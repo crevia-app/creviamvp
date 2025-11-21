@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Paperclip, Image as ImageIcon, File, X, Check, CheckCheck, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
+import NewConversationDialog from "./NewConversationDialog";
 
 const CreviaChat = () => {
   const { toast } = useToast();
@@ -15,6 +16,7 @@ const CreviaChat = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [currentUserType, setCurrentUserType] = useState<string>("");
   const [isTyping, setIsTyping] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
@@ -49,7 +51,39 @@ const CreviaChat = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       setCurrentUserId(user.id);
+      
+      // Get user type from profiles
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("user_type")
+        .eq("id", user.id)
+        .single();
+      
+      if (profile) {
+        setCurrentUserType(profile.user_type);
+      }
+      
       fetchConversations(user.id);
+    }
+  };
+
+  const handleNewConversation = (userId: string, profile: any) => {
+    setSelectedConversation({
+      userId,
+      profile,
+      lastMessage: "",
+      lastMessageTime: null
+    });
+    
+    // Add to conversations list if not already there
+    const exists = conversations.find(c => c.userId === userId);
+    if (!exists) {
+      setConversations(prev => [{
+        userId,
+        profile,
+        lastMessage: "",
+        lastMessageTime: null
+      }, ...prev]);
     }
   };
 
@@ -293,11 +327,19 @@ const CreviaChat = () => {
   };
 
   return (
-    <div className="grid grid-cols-12 gap-6 h-[600px]">
-      <Card className="col-span-4">
-        <CardHeader>
-          <CardTitle>Conversations</CardTitle>
-        </CardHeader>
+    <div className="space-y-4">
+      {currentUserId && currentUserType && (
+        <NewConversationDialog 
+          currentUserId={currentUserId}
+          currentUserType={currentUserType}
+          onConversationCreated={handleNewConversation}
+        />
+      )}
+      <div className="grid grid-cols-12 gap-6 h-[600px]">
+        <Card className="col-span-4">
+          <CardHeader>
+            <CardTitle>Conversations</CardTitle>
+          </CardHeader>
         <CardContent className="p-0">
           <ScrollArea className="h-[500px]">
             {conversations.length === 0 ? (
@@ -472,6 +514,7 @@ const CreviaChat = () => {
           </CardContent>
         )}
       </Card>
+      </div>
     </div>
   );
 };
