@@ -19,16 +19,20 @@ const CreviaConnect = () => {
         return;
       }
 
-      // Get user profile
-      const { data: profile } = await supabase
+      // Get user profile from the database
+      const { data: profile, error } = await supabase
         .from("profiles")
         .select("user_type")
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
 
-      if (profile) {
-        setUserType(profile.user_type);
+      if (error) {
+        console.error("Error fetching profile:", error);
       }
+
+      // Use profile from database, fallback to user metadata
+      const type = profile?.user_type || session.user.user_metadata?.user_type || 'creator';
+      setUserType(type);
       setLoading(false);
     };
 
