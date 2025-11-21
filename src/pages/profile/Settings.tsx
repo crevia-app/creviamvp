@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { Settings as SettingsIcon, User, Lock, Link2, Eye } from "lucide-react";
+import { Settings as SettingsIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -49,8 +50,9 @@ const Settings = () => {
         <p className="text-muted-foreground mb-8">Manage your account preferences</p>
 
         <Tabs defaultValue="account" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="account">Account</TabsTrigger>
+            <TabsTrigger value="appearance">Appearance</TabsTrigger>
             <TabsTrigger value="preferences">Preferences</TabsTrigger>
             <TabsTrigger value="integrations">Integrations</TabsTrigger>
             <TabsTrigger value="privacy">Privacy</TabsTrigger>
@@ -89,6 +91,13 @@ const Settings = () => {
                   <Button className="bg-bronze hover:bg-bronze-dark">Save Changes</Button>
                 </div>
               </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="appearance">
+            <Card className="p-8">
+              <h2 className="font-vollkorn text-2xl font-bold mb-6">Appearance</h2>
+              <ThemeToggle />
             </Card>
           </TabsContent>
 
