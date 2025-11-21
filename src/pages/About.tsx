@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Target, Heart, Calendar, Users } from "lucide-react";
+import { Target, Heart, Calendar, Users, MapPin } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import gallery1 from "@/assets/about-gallery-1.jpg";
@@ -10,6 +11,7 @@ import gallery3 from "@/assets/about-gallery-3.jpg";
 import gallery4 from "@/assets/about-gallery-4.jpg";
 
 const About = () => {
+  const [showUpcoming, setShowUpcoming] = useState(true);
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -103,6 +105,174 @@ const About = () => {
           <Button size="lg" className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold">
             Join Our Community
           </Button>
+        </div>
+      </section>
+
+      {/* Our Events Section */}
+      <section className="py-20 px-6 bg-[hsl(30,30%,88%)]">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Calendar className="w-12 h-12 text-bronze" />
+              <h2 className="font-vollkorn text-4xl md:text-5xl font-bold text-bronze-dark">Our Events</h2>
+            </div>
+            <p className="text-lg text-bronze-dark/70 mb-8">
+              Join us at upcoming events or see what we've accomplished
+            </p>
+            
+            {/* Toggle Buttons */}
+            <div className="flex items-center justify-center gap-4 mb-12">
+              <button
+                onClick={() => setShowUpcoming(true)}
+                className={`px-8 py-3 rounded-full font-poppins font-semibold transition-all ${
+                  showUpcoming 
+                    ? 'bg-bronze text-white shadow-lg' 
+                    : 'bg-transparent text-bronze-dark hover:bg-bronze/10'
+                }`}
+              >
+                Upcoming Events
+              </button>
+              <button
+                onClick={() => setShowUpcoming(false)}
+                className={`px-8 py-3 rounded-full font-poppins font-semibold transition-all ${
+                  !showUpcoming 
+                    ? 'bg-bronze text-white shadow-lg' 
+                    : 'bg-transparent text-bronze-dark hover:bg-bronze/10'
+                }`}
+              >
+                Previous Events
+              </button>
+            </div>
+          </div>
+
+          {/* Events Content */}
+          {showUpcoming ? (
+            /* Upcoming Events */
+            <div className="max-w-2xl mx-auto">
+              <Card className="p-8 bg-white border-bronze/20 shadow-xl">
+                <div className="flex items-start justify-between mb-6">
+                  <span className="px-4 py-1.5 bg-bronze text-white rounded-full text-sm font-poppins font-semibold">
+                    Summit
+                  </span>
+                  <span className="px-4 py-1.5 bg-bronze/10 text-bronze rounded-full text-sm font-poppins font-semibold">
+                    Coming Soon
+                  </span>
+                </div>
+                
+                <h3 className="font-vollkorn text-3xl md:text-4xl font-bold mb-6 text-bronze-dark">
+                  Crevia Creators Connect
+                </h3>
+                
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center gap-3 text-bronze-dark/80">
+                    <Calendar className="w-5 h-5 text-bronze" />
+                    <span className="font-poppins">TBA 2025</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-bronze-dark/80">
+                    <MapPin className="w-5 h-5 text-bronze" />
+                    <span className="font-poppins">Location TBA</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-bronze-dark/80">
+                    <Users className="w-5 h-5 text-bronze" />
+                    <span className="font-poppins">Registration Opening Soon</span>
+                  </div>
+                </div>
+                
+                <Button 
+                  size="lg" 
+                  className="w-full bg-bronze hover:bg-bronze-dark text-white font-poppins font-semibold text-lg py-6"
+                  disabled
+                >
+                  Coming Soon
+                </Button>
+              </Card>
+            </div>
+          ) : (
+            /* Previous Events */
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Freelancers Summit 2024 */}
+              <Card className="overflow-hidden bg-white border-bronze/20 shadow-xl">
+                <div className="aspect-video">
+                  <iframe
+                    className="w-full h-full"
+                    src="https://www.youtube.com/embed/YOUR_VIDEO_ID_1"
+                    title="Freelancers Summit 2024"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+                <div className="p-6">
+                  <span className="inline-block px-4 py-1.5 bg-bronze text-white rounded-full text-sm font-poppins font-semibold mb-4">
+                    Summit
+                  </span>
+                  <h3 className="font-vollkorn text-2xl font-bold mb-4 text-bronze-dark">
+                    Freelancers Summit 2024
+                  </h3>
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center gap-3 text-bronze-dark/80">
+                      <Calendar className="w-4 h-4 text-bronze" />
+                      <span className="font-poppins text-sm">November 2024</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-bronze-dark/80">
+                      <MapPin className="w-4 h-4 text-bronze" />
+                      <span className="font-poppins text-sm">iHub Nairobi</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-bronze-dark/80">
+                      <Users className="w-4 h-4 text-bronze" />
+                      <span className="font-poppins text-sm">500 attendees</span>
+                    </div>
+                  </div>
+                  <Button 
+                    size="lg" 
+                    className="w-full bg-[hsl(30,30%,88%)] hover:bg-bronze/20 text-bronze-dark font-poppins font-semibold"
+                  >
+                    View Highlights
+                  </Button>
+                </div>
+              </Card>
+
+              {/* AI Summit 2025 */}
+              <Card className="overflow-hidden bg-white border-bronze/20 shadow-xl">
+                <div className="aspect-video">
+                  <iframe
+                    className="w-full h-full"
+                    src="https://www.youtube.com/embed/YOUR_VIDEO_ID_2"
+                    title="AI Summit 2025"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+                <div className="p-6">
+                  <span className="inline-block px-4 py-1.5 bg-bronze text-white rounded-full text-sm font-poppins font-semibold mb-4">
+                    Summit
+                  </span>
+                  <h3 className="font-vollkorn text-2xl font-bold mb-4 text-bronze-dark">
+                    AI Summit 2025
+                  </h3>
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center gap-3 text-bronze-dark/80">
+                      <Calendar className="w-4 h-4 text-bronze" />
+                      <span className="font-poppins text-sm">January 2025</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-bronze-dark/80">
+                      <MapPin className="w-4 h-4 text-bronze" />
+                      <span className="font-poppins text-sm">Nairobi, Kenya</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-bronze-dark/80">
+                      <Users className="w-4 h-4 text-bronze" />
+                      <span className="font-poppins text-sm">800 attendees</span>
+                    </div>
+                  </div>
+                  <Button 
+                    size="lg" 
+                    className="w-full bg-[hsl(30,30%,88%)] hover:bg-bronze/20 text-bronze-dark font-poppins font-semibold"
+                  >
+                    View Highlights
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          )}
         </div>
       </section>
 
