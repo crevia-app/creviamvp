@@ -47,7 +47,7 @@ const CampaignApplicationsDialog = ({ campaign, open, onClose }: CampaignApplica
     }
   };
 
-  const handleStatusUpdate = async (applicationId: string, status: string) => {
+  const handleStatusUpdate = async (applicationId: string, status: "accepted" | "completed" | "pending" | "rejected") => {
     try {
       const { error } = await supabase
         .from("campaign_applications")
