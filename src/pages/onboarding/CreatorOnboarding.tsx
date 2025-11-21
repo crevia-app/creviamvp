@@ -67,7 +67,9 @@ const CreatorOnboarding = () => {
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    // Store creator data and complete onboarding
+    // This will be implemented with backend
     toast({ title: "Welcome to Crevia! 🎉" });
     navigate("/dashboard");
   };
