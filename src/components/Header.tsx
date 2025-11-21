@@ -61,6 +61,10 @@ const Header = () => {
         </Link>
         
         <div className="hidden md:flex items-center gap-8">
+          <Link to="/" className="text-sm font-medium hover:text-bronze transition-colors">
+            Home
+          </Link>
+          
           {isAuthenticated && (
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium hover:text-bronze transition-colors outline-none">
@@ -79,6 +83,14 @@ const Header = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           )}
+          
+          <Link to="/pricing" className="text-sm font-medium hover:text-bronze transition-colors">
+            Pricing
+          </Link>
+          
+          <Link to="/about" className="text-sm font-medium hover:text-bronze transition-colors">
+            About
+          </Link>
         </div>
 
         <div className="flex items-center gap-3">

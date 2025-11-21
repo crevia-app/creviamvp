@@ -23,6 +23,8 @@ import Verification from "./pages/profile/Verification";
 import Settings from "./pages/profile/Settings";
 import Help from "./pages/profile/Help";
 import Feedback from "./pages/profile/Feedback";
+import Pricing from "./pages/Pricing";
+import About from "./pages/About";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +38,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/about" element={<About />} />
             <Route path="/user-type-selection" element={<UserTypeSelection />} />
             <Route path="/signup/creator" element={<CreatorSignup />} />
             <Route path="/signup/brand" element={<BrandSignup />} />
