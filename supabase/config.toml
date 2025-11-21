@@ -1,1 +1,7 @@
 project_id = "uirtqximofzbhgttbbhh"
+
+[functions.ai-match-score]
+verify_jwt = false
+
+[functions.kira-suggestions]
+verify_jwt = false
