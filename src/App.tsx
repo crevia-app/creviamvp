@@ -12,6 +12,7 @@ import CreatorOnboarding from "./pages/onboarding/CreatorOnboarding";
 import BrandOnboarding from "./pages/onboarding/BrandOnboarding";
 import Dashboard from "./pages/Dashboard";
 import CreviaConnect from "./pages/CreviaConnect";
+import CreviaAI from "./pages/CreviaAI";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/onboarding/brand" element={<BrandOnboarding />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/crevia-connect" element={<CreviaConnect />} />
+          <Route path="/crevia-ai" element={<CreviaAI />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
