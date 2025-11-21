@@ -12,7 +12,9 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Link2, Plus, Eye, Settings, Sparkles } from "lucide-react";
+import { Link2, Plus, Eye, Sparkles } from "lucide-react";
+import { AddButtonDialog } from "@/components/crevia-link/AddButtonDialog";
+import { ButtonItem } from "@/components/crevia-link/ButtonItem";
 
 const CreviaLink = () => {
   const navigate = useNavigate();
@@ -20,7 +22,9 @@ const CreviaLink = () => {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [linkProfile, setLinkProfile] = useState<any>(null);
+  const [buttons, setButtons] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
+  const [showAddButton, setShowAddButton] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -69,6 +73,94 @@ const CreviaLink = () => {
     }
 
     setLoading(false);
+  };
+
+  const fetchButtons = async () => {
+    if (!linkProfile?.id) return;
+
+    const { data } = await supabase
+      .from("link_buttons")
+      .select("*")
+      .eq("profile_id", linkProfile.id)
+      .order("order_index");
+
+    setButtons(data || []);
+  };
+
+  useEffect(() => {
+    if (linkProfile) {
+      fetchButtons();
+    }
+  }, [linkProfile]);
+
+  const handleAddButton = async (buttonData: any) => {
+    const maxOrder = buttons.length > 0 
+      ? Math.max(...buttons.map(b => b.order_index)) 
+      : -1;
+
+    const { data, error } = await supabase
+      .from("link_buttons")
+      .insert({
+        profile_id: linkProfile.id,
+        ...buttonData,
+        order_index: maxOrder + 1,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      setButtons([...buttons, data]);
+      toast({
+        title: "Button added!",
+        description: "Your new button has been created.",
+      });
+    }
+  };
+
+  const handleDeleteButton = async (id: string) => {
+    const { error } = await supabase
+      .from("link_buttons")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      setButtons(buttons.filter(b => b.id !== id));
+      toast({
+        title: "Button deleted",
+        description: "The button has been removed.",
+      });
+    }
+  };
+
+  const handleToggleVisibility = async (id: string, visible: boolean) => {
+    const { error } = await supabase
+      .from("link_buttons")
+      .update({ visible })
+      .eq("id", id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      setButtons(buttons.map(b => 
+        b.id === id ? { ...b, visible } : b
+      ));
+    }
   };
 
   const handleSave = async () => {
@@ -226,16 +318,33 @@ const CreviaLink = () => {
             <Card className="p-8">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="font-vollkorn text-2xl font-bold">Links & Buttons</h3>
-                <Button className="bg-bronze hover:bg-bronze-dark">
+                <Button 
+                  className="bg-bronze hover:bg-bronze-dark"
+                  onClick={() => setShowAddButton(true)}
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Button
                 </Button>
               </div>
               
-              <div className="text-center py-12 text-muted-foreground">
-                <Link2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>No buttons yet. Click "Add Button" to get started.</p>
-              </div>
+              {buttons.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Link2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>No buttons yet. Click "Add Button" to get started.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {buttons.map((button) => (
+                    <ButtonItem
+                      key={button.id}
+                      button={button}
+                      onEdit={() => {}}
+                      onDelete={handleDeleteButton}
+                      onToggleVisibility={handleToggleVisibility}
+                    />
+                  ))}
+                </div>
+              )}
             </Card>
           </TabsContent>
 
@@ -344,6 +453,12 @@ const CreviaLink = () => {
           </div>
         </div>
       </main>
+
+      <AddButtonDialog
+        open={showAddButton}
+        onOpenChange={setShowAddButton}
+        onAdd={handleAddButton}
+      />
 
       <Footer />
     </div>
