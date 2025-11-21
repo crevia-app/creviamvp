@@ -573,6 +573,10 @@ export type Database = {
           campaign_id: string | null
           content: string
           created_at: string | null
+          file_name: string | null
+          file_size: number | null
+          file_type: string | null
+          file_url: string | null
           id: string
           is_flagged: boolean | null
           receiver_id: string
@@ -583,6 +587,10 @@ export type Database = {
           campaign_id?: string | null
           content: string
           created_at?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
           id?: string
           is_flagged?: boolean | null
           receiver_id: string
@@ -593,6 +601,10 @@ export type Database = {
           campaign_id?: string | null
           content?: string
           created_at?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
           id?: string
           is_flagged?: boolean | null
           receiver_id?: string
