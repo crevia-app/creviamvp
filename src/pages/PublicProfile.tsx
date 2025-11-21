@@ -1,0 +1,224 @@
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Instagram, Linkedin, Youtube, Mail, Globe, CheckCircle2 } from "lucide-react";
+
+const PublicProfile = () => {
+  const { username } = useParams();
+  const [profile, setProfile] = useState<any>(null);
+  const [buttons, setButtons] = useState<any[]>([]);
+  const [socialIcons, setSocialIcons] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadProfile();
+  }, [username]);
+
+  const loadProfile = async () => {
+    if (!username) return;
+
+    // Fetch link profile
+    const { data: linkProfile } = await supabase
+      .from("link_profiles")
+      .select("*, profiles(*)")
+      .eq("username", username)
+      .single();
+
+    if (linkProfile) {
+      setProfile(linkProfile);
+
+      // Track visit
+      await supabase
+        .from("link_profiles")
+        .update({ total_visits: (linkProfile.total_visits || 0) + 1 })
+        .eq("id", linkProfile.id);
+
+      // Fetch buttons
+      const { data: buttonData } = await supabase
+        .from("link_buttons")
+        .select("*")
+        .eq("profile_id", linkProfile.id)
+        .eq("visible", true)
+        .order("order_index");
+
+      setButtons(buttonData || []);
+
+      // Fetch social icons
+      const { data: socialData } = await supabase
+        .from("link_social_icons")
+        .select("*")
+        .eq("profile_id", linkProfile.id)
+        .order("order_index");
+
+      setSocialIcons(socialData || []);
+    }
+
+    setLoading(false);
+  };
+
+  const handleButtonClick = async (buttonId: string, url: string) => {
+    // Track click
+    await supabase
+      .from("link_buttons")
+      .update({ clicks: buttons.find(b => b.id === buttonId)?.clicks + 1 || 1 })
+      .eq("id", buttonId);
+
+    // Open URL
+    window.open(url, "_blank");
+  };
+
+  const getThemeStyles = () => {
+    const theme = profile?.theme || "dark";
+    switch (theme) {
+      case "light":
+        return "bg-white text-black";
+      case "dark":
+        return "bg-black text-white";
+      case "gold":
+        return "bg-black text-[#CF8150]";
+      case "minimal":
+        return "bg-gray-50 text-gray-800";
+      default:
+        return "bg-black text-white";
+    }
+  };
+
+  const getButtonVariant = (style: string) => {
+    switch (style) {
+      case "filled":
+        return "default";
+      case "outline":
+        return "outline";
+      case "minimal":
+        return "ghost";
+      default:
+        return "default";
+    }
+  };
+
+  const getSocialIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case "instagram":
+        return <Instagram className="w-5 h-5" />;
+      case "linkedin":
+        return <Linkedin className="w-5 h-5" />;
+      case "youtube":
+        return <Youtube className="w-5 h-5" />;
+      case "email":
+        return <Mail className="w-5 h-5" />;
+      case "website":
+        return <Globe className="w-5 h-5" />;
+      default:
+        return <Globe className="w-5 h-5" />;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <p className="font-poppins">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <div className="text-center">
+          <h1 className="font-vollkorn text-4xl font-bold mb-4">Page not found</h1>
+          <p className="font-poppins text-gray-400">This Crevia Link doesn't exist.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const layoutClass = profile?.layout === "centered" ? "max-w-2xl mx-auto" : 
+                     profile?.layout === "left" ? "max-w-2xl" : "max-w-4xl mx-auto";
+
+  return (
+    <div className={`min-h-screen ${getThemeStyles()} py-12 px-6`}>
+      <div className={layoutClass}>
+        {/* Profile Header */}
+        <div className="text-center mb-8">
+          {profile?.profile_picture && (
+            <img
+              src={profile.profile_picture}
+              alt={profile.display_name}
+              className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-[#CF8150]"
+            />
+          )}
+          
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <h1 className="font-vollkorn text-3xl font-bold">
+              {profile?.display_name || profile?.username}
+            </h1>
+            {profile?.show_verified_badge && profile?.profiles?.is_verified && (
+              <CheckCircle2 className="w-6 h-6 text-[#CF8150]" />
+            )}
+          </div>
+
+          {profile?.bio && (
+            <p className="font-poppins text-muted-foreground max-w-md mx-auto">
+              {profile.bio}
+            </p>
+          )}
+        </div>
+
+        {/* Social Icons */}
+        {socialIcons.length > 0 && (
+          <div className="flex justify-center gap-4 mb-8">
+            {socialIcons.map((icon) => (
+              <a
+                key={icon.id}
+                href={icon.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-3 rounded-full border border-[#CF8150] hover:bg-[#CF8150]/10 transition-colors"
+              >
+                {getSocialIcon(icon.platform)}
+              </a>
+            ))}
+          </div>
+        )}
+
+        {/* Buttons */}
+        <div className="space-y-4 mb-12">
+          {buttons.map((button) => (
+            <Button
+              key={button.id}
+              variant={getButtonVariant(button.style) as any}
+              className="w-full h-auto py-4 text-base font-poppins hover:scale-105 transition-transform"
+              onClick={() => handleButtonClick(button.id, button.url)}
+            >
+              <div className="text-left w-full">
+                <div className="font-semibold">{button.title}</div>
+                {button.subtitle && (
+                  <div className="text-sm opacity-80">{button.subtitle}</div>
+                )}
+              </div>
+            </Button>
+          ))}
+        </div>
+
+        {buttons.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground">
+            <p className="font-poppins">No links added yet.</p>
+          </div>
+        )}
+
+        {/* Footer */}
+        {profile?.show_crevia_branding && (
+          <div className="text-center mt-16 pt-8 border-t border-[#CF8150]/20">
+            <p className="text-sm font-poppins text-muted-foreground">
+              Made with ♥ on <span className="text-[#CF8150] font-semibold">Crevia</span>
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default PublicProfile;

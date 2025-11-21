@@ -52,6 +52,9 @@ const Header = () => {
                 <DropdownMenuItem asChild>
                   <Link to="/crevia-ai" className="cursor-pointer">Crevia AI</Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/crevia-link" className="cursor-pointer">Crevia Link</Link>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
