@@ -4,21 +4,90 @@ import { Card } from "@/components/ui/card";
 import { Target, Heart, Calendar, Users } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import gallery1 from "@/assets/about-gallery-1.jpg";
+import gallery2 from "@/assets/about-gallery-2.jpg";
+import gallery3 from "@/assets/about-gallery-3.jpg";
+import gallery4 from "@/assets/about-gallery-4.jpg";
 
 const About = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6 bg-gradient-to-br from-bronze/10 via-background to-bronze/5">
-        <div className="container mx-auto max-w-6xl text-center">
+      {/* Hero Gallery Section */}
+      <section className="relative pt-32 pb-20 overflow-hidden bg-gradient-to-br from-background via-secondary/20 to-background">
+        <div className="container mx-auto max-w-6xl text-center mb-12 px-6 relative z-10">
           <h1 className="font-vollkorn text-5xl md:text-7xl font-bold mb-6">
             About <span className="text-gradient-bronze">In Action</span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             We are on a mission to empower creators and brands to build meaningful collaborations
           </p>
+        </div>
+        
+        {/* Scrolling Gallery */}
+        <div className="relative w-full overflow-hidden">
+          <div className="flex gap-6 animate-scroll-left">
+            {/* First set of images */}
+            <div className="flex-shrink-0 w-80 h-64 transform rotate-[-3deg] hover:rotate-0 transition-transform duration-500">
+              <img 
+                src={gallery1} 
+                alt="Crevia community event" 
+                className="w-full h-full object-cover rounded-2xl shadow-2xl"
+              />
+            </div>
+            <div className="flex-shrink-0 w-80 h-64 transform rotate-[2deg] hover:rotate-0 transition-transform duration-500">
+              <img 
+                src={gallery2} 
+                alt="Creator community gathering" 
+                className="w-full h-full object-cover rounded-2xl shadow-2xl"
+              />
+            </div>
+            <div className="flex-shrink-0 w-80 h-64 transform rotate-[-2deg] hover:rotate-0 transition-transform duration-500">
+              <img 
+                src={gallery3} 
+                alt="Workshop session" 
+                className="w-full h-full object-cover rounded-2xl shadow-2xl"
+              />
+            </div>
+            <div className="flex-shrink-0 w-80 h-64 transform rotate-[3deg] hover:rotate-0 transition-transform duration-500">
+              <img 
+                src={gallery4} 
+                alt="Team collaboration" 
+                className="w-full h-full object-cover rounded-2xl shadow-2xl"
+              />
+            </div>
+            
+            {/* Duplicate set for seamless loop */}
+            <div className="flex-shrink-0 w-80 h-64 transform rotate-[-3deg] hover:rotate-0 transition-transform duration-500">
+              <img 
+                src={gallery1} 
+                alt="Crevia community event" 
+                className="w-full h-full object-cover rounded-2xl shadow-2xl"
+              />
+            </div>
+            <div className="flex-shrink-0 w-80 h-64 transform rotate-[2deg] hover:rotate-0 transition-transform duration-500">
+              <img 
+                src={gallery2} 
+                alt="Creator community gathering" 
+                className="w-full h-full object-cover rounded-2xl shadow-2xl"
+              />
+            </div>
+            <div className="flex-shrink-0 w-80 h-64 transform rotate-[-2deg] hover:rotate-0 transition-transform duration-500">
+              <img 
+                src={gallery3} 
+                alt="Workshop session" 
+                className="w-full h-full object-cover rounded-2xl shadow-2xl"
+              />
+            </div>
+            <div className="flex-shrink-0 w-80 h-64 transform rotate-[3deg] hover:rotate-0 transition-transform duration-500">
+              <img 
+                src={gallery4} 
+                alt="Team collaboration" 
+                className="w-full h-full object-cover rounded-2xl shadow-2xl"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
