@@ -14,12 +14,6 @@ const Header = () => {
           <Link to="/products" className="text-sm font-medium bronze-underline hover:text-bronze transition-colors">
             Products
           </Link>
-          <Link to="/pricing" className="text-sm font-medium bronze-underline hover:text-bronze transition-colors">
-            Pricing
-          </Link>
-          <Link to="/about" className="text-sm font-medium bronze-underline hover:text-bronze transition-colors">
-            About
-          </Link>
         </div>
 
         <div className="flex items-center gap-3">
