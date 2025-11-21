@@ -368,6 +368,206 @@ export type Database = {
         }
         Relationships: []
       }
+      link_buttons: {
+        Row: {
+          clicks: number | null
+          created_at: string | null
+          icon: string | null
+          id: string
+          order_index: number
+          profile_id: string
+          style: string | null
+          subtitle: string | null
+          title: string
+          url: string
+          visible: boolean | null
+        }
+        Insert: {
+          clicks?: number | null
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          order_index: number
+          profile_id: string
+          style?: string | null
+          subtitle?: string | null
+          title: string
+          url: string
+          visible?: boolean | null
+        }
+        Update: {
+          clicks?: number | null
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          order_index?: number
+          profile_id?: string
+          style?: string | null
+          subtitle?: string | null
+          title?: string
+          url?: string
+          visible?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "link_buttons_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "link_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      link_featured_work: {
+        Row: {
+          created_at: string | null
+          id: string
+          order_index: number
+          profile_id: string
+          thumbnail: string | null
+          title: string | null
+          type: string
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          order_index: number
+          profile_id: string
+          thumbnail?: string | null
+          title?: string | null
+          type: string
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          order_index?: number
+          profile_id?: string
+          thumbnail?: string | null
+          title?: string | null
+          type?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "link_featured_work_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "link_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      link_profiles: {
+        Row: {
+          background: Json | null
+          bio: string | null
+          contact_email: string | null
+          contact_enabled: boolean | null
+          created_at: string | null
+          display_name: string | null
+          id: string
+          layout: string | null
+          profile_picture: string | null
+          seo_description: string | null
+          seo_image: string | null
+          seo_title: string | null
+          show_crevia_branding: boolean | null
+          show_verified_badge: boolean | null
+          theme: string | null
+          total_visits: number | null
+          updated_at: string | null
+          user_id: string
+          username: string
+        }
+        Insert: {
+          background?: Json | null
+          bio?: string | null
+          contact_email?: string | null
+          contact_enabled?: boolean | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          layout?: string | null
+          profile_picture?: string | null
+          seo_description?: string | null
+          seo_image?: string | null
+          seo_title?: string | null
+          show_crevia_branding?: boolean | null
+          show_verified_badge?: boolean | null
+          theme?: string | null
+          total_visits?: number | null
+          updated_at?: string | null
+          user_id: string
+          username: string
+        }
+        Update: {
+          background?: Json | null
+          bio?: string | null
+          contact_email?: string | null
+          contact_enabled?: boolean | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          layout?: string | null
+          profile_picture?: string | null
+          seo_description?: string | null
+          seo_image?: string | null
+          seo_title?: string | null
+          show_crevia_branding?: boolean | null
+          show_verified_badge?: boolean | null
+          theme?: string | null
+          total_visits?: number | null
+          updated_at?: string | null
+          user_id?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "link_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      link_social_icons: {
+        Row: {
+          created_at: string | null
+          id: string
+          order_index: number
+          platform: string
+          profile_id: string
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          order_index: number
+          platform: string
+          profile_id: string
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          order_index?: number
+          platform?: string
+          profile_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "link_social_icons_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "link_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           campaign_id: string | null
