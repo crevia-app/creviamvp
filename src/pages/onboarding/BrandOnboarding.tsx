@@ -67,10 +67,8 @@ const BrandOnboarding = () => {
   };
 
   const handleComplete = async () => {
-    // Store brand data and complete onboarding
-    // This will be implemented with backend
     toast({ title: "Welcome to Crevia! 🎉" });
-    navigate("/dashboard");
+    navigate("/");
   };
 
   return (

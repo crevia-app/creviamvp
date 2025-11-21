@@ -26,7 +26,7 @@ const CreatorSignup = () => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/onboarding/creator`,
+        emailRedirectTo: `${window.location.origin}/`,
         data: {
           user_type: 'creator'
         }
@@ -36,7 +36,7 @@ const CreatorSignup = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Success! Please check your email to confirm your account." });
+      toast({ title: "Account created! Redirecting to onboarding..." });
       navigate("/onboarding/creator");
     }
   };

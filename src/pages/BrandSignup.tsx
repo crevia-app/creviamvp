@@ -26,7 +26,7 @@ const BrandSignup = () => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/onboarding/brand`,
+        emailRedirectTo: `${window.location.origin}/`,
         data: {
           user_type: 'brand'
         }
@@ -36,7 +36,7 @@ const BrandSignup = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Success! Please check your email to confirm your account." });
+      toast({ title: "Account created! Redirecting to onboarding..." });
       navigate("/onboarding/brand");
     }
   };
