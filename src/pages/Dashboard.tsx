@@ -1,40 +1,52 @@
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
+import { supabase } from "@/integrations/supabase/client";
+import CreatorDashboard from "./dashboard/CreatorDashboard";
+import BrandDashboard from "./dashboard/BrandDashboard";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const [userType, setUserType] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/auth");
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("user_type")
+      .eq("id", session.user.id)
+      .single();
+
+    setUserType(profile?.user_type || null);
+    setLoading(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-6 pt-32 text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="pt-24 p-6">
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="font-vollkorn text-4xl font-bold mb-2">Welcome to Crevia</h1>
-              <p className="text-muted-foreground">Your dashboard is coming soon!</p>
-            </div>
-            <Button className="bg-bronze hover:bg-bronze-dark">
-              Complete Profile
-            </Button>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            <Card className="p-6">
-              <h3 className="font-vollkorn text-xl font-bold mb-2">Profile Strength</h3>
-              <p className="text-3xl font-bold text-bronze">75%</p>
-            </Card>
-
-            <Card className="p-6">
-              <h3 className="font-vollkorn text-xl font-bold mb-2">Active Campaigns</h3>
-              <p className="text-3xl font-bold">0</p>
-            </Card>
-
-            <Card className="p-6">
-              <h3 className="font-vollkorn text-xl font-bold mb-2">Total Earnings</h3>
-              <p className="text-3xl font-bold text-bronze">$0</p>
-            </Card>
-          </div>
-        </div>
+      <div className="pt-24">
+        {userType === "creator" ? <CreatorDashboard /> : <BrandDashboard />}
       </div>
     </div>
   );
