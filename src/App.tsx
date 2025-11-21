@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import UserTypeSelection from "./pages/UserTypeSelection";
+import CreatorSignup from "./pages/CreatorSignup";
+import BrandSignup from "./pages/BrandSignup";
 import CreatorOnboarding from "./pages/onboarding/CreatorOnboarding";
 import BrandOnboarding from "./pages/onboarding/BrandOnboarding";
 import Dashboard from "./pages/Dashboard";
@@ -24,6 +26,8 @@ const App = () => (
           <Route path="/" element={<Home />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/user-type-selection" element={<UserTypeSelection />} />
+          <Route path="/signup/creator" element={<CreatorSignup />} />
+          <Route path="/signup/brand" element={<BrandSignup />} />
           <Route path="/onboarding/creator" element={<CreatorOnboarding />} />
           <Route path="/onboarding/brand" element={<BrandOnboarding />} />
           <Route path="/dashboard" element={<Dashboard />} />

@@ -15,42 +15,36 @@ const UserTypeSelection = () => {
             <span className="font-vollkorn text-3xl font-bold">Crevia</span>
           </Link>
           <h1 className="font-vollkorn text-4xl md:text-5xl font-bold mb-4">
-            Join <span className="text-gradient-bronze">Crevia</span>
+            Create your account
           </h1>
-          <p className="text-xl text-muted-foreground">Choose your account type</p>
+          <p className="text-xl text-muted-foreground">I'm joining as *</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
           <Card 
             className="p-8 cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 hover:border-bronze group"
-            onClick={() => navigate("/onboarding/creator")}
+            onClick={() => navigate("/signup/creator")}
           >
             <div className="w-16 h-16 rounded-2xl bg-bronze/10 group-hover:bg-bronze flex items-center justify-center mb-6 transition-colors">
               <Users className="w-8 h-8 text-bronze group-hover:text-white transition-colors" />
             </div>
-            <h2 className="font-vollkorn text-3xl font-bold mb-3">I'm a Creator</h2>
-            <p className="text-muted-foreground mb-6">
-              Find brand deals, grow your audience, and manage your creator business all in one place.
+            <h2 className="font-vollkorn text-3xl font-bold mb-3">Creator</h2>
+            <p className="text-muted-foreground">
+              Sell products & services
             </p>
-            <Button className="w-full bg-bronze hover:bg-bronze-dark font-semibold">
-              Continue as Creator
-            </Button>
           </Card>
 
           <Card 
             className="p-8 cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 hover:border-bronze group"
-            onClick={() => navigate("/onboarding/brand")}
+            onClick={() => navigate("/signup/brand")}
           >
             <div className="w-16 h-16 rounded-2xl bg-bronze/10 group-hover:bg-bronze flex items-center justify-center mb-6 transition-colors">
               <Building2 className="w-8 h-8 text-bronze group-hover:text-white transition-colors" />
             </div>
-            <h2 className="font-vollkorn text-3xl font-bold mb-3">I'm a Brand</h2>
-            <p className="text-muted-foreground mb-6">
-              Discover creators, run campaigns, and track performance with powerful analytics.
+            <h2 className="font-vollkorn text-3xl font-bold mb-3">Brand</h2>
+            <p className="text-muted-foreground">
+              Find & hire creators
             </p>
-            <Button className="w-full bg-bronze hover:bg-bronze-dark font-semibold">
-              Continue as Brand
-            </Button>
           </Card>
         </div>
 
