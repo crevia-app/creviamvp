@@ -22,7 +22,7 @@ const Home = () => {
               Tools that help you collaborate, grow, and earn — all in one simple platform.
             </p>
             <div className="flex gap-4 justify-center pt-6">
-              <Link to="/auth?signup=true">
+              <Link to="/user-type-selection">
                 <Button size="lg" className="bg-bronze hover:bg-bronze-dark text-lg px-8 py-6 font-poppins font-semibold">
                   Get Started
                 </Button>
@@ -142,7 +142,7 @@ const Home = () => {
           <p className="text-xl text-muted-foreground mb-8">
             Join thousands of creators building their digital careers on Crevia.
           </p>
-          <Link to="/auth?signup=true">
+          <Link to="/user-type-selection">
             <Button size="lg" className="bg-bronze hover:bg-bronze-dark text-lg px-12 py-6 font-poppins font-semibold">
               Start Your Journey
             </Button>
