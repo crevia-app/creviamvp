@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Users, Building2 } from "lucide-react";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const isSignup = searchParams.get("signup") === "true";
   const [mode, setMode] = useState<"choice" | "creator" | "brand">(isSignup ? "choice" : "creator");
   const [email, setEmail] = useState("");
@@ -37,7 +38,7 @@ const Auth = () => {
           <div className="grid md:grid-cols-2 gap-6">
             <Card 
               className="p-8 cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 hover:border-bronze group"
-              onClick={() => setMode("creator")}
+              onClick={() => navigate("/onboarding/creator")}
             >
               <div className="w-16 h-16 rounded-2xl bg-bronze/10 group-hover:bg-bronze flex items-center justify-center mb-6 transition-colors">
                 <Users className="w-8 h-8 text-bronze group-hover:text-white transition-colors" />
@@ -53,7 +54,7 @@ const Auth = () => {
 
             <Card 
               className="p-8 cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 hover:border-bronze group"
-              onClick={() => setMode("brand")}
+              onClick={() => navigate("/onboarding/brand")}
             >
               <div className="w-16 h-16 rounded-2xl bg-bronze/10 group-hover:bg-bronze flex items-center justify-center mb-6 transition-colors">
                 <Building2 className="w-8 h-8 text-bronze group-hover:text-white transition-colors" />
