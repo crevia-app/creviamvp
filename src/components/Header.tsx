@@ -6,25 +6,46 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, User, CreditCard, Bell, Shield, Settings, HelpCircle, MessageSquare, LogOut, Link2, LayoutDashboard } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Header = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
     // Check authentication status
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setProfile(null);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const fetchProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+    
+    setProfile(data);
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -62,20 +83,74 @@ const Header = () => {
 
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
-            <>
-              <Link to="/dashboard">
-                <Button variant="ghost" className="font-poppins font-semibold">
-                  Dashboard
-                </Button>
-              </Link>
-              <Button 
-                variant="outline" 
-                onClick={handleSignOut}
-                className="font-poppins font-semibold"
-              >
-                Sign Out
-              </Button>
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-2 outline-none">
+                <Avatar className="w-9 h-9">
+                  <AvatarImage src={profile?.avatar_url} />
+                  <AvatarFallback className="bg-bronze text-white">
+                    {profile?.display_name?.charAt(0) || profile?.handle?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <ChevronDown className="w-4 h-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 bg-background border-border" align="end">
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard" className="cursor-pointer flex items-center gap-2">
+                    <LayoutDashboard className="w-4 h-4" />
+                    My Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/crevia-link" className="cursor-pointer flex items-center gap-2">
+                    <Link2 className="w-4 h-4" />
+                    My Crevia Link
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/payments" className="cursor-pointer flex items-center gap-2">
+                    <CreditCard className="w-4 h-4" />
+                    Payments & Billing
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/notifications" className="cursor-pointer flex items-center gap-2">
+                    <Bell className="w-4 h-4" />
+                    Notifications
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/verification" className="cursor-pointer flex items-center gap-2">
+                    <Shield className="w-4 h-4" />
+                    Verification
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/settings" className="cursor-pointer flex items-center gap-2">
+                    <Settings className="w-4 h-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/help" className="cursor-pointer flex items-center gap-2">
+                    <HelpCircle className="w-4 h-4" />
+                    Help & Support
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/feedback" className="cursor-pointer flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4" />
+                    Feedback
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer flex items-center gap-2 text-destructive">
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <>
               <Link to="/auth">

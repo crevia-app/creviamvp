@@ -16,6 +16,12 @@ import CreviaAI from "./pages/CreviaAI";
 import CreviaLink from "./pages/CreviaLink";
 import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
+import PaymentsBilling from "./pages/profile/PaymentsBilling";
+import Notifications from "./pages/profile/Notifications";
+import Verification from "./pages/profile/Verification";
+import Settings from "./pages/profile/Settings";
+import Help from "./pages/profile/Help";
+import Feedback from "./pages/profile/Feedback";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +43,12 @@ const App = () => (
           <Route path="/crevia-connect" element={<CreviaConnect />} />
           <Route path="/crevia-ai" element={<CreviaAI />} />
           <Route path="/crevia-link" element={<CreviaLink />} />
+          <Route path="/payments" element={<PaymentsBilling />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/verification" element={<Verification />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/help" element={<Help />} />
+          <Route path="/feedback" element={<Feedback />} />
           <Route path="/:username" element={<PublicProfile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
