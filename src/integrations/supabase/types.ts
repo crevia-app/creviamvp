@@ -151,6 +151,69 @@ export type Database = {
           },
         ]
       }
+      campaign_milestones: {
+        Row: {
+          application_id: string
+          campaign_id: string
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          application_id: string
+          campaign_id: string
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          application_id?: string
+          campaign_id?: string
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      campaign_payments: {
+        Row: {
+          amount: number
+          application_id: string
+          created_at: string | null
+          id: string
+          released_at: string | null
+          status: string | null
+        }
+        Insert: {
+          amount: number
+          application_id: string
+          created_at?: string | null
+          id?: string
+          released_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          amount?: number
+          application_id?: string
+          created_at?: string | null
+          id?: string
+          released_at?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       campaigns: {
         Row: {
           applications_count: number | null
@@ -268,6 +331,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      deliverable_submissions: {
+        Row: {
+          created_at: string | null
+          file_url: string
+          id: string
+          milestone_id: string
+          notes: string | null
+          reviewed_at: string | null
+          revision_notes: string | null
+          status: string | null
+          submitted_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_url: string
+          id?: string
+          milestone_id: string
+          notes?: string | null
+          reviewed_at?: string | null
+          revision_notes?: string | null
+          status?: string | null
+          submitted_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          file_url?: string
+          id?: string
+          milestone_id?: string
+          notes?: string | null
+          reviewed_at?: string | null
+          revision_notes?: string | null
+          status?: string | null
+          submitted_at?: string | null
+        }
+        Relationships: []
       }
       messages: {
         Row: {
