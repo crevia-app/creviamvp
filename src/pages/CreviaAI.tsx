@@ -270,6 +270,16 @@ const CreviaAI = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden md:ml-[260px]">
+        {/* Mobile Menu Button - Fixed at top left */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setMobileSidebarOpen(true)}
+          className="md:hidden fixed top-4 left-4 z-50 h-10 w-10 bg-black/80 backdrop-blur border border-white/10 hover:bg-white/10 text-white"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+
         {/* Hero Section - Compact */}
         <div className="bg-gradient-to-b from-muted/30 to-background py-6 px-4 border-b border-border/40">
           <div className="max-w-4xl mx-auto text-center">
@@ -288,18 +298,6 @@ const CreviaAI = () => {
 
         {/* Chat Interface */}
         <div className="flex-1 flex flex-col relative overflow-hidden">
-          {/* Mobile Menu Button */}
-          <div className="md:hidden absolute top-4 left-4 z-10">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setMobileSidebarOpen(true)}
-              className="h-10 w-10 bg-background/95 backdrop-blur border-border/40 hover:bg-muted"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-          </div>
-
           {/* Toggle button for collapsed sidebar (Desktop only) */}
           {sidebarCollapsed && (
             <div className="hidden md:block absolute top-4 left-4 z-10">
