@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import MainSidebar from "./MainSidebar";
 import MobileBottomNav from "./MobileBottomNav";
@@ -12,6 +12,7 @@ interface AppLayoutProps {
 
 const AppLayout = ({ children }: AppLayoutProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [userType, setUserType] = useState<"creator" | "brand" | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -51,9 +52,15 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     return null;
   }
 
+  const isCrevidAI = location.pathname === '/crevia-ai';
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <TopBar profile={profile} onProfileClick={() => setProfileDrawerOpen(true)} />
+      <TopBar 
+        profile={profile} 
+        onProfileClick={() => setProfileDrawerOpen(true)} 
+        hideRightElements={isCrevidAI}
+      />
       
       <div className="flex flex-1 overflow-hidden">
         <MainSidebar 
