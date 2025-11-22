@@ -109,7 +109,7 @@ const About = () => {
       </section>
 
       {/* Our Events Section */}
-      <section className="py-12 md:py-20 px-4 md:px-6 bg-[hsl(30,30%,88%)]">
+      <section className="py-12 md:py-20 px-4 md:px-6 bg-gradient-to-br from-primary/10 via-secondary/30 to-accent/20">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-8 md:mb-12">
             <div className="flex items-center justify-center gap-2 md:gap-3 mb-4">
@@ -191,84 +191,70 @@ const About = () => {
             /* Previous Events */
             <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
               {/* Freelancers Summit 2024 */}
-              <Card className="overflow-hidden bg-white border-bronze/20 shadow-xl">
-                <div className="aspect-video">
+              <Card className="overflow-hidden bg-card border-primary/20 shadow-xl hover:shadow-2xl transition-shadow">
+                <div className="aspect-video bg-black">
                   <iframe
                     className="w-full h-full"
-                    src="https://www.youtube.com/embed/YOUR_VIDEO_ID_1"
-                    title="Freelancers Summit 2024"
+                    src="https://www.youtube.com/embed/-20xdAqoBfo"
+                    title="Freelancers Summit 2024 - Event Highlights"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   />
                 </div>
                 <div className="p-6">
-                  <span className="inline-block px-4 py-1.5 bg-bronze text-white rounded-full text-sm font-poppins font-semibold mb-4">
+                  <span className="inline-block px-4 py-1.5 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-full text-sm font-poppins font-semibold mb-4 shadow-md">
                     Summit
                   </span>
-                  <h3 className="font-vollkorn text-2xl font-bold mb-4 text-bronze-dark">
+                  <h3 className="font-vollkorn text-2xl font-bold mb-3 text-foreground">
                     Freelancers Summit 2024
                   </h3>
+                  <p className="text-muted-foreground mb-4 font-poppins">
+                    Empowering digital independence
+                  </p>
                   <div className="space-y-3 mb-6">
-                    <div className="flex items-center gap-3 text-bronze-dark/80">
-                      <Calendar className="w-4 h-4 text-bronze" />
-                      <span className="font-poppins text-sm">November 2024</span>
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <Calendar className="w-4 h-4 text-primary" />
+                      <span className="font-poppins text-sm">October 2024</span>
                     </div>
-                    <div className="flex items-center gap-3 text-bronze-dark/80">
-                      <MapPin className="w-4 h-4 text-bronze" />
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <MapPin className="w-4 h-4 text-primary" />
                       <span className="font-poppins text-sm">iHub Nairobi</span>
                     </div>
-                    <div className="flex items-center gap-3 text-bronze-dark/80">
-                      <Users className="w-4 h-4 text-bronze" />
-                      <span className="font-poppins text-sm">500 attendees</span>
-                    </div>
                   </div>
-                  <Button 
-                    size="lg" 
-                    className="w-full bg-[hsl(30,30%,88%)] hover:bg-bronze/20 text-bronze-dark font-poppins font-semibold"
-                  >
-                    View Highlights
-                  </Button>
                 </div>
               </Card>
 
               {/* AI Summit 2025 */}
-              <Card className="overflow-hidden bg-white border-bronze/20 shadow-xl">
-                <div className="aspect-video">
+              <Card className="overflow-hidden bg-card border-primary/20 shadow-xl hover:shadow-2xl transition-shadow">
+                <div className="aspect-video bg-black">
                   <iframe
                     className="w-full h-full"
-                    src="https://www.youtube.com/embed/YOUR_VIDEO_ID_2"
-                    title="AI Summit 2025"
+                    src="https://www.youtube.com/embed/BKaxVxiLz0Y"
+                    title="AI Summit 2025 - Event Highlights"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   />
                 </div>
                 <div className="p-6">
-                  <span className="inline-block px-4 py-1.5 bg-bronze text-white rounded-full text-sm font-poppins font-semibold mb-4">
+                  <span className="inline-block px-4 py-1.5 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-full text-sm font-poppins font-semibold mb-4 shadow-md">
                     Summit
                   </span>
-                  <h3 className="font-vollkorn text-2xl font-bold mb-4 text-bronze-dark">
+                  <h3 className="font-vollkorn text-2xl font-bold mb-3 text-foreground">
                     AI Summit 2025
                   </h3>
+                  <p className="text-muted-foreground mb-4 font-poppins">
+                    Building AI for impact
+                  </p>
                   <div className="space-y-3 mb-6">
-                    <div className="flex items-center gap-3 text-bronze-dark/80">
-                      <Calendar className="w-4 h-4 text-bronze" />
-                      <span className="font-poppins text-sm">January 2025</span>
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <Calendar className="w-4 h-4 text-primary" />
+                      <span className="font-poppins text-sm">August 2025</span>
                     </div>
-                    <div className="flex items-center gap-3 text-bronze-dark/80">
-                      <MapPin className="w-4 h-4 text-bronze" />
-                      <span className="font-poppins text-sm">Nairobi, Kenya</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-bronze-dark/80">
-                      <Users className="w-4 h-4 text-bronze" />
-                      <span className="font-poppins text-sm">800 attendees</span>
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <MapPin className="w-4 h-4 text-primary" />
+                      <span className="font-poppins text-sm">Strathmore University</span>
                     </div>
                   </div>
-                  <Button 
-                    size="lg" 
-                    className="w-full bg-[hsl(30,30%,88%)] hover:bg-bronze/20 text-bronze-dark font-poppins font-semibold"
-                  >
-                    View Highlights
-                  </Button>
                 </div>
               </Card>
             </div>
