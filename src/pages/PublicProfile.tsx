@@ -73,16 +73,77 @@ const PublicProfile = () => {
     const theme = profile?.theme || "dark";
     switch (theme) {
       case "light":
-        return "bg-white text-black";
+        return "bg-white text-gray-900";
       case "dark":
-        return "bg-black text-white";
-      case "gold":
-        return "bg-black text-[#CF8150]";
+        return "bg-gray-900 text-white";
+      case "bronze":
+        return "bg-gradient-to-br from-[#1a1a1a] to-[#2d2520] text-white";
       case "minimal":
         return "bg-gray-50 text-gray-800";
+      case "sunset":
+        return "bg-gradient-to-br from-orange-500 to-pink-600 text-white";
+      case "ocean":
+        return "bg-gradient-to-br from-blue-600 to-teal-500 text-white";
+      case "forest":
+        return "bg-gradient-to-br from-green-700 to-emerald-900 text-white";
+      case "royal":
+        return "bg-gradient-to-br from-purple-700 to-indigo-900 text-white";
       default:
-        return "bg-black text-white";
+        return "bg-gray-900 text-white";
     }
+  };
+
+  const getFontFamily = () => {
+    const font = profile?.background?.font_family || "poppins";
+    const fontMap: Record<string, string> = {
+      poppins: "font-poppins",
+      vollkorn: "font-vollkorn",
+      inter: "font-[Inter]",
+      playfair: "font-[Playfair_Display]",
+      montserrat: "font-[Montserrat]",
+      roboto: "font-[Roboto]",
+      lora: "font-[Lora]",
+      "space-grotesk": "font-[Space_Grotesk]",
+    };
+    return fontMap[font] || "font-poppins";
+  };
+
+  const getFontSize = () => {
+    const size = profile?.background?.font_size || "medium";
+    const sizeMap: Record<string, string> = {
+      small: "text-sm",
+      medium: "text-base",
+      large: "text-lg",
+      xlarge: "text-xl",
+    };
+    return sizeMap[size] || "text-base";
+  };
+
+  const getButtonStyle = () => {
+    const style = profile?.background?.button_style || "rounded";
+    const styleMap: Record<string, string> = {
+      rounded: "rounded-full",
+      sharp: "rounded-none",
+      soft: "rounded-lg",
+      pill: "rounded-full",
+    };
+    return styleMap[style] || "rounded-full";
+  };
+
+  const getPageWidth = () => {
+    const width = profile?.background?.page_width || "medium";
+    const widthMap: Record<string, string> = {
+      narrow: "max-w-md",
+      medium: "max-w-2xl",
+      wide: "max-w-3xl",
+      full: "max-w-6xl",
+    };
+    return widthMap[width] || "max-w-2xl";
+  };
+
+  const getButtonSpacing = () => {
+    const spacing = profile?.background?.button_spacing || 12;
+    return `${spacing}px`;
   };
 
   const getButtonVariant = (style: string) => {
@@ -134,12 +195,23 @@ const PublicProfile = () => {
     );
   }
 
-  const layoutClass = profile?.layout === "centered" ? "max-w-2xl mx-auto" : 
-                     profile?.layout === "left" ? "max-w-2xl" : "max-w-4xl mx-auto";
+  const layoutClass = profile?.layout === "centered" ? "mx-auto" : 
+                     profile?.layout === "left" ? "" : 
+                     profile?.layout === "full" ? "w-full px-8" :
+                     profile?.layout === "card" ? "mx-auto bg-card/10 backdrop-blur p-8 rounded-2xl" :
+                     profile?.layout === "split" ? "grid md:grid-cols-2 gap-8 max-w-6xl mx-auto" :
+                     "mx-auto";
+
+  const hoverEffects = profile?.background?.hover_effects !== false;
+  const smoothScroll = profile?.background?.smooth_scroll !== false;
+  const fadeAnimation = profile?.background?.fade_animation !== false;
 
   return (
-    <div className={`min-h-screen ${getThemeStyles()} py-12 px-6`}>
-      <div className={layoutClass}>
+    <div 
+      className={`min-h-screen ${getThemeStyles()} ${getFontFamily()} ${getFontSize()} py-12 px-6`}
+      style={{ scrollBehavior: smoothScroll ? 'smooth' : 'auto' }}
+    >
+      <div className={`${getPageWidth()} ${layoutClass} ${fadeAnimation ? 'animate-fade-in' : ''}`}>
         {/* Profile Header */}
         <div className="text-center mb-8">
           {profile?.profile_picture && (
@@ -184,12 +256,18 @@ const PublicProfile = () => {
         )}
 
         {/* Buttons */}
-        <div className="space-y-4 mb-12">
-          {buttons.map((button) => (
+        <div className="mb-12" style={{ display: 'flex', flexDirection: 'column', gap: getButtonSpacing() }}>
+          {buttons.map((button, index) => (
             <Button
               key={button.id}
               variant={getButtonVariant(button.style) as any}
-              className="w-full h-auto py-4 text-base font-poppins hover:scale-105 transition-transform"
+              className={`w-full h-auto py-4 ${getButtonStyle()} ${
+                hoverEffects ? 'hover:scale-105 hover:shadow-lg transition-all duration-300' : ''
+              } ${fadeAnimation ? 'animate-fade-in' : ''}`}
+              style={{ 
+                animationDelay: fadeAnimation ? `${index * 100}ms` : '0ms',
+                border: '2px solid hsl(var(--bronze))',
+              }}
               onClick={() => handleButtonClick(button.id, button.url)}
             >
               <div className="text-left w-full">
