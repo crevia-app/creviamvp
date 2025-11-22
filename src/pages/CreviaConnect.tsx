@@ -113,22 +113,6 @@ const CreviaConnect = () => {
               </Button>
             )}
           </div>
-
-          {/* Feature highlights - subtle */}
-          <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto animate-fade-in">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-bronze mb-2">AI-Powered</div>
-              <p className="text-sm text-muted-foreground">Smart matching & insights</p>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-bronze mb-2">All-in-One</div>
-              <p className="text-sm text-muted-foreground">Chat, manage, & deliver</p>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-bronze mb-2">Secure</div>
-              <p className="text-sm text-muted-foreground">Escrow-protected payments</p>
-            </div>
-          </div>
         </div>
       </section>
 
