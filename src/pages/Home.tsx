@@ -5,6 +5,7 @@ import { Users, TrendingUp, Sparkles, Link2, Brain, Globe, ChevronLeft, ChevronR
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useState } from "react";
+import heroBackground from "@/assets/home-hero-bg.jpg";
 
 const Home = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
@@ -60,30 +61,48 @@ const Home = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="pt-24 md:pt-32 pb-12 md:pb-20 px-4 md:px-6">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center space-y-4 md:space-y-6 mb-8 md:mb-12">
-            <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold leading-tight px-2">
+      <section className="relative pt-24 md:pt-32 pb-12 md:pb-20 px-4 md:px-6 min-h-[90vh] flex items-center overflow-hidden">
+        {/* Background Image with Overlay */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center animate-scale-in"
+          style={{ 
+            backgroundImage: `url(${heroBackground})`,
+            animationDuration: '1.2s'
+          }}
+        />
+        
+        {/* Gradient Overlays for both light and dark mode */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/85 to-background/60 dark:from-background/90 dark:via-background/75 dark:to-background/40" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-background/60" />
+        
+        <div className="container mx-auto max-w-6xl relative z-10">
+          <div className="text-left max-w-3xl space-y-6 md:space-y-8 animate-fade-in" style={{ animationDelay: '0.3s', animationDuration: '0.8s' }}>
+            <h1 className="font-vollkorn text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight animate-fade-in" style={{ animationDelay: '0.5s', animationDuration: '0.8s' }}>
               Empowering creators to <br className="hidden sm:block" />
               <span className="text-gradient-bronze">own their digital careers</span>
             </h1>
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto font-poppins px-4">
+            <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-foreground/80 font-poppins animate-fade-in" style={{ animationDelay: '0.7s', animationDuration: '0.8s' }}>
               Tools that help you collaborate, grow, and earn — all in one simple platform.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center pt-4 md:pt-6 px-4">
+            <div className="flex flex-col sm:flex-row gap-4 pt-4 animate-fade-in" style={{ animationDelay: '0.9s', animationDuration: '0.8s' }}>
               <Link to="/user-type-selection" className="w-full sm:w-auto">
-                <Button size="lg" className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-base md:text-lg px-6 md:px-8 py-5 md:py-6 font-poppins font-semibold">
+                <Button size="lg" className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-lg px-8 py-6 font-poppins font-semibold hover-scale shadow-lg">
                   Get Started
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="w-full sm:w-auto text-base md:text-lg px-6 md:px-8 py-5 md:py-6 font-poppins font-semibold">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg px-8 py-6 font-poppins font-semibold hover-scale border-2 border-bronze/30 hover:border-bronze hover:bg-bronze/10">
                 Learn More
               </Button>
             </div>
           </div>
 
-          {/* Demo Section */}
-          <div className="mt-16 rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-bronze/10 to-background border border-bronze/20 animate-fade-in">
+        </div>
+      </section>
+
+      {/* Demo Section */}
+      <section className="py-12 md:py-20 px-4 md:px-6 bg-secondary/20">
+        <div className="container mx-auto max-w-6xl">
+          <div className="rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-bronze/10 to-background border border-bronze/20 animate-fade-in">
             <div className="aspect-video">
               <iframe 
                 className="w-full h-full"
