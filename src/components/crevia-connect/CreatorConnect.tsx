@@ -1,5 +1,4 @@
 import { useLocation } from "react-router-dom";
-import ConnectHeader from "./ConnectHeader";
 import ConnectSidebarDesktop from "./ConnectSidebarDesktop";
 import ConnectTabsMobile from "./ConnectTabsMobile";
 import OpportunitiesTab from "./creator/OpportunitiesTab";
@@ -31,8 +30,6 @@ const CreatorConnect = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <ConnectHeader />
-      
       <ConnectTabsMobile userType="creator" />
       
       <div className="flex flex-1 w-full">
