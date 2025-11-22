@@ -16,8 +16,9 @@ import {
   Plus, 
   Search, 
   Paperclip,
-  Image as ImageIcon,
-  Trash2
+  Trash2,
+  PanelLeftClose,
+  PanelLeft
 } from "lucide-react";
 
 interface ChatHistory {
@@ -47,7 +48,7 @@ const CreviaAI = () => {
   ]);
   const [input, setInput] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = () => {
@@ -139,59 +140,147 @@ const CreviaAI = () => {
       </section>
 
       {/* Main Chat Interface */}
-      <section className="flex-1 flex overflow-hidden">
+      <section className="flex-1 flex overflow-hidden relative">
         <div className="flex w-full h-[calc(100vh-320px)]">
           {/* Sidebar - Chat History */}
-          <div className={`${sidebarOpen ? 'w-64' : 'w-0'} hidden lg:block bg-muted/30 border-r border-border/50 transition-all duration-300 overflow-hidden`}>
-            <div className="p-4 space-y-4">
-              <Button 
-                onClick={handleNewChat}
-                className="w-full justify-start gap-2 bg-bronze hover:bg-bronze-dark text-background"
-                size="sm"
-              >
-                <Plus className="w-4 h-4" />
-                New Chat
-              </Button>
-
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search chats..." 
-                  className="pl-9 h-9 text-sm"
-                />
+          <div 
+            className={`bg-black text-white border-r border-white/10 transition-all duration-300 flex-shrink-0 ${
+              sidebarCollapsed ? 'w-0 md:w-[60px]' : 'w-0 md:w-[260px]'
+            } overflow-hidden`}
+          >
+            <div className="h-full flex flex-col">
+              {/* Sidebar Header */}
+              <div className="p-3 flex items-center justify-between border-b border-white/10">
+                {!sidebarCollapsed && (
+                  <h2 className="font-poppins font-semibold text-sm">Kira AI</h2>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className="h-8 w-8 text-white/60 hover:text-bronze hover:bg-white/10 flex-shrink-0"
+                >
+                  {sidebarCollapsed ? (
+                    <PanelLeft className="h-4 w-4" />
+                  ) : (
+                    <PanelLeftClose className="h-4 w-4" />
+                  )}
+                </Button>
               </div>
 
-              <Separator />
-
-              <ScrollArea className="h-[calc(100vh-450px)]">
-                <div className="space-y-1">
-                  {chatHistories.map((chat) => (
-                    <button
-                      key={chat.id}
-                      onClick={() => setActiveChat(chat.id)}
-                      className={`w-full text-left p-3 rounded-lg text-sm transition-colors group hover:bg-accent ${
-                        activeChat === chat.id ? 'bg-accent' : ''
-                      }`}
+              {!sidebarCollapsed && (
+                <>
+                  {/* New Chat Button */}
+                  <div className="p-3">
+                    <Button 
+                      onClick={handleNewChat}
+                      className="w-full justify-start gap-2 bg-bronze hover:bg-bronze/90 text-background font-poppins"
+                      size="sm"
                     >
-                      <div className="flex items-start gap-2">
-                        <MessageSquare className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{chat.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {chat.timestamp.toLocaleDateString()}
-                          </p>
-                        </div>
-                        <Trash2 className="w-3 h-3 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity" />
-                      </div>
-                    </button>
-                  ))}
+                      <Plus className="w-4 h-4" />
+                      New Chat
+                    </Button>
+                  </div>
+
+                  {/* Search Chats */}
+                  <div className="px-3 pb-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                      <Input 
+                        placeholder="Search chats..." 
+                        className="pl-9 h-9 text-sm bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-bronze"
+                      />
+                    </div>
+                  </div>
+
+                  <Separator className="bg-white/10" />
+
+                  {/* Your Chats Label */}
+                  <div className="px-3 py-2">
+                    <p className="text-xs font-poppins font-medium text-white/50 uppercase tracking-wider">
+                      Your Chats
+                    </p>
+                  </div>
+
+                  {/* Chat History */}
+                  <ScrollArea className="flex-1 px-2">
+                    <div className="space-y-1 pb-3">
+                      {chatHistories.map((chat) => (
+                        <button
+                          key={chat.id}
+                          onClick={() => setActiveChat(chat.id)}
+                          className={`w-full text-left p-2.5 rounded-lg text-sm transition-all group relative ${
+                            activeChat === chat.id 
+                              ? 'bg-white/10 text-white' 
+                              : 'text-white/70 hover:bg-white/5 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2">
+                            <MessageSquare className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-poppins font-medium truncate text-sm">
+                                {chat.title}
+                              </p>
+                              <p className="text-xs text-white/40 mt-0.5">
+                                {chat.timestamp.toLocaleDateString()}
+                              </p>
+                            </div>
+                            <button 
+                              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Handle delete
+                              }}
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-white/40 hover:text-red-400" />
+                            </button>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </>
+              )}
+
+              {/* Collapsed Sidebar Icons */}
+              {sidebarCollapsed && (
+                <div className="flex flex-col items-center gap-2 p-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleNewChat}
+                    className="w-10 h-10 text-white/60 hover:text-bronze hover:bg-white/10"
+                  >
+                    <Plus className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-10 h-10 text-white/60 hover:text-bronze hover:bg-white/10"
+                  >
+                    <Search className="h-5 w-5" />
+                  </Button>
                 </div>
-              </ScrollArea>
+              )}
             </div>
           </div>
 
           {/* Main Chat Area */}
-          <div className="flex-1 flex flex-col bg-background">
+          <div className="flex-1 flex flex-col bg-background relative">
+            {/* Toggle button for collapsed sidebar - visible when sidebar is hidden */}
+            {sidebarCollapsed && (
+              <div className="absolute top-4 left-4 z-10">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setSidebarCollapsed(false)}
+                  className="h-9 w-9 bg-background/95 backdrop-blur border-border/40 hover:bg-muted"
+                >
+                  <PanelLeft className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+            
             <div className="flex-1 overflow-hidden">
               <ScrollArea className="h-full px-4 md:px-6">
                 <div className="max-w-3xl mx-auto py-6 space-y-6">
