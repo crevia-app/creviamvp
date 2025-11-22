@@ -14,7 +14,7 @@ import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout } from "lucide-react";
+import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check } from "lucide-react";
 import { AddButtonDialog } from "@/components/crevia-link/AddButtonDialog";
 import { ButtonItem } from "@/components/crevia-link/ButtonItem";
 
@@ -27,6 +27,7 @@ const CreviaLink = () => {
   const [buttons, setButtons] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
   const [showAddButton, setShowAddButton] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -192,8 +193,37 @@ const CreviaLink = () => {
         title: "Saved!",
         description: "Your Crevia Link has been updated.",
       });
+      // Refresh the link profile to get the latest data
+      const { data: updatedLink } = await supabase
+        .from("link_profiles")
+        .select("*")
+        .eq("id", linkProfile.id)
+        .single();
+      
+      if (updatedLink) {
+        setLinkProfile(updatedLink);
+      }
     }
     setSaving(false);
+  };
+
+  const handleCopyLink = async () => {
+    const link = `${window.location.origin}/${linkProfile?.username}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      toast({
+        title: "Link copied!",
+        description: "Your Crevia Link has been copied to clipboard.",
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to copy link to clipboard.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -242,6 +272,15 @@ const CreviaLink = () => {
               className="font-poppins font-semibold"
             >
               {saving ? "Saving..." : "Save Changes"}
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={handleCopyLink}
+              className="font-poppins font-semibold"
+            >
+              {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+              {copied ? "Copied!" : "Copy Link"}
             </Button>
           </div>
         </div>
