@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -232,26 +230,21 @@ const CreviaLink = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="container mx-auto px-6 pt-32 text-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
+      <div className="flex items-center justify-center h-full">
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      
+    <div className="h-full flex flex-col">
       <LinkTabsMobile userType={profile?.user_type || "creator"} />
       
-      <div className="flex flex-1 w-full">
+      <div className="flex flex-1 w-full overflow-hidden">
         <LinkSidebarDesktop userType={profile?.user_type || "creator"} />
         
         <main className="flex-1 overflow-auto">
-          <div className="container mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-12 md:pb-20">
+          <div className="container mx-auto px-4 md:px-6 py-8">
             {/* Editor Content */}
             <div className="max-w-5xl mx-auto">
 
@@ -857,7 +850,7 @@ const CreviaLink = () => {
         onAdd={handleAddButton}
       />
 
-      <Footer />
+      
     </div>
   );
 };

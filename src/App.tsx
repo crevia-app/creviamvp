@@ -25,6 +25,7 @@ import Help from "./pages/profile/Help";
 import Feedback from "./pages/profile/Feedback";
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
+import AppLayout from "./components/navigation/AppLayout";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/pricing" element={<Pricing />} />
@@ -45,18 +47,21 @@ const App = () => (
             <Route path="/signup/brand" element={<BrandSignup />} />
             <Route path="/onboarding/creator" element={<CreatorOnboarding />} />
             <Route path="/onboarding/brand" element={<BrandOnboarding />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/crevia-connect" element={<CreviaConnect />} />
-            <Route path="/crevia-ai" element={<CreviaAI />} />
-            <Route path="/crevia-link" element={<CreviaLink />} />
-            <Route path="/payments" element={<PaymentsBilling />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/verification" element={<Verification />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/help" element={<Help />} />
-            <Route path="/feedback" element={<Feedback />} />
             <Route path="/:username" element={<PublicProfile />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            
+            {/* Protected routes with AppLayout */}
+            <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
+            <Route path="/crevia-connect" element={<AppLayout><CreviaConnect /></AppLayout>} />
+            <Route path="/crevia-ai" element={<AppLayout><CreviaAI /></AppLayout>} />
+            <Route path="/crevia-link" element={<AppLayout><CreviaLink /></AppLayout>} />
+            <Route path="/profile/payments-billing" element={<AppLayout><PaymentsBilling /></AppLayout>} />
+            <Route path="/profile/notifications" element={<AppLayout><Notifications /></AppLayout>} />
+            <Route path="/profile/verification" element={<AppLayout><Verification /></AppLayout>} />
+            <Route path="/profile/settings" element={<AppLayout><Settings /></AppLayout>} />
+            <Route path="/profile/help" element={<AppLayout><Help /></AppLayout>} />
+            <Route path="/profile/feedback" element={<AppLayout><Feedback /></AppLayout>} />
+            
+            {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
