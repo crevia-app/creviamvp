@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,6 +14,9 @@ const Auth = () => {
   const [isSignup, setIsSignup] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -55,6 +59,32 @@ const Auth = () => {
     }
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsResetting(true);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+
+    setIsResetting(false);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Password reset email sent!",
+        description: "Check your inbox for the password reset link.",
+      });
+      setShowForgotPassword(false);
+      setResetEmail("");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center p-6">
       <Card className="w-full max-w-md p-8">
@@ -86,7 +116,18 @@ const Auth = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              {!isSignup && (
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-xs text-bronze hover:text-bronze-dark bronze-underline transition-all duration-300"
+                >
+                  Forgot password?
+                </button>
+              )}
+            </div>
             <Input
               id="password"
               type="password"
@@ -142,6 +183,52 @@ const Auth = () => {
           </button>
         </p>
       </Card>
+
+      {/* Forgot Password Dialog */}
+      <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-vollkorn text-2xl">Reset your password</DialogTitle>
+            <DialogDescription>
+              Enter your email address and we'll send you a link to reset your password.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleForgotPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-email">Email</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                placeholder="you@example.com"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                required
+                className="h-12"
+              />
+            </div>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowForgotPassword(false);
+                  setResetEmail("");
+                }}
+                className="h-12"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isResetting}
+                className="h-12 bg-bronze hover:bg-bronze-dark font-semibold"
+              >
+                {isResetting ? "Sending..." : "Send Reset Link"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
