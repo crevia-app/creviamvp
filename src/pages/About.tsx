@@ -109,14 +109,14 @@ const About = () => {
       </section>
 
       {/* Our Events Section */}
-      <section className="py-12 md:py-20 px-4 md:px-6 bg-gradient-to-br from-primary/10 via-secondary/30 to-accent/20">
+      <section className="py-12 md:py-20 px-4 md:px-6 bg-gradient-to-br from-bronze/5 via-bronze-light/10 to-bronze/5">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-8 md:mb-12">
             <div className="flex items-center justify-center gap-2 md:gap-3 mb-4">
               <Calendar className="w-10 h-10 md:w-12 md:h-12 text-bronze" />
-              <h2 className="font-vollkorn text-3xl sm:text-4xl lg:text-5xl font-bold text-bronze-dark">Our Events</h2>
+              <h2 className="font-vollkorn text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground">Our Events</h2>
             </div>
-            <p className="text-base sm:text-lg text-bronze-dark/70 mb-6 md:mb-8 px-2">
+            <p className="text-base sm:text-lg text-muted-foreground mb-6 md:mb-8 px-2">
               Join us at upcoming events or see what we've accomplished
             </p>
             
@@ -126,8 +126,8 @@ const About = () => {
                 onClick={() => setShowUpcoming(true)}
                 className={`w-full sm:w-auto px-6 md:px-8 py-3 rounded-full font-poppins font-semibold transition-all text-sm md:text-base ${
                   showUpcoming 
-                    ? 'bg-bronze text-white shadow-lg' 
-                    : 'bg-transparent text-bronze-dark hover:bg-bronze/10'
+                    ? 'bg-gradient-to-r from-bronze to-bronze-light text-white shadow-lg hover:shadow-xl' 
+                    : 'bg-card text-foreground border-2 border-bronze/30 hover:border-bronze hover:bg-bronze/5'
                 }`}
               >
                 Upcoming Events
@@ -136,8 +136,8 @@ const About = () => {
                 onClick={() => setShowUpcoming(false)}
                 className={`w-full sm:w-auto px-6 md:px-8 py-3 rounded-full font-poppins font-semibold transition-all text-sm md:text-base ${
                   !showUpcoming 
-                    ? 'bg-bronze text-white shadow-lg' 
-                    : 'bg-transparent text-bronze-dark hover:bg-bronze/10'
+                    ? 'bg-gradient-to-r from-bronze to-bronze-light text-white shadow-lg hover:shadow-xl' 
+                    : 'bg-card text-foreground border-2 border-bronze/30 hover:border-bronze hover:bg-bronze/5'
                 }`}
               >
                 Previous Events
@@ -149,30 +149,30 @@ const About = () => {
           {showUpcoming ? (
             /* Upcoming Events */
             <div className="max-w-2xl mx-auto">
-              <Card className="p-8 bg-white border-bronze/20 shadow-xl">
+              <Card className="p-8 bg-card border-2 border-bronze/30 shadow-xl hover:shadow-2xl transition-all">
                 <div className="flex items-start justify-between mb-6">
-                  <span className="px-4 py-1.5 bg-bronze text-white rounded-full text-sm font-poppins font-semibold">
+                  <span className="px-4 py-1.5 bg-gradient-to-r from-bronze to-bronze-light text-white rounded-full text-sm font-poppins font-semibold shadow-md">
                     Summit
                   </span>
-                  <span className="px-4 py-1.5 bg-bronze/10 text-bronze rounded-full text-sm font-poppins font-semibold">
+                  <span className="px-4 py-1.5 bg-bronze/10 text-bronze-dark rounded-full text-sm font-poppins font-semibold border border-bronze/20">
                     Coming Soon
                   </span>
                 </div>
                 
-                <h3 className="font-vollkorn text-3xl md:text-4xl font-bold mb-6 text-bronze-dark">
+                <h3 className="font-vollkorn text-3xl md:text-4xl font-bold mb-6 text-gradient-bronze">
                   Crevia Creators Connect
                 </h3>
                 
                 <div className="space-y-4 mb-8">
-                  <div className="flex items-center gap-3 text-bronze-dark/80">
+                  <div className="flex items-center gap-3 text-foreground">
                     <Calendar className="w-5 h-5 text-bronze" />
                     <span className="font-poppins">TBA 2025</span>
                   </div>
-                  <div className="flex items-center gap-3 text-bronze-dark/80">
+                  <div className="flex items-center gap-3 text-foreground">
                     <MapPin className="w-5 h-5 text-bronze" />
                     <span className="font-poppins">Location TBA</span>
                   </div>
-                  <div className="flex items-center gap-3 text-bronze-dark/80">
+                  <div className="flex items-center gap-3 text-foreground">
                     <Users className="w-5 h-5 text-bronze" />
                     <span className="font-poppins">Registration Opening Soon</span>
                   </div>
@@ -180,7 +180,7 @@ const About = () => {
                 
                 <Button 
                   size="lg" 
-                  className="w-full bg-bronze hover:bg-bronze-dark text-white font-poppins font-semibold text-lg py-6"
+                  className="w-full bg-gradient-to-r from-bronze to-bronze-light hover:from-bronze-dark hover:to-bronze text-white font-poppins font-semibold text-lg py-6 shadow-lg"
                   disabled
                 >
                   Coming Soon
