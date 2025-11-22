@@ -55,15 +55,15 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 w-full bg-background/80 backdrop-blur-md z-50 border-b border-border/50">
+    <header className="fixed top-0 w-full bg-background/80 backdrop-blur-md z-50 border-b border-border/50 animate-fade-in">
       <nav className="container mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 md:w-8 md:h-8 bg-bronze rounded-lg"></div>
-          <span className="font-vollkorn text-xl md:text-2xl font-bold">Crevia</span>
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="w-7 h-7 md:w-8 md:h-8 bg-bronze rounded-lg transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110"></div>
+          <span className="font-vollkorn text-xl md:text-2xl font-bold transition-colors duration-300 group-hover:text-bronze">Crevia</span>
         </Link>
         
         <div className="hidden lg:flex items-center gap-6 xl:gap-8">
-          <Link to="/" className="text-sm font-medium hover:text-bronze transition-colors">
+          <Link to="/" className="text-sm font-medium hover:text-bronze transition-all duration-300 bronze-underline">
             Home
           </Link>
           
@@ -86,11 +86,11 @@ const Header = () => {
             </DropdownMenu>
           )}
           
-          <Link to="/pricing" className="text-sm font-medium hover:text-bronze transition-colors">
+          <Link to="/pricing" className="text-sm font-medium hover:text-bronze transition-all duration-300 bronze-underline">
             Pricing
           </Link>
           
-          <Link to="/about" className="text-sm font-medium hover:text-bronze transition-colors">
+          <Link to="/about" className="text-sm font-medium hover:text-bronze transition-all duration-300 bronze-underline">
             About
           </Link>
         </div>
@@ -248,12 +248,12 @@ const Header = () => {
             ) : (
               <>
                 <Link to="/auth">
-                  <Button variant="ghost" className="font-poppins font-semibold">
+                  <Button variant="ghost" className="font-poppins font-semibold transition-all duration-300 hover-scale">
                     Sign In
                   </Button>
                 </Link>
                 <Link to="/user-type-selection">
-                  <Button className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold">
+                  <Button className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold transition-all duration-300 hover-lift hover-glow">
                     Get Started
                   </Button>
                 </Link>

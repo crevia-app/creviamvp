@@ -163,12 +163,13 @@ const OpportunitiesTab = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredCampaigns.map((campaign) => (
-          <Card key={campaign.id} className="hover:shadow-lg transition-shadow cursor-pointer"
+        {filteredCampaigns.map((campaign, index) => (
+          <Card key={campaign.id} className="hover-lift hover-glow cursor-pointer group animate-fade-in-up"
+            style={{ animationDelay: `${index * 50}ms` }}
             onClick={() => setSelectedCampaign(campaign)}>
             <CardHeader>
               <div className="flex items-start justify-between">
-                <CardTitle className="text-lg">{campaign.title}</CardTitle>
+                <CardTitle className="text-lg group-hover:text-bronze transition-colors duration-300">{campaign.title}</CardTitle>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -176,14 +177,15 @@ const OpportunitiesTab = () => {
                     e.stopPropagation();
                     addToWishlist(campaign.id);
                   }}
+                  className="transition-all duration-300 hover:scale-110 hover:text-bronze"
                 >
                   <Heart className="h-4 w-4" />
                 </Button>
               </div>
               {matchScores[campaign.id] && (
-                <div className="flex items-center gap-2 mt-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  <Badge variant="secondary">
+                <div className="flex items-center gap-2 mt-2 animate-fade-in">
+                  <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                  <Badge variant="secondary" className="transition-all duration-300 group-hover:scale-105">
                     {matchScores[campaign.id]}% Match
                   </Badge>
                 </div>
@@ -195,12 +197,12 @@ const OpportunitiesTab = () => {
               </p>
               <div className="flex flex-wrap gap-2 mb-4">
                 {campaign.platforms?.slice(0, 3).map((platform: string) => (
-                  <Badge key={platform} variant="outline">{platform}</Badge>
+                  <Badge key={platform} variant="outline" className="transition-all duration-300 hover:scale-105 hover:border-bronze">{platform}</Badge>
                 ))}
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">${campaign.budget}</span>
-                <Badge>{campaign.applications_count || 0} applicants</Badge>
+                <span className="text-sm font-medium group-hover:text-bronze transition-colors duration-300">${campaign.budget}</span>
+                <Badge className="transition-all duration-300 group-hover:scale-105">{campaign.applications_count || 0} applicants</Badge>
               </div>
             </CardContent>
           </Card>
