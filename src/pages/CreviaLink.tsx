@@ -252,36 +252,6 @@ const CreviaLink = () => {
         
         <main className="flex-1 overflow-auto">
           <div className="container mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-12 md:pb-20">
-            {/* Action Buttons - Always Visible */}
-            <div className="flex flex-col sm:flex-row flex-wrap gap-3 md:gap-4 justify-center px-4 mb-10 md:mb-16">
-              <Button
-                size="lg"
-                onClick={() => window.open(`/${linkProfile?.username}`, "_blank")}
-                className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold"
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                Preview Your Page
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={handleSave}
-                disabled={saving}
-                className="font-poppins font-semibold"
-              >
-                {saving ? "Saving..." : "Save Changes"}
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={handleCopyLink}
-                className="font-poppins font-semibold"
-              >
-                {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-                {copied ? "Copied!" : "Copy Link"}
-              </Button>
-            </div>
-
             {/* Editor Content */}
             <div className="max-w-5xl mx-auto">
 
@@ -302,6 +272,35 @@ const CreviaLink = () => {
                 </p>
               </div>
 
+              {/* Action Buttons - Only in Profile Tab */}
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3 md:gap-4 justify-center px-4 mb-10 md:mb-16">
+                <Button
+                  size="lg"
+                  onClick={() => window.open(`/${linkProfile?.username}`, "_blank")}
+                  className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview Your Page
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="font-poppins font-semibold"
+                >
+                  {saving ? "Saving..." : "Save Changes"}
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={handleCopyLink}
+                  className="font-poppins font-semibold"
+                >
+                  {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                  {copied ? "Copied!" : "Copy Link"}
+                </Button>
+              </div>
             
               <Card className="p-8">
                 <h3 className="font-vollkorn text-2xl font-bold mb-6">Profile Information</h3>
