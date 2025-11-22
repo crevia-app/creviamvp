@@ -186,10 +186,10 @@ const CreviaAI = () => {
               <ScrollArea className="flex-1 px-2">
                 <div className="space-y-1 pb-3">
                   {chatHistories.map((chat) => (
-                    <button
+                    <div
                       key={chat.id}
                       onClick={() => setActiveChat(chat.id)}
-                      className={`w-full text-left p-2.5 rounded-lg text-sm transition-all group relative ${
+                      className={`w-full text-left p-2.5 rounded-lg text-sm transition-all group relative cursor-pointer ${
                         activeChat === chat.id 
                           ? 'bg-white/10 text-white' 
                           : 'text-white/70 hover:bg-white/5 hover:text-white'
@@ -209,13 +209,13 @@ const CreviaAI = () => {
                           className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded transition-opacity"
                           onClick={(e) => {
                             e.stopPropagation();
-                            // Handle delete
+                            setChatHistories(chatHistories.filter(c => c.id !== chat.id));
                           }}
                         >
                           <Trash2 className="w-3.5 h-3.5 text-white/40 hover:text-red-400" />
                         </button>
                       </div>
-                    </button>
+                    </div>
                   ))}
                 </div>
               </ScrollArea>
