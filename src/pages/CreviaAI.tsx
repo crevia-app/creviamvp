@@ -122,9 +122,9 @@ const CreviaAI = () => {
 
   return (
     <div className="h-full flex overflow-hidden">
-      {/* Sidebar - Full Height from Top */}
+      {/* Sidebar - Fixed Position */}
       <div 
-        className={`bg-black text-white border-r border-white/10 transition-all duration-300 flex-shrink-0 ${
+        className={`bg-black text-white border-r border-white/10 transition-all duration-300 flex-shrink-0 fixed left-[240px] top-16 bottom-0 z-20 ${
           sidebarCollapsed ? 'w-0 md:w-[60px]' : 'w-0 md:w-[260px]'
         } overflow-hidden`}
       >
@@ -246,7 +246,7 @@ const CreviaAI = () => {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden md:ml-[260px]">
         {/* Hero Section - Compact */}
         <div className="bg-gradient-to-b from-muted/30 to-background py-6 px-4 border-b border-border/40">
           <div className="max-w-4xl mx-auto text-center">
