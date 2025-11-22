@@ -10,9 +10,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Link2, Plus, Eye, Sparkles } from "lucide-react";
+import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout } from "lucide-react";
 import { AddButtonDialog } from "@/components/crevia-link/AddButtonDialog";
 import { ButtonItem } from "@/components/crevia-link/ButtonItem";
 
@@ -175,6 +177,7 @@ const CreviaLink = () => {
         layout: linkProfile.layout,
         show_verified_badge: linkProfile.show_verified_badge,
         contact_enabled: linkProfile.contact_enabled,
+        background: linkProfile.background,
       })
       .eq("id", linkProfile.id);
 
@@ -350,46 +353,369 @@ const CreviaLink = () => {
 
           {/* Appearance Tab */}
           <TabsContent value="appearance">
-            <Card className="p-8">
-              <h3 className="font-vollkorn text-2xl font-bold mb-6">Appearance</h3>
-              
-              <div className="space-y-6">
-                <div>
-                  <Label htmlFor="theme">Theme</Label>
-                  <Select
-                    value={linkProfile?.theme || "dark"}
-                    onValueChange={(value) => setLinkProfile({ ...linkProfile, theme: value })}
-                  >
-                    <SelectTrigger className="mt-2">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="light">Light Mode</SelectItem>
-                      <SelectItem value="dark">Dark Mode</SelectItem>
-                      <SelectItem value="gold">Premium Gold</SelectItem>
-                      <SelectItem value="minimal">Minimal</SelectItem>
-                    </SelectContent>
-                  </Select>
+            <div className="space-y-6">
+              {/* Typography Section */}
+              <Card className="p-8">
+                <div className="flex items-center gap-2 mb-6">
+                  <Type className="w-5 h-5 text-bronze" />
+                  <h3 className="font-vollkorn text-2xl font-bold">Typography</h3>
                 </div>
+                
+                <div className="space-y-6">
+                  <div>
+                    <Label htmlFor="fontFamily">Font Family</Label>
+                    <Select
+                      value={linkProfile?.background?.font_family || "poppins"}
+                      onValueChange={(value) => setLinkProfile({ 
+                        ...linkProfile, 
+                        background: { ...linkProfile?.background, font_family: value }
+                      })}
+                    >
+                      <SelectTrigger className="mt-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="poppins">Poppins (Modern Sans)</SelectItem>
+                        <SelectItem value="vollkorn">Vollkorn (Classic Serif)</SelectItem>
+                        <SelectItem value="inter">Inter (Clean Sans)</SelectItem>
+                        <SelectItem value="playfair">Playfair Display (Elegant Serif)</SelectItem>
+                        <SelectItem value="montserrat">Montserrat (Geometric Sans)</SelectItem>
+                        <SelectItem value="roboto">Roboto (Neutral Sans)</SelectItem>
+                        <SelectItem value="lora">Lora (Traditional Serif)</SelectItem>
+                        <SelectItem value="space-grotesk">Space Grotesk (Tech Sans)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Choose a font that matches your brand personality
+                    </p>
+                  </div>
 
-                <div>
-                  <Label htmlFor="layout">Layout</Label>
-                  <Select
-                    value={linkProfile?.layout || "centered"}
-                    onValueChange={(value) => setLinkProfile({ ...linkProfile, layout: value })}
-                  >
-                    <SelectTrigger className="mt-2">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="centered">Centered</SelectItem>
-                      <SelectItem value="left">Left-aligned</SelectItem>
-                      <SelectItem value="full">Full-width</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div>
+                    <Label htmlFor="fontSize">Text Size</Label>
+                    <Select
+                      value={linkProfile?.background?.font_size || "medium"}
+                      onValueChange={(value) => setLinkProfile({ 
+                        ...linkProfile, 
+                        background: { ...linkProfile?.background, font_size: value }
+                      })}
+                    >
+                      <SelectTrigger className="mt-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="small">Small</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="large">Large</SelectItem>
+                        <SelectItem value="xlarge">Extra Large</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+
+              {/* Theme & Colors Section */}
+              <Card className="p-8">
+                <div className="flex items-center gap-2 mb-6">
+                  <Palette className="w-5 h-5 text-bronze" />
+                  <h3 className="font-vollkorn text-2xl font-bold">Theme & Colors</h3>
+                </div>
+                
+                <div className="space-y-6">
+                  <div>
+                    <Label>Color Scheme</Label>
+                    <RadioGroup
+                      value={linkProfile?.theme || "dark"}
+                      onValueChange={(value) => setLinkProfile({ ...linkProfile, theme: value })}
+                      className="grid grid-cols-2 gap-4 mt-4"
+                    >
+                      <div className="relative">
+                        <RadioGroupItem value="light" id="light" className="peer sr-only" />
+                        <Label
+                          htmlFor="light"
+                          className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-white p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze [&:has([data-state=checked])]:border-bronze cursor-pointer"
+                        >
+                          <div className="w-full h-20 rounded bg-gradient-to-br from-gray-50 to-gray-100 mb-3"></div>
+                          <span className="font-semibold">Light</span>
+                        </Label>
+                      </div>
+
+                      <div className="relative">
+                        <RadioGroupItem value="dark" id="dark" className="peer sr-only" />
+                        <Label
+                          htmlFor="dark"
+                          className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-white p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze [&:has([data-state=checked])]:border-bronze cursor-pointer"
+                        >
+                          <div className="w-full h-20 rounded bg-gradient-to-br from-gray-800 to-gray-900 mb-3"></div>
+                          <span className="font-semibold">Dark</span>
+                        </Label>
+                      </div>
+
+                      <div className="relative">
+                        <RadioGroupItem value="bronze" id="bronze" className="peer sr-only" />
+                        <Label
+                          htmlFor="bronze"
+                          className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-white p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze [&:has([data-state=checked])]:border-bronze cursor-pointer"
+                        >
+                          <div className="w-full h-20 rounded bg-gradient-to-br from-bronze to-bronze-dark mb-3"></div>
+                          <span className="font-semibold">Bronze Elegance</span>
+                        </Label>
+                      </div>
+
+                      <div className="relative">
+                        <RadioGroupItem value="minimal" id="minimal" className="peer sr-only" />
+                        <Label
+                          htmlFor="minimal"
+                          className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-white p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze [&:has([data-state=checked])]:border-bronze cursor-pointer"
+                        >
+                          <div className="w-full h-20 rounded bg-white border-2 mb-3"></div>
+                          <span className="font-semibold">Minimal</span>
+                        </Label>
+                      </div>
+
+                      <div className="relative">
+                        <RadioGroupItem value="sunset" id="sunset" className="peer sr-only" />
+                        <Label
+                          htmlFor="sunset"
+                          className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-white p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze [&:has([data-state=checked])]:border-bronze cursor-pointer"
+                        >
+                          <div className="w-full h-20 rounded bg-gradient-to-br from-orange-400 to-pink-600 mb-3"></div>
+                          <span className="font-semibold">Sunset</span>
+                        </Label>
+                      </div>
+
+                      <div className="relative">
+                        <RadioGroupItem value="ocean" id="ocean" className="peer sr-only" />
+                        <Label
+                          htmlFor="ocean"
+                          className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-white p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze [&:has([data-state=checked])]:border-bronze cursor-pointer"
+                        >
+                          <div className="w-full h-20 rounded bg-gradient-to-br from-blue-500 to-teal-400 mb-3"></div>
+                          <span className="font-semibold">Ocean</span>
+                        </Label>
+                      </div>
+
+                      <div className="relative">
+                        <RadioGroupItem value="forest" id="forest" className="peer sr-only" />
+                        <Label
+                          htmlFor="forest"
+                          className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-white p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze [&:has([data-state=checked])]:border-bronze cursor-pointer"
+                        >
+                          <div className="w-full h-20 rounded bg-gradient-to-br from-green-600 to-emerald-800 mb-3"></div>
+                          <span className="font-semibold">Forest</span>
+                        </Label>
+                      </div>
+
+                      <div className="relative">
+                        <RadioGroupItem value="royal" id="royal" className="peer sr-only" />
+                        <Label
+                          htmlFor="royal"
+                          className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-white p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze [&:has([data-state=checked])]:border-bronze cursor-pointer"
+                        >
+                          <div className="w-full h-20 rounded bg-gradient-to-br from-purple-600 to-indigo-800 mb-3"></div>
+                          <span className="font-semibold">Royal Purple</span>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div>
+                    <Label>Background Style</Label>
+                    <Select
+                      value={linkProfile?.background?.style || "solid"}
+                      onValueChange={(value) => setLinkProfile({ 
+                        ...linkProfile, 
+                        background: { ...linkProfile?.background, style: value }
+                      })}
+                    >
+                      <SelectTrigger className="mt-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="solid">Solid Color</SelectItem>
+                        <SelectItem value="gradient">Gradient</SelectItem>
+                        <SelectItem value="pattern">Pattern</SelectItem>
+                        <SelectItem value="blur">Blur Effect</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Layout & Spacing Section */}
+              <Card className="p-8">
+                <div className="flex items-center gap-2 mb-6">
+                  <Layout className="w-5 h-5 text-bronze" />
+                  <h3 className="font-vollkorn text-2xl font-bold">Layout & Spacing</h3>
+                </div>
+                
+                <div className="space-y-6">
+                  <div>
+                    <Label htmlFor="layout">Page Layout</Label>
+                    <Select
+                      value={linkProfile?.layout || "centered"}
+                      onValueChange={(value) => setLinkProfile({ ...linkProfile, layout: value })}
+                    >
+                      <SelectTrigger className="mt-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="centered">Centered Classic</SelectItem>
+                        <SelectItem value="left">Left Aligned</SelectItem>
+                        <SelectItem value="full">Full Width</SelectItem>
+                        <SelectItem value="card">Card Style</SelectItem>
+                        <SelectItem value="split">Split Screen</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Button Style</Label>
+                    <RadioGroup
+                      value={linkProfile?.background?.button_style || "rounded"}
+                      onValueChange={(value) => setLinkProfile({ 
+                        ...linkProfile, 
+                        background: { ...linkProfile?.background, button_style: value }
+                      })}
+                      className="grid grid-cols-2 gap-4 mt-4"
+                    >
+                      <div className="relative">
+                        <RadioGroupItem value="rounded" id="rounded" className="peer sr-only" />
+                        <Label
+                          htmlFor="rounded"
+                          className="flex flex-col items-center justify-center rounded-lg border-2 border-muted p-4 hover:bg-accent peer-data-[state=checked]:border-bronze cursor-pointer"
+                        >
+                          <div className="w-full h-12 rounded-full bg-bronze/20 border-2 border-bronze mb-2"></div>
+                          <span className="text-sm font-medium">Rounded</span>
+                        </Label>
+                      </div>
+
+                      <div className="relative">
+                        <RadioGroupItem value="sharp" id="sharp" className="peer sr-only" />
+                        <Label
+                          htmlFor="sharp"
+                          className="flex flex-col items-center justify-center rounded-lg border-2 border-muted p-4 hover:bg-accent peer-data-[state=checked]:border-bronze cursor-pointer"
+                        >
+                          <div className="w-full h-12 bg-bronze/20 border-2 border-bronze mb-2"></div>
+                          <span className="text-sm font-medium">Sharp</span>
+                        </Label>
+                      </div>
+
+                      <div className="relative">
+                        <RadioGroupItem value="soft" id="soft" className="peer sr-only" />
+                        <Label
+                          htmlFor="soft"
+                          className="flex flex-col items-center justify-center rounded-lg border-2 border-muted p-4 hover:bg-accent peer-data-[state=checked]:border-bronze cursor-pointer"
+                        >
+                          <div className="w-full h-12 rounded-lg bg-bronze/20 border-2 border-bronze mb-2"></div>
+                          <span className="text-sm font-medium">Soft</span>
+                        </Label>
+                      </div>
+
+                      <div className="relative">
+                        <RadioGroupItem value="pill" id="pill" className="peer sr-only" />
+                        <Label
+                          htmlFor="pill"
+                          className="flex flex-col items-center justify-center rounded-lg border-2 border-muted p-4 hover:bg-accent peer-data-[state=checked]:border-bronze cursor-pointer"
+                        >
+                          <div className="w-full h-12 rounded-full bg-bronze mb-2"></div>
+                          <span className="text-sm font-medium">Pill</span>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div>
+                    <Label>Button Spacing</Label>
+                    <div className="mt-4">
+                      <Slider
+                        value={[linkProfile?.background?.button_spacing || 12]}
+                        onValueChange={(value) => setLinkProfile({ 
+                          ...linkProfile, 
+                          background: { ...linkProfile?.background, button_spacing: value[0] }
+                        })}
+                        min={4}
+                        max={32}
+                        step={4}
+                        className="w-full"
+                      />
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {linkProfile?.background?.button_spacing || 12}px between buttons
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Page Width</Label>
+                    <Select
+                      value={linkProfile?.background?.page_width || "medium"}
+                      onValueChange={(value) => setLinkProfile({ 
+                        ...linkProfile, 
+                        background: { ...linkProfile?.background, page_width: value }
+                      })}
+                    >
+                      <SelectTrigger className="mt-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="narrow">Narrow (480px)</SelectItem>
+                        <SelectItem value="medium">Medium (640px)</SelectItem>
+                        <SelectItem value="wide">Wide (800px)</SelectItem>
+                        <SelectItem value="full">Full Width</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Effects & Animations */}
+              <Card className="p-8">
+                <h3 className="font-vollkorn text-2xl font-bold mb-6">Effects & Animations</h3>
+                
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Button Hover Effects</Label>
+                      <p className="text-xs text-muted-foreground">Subtle animations on hover</p>
+                    </div>
+                    <Switch
+                      checked={linkProfile?.background?.hover_effects !== false}
+                      onCheckedChange={(checked) => setLinkProfile({ 
+                        ...linkProfile, 
+                        background: { ...linkProfile?.background, hover_effects: checked }
+                      })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Smooth Scrolling</Label>
+                      <p className="text-xs text-muted-foreground">Enhanced scroll experience</p>
+                    </div>
+                    <Switch
+                      checked={linkProfile?.background?.smooth_scroll !== false}
+                      onCheckedChange={(checked) => setLinkProfile({ 
+                        ...linkProfile, 
+                        background: { ...linkProfile?.background, smooth_scroll: checked }
+                      })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Fade-in Animation</Label>
+                      <p className="text-xs text-muted-foreground">Elements fade in on load</p>
+                    </div>
+                    <Switch
+                      checked={linkProfile?.background?.fade_animation !== false}
+                      onCheckedChange={(checked) => setLinkProfile({ 
+                        ...linkProfile, 
+                        background: { ...linkProfile?.background, fade_animation: checked }
+                      })}
+                    />
+                  </div>
+                </div>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Settings Tab */}
