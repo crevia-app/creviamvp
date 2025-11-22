@@ -98,9 +98,9 @@ const About = () => {
         <div className="container mx-auto max-w-4xl text-center">
           <h2 className="font-vollkorn text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 md:mb-6 px-2">About Us</h2>
           <p className="text-base sm:text-lg text-muted-foreground mb-6 md:mb-8 max-w-2xl mx-auto px-2">
-            Building Africa's largest community of creators, entrepreneurs, and innovators. 
+            Building the world's largest community of creators, entrepreneurs, and innovators. 
             Together, we're bridging the gap between creators and brands, creating opportunities 
-            that drive impact and growth across the continent.
+            that drive impact and growth globally.
           </p>
           <Button size="lg" className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold">
             Join Our Community
@@ -276,7 +276,7 @@ const About = () => {
               </div>
               <h3 className="font-vollkorn text-2xl font-bold mb-3">Our Mission</h3>
               <p className="text-muted-foreground">
-                To build the largest community of African creators, innovators, and entrepreneurs 
+                To build the largest community of creators, innovators, and entrepreneurs 
                 by connecting them with global opportunities and fostering genuine collaboration.
               </p>
             </Card>
@@ -313,8 +313,8 @@ const About = () => {
             
             <div className="space-y-6">
               <p className="text-lg text-foreground leading-relaxed">
-                "A future we envision where millions of African creators are building sustainable 
-                careers, collaborating with global brands, and shaping the narrative of our continent 
+                "A future we envision where millions of creators are building sustainable 
+                careers, collaborating with global brands, and shaping their narratives 
                 on their own terms."
               </p>
               <p className="text-lg text-foreground leading-relaxed">
@@ -323,7 +323,7 @@ const About = () => {
                 every connection gets us closer to this vision."
               </p>
               <p className="text-muted-foreground italic">
-                Together, let's empower Africa's creative economy and unlock the potential of every creator.
+                Together, let's empower the global creative economy and unlock the potential of every creator.
               </p>
             </div>
           </div>
