@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,12 +14,18 @@ const CreatorSignup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
       toast({ title: "Error", description: "Passwords do not match", variant: "destructive" });
+      return;
+    }
+
+    if (!agreedToTerms) {
+      toast({ title: "Error", description: "Please agree to the Terms and Conditions", variant: "destructive" });
       return;
     }
 
@@ -93,6 +100,25 @@ const CreatorSignup = () => {
               required
               className="h-12"
             />
+          </div>
+
+          <div className="flex items-start gap-3 pt-2">
+            <Checkbox 
+              id="terms" 
+              checked={agreedToTerms}
+              onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+              className="mt-1"
+            />
+            <Label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
+              I agree to the{" "}
+              <Link to="/terms" className="text-bronze hover:text-bronze-dark font-semibold bronze-underline">
+                Terms and Conditions
+              </Link>
+              {" "}and{" "}
+              <Link to="/privacy" className="text-bronze hover:text-bronze-dark font-semibold bronze-underline">
+                Privacy Policy
+              </Link>
+            </Label>
           </div>
 
           <Button type="submit" className="w-full h-12 bg-bronze hover:bg-bronze-dark font-semibold">
