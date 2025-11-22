@@ -160,7 +160,7 @@ const Header = () => {
                   <div className="flex flex-col gap-3 pt-4 border-t border-border">
                     <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
                       <Button variant="outline" className="w-full font-poppins font-semibold">
-                        Sign In
+                        Log In
                       </Button>
                     </Link>
                     <Link to="/user-type-selection" onClick={() => setMobileMenuOpen(false)}>
@@ -249,7 +249,7 @@ const Header = () => {
               <>
                 <Link to="/auth">
                   <Button variant="ghost" className="font-poppins font-semibold transition-all duration-300 hover-scale">
-                    Sign In
+                    Log In
                   </Button>
                 </Link>
                 <Link to="/user-type-selection">
