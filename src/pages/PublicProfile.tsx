@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Instagram, Linkedin, Youtube, Mail, Globe, CheckCircle2 } from "lucide-react";
+import { Instagram, Linkedin, Youtube, Mail, Globe, CheckCircle2, Sparkles } from "lucide-react";
 
 const PublicProfile = () => {
   const { username } = useParams();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [buttons, setButtons] = useState<any[]>([]);
   const [socialIcons, setSocialIcons] = useState<any[]>([]);
@@ -289,6 +290,13 @@ const PublicProfile = () => {
         {/* Footer */}
         {profile?.show_crevia_branding && (
           <div className="text-center mt-16 pt-8 border-t border-[#CF8150]/20">
+            <Button
+              onClick={() => navigate('/')}
+              className="bg-gradient-to-r from-[#CF8150] to-[#D9955F] hover:from-[#B8704A] hover:to-[#CF8150] text-white font-poppins font-semibold px-8 py-6 rounded-full mb-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            >
+              <Sparkles className="w-5 h-5 mr-2" />
+              Create your link-in-bio
+            </Button>
             <p className="text-sm font-poppins text-muted-foreground">
               Made with ♥ on <span className="text-[#CF8150] font-semibold">Crevia</span>
             </p>
