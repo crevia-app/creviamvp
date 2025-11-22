@@ -208,21 +208,21 @@ const CreviaLink = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="container mx-auto px-6 pt-32 pb-20">
+      <main className="container mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-12 md:pb-20">
         {/* Hero Section */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 mb-4 text-bronze">
-            <Link2 className="w-6 h-6" />
-            <span className="text-sm font-poppins font-semibold">CREVIA LINK</span>
+        <div className="text-center mb-10 md:mb-16">
+          <div className="inline-flex items-center gap-2 mb-3 md:mb-4 text-bronze">
+            <Link2 className="w-5 h-5 md:w-6 md:h-6" />
+            <span className="text-xs md:text-sm font-poppins font-semibold">CREVIA LINK</span>
           </div>
-          <h1 className="font-vollkorn text-5xl md:text-6xl font-bold mb-6">
+          <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 px-2">
             Your premium link-in-bio
           </h1>
-          <p className="text-lg text-muted-foreground font-poppins max-w-2xl mx-auto mb-8">
+          <p className="text-base md:text-lg text-muted-foreground font-poppins max-w-2xl mx-auto mb-6 md:mb-8 px-4">
             Beautiful, customizable, and powerful. Share everything you create in one elegant page.
           </p>
           
-          <div className="flex flex-wrap gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 md:gap-4 justify-center px-4">
             <Button
               size="lg"
               onClick={() => window.open(`/${linkProfile?.username}`, "_blank")}
@@ -245,7 +245,7 @@ const CreviaLink = () => {
 
         {/* Editor */}
         <Tabs defaultValue="profile" className="max-w-5xl mx-auto">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6 md:mb-8">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="buttons">Buttons</TabsTrigger>
             <TabsTrigger value="appearance">Appearance</TabsTrigger>

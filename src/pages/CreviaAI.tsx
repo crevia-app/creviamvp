@@ -65,17 +65,17 @@ const CreviaAI = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6">
+      <section className="pt-24 md:pt-32 pb-12 md:pb-20 px-4 md:px-6">
         <div className="container mx-auto max-w-5xl text-center">
-          <div className="mb-8 flex justify-center">
-            <img src={kiraMascot} alt="Kira mascot" className="w-64 h-64 object-contain" />
+          <div className="mb-6 md:mb-8 flex justify-center">
+            <img src={kiraMascot} alt="Kira mascot" className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 object-contain" />
           </div>
           
-          <h1 className="font-vollkorn text-5xl md:text-6xl font-bold mb-6">
+          <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 px-2">
             Meet Kira — your creator co-pilot.
           </h1>
           
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 md:mb-8 max-w-2xl mx-auto px-2">
             Strategy, ideas, briefs, pitches — Kira helps you grow smarter.
           </p>
           
@@ -90,12 +90,12 @@ const CreviaAI = () => {
       </section>
 
       {/* Main Section */}
-      <section id="chat-section" className="py-20 px-6 bg-muted/30">
+      <section id="chat-section" className="py-12 md:py-20 px-4 md:px-6 bg-muted/30">
         <div className="container mx-auto max-w-7xl">
-          <div className="grid md:grid-cols-2 gap-12">
+          <div className="grid lg:grid-cols-2 gap-8 md:gap-12">
             {/* Left: Chat Window */}
             <div>
-              <Card className="h-[600px] flex flex-col border-border/50 shadow-lg">
+              <Card className="h-[500px] md:h-[600px] flex flex-col border-border/50 shadow-lg">
                 <div className="p-6 border-b border-border/50 bg-card">
                   <h3 className="font-vollkorn text-2xl font-bold">Chat with Kira</h3>
                 </div>

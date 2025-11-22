@@ -17,21 +17,21 @@ const About = () => {
       <Header />
       
       {/* Hero Gallery Section */}
-      <section className="relative pt-32 pb-20 overflow-hidden bg-gradient-to-br from-background via-secondary/20 to-background">
-        <div className="container mx-auto max-w-6xl text-center mb-12 px-6 relative z-10">
-          <h1 className="font-vollkorn text-5xl md:text-7xl font-bold mb-6">
+      <section className="relative pt-24 md:pt-32 pb-12 md:pb-20 overflow-hidden bg-gradient-to-br from-background via-secondary/20 to-background">
+        <div className="container mx-auto max-w-6xl text-center mb-8 md:mb-12 px-4 md:px-6 relative z-10">
+          <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-4 md:mb-6">
             About <span className="text-gradient-bronze">In Action</span>
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto px-2">
             We are on a mission to empower creators and brands to build meaningful collaborations
           </p>
         </div>
         
         {/* Scrolling Gallery */}
         <div className="relative w-full overflow-hidden">
-          <div className="flex gap-6 animate-scroll-left">
+          <div className="flex gap-4 md:gap-6 animate-scroll-left">
             {/* First set of images */}
-            <div className="flex-shrink-0 w-80 h-64 transform rotate-[-3deg] hover:rotate-0 transition-transform duration-500">
+            <div className="flex-shrink-0 w-64 h-48 sm:w-72 sm:h-56 md:w-80 md:h-64 transform rotate-[-3deg] hover:rotate-0 transition-transform duration-500">
               <img 
                 src={gallery1} 
                 alt="Crevia community event" 
@@ -94,10 +94,10 @@ const About = () => {
       </section>
 
       {/* About Us Section */}
-      <section className="py-20 px-6">
+      <section className="py-12 md:py-20 px-4 md:px-6">
         <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="font-vollkorn text-4xl md:text-5xl font-bold mb-6">About Us</h2>
-          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <h2 className="font-vollkorn text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 md:mb-6 px-2">About Us</h2>
+          <p className="text-base sm:text-lg text-muted-foreground mb-6 md:mb-8 max-w-2xl mx-auto px-2">
             Building Africa's largest community of creators, entrepreneurs, and innovators. 
             Together, we're bridging the gap between creators and brands, creating opportunities 
             that drive impact and growth across the continent.
@@ -109,22 +109,22 @@ const About = () => {
       </section>
 
       {/* Our Events Section */}
-      <section className="py-20 px-6 bg-[hsl(30,30%,88%)]">
+      <section className="py-12 md:py-20 px-4 md:px-6 bg-[hsl(30,30%,88%)]">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Calendar className="w-12 h-12 text-bronze" />
-              <h2 className="font-vollkorn text-4xl md:text-5xl font-bold text-bronze-dark">Our Events</h2>
+          <div className="text-center mb-8 md:mb-12">
+            <div className="flex items-center justify-center gap-2 md:gap-3 mb-4">
+              <Calendar className="w-10 h-10 md:w-12 md:h-12 text-bronze" />
+              <h2 className="font-vollkorn text-3xl sm:text-4xl lg:text-5xl font-bold text-bronze-dark">Our Events</h2>
             </div>
-            <p className="text-lg text-bronze-dark/70 mb-8">
+            <p className="text-base sm:text-lg text-bronze-dark/70 mb-6 md:mb-8 px-2">
               Join us at upcoming events or see what we've accomplished
             </p>
             
             {/* Toggle Buttons */}
-            <div className="flex items-center justify-center gap-4 mb-12">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 mb-8 md:mb-12 px-4">
               <button
                 onClick={() => setShowUpcoming(true)}
-                className={`px-8 py-3 rounded-full font-poppins font-semibold transition-all ${
+                className={`w-full sm:w-auto px-6 md:px-8 py-3 rounded-full font-poppins font-semibold transition-all text-sm md:text-base ${
                   showUpcoming 
                     ? 'bg-bronze text-white shadow-lg' 
                     : 'bg-transparent text-bronze-dark hover:bg-bronze/10'
@@ -134,7 +134,7 @@ const About = () => {
               </button>
               <button
                 onClick={() => setShowUpcoming(false)}
-                className={`px-8 py-3 rounded-full font-poppins font-semibold transition-all ${
+                className={`w-full sm:w-auto px-6 md:px-8 py-3 rounded-full font-poppins font-semibold transition-all text-sm md:text-base ${
                   !showUpcoming 
                     ? 'bg-bronze text-white shadow-lg' 
                     : 'bg-transparent text-bronze-dark hover:bg-bronze/10'
@@ -189,7 +189,7 @@ const About = () => {
             </div>
           ) : (
             /* Previous Events */
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
               {/* Freelancers Summit 2024 */}
               <Card className="overflow-hidden bg-white border-bronze/20 shadow-xl">
                 <div className="aspect-video">

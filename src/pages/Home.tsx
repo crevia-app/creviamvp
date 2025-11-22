@@ -11,23 +11,23 @@ const Home = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6">
+      <section className="pt-24 md:pt-32 pb-12 md:pb-20 px-4 md:px-6">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center space-y-6 mb-12">
-            <h1 className="font-vollkorn text-5xl md:text-7xl font-bold leading-tight">
-              Empowering creators to <br />
+          <div className="text-center space-y-4 md:space-y-6 mb-8 md:mb-12">
+            <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold leading-tight px-2">
+              Empowering creators to <br className="hidden sm:block" />
               <span className="text-gradient-bronze">own their digital careers</span>
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto font-poppins">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto font-poppins px-4">
               Tools that help you collaborate, grow, and earn — all in one simple platform.
             </p>
-            <div className="flex gap-4 justify-center pt-6">
-              <Link to="/user-type-selection">
-                <Button size="lg" className="bg-bronze hover:bg-bronze-dark text-lg px-8 py-6 font-poppins font-semibold">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center pt-4 md:pt-6 px-4">
+              <Link to="/user-type-selection" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-base md:text-lg px-6 md:px-8 py-5 md:py-6 font-poppins font-semibold">
                   Get Started
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-6 font-poppins font-semibold">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto text-base md:text-lg px-6 md:px-8 py-5 md:py-6 font-poppins font-semibold">
                 Learn More
               </Button>
             </div>
@@ -49,13 +49,13 @@ const Home = () => {
       </section>
 
       {/* What Crevia Solves */}
-      <section className="py-20 px-6 bg-secondary/30">
+      <section className="py-12 md:py-20 px-4 md:px-6 bg-secondary/30">
         <div className="container mx-auto max-w-6xl">
-          <h2 className="font-vollkorn text-4xl md:text-5xl font-bold text-center mb-16">
+          <h2 className="font-vollkorn text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-8 md:mb-16 px-2">
             What <span className="text-gradient-bronze">Crevia</span> Solves
           </h2>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
             <Card className="p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-bronze/20">
               <div className="w-14 h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-6">
                 <Users className="w-7 h-7 text-bronze" />
@@ -90,13 +90,13 @@ const Home = () => {
       </section>
 
       {/* Products Preview */}
-      <section className="py-20 px-6">
+      <section className="py-12 md:py-20 px-4 md:px-6">
         <div className="container mx-auto max-w-6xl">
-          <h2 className="font-vollkorn text-4xl md:text-5xl font-bold text-center mb-16">
+          <h2 className="font-vollkorn text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-8 md:mb-16 px-2">
             Powerful <span className="text-gradient-bronze">Products</span>
           </h2>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
             <Card className="p-8 bg-gradient-to-br from-bronze/5 to-background hover:shadow-xl transition-all duration-300 border-bronze/20">
               <Link2 className="w-12 h-12 text-bronze mb-4" />
               <h3 className="font-vollkorn text-2xl font-bold mb-3">Crevia Connect</h3>
@@ -134,16 +134,16 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6 bg-gradient-to-br from-bronze/10 via-background to-bronze/5">
+      <section className="py-12 md:py-20 px-4 md:px-6 bg-gradient-to-br from-bronze/10 via-background to-bronze/5">
         <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="font-vollkorn text-4xl md:text-5xl font-bold mb-6">
+          <h2 className="font-vollkorn text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 md:mb-6 px-2">
             Ready to own your story?
           </h2>
-          <p className="text-xl text-muted-foreground mb-8">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 md:mb-8 px-4">
             Join thousands of creators building their digital careers on Crevia.
           </p>
           <Link to="/user-type-selection">
-            <Button size="lg" className="bg-bronze hover:bg-bronze-dark text-lg px-12 py-6 font-poppins font-semibold">
+            <Button size="lg" className="bg-bronze hover:bg-bronze-dark text-base md:text-lg px-8 md:px-12 py-5 md:py-6 font-poppins font-semibold">
               Start Your Journey
             </Button>
           </Link>

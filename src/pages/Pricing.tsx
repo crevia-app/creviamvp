@@ -156,12 +156,12 @@ const Pricing = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6">
+      <section className="pt-24 md:pt-32 pb-12 md:pb-20 px-4 md:px-6">
         <div className="container mx-auto max-w-6xl text-center">
-          <h1 className="font-vollkorn text-5xl md:text-7xl font-bold mb-6">
+          <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-4 md:mb-6 px-2">
             Simple, <span className="text-gradient-bronze">Transparent</span> Pricing
           </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-6 md:mb-8 px-2">
             {userType === "creator" 
               ? "Choose the plan that fits your creator journey"
               : userType === "brand"
@@ -170,12 +170,12 @@ const Pricing = () => {
           </p>
           
           {!userType && (
-            <div className="flex gap-4 justify-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center mb-8 md:mb-12 px-4">
               <Button 
                 variant="outline" 
                 size="lg"
                 onClick={() => setUserType("creator")}
-                className="font-poppins font-semibold"
+                className="w-full sm:w-auto font-poppins font-semibold"
               >
                 I'm a Creator
               </Button>
@@ -183,7 +183,7 @@ const Pricing = () => {
                 variant="outline" 
                 size="lg"
                 onClick={() => setUserType("brand")}
-                className="font-poppins font-semibold"
+                className="w-full sm:w-auto font-poppins font-semibold"
               >
                 I'm a Brand
               </Button>
@@ -193,9 +193,9 @@ const Pricing = () => {
       </section>
 
       {/* Pricing Cards */}
-      <section className="pb-20 px-6">
+      <section className="pb-12 md:pb-20 px-4 md:px-6">
         <div className="container mx-auto max-w-7xl">
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
             {plans.map((plan, index) => (
               <Card 
                 key={index}
