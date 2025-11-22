@@ -270,12 +270,12 @@ const CreviaAI = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden md:ml-[260px]">
-        {/* Mobile Menu Button - Fixed at top left */}
+        {/* Mobile Menu Button - Positioned below TopBar */}
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setMobileSidebarOpen(true)}
-          className="md:hidden fixed top-4 left-4 z-50 h-10 w-10 bg-black/80 backdrop-blur border border-white/10 hover:bg-white/10 text-white"
+          className="md:hidden fixed top-20 left-4 z-50 h-10 w-10 bg-black/80 backdrop-blur border border-white/10 hover:bg-white/10 text-white"
         >
           <Menu className="h-5 w-5" />
         </Button>
