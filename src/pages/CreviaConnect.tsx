@@ -132,50 +132,6 @@ const CreviaConnect = () => {
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section className="py-24 px-6 bg-background">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="font-serif text-4xl md:text-5xl font-bold text-center mb-4">
-            How Crevia Connect Works
-          </h2>
-          <p className="text-muted-foreground text-center mb-16 text-lg">
-            A simple, elegant 4-step system for creators and brands
-          </p>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              {
-                step: "01",
-                title: "Discover",
-                description: "Find opportunities (creators) or creators (brands) instantly with smart filters."
-              },
-              {
-                step: "02",
-                title: "Connect",
-                description: "Chat, negotiate, and collaborate — all on Crevia."
-              },
-              {
-                step: "03",
-                title: "Create",
-                description: "Track briefs, deliverables, revisions, timelines in one shared workspace."
-              },
-              {
-                step: "04",
-                title: "Complete & Get Paid",
-                description: "Payments protected with escrow. Reviews build your reputation."
-              }
-            ].map((item) => (
-              <div key={item.step} className="text-center group">
-                <div className="text-bronze/40 text-5xl font-bold mb-4 group-hover:text-bronze transition-colors">
-                  {item.step}
-                </div>
-                <h3 className="font-serif text-2xl font-bold mb-3">{item.title}</h3>
-                <p className="text-muted-foreground leading-relaxed">{item.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Personalized Dashboard (only for authenticated users) */}
       {isAuthenticated && (
