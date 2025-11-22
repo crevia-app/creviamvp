@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, Users, Sparkles, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -9,12 +9,32 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 const MobileBottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [profile, setProfile] = useState<any>(null);
+  const [userType, setUserType] = useState<"creator" | "brand" | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
+        setProfile(profileData);
+        setUserType(profileData?.user_type || null);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   const isActive = (path: string) => {
     if (path === "/dashboard") {
@@ -68,7 +88,32 @@ const MobileBottomNav = () => {
             <SheetHeader>
               <SheetTitle className="text-white font-vollkorn">More Options</SheetTitle>
             </SheetHeader>
-            <div className="grid gap-2 py-4">
+            
+            {/* Profile Info */}
+            {profile && (
+              <>
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 my-4">
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage src={profile?.avatar_url} />
+                    <AvatarFallback className="bg-bronze text-white">
+                      {profile?.display_name?.charAt(0) || profile?.email?.charAt(0) || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-poppins text-sm font-semibold text-white">
+                      {profile?.display_name || "User"}
+                    </p>
+                    <p className="text-xs text-white/50 truncate">{profile?.email}</p>
+                    {userType && (
+                      <p className="text-xs text-bronze capitalize mt-1">{userType} Account</p>
+                    )}
+                  </div>
+                </div>
+                <Separator className="bg-white/10 mb-4" />
+              </>
+            )}
+            
+            <div className="grid gap-2 pb-4">
               <Link to="/crevia-link">
                 <Button variant="ghost" className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5">
                   Crevia Link

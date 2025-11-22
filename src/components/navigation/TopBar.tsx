@@ -21,13 +21,13 @@ const TopBar = ({ profile, onProfileClick, hideRightElements = false }: TopBarPr
         {/* Right Side: Notifications + Avatar */}
         {!hideRightElements && (
           <div className="flex items-center gap-3">
-            <Link to="/profile/notifications">
+            <Link to="/profile/notifications" className="hidden md:block">
               <Button variant="ghost" size="icon" className="text-white/60 hover:text-bronze hover:bg-white/5">
                 <Bell className="h-5 w-5" />
               </Button>
             </Link>
             
-            <button onClick={onProfileClick} className="hidden md:block">
+            <button onClick={onProfileClick}>
               <Avatar className="h-9 w-9 cursor-pointer ring-2 ring-white/10 hover:ring-bronze/50 transition-all">
                 <AvatarImage src={profile?.avatar_url} />
                 <AvatarFallback className="bg-bronze text-white">
