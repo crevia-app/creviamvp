@@ -32,7 +32,12 @@ const Footer = () => {
           <div>
             <h4 className="font-poppins font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              <li><Link to="/products" className="text-sm text-muted-foreground hover:text-bronze transition-colors">Products</Link></li>
+              <li><Link to="/" className="text-sm text-muted-foreground hover:text-bronze transition-colors">Home</Link></li>
+              <li><Link to="/about" className="text-sm text-muted-foreground hover:text-bronze transition-colors">About</Link></li>
+              <li><Link to="/pricing" className="text-sm text-muted-foreground hover:text-bronze transition-colors">Pricing</Link></li>
+              <li><Link to="/crevia-connect" className="text-sm text-muted-foreground hover:text-bronze transition-colors">Crevia Connect</Link></li>
+              <li><Link to="/crevia-link" className="text-sm text-muted-foreground hover:text-bronze transition-colors">Crevia Link</Link></li>
+              <li><Link to="/crevia-ai" className="text-sm text-muted-foreground hover:text-bronze transition-colors">Crevia AI</Link></li>
             </ul>
           </div>
 
