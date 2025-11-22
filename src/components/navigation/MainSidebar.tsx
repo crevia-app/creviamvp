@@ -129,8 +129,15 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
                 Help & Support
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-white/80 hover:text-bronze focus:text-bronze">
-              System Status
+            <DropdownMenuItem asChild>
+              <Link to="/privacy-policy" className="text-white/80 hover:text-bronze focus:text-bronze">
+                Privacy Policy
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/terms-of-service" className="text-white/80 hover:text-bronze focus:text-bronze">
+                Terms of Service
+              </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
