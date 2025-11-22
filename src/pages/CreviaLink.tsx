@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,9 +16,12 @@ import { useToast } from "@/hooks/use-toast";
 import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check } from "lucide-react";
 import { AddButtonDialog } from "@/components/crevia-link/AddButtonDialog";
 import { ButtonItem } from "@/components/crevia-link/ButtonItem";
+import LinkSidebarDesktop from "@/components/crevia-link/LinkSidebarDesktop";
+import LinkTabsMobile from "@/components/crevia-link/LinkTabsMobile";
 
 const CreviaLink = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
@@ -28,6 +30,8 @@ const CreviaLink = () => {
   const [saving, setSaving] = useState(false);
   const [showAddButton, setShowAddButton] = useState(false);
   const [copied, setCopied] = useState(false);
+  
+  const currentTab = new URLSearchParams(location.search).get("tab") || "profile";
 
   useEffect(() => {
     checkAuth();
@@ -238,64 +242,64 @@ const CreviaLink = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen flex flex-col">
       <Header />
       
-      <main className="container mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-12 md:pb-20">
-        {/* Hero Section */}
-        <div className="text-center mb-10 md:mb-16">
-          <div className="inline-flex items-center gap-2 mb-3 md:mb-4 text-bronze">
-            <Link2 className="w-5 h-5 md:w-6 md:h-6" />
-            <span className="text-xs md:text-sm font-poppins font-semibold">CREVIA LINK</span>
-          </div>
-          <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 px-2">
-            Your premium link-in-bio
-          </h1>
-          <p className="text-base md:text-lg text-muted-foreground font-poppins max-w-2xl mx-auto mb-6 md:mb-8 px-4">
-            Beautiful, customizable, and powerful. Share everything you create in one elegant page.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row flex-wrap gap-3 md:gap-4 justify-center px-4">
-            <Button
-              size="lg"
-              onClick={() => window.open(`/${linkProfile?.username}`, "_blank")}
-              className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              Preview Your Page
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={handleSave}
-              disabled={saving}
-              className="font-poppins font-semibold"
-            >
-              {saving ? "Saving..." : "Save Changes"}
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={handleCopyLink}
-              className="font-poppins font-semibold"
-            >
-              {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-              {copied ? "Copied!" : "Copy Link"}
-            </Button>
-          </div>
-        </div>
+      <LinkTabsMobile userType={profile?.user_type || "creator"} />
+      
+      <div className="flex flex-1 w-full">
+        <LinkSidebarDesktop userType={profile?.user_type || "creator"} />
+        
+        <main className="flex-1 overflow-auto">
+          <div className="container mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-12 md:pb-20">
+            {/* Hero Section */}
+            <div className="text-center mb-10 md:mb-16">
+              <div className="inline-flex items-center gap-2 mb-3 md:mb-4 text-bronze">
+                <Link2 className="w-5 h-5 md:w-6 md:h-6" />
+                <span className="text-xs md:text-sm font-poppins font-semibold">CREVIA LINK</span>
+              </div>
+              <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 px-2">
+                Your premium link-in-bio
+              </h1>
+              <p className="text-base md:text-lg text-muted-foreground font-poppins max-w-2xl mx-auto mb-6 md:mb-8 px-4">
+                Beautiful, customizable, and powerful. Share everything you create in one elegant page.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3 md:gap-4 justify-center px-4">
+                <Button
+                  size="lg"
+                  onClick={() => window.open(`/${linkProfile?.username}`, "_blank")}
+                  className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview Your Page
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="font-poppins font-semibold"
+                >
+                  {saving ? "Saving..." : "Save Changes"}
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={handleCopyLink}
+                  className="font-poppins font-semibold"
+                >
+                  {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                  {copied ? "Copied!" : "Copy Link"}
+                </Button>
+              </div>
+            </div>
 
-        {/* Editor */}
-        <Tabs defaultValue="profile" className="max-w-5xl mx-auto">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6 md:mb-8">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="buttons">Buttons</TabsTrigger>
-            <TabsTrigger value="appearance">Appearance</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
+            {/* Editor Content */}
+            <div className="max-w-5xl mx-auto">
 
           {/* Profile Tab */}
-          <TabsContent value="profile">
+          {currentTab === "profile" && (
             <Card className="p-8">
               <h3 className="font-vollkorn text-2xl font-bold mb-6">Profile Information</h3>
               
@@ -353,10 +357,10 @@ const CreviaLink = () => {
                 )}
               </div>
             </Card>
-          </TabsContent>
+          )}
 
           {/* Buttons Tab */}
-          <TabsContent value="buttons">
+          {currentTab === "buttons" && (
             <Card className="p-8">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="font-vollkorn text-2xl font-bold">Links & Buttons</h3>
@@ -388,10 +392,10 @@ const CreviaLink = () => {
                 </div>
               )}
             </Card>
-          </TabsContent>
+          )}
 
           {/* Appearance Tab */}
-          <TabsContent value="appearance">
+          {currentTab === "appearance" && (
             <div className="space-y-6">
               {/* Typography Section */}
               <Card className="p-8">
@@ -755,10 +759,10 @@ const CreviaLink = () => {
                 </div>
               </Card>
             </div>
-          </TabsContent>
+          )}
 
           {/* Settings Tab */}
-          <TabsContent value="settings">
+          {currentTab === "settings" && (
             <Card className="p-8">
               <h3 className="font-vollkorn text-2xl font-bold mb-6">Settings</h3>
               
@@ -791,33 +795,82 @@ const CreviaLink = () => {
                 </div>
               </div>
             </Card>
-          </TabsContent>
-        </Tabs>
+          )}
 
-        {/* Features Section */}
-        <div className="mt-20 max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <Sparkles className="w-8 h-8 mx-auto mb-4 text-bronze" />
-            <h2 className="font-vollkorn text-3xl font-bold mb-4">Premium Features</h2>
-            <p className="text-muted-foreground">Everything you need in one beautiful link</p>
-          </div>
+          {/* Analytics Tab */}
+          {currentTab === "analytics" && (
+            <Card className="p-8">
+              <h3 className="font-vollkorn text-2xl font-bold mb-6">Analytics</h3>
+              
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-6 bg-muted rounded-lg">
+                    <p className="text-3xl font-bold text-bronze">{linkProfile?.total_visits || 0}</p>
+                    <p className="text-sm text-muted-foreground mt-2">Total Page Views</p>
+                  </div>
+                  <div className="p-6 bg-muted rounded-lg">
+                    <p className="text-3xl font-bold text-bronze">
+                      {buttons.reduce((sum, btn) => sum + (btn.clicks || 0), 0)}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">Total Link Clicks</p>
+                  </div>
+                  <div className="p-6 bg-muted rounded-lg">
+                    <p className="text-3xl font-bold text-bronze">{buttons.length}</p>
+                    <p className="text-sm text-muted-foreground mt-2">Active Links</p>
+                  </div>
+                </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="p-6 bg-card border rounded-lg">
-              <h3 className="font-semibold mb-2">Unlimited Links</h3>
-              <p className="text-sm text-muted-foreground">Add as many buttons and links as you want</p>
-            </div>
-            <div className="p-6 bg-card border rounded-lg">
-              <h3 className="font-semibold mb-2">Custom Themes</h3>
-              <p className="text-sm text-muted-foreground">Match your brand with beautiful themes</p>
-            </div>
-            <div className="p-6 bg-card border rounded-lg">
-              <h3 className="font-semibold mb-2">Analytics</h3>
-              <p className="text-sm text-muted-foreground">Track visits and engagement</p>
-            </div>
-          </div>
+                <div className="pt-6 border-t">
+                  <h4 className="font-semibold mb-4">Link Performance</h4>
+                  <div className="space-y-3">
+                    {buttons.map((button) => (
+                      <div key={button.id} className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                        <div>
+                          <p className="font-medium">{button.title}</p>
+                          <p className="text-xs text-muted-foreground truncate max-w-xs">{button.url}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-bronze">{button.clicks || 0}</p>
+                          <p className="text-xs text-muted-foreground">clicks</p>
+                        </div>
+                      </div>
+                    ))}
+                    {buttons.length === 0 && (
+                      <p className="text-center text-muted-foreground py-8">No links yet. Add buttons to see performance data.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
         </div>
-      </main>
+
+            {/* Features Section */}
+            <div className="mt-20">
+              <div className="text-center mb-12">
+                <Sparkles className="w-8 h-8 mx-auto mb-4 text-bronze" />
+                <h2 className="font-vollkorn text-3xl font-bold mb-4">Premium Features</h2>
+                <p className="text-muted-foreground">Everything you need in one beautiful link</p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="p-6 bg-card border rounded-lg">
+                  <h3 className="font-semibold mb-2">Unlimited Links</h3>
+                  <p className="text-sm text-muted-foreground">Add as many buttons and links as you want</p>
+                </div>
+                <div className="p-6 bg-card border rounded-lg">
+                  <h3 className="font-semibold mb-2">Custom Themes</h3>
+                  <p className="text-sm text-muted-foreground">Match your brand with beautiful themes</p>
+                </div>
+                <div className="p-6 bg-card border rounded-lg">
+                  <h3 className="font-semibold mb-2">Analytics</h3>
+                  <p className="text-sm text-muted-foreground">Track visits and engagement</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
 
       <AddButtonDialog
         open={showAddButton}
