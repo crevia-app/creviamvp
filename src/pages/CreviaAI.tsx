@@ -1,6 +1,4 @@
 import { useState, useRef } from "react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { AnimatedKira } from "@/components/AnimatedKira";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -122,11 +120,9 @@ const CreviaAI = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Header />
-      
+    <div className="h-full bg-background flex flex-col">
       {/* Hero Section */}
-      <section className="pt-20 md:pt-24 pb-8 md:pb-12 px-4 md:px-6 bg-gradient-to-b from-muted/30 to-background">
+      <section className="py-8 md:py-12 px-4 md:px-6 bg-gradient-to-b from-muted/30 to-background">
         <div className="container mx-auto max-w-6xl text-center">
           <div className="mb-4 md:mb-6 flex justify-center">
             <AnimatedKira />
@@ -144,7 +140,7 @@ const CreviaAI = () => {
 
       {/* Main Chat Interface */}
       <section className="flex-1 flex overflow-hidden">
-        <div className="flex w-full h-[calc(100vh-280px)] md:h-[calc(100vh-320px)]">
+        <div className="flex w-full h-[calc(100vh-320px)]">
           {/* Sidebar - Chat History */}
           <div className={`${sidebarOpen ? 'w-64' : 'w-0'} hidden lg:block bg-muted/30 border-r border-border/50 transition-all duration-300 overflow-hidden`}>
             <div className="p-4 space-y-4">
@@ -313,8 +309,6 @@ const CreviaAI = () => {
           </div>
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 };
