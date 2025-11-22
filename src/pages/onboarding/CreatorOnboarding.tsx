@@ -36,6 +36,8 @@ const CreatorOnboarding = () => {
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [handle, setHandle] = useState("");
   const [bio, setBio] = useState("");
+  const [otherTypeText, setOtherTypeText] = useState("");
+  const [otherGoalText, setOtherGoalText] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -117,6 +119,21 @@ const CreatorOnboarding = () => {
                 ))}
               </div>
 
+              {selectedTypes.includes("Other") && (
+                <div className="animate-fade-in-up">
+                  <Label htmlFor="otherType" className="text-sm font-medium">
+                    Please specify your creator type
+                  </Label>
+                  <Input
+                    id="otherType"
+                    placeholder="Enter your creator type..."
+                    value={otherTypeText}
+                    onChange={(e) => setOtherTypeText(e.target.value)}
+                    className="mt-2"
+                  />
+                </div>
+              )}
+
               <Button onClick={handleNext} className="w-full h-12 bg-bronze hover:bg-bronze-dark font-semibold">
                 Continue
               </Button>
@@ -146,6 +163,22 @@ const CreatorOnboarding = () => {
                   </Button>
                 ))}
               </div>
+
+              {selectedGoals.includes("Other") && (
+                <div className="animate-fade-in-up">
+                  <Label htmlFor="otherGoal" className="text-sm font-medium">
+                    Please specify your goal
+                  </Label>
+                  <Textarea
+                    id="otherGoal"
+                    placeholder="Tell us what you want to achieve..."
+                    value={otherGoalText}
+                    onChange={(e) => setOtherGoalText(e.target.value)}
+                    rows={2}
+                    className="mt-2"
+                  />
+                </div>
+              )}
 
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setStep(1)} className="flex-1 h-12">
