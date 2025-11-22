@@ -1,11 +1,60 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Users, TrendingUp, Sparkles, Link2, Brain, Globe } from "lucide-react";
+import { Users, TrendingUp, Sparkles, Link2, Brain, Globe, ChevronLeft, ChevronRight, Star } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useState } from "react";
 
 const Home = () => {
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  
+  const testimonials = [
+    {
+      name: "Sarah Chen",
+      role: "Beauty & Lifestyle Creator",
+      content: "Crevia has completely transformed how I manage my brand partnerships. The AI matching is incredibly accurate, and I've tripled my collaborations in just 3 months.",
+      rating: 5,
+      image: "bg-gradient-to-br from-pink-400 to-rose-500"
+    },
+    {
+      name: "Marcus Rodriguez",
+      role: "Tech Reviewer",
+      content: "The all-in-one workspace is a game-changer. From discovery to payment, everything is seamless. I've saved countless hours and increased my revenue by 200%.",
+      rating: 5,
+      image: "bg-gradient-to-br from-blue-500 to-cyan-500"
+    },
+    {
+      name: "Amelia Thompson",
+      role: "Food & Travel Blogger",
+      content: "Finally, a platform that understands creators. The escrow system gives me peace of mind, and Kira AI's suggestions have helped me find perfect brand matches.",
+      rating: 5,
+      image: "bg-gradient-to-br from-amber-400 to-orange-500"
+    },
+    {
+      name: "David Kim",
+      role: "Fitness Influencer",
+      content: "Crevia's campaign management tools are unmatched. I can track everything in one place, and the professional workspace has elevated my entire business.",
+      rating: 5,
+      image: "bg-gradient-to-br from-green-400 to-emerald-500"
+    },
+    {
+      name: "Luna Martinez",
+      role: "Fashion Designer",
+      content: "The collaboration features are incredible. I love how easy it is to communicate with brands and manage multiple campaigns simultaneously. Absolutely essential!",
+      rating: 5,
+      image: "bg-gradient-to-br from-purple-500 to-violet-600"
+    }
+  ];
+
+  const nextTestimonial = () => {
+    setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+  };
+
+  const prevTestimonial = () => {
+    setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -34,15 +83,15 @@ const Home = () => {
           </div>
 
           {/* Demo Section */}
-          <div className="mt-16 rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-bronze/10 to-background border border-bronze/20">
-            <div className="aspect-video bg-secondary/50 flex items-center justify-center">
-              <div className="text-center space-y-4 p-8">
-                <div className="w-20 h-20 rounded-full bg-bronze/20 flex items-center justify-center mx-auto">
-                  <Sparkles className="w-10 h-10 text-bronze" />
-                </div>
-                <h3 className="font-vollkorn text-2xl font-bold">Platform Demo</h3>
-                <p className="text-muted-foreground">See Crevia in action</p>
-              </div>
+          <div className="mt-16 rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-bronze/10 to-background border border-bronze/20 animate-fade-in">
+            <div className="aspect-video">
+              <iframe 
+                className="w-full h-full"
+                src="https://www.youtube.com/embed/-20xdAqoBfo"
+                title="Crevia Platform Demo"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             </div>
           </div>
         </div>
@@ -89,6 +138,47 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Creators Using Crevia */}
+      <section className="py-12 md:py-20 px-4 md:px-6 relative overflow-hidden">
+        {/* Subtle background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-bronze/5 to-background" />
+        
+        <div className="container mx-auto max-w-7xl relative z-10">
+          <div className="text-center mb-12 md:mb-16">
+            <p className="text-bronze text-sm md:text-base font-semibold tracking-wider uppercase mb-3 animate-fade-in">
+              Trusted by Creators Worldwide
+            </p>
+            <h2 className="font-vollkorn text-3xl sm:text-4xl lg:text-5xl font-bold px-2 animate-fade-in">
+              Built for pros. <span className="text-gradient-bronze">Chosen by the best.</span>
+            </h2>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6 animate-fade-in">
+            {[
+              { name: "Jay Shetty", role: "Podcast Host & Life Coach", bg: "bg-gradient-to-br from-stone-200 to-stone-300" },
+              { name: "Kim Scott", role: "Co-founder of Radical Candor", bg: "bg-gradient-to-br from-red-400 to-red-500" },
+              { name: "Ali Abdaal", role: "Productivity Expert", bg: "bg-gradient-to-br from-purple-400 to-purple-500" },
+              { name: "Anne-Laure Le Cunff", role: "Founder, Ness Labs", bg: "bg-gradient-to-br from-amber-500 to-amber-600" },
+              { name: "Tim Ferriss", role: "Podcast Host & Author", bg: "bg-gradient-to-br from-blue-400 to-blue-500" },
+              { name: "Mel Robbins", role: "Award Winning Podcast Host", bg: "bg-gradient-to-br from-stone-300 to-stone-400" }
+            ].map((creator, index) => (
+              <div
+                key={index}
+                className="group relative aspect-[3/4] rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className={`${creator.bg} w-full h-full absolute inset-0`} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                  <h3 className="font-vollkorn text-white text-lg font-bold mb-1">{creator.name}</h3>
+                  <p className="text-white/90 text-xs">{creator.role}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Products Preview */}
       <section className="py-12 md:py-20 px-4 md:px-6">
         <div className="container mx-auto max-w-6xl">
@@ -129,6 +219,105 @@ const Home = () => {
                 Learn more →
               </Button>
             </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-16 md:py-24 px-4 md:px-6 bg-secondary/30 overflow-hidden">
+        <div className="container mx-auto max-w-7xl">
+          <div className="text-center mb-12 md:mb-16">
+            <p className="text-bronze text-sm md:text-base font-semibold tracking-wider uppercase mb-3 animate-fade-in">
+              Creator Success Stories
+            </p>
+            <h2 className="font-vollkorn text-3xl sm:text-4xl lg:text-5xl font-bold px-2 animate-fade-in">
+              Loved by <span className="text-gradient-bronze">thousands</span> of creators
+            </h2>
+          </div>
+
+          <div className="relative max-w-6xl mx-auto">
+            {/* Navigation Buttons */}
+            <button
+              onClick={prevTestimonial}
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-12 z-10 w-12 h-12 rounded-full bg-background border-2 border-bronze/20 hover:border-bronze hover:bg-bronze/10 transition-all duration-300 flex items-center justify-center shadow-lg group"
+              aria-label="Previous testimonial"
+            >
+              <ChevronLeft className="w-6 h-6 text-bronze group-hover:scale-110 transition-transform" />
+            </button>
+            
+            <button
+              onClick={nextTestimonial}
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-12 z-10 w-12 h-12 rounded-full bg-background border-2 border-bronze/20 hover:border-bronze hover:bg-bronze/10 transition-all duration-300 flex items-center justify-center shadow-lg group"
+              aria-label="Next testimonial"
+            >
+              <ChevronRight className="w-6 h-6 text-bronze group-hover:scale-110 transition-transform" />
+            </button>
+
+            {/* Testimonials Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+              {testimonials.map((testimonial, index) => {
+                const position = (index - currentTestimonial + testimonials.length) % testimonials.length;
+                const isCenter = position === 0;
+                const isAdjacent = position === 1 || position === testimonials.length - 1;
+                
+                return (
+                  <div
+                    key={index}
+                    className={`transition-all duration-700 ease-in-out ${
+                      isCenter
+                        ? "md:col-span-3 lg:col-span-1 scale-100 opacity-100 z-20"
+                        : isAdjacent
+                        ? "hidden md:block scale-90 opacity-60 hover:opacity-80"
+                        : "hidden lg:block scale-75 opacity-40 hover:opacity-60"
+                    }`}
+                    style={{
+                      order: position
+                    }}
+                  >
+                    <Card className={`p-6 md:p-8 h-full border-bronze/20 hover:border-bronze/40 transition-all duration-300 ${
+                      isCenter ? "shadow-2xl bg-gradient-to-br from-bronze/5 to-background" : "shadow-lg"
+                    }`}>
+                      {/* Avatar */}
+                      <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full ${testimonial.image} mb-4 md:mb-6 mx-auto shadow-lg`} />
+                      
+                      {/* Stars */}
+                      <div className="flex justify-center gap-1 mb-4">
+                        {[...Array(testimonial.rating)].map((_, i) => (
+                          <Star key={i} className="w-4 h-4 md:w-5 md:h-5 fill-bronze text-bronze" />
+                        ))}
+                      </div>
+                      
+                      {/* Content */}
+                      <p className="text-muted-foreground text-sm md:text-base leading-relaxed mb-6 italic">
+                        "{testimonial.content}"
+                      </p>
+                      
+                      {/* Author */}
+                      <div className="text-center border-t border-border pt-4">
+                        <h4 className="font-vollkorn font-bold text-base md:text-lg">{testimonial.name}</h4>
+                        <p className="text-muted-foreground text-xs md:text-sm">{testimonial.role}</p>
+                      </div>
+                    </Card>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Dots Indicator */}
+            <div className="flex justify-center gap-2 mt-8">
+              {testimonials.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentTestimonial(index)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    index === currentTestimonial
+                      ? "bg-bronze w-8"
+                      : "bg-bronze/30 hover:bg-bronze/50"
+                  }`}
+                  aria-label={`Go to testimonial ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
