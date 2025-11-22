@@ -78,7 +78,7 @@ const Home = () => {
         <div className="container mx-auto max-w-6xl relative z-10">
           <div className="text-left max-w-3xl space-y-6 md:space-y-8 animate-fade-in" style={{ animationDelay: '0.3s', animationDuration: '0.8s' }}>
             <h1 className="font-vollkorn text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight animate-fade-in" style={{ animationDelay: '0.5s', animationDuration: '0.8s' }}>
-              Empowering creators to <br className="hidden sm:block" />
+              Empowering creators to{" "}
               <span className="text-gradient-bronze">own their digital careers</span>
             </h1>
             <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-foreground/80 font-poppins animate-fade-in" style={{ animationDelay: '0.7s', animationDuration: '0.8s' }}>
