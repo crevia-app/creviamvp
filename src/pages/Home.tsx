@@ -124,9 +124,9 @@ const Home = () => {
           </h2>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-            <Card className="p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-bronze/20">
-              <div className="w-14 h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-6">
-                <Users className="w-7 h-7 text-bronze" />
+            <Card className="p-8 hover-lift border-bronze/20 animate-fade-in-up stagger-1 group">
+              <div className="w-14 h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-bronze/20 group-hover:scale-110">
+                <Users className="w-7 h-7 text-bronze transition-transform duration-300 group-hover:rotate-6" />
               </div>
               <h3 className="font-vollkorn text-2xl font-bold mb-4">Find collaborations effortlessly</h3>
               <p className="text-muted-foreground">
@@ -134,9 +134,9 @@ const Home = () => {
               </p>
             </Card>
 
-            <Card className="p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-bronze/20">
-              <div className="w-14 h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-6">
-                <Globe className="w-7 h-7 text-bronze" />
+            <Card className="p-8 hover-lift border-bronze/20 animate-fade-in-up stagger-2 group">
+              <div className="w-14 h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-bronze/20 group-hover:scale-110">
+                <Globe className="w-7 h-7 text-bronze transition-transform duration-300 group-hover:rotate-6" />
               </div>
               <h3 className="font-vollkorn text-2xl font-bold mb-4">Manage everything in one place</h3>
               <p className="text-muted-foreground">
@@ -144,9 +144,9 @@ const Home = () => {
               </p>
             </Card>
 
-            <Card className="p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-bronze/20">
-              <div className="w-14 h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-6">
-                <TrendingUp className="w-7 h-7 text-bronze" />
+            <Card className="p-8 hover-lift border-bronze/20 animate-fade-in-up stagger-3 group">
+              <div className="w-14 h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-bronze/20 group-hover:scale-110">
+                <TrendingUp className="w-7 h-7 text-bronze transition-transform duration-300 group-hover:rotate-6" />
               </div>
               <h3 className="font-vollkorn text-2xl font-bold mb-4">Grow with AI guidance</h3>
               <p className="text-muted-foreground">
@@ -183,12 +183,12 @@ const Home = () => {
             ].map((creator, index) => (
               <div
                 key={index}
-                className="group relative aspect-[3/4] rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-500 hover:scale-105"
+                className="group relative aspect-[3/4] rounded-2xl overflow-hidden hover-lift transition-all duration-500 animate-scale-in"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <div className={`${creator.bg} w-full h-full absolute inset-0`} />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                <div className={`${creator.bg} w-full h-full absolute inset-0 transition-transform duration-500 group-hover:scale-110`} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-500">
                   <h3 className="font-vollkorn text-white text-lg font-bold mb-1">{creator.name}</h3>
                   <p className="text-white/90 text-xs">{creator.role}</p>
                 </div>
@@ -206,35 +206,38 @@ const Home = () => {
           </h2>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-            <Card className="p-8 bg-gradient-to-br from-bronze/5 to-background hover:shadow-xl transition-all duration-300 border-bronze/20">
-              <Link2 className="w-12 h-12 text-bronze mb-4" />
-              <h3 className="font-vollkorn text-2xl font-bold mb-3">Crevia Connect</h3>
-              <p className="text-muted-foreground mb-4">
+            <Card className="p-8 bg-gradient-to-br from-bronze/5 to-background hover-lift hover-glow border-bronze/20 animate-fade-in-up stagger-1 group overflow-hidden relative">
+              <div className="shimmer absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <Link2 className="w-12 h-12 text-bronze mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 relative z-10" />
+              <h3 className="font-vollkorn text-2xl font-bold mb-3 relative z-10">Crevia Connect</h3>
+              <p className="text-muted-foreground mb-4 relative z-10">
                 Connect creators & brands for seamless collaborations.
               </p>
-              <Button variant="ghost" className="text-bronze hover:text-bronze-dark p-0 h-auto font-semibold bronze-underline">
+              <Button variant="ghost" className="text-bronze hover:text-bronze-dark p-0 h-auto font-semibold bronze-underline relative z-10">
                 Learn more →
               </Button>
             </Card>
 
-            <Card className="p-8 bg-gradient-to-br from-bronze/5 to-background hover:shadow-xl transition-all duration-300 border-bronze/20">
-              <Brain className="w-12 h-12 text-bronze mb-4" />
-              <h3 className="font-vollkorn text-2xl font-bold mb-3">Crevia AI</h3>
-              <p className="text-muted-foreground mb-4">
+            <Card className="p-8 bg-gradient-to-br from-bronze/5 to-background hover-lift hover-glow border-bronze/20 animate-fade-in-up stagger-2 group overflow-hidden relative">
+              <div className="shimmer absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <Brain className="w-12 h-12 text-bronze mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 relative z-10" />
+              <h3 className="font-vollkorn text-2xl font-bold mb-3 relative z-10">Crevia AI</h3>
+              <p className="text-muted-foreground mb-4 relative z-10">
                 Your personal creator growth assistant, powered by Kira.
               </p>
-              <Button variant="ghost" className="text-bronze hover:text-bronze-dark p-0 h-auto font-semibold bronze-underline">
+              <Button variant="ghost" className="text-bronze hover:text-bronze-dark p-0 h-auto font-semibold bronze-underline relative z-10">
                 Learn more →
               </Button>
             </Card>
 
-            <Card className="p-8 bg-gradient-to-br from-bronze/5 to-background hover:shadow-xl transition-all duration-300 border-bronze/20">
-              <Link2 className="w-12 h-12 text-bronze mb-4" />
-              <h3 className="font-vollkorn text-2xl font-bold mb-3">Crevia Link</h3>
-              <p className="text-muted-foreground mb-4">
+            <Card className="p-8 bg-gradient-to-br from-bronze/5 to-background hover-lift hover-glow border-bronze/20 animate-fade-in-up stagger-3 group overflow-hidden relative">
+              <div className="shimmer absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <Link2 className="w-12 h-12 text-bronze mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 relative z-10" />
+              <h3 className="font-vollkorn text-2xl font-bold mb-3 relative z-10">Crevia Link</h3>
+              <p className="text-muted-foreground mb-4 relative z-10">
                 Your all-in-one public link to showcase your work.
               </p>
-              <Button variant="ghost" className="text-bronze hover:text-bronze-dark p-0 h-auto font-semibold bronze-underline">
+              <Button variant="ghost" className="text-bronze hover:text-bronze-dark p-0 h-auto font-semibold bronze-underline relative z-10">
                 Learn more →
               </Button>
             </Card>
