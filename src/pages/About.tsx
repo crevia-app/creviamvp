@@ -20,7 +20,7 @@ const About = () => {
       <section className="relative pt-24 md:pt-32 pb-12 md:pb-20 overflow-hidden bg-gradient-to-br from-background via-secondary/20 to-background">
         <div className="container mx-auto max-w-6xl text-center mb-8 md:mb-12 px-4 md:px-6 relative z-10">
           <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-4 md:mb-6">
-            About <span className="text-gradient-bronze">In Action</span>
+            Own Your <span className="text-gradient-bronze">Story</span>
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto px-2">
             We are on a mission to empower creators and brands to build meaningful collaborations
