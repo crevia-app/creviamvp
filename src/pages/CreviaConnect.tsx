@@ -5,6 +5,7 @@ import { Loader2, Sparkles } from "lucide-react";
 import CreatorConnect from "@/components/crevia-connect/CreatorConnect";
 import BrandConnect from "@/components/crevia-connect/BrandConnect";
 import { Button } from "@/components/ui/button";
+import Header from "@/components/Header";
 import heroImage from "@/assets/crevia-connect-hero.jpg";
 
 const CreviaConnect = () => {
@@ -55,6 +56,8 @@ const CreviaConnect = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header />
+      
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center py-24 px-6">
         {/* Subtle background accent */}
