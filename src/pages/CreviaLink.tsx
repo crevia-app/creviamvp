@@ -844,30 +844,6 @@ const CreviaLink = () => {
             </Card>
           )}
         </div>
-
-            {/* Features Section */}
-            <div className="mt-20">
-              <div className="text-center mb-12">
-                <Sparkles className="w-8 h-8 mx-auto mb-4 text-bronze" />
-                <h2 className="font-vollkorn text-3xl font-bold mb-4">Premium Features</h2>
-                <p className="text-muted-foreground">Everything you need in one beautiful link</p>
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="p-6 bg-card border rounded-lg">
-                  <h3 className="font-semibold mb-2">Unlimited Links</h3>
-                  <p className="text-sm text-muted-foreground">Add as many buttons and links as you want</p>
-                </div>
-                <div className="p-6 bg-card border rounded-lg">
-                  <h3 className="font-semibold mb-2">Custom Themes</h3>
-                  <p className="text-sm text-muted-foreground">Match your brand with beautiful themes</p>
-                </div>
-                <div className="p-6 bg-card border rounded-lg">
-                  <h3 className="font-semibold mb-2">Analytics</h3>
-                  <p className="text-sm text-muted-foreground">Track visits and engagement</p>
-                </div>
-              </div>
-            </div>
           </div>
         </main>
       </div>
