@@ -97,7 +97,7 @@ const Auth = () => {
             {isSignup ? "Create your account" : "Welcome back"}
           </h1>
           <p className="text-muted-foreground">
-            {isSignup ? "Sign up to get started" : "Sign in to continue"}
+            {isSignup ? "Sign up to get started" : "Log in to continue"}
           </p>
         </div>
 
@@ -140,7 +140,7 @@ const Auth = () => {
           </div>
 
           <Button type="submit" className="w-full h-12 bg-bronze hover:bg-bronze-dark font-semibold">
-            {isSignup ? "Create Account" : "Sign In"}
+            {isSignup ? "Create Account" : "Log In"}
           </Button>
         </form>
 
@@ -179,7 +179,7 @@ const Auth = () => {
             onClick={() => setIsSignup(!isSignup)}
             className="text-bronze hover:text-bronze-dark font-semibold bronze-underline"
           >
-            {isSignup ? "Sign In" : "Sign Up"}
+            {isSignup ? "Log In" : "Sign Up"}
           </button>
         </p>
       </Card>
