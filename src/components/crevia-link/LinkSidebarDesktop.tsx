@@ -33,7 +33,7 @@ const LinkSidebarDesktop = ({ userType }: LinkSidebarDesktopProps) => {
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col bg-black text-white border-r border-border/20 transition-all duration-200 ease-in-out",
+        "hidden md:flex flex-col bg-black text-white border-r border-border/20 transition-all duration-200 ease-in-out sticky top-0 h-screen",
         collapsed ? "w-[70px]" : "w-[220px]"
       )}
     >
