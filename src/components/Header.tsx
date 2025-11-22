@@ -54,13 +54,13 @@ const Header = () => {
 
   return (
     <header className="fixed top-0 w-full bg-background/80 backdrop-blur-md z-50 border-b border-border/50">
-      <nav className="container mx-auto px-6 py-4 flex items-center justify-between">
+      <nav className="container mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-bronze rounded-lg"></div>
-          <span className="font-vollkorn text-2xl font-bold">Crevia</span>
+          <div className="w-7 h-7 md:w-8 md:h-8 bg-bronze rounded-lg"></div>
+          <span className="font-vollkorn text-xl md:text-2xl font-bold">Crevia</span>
         </Link>
         
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-6 xl:gap-8">
           <Link to="/" className="text-sm font-medium hover:text-bronze transition-colors">
             Home
           </Link>
