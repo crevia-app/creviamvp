@@ -46,7 +46,7 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col bg-black text-white border-r border-white/10 transition-all duration-300 ease-in-out",
+        "hidden md:flex flex-col bg-black text-white border-r border-white/10 transition-all duration-300 ease-in-out fixed left-0 top-16 bottom-0 z-30",
         collapsed ? "w-[72px]" : "w-[240px]"
       )}
     >
