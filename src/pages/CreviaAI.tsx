@@ -1,12 +1,12 @@
 import { useState, useRef } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { AnimatedKira } from "@/components/AnimatedKira";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import kiraMascot from "@/assets/kira-mascot.png";
 import { 
   Lightbulb, 
   Users, 
@@ -129,7 +129,7 @@ const CreviaAI = () => {
       <section className="pt-20 md:pt-24 pb-8 md:pb-12 px-4 md:px-6 bg-gradient-to-b from-muted/30 to-background">
         <div className="container mx-auto max-w-6xl text-center">
           <div className="mb-4 md:mb-6 flex justify-center">
-            <img src={kiraMascot} alt="Kira mascot" className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 object-contain" />
+            <AnimatedKira />
           </div>
           
           <h1 className="font-vollkorn text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4 px-2">
