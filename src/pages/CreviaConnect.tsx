@@ -56,46 +56,54 @@ const CreviaConnect = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0">
-          <img 
-            src={heroImage} 
-            alt="Creator adjusting camera" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/50 to-background" />
-        </div>
+      <section className="relative min-h-screen flex items-center justify-center py-24 px-6">
+        {/* Subtle background accent */}
+        <div className="absolute inset-0 bg-gradient-to-b from-bronze/5 via-background to-background" />
         
-        <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
-          <h1 className="font-serif text-5xl md:text-7xl font-bold text-foreground mb-6">
-            Where creators and brands collaborate. <span className="text-gradient-bronze">Seamlessly.</span>
+        <div className="relative z-10 text-center max-w-6xl mx-auto">
+          {/* Icon Label */}
+          <div className="flex items-center justify-center gap-2 mb-8 animate-fade-in">
+            <Sparkles className="h-5 w-5 text-bronze" />
+            <span className="text-bronze text-sm font-medium tracking-wider uppercase">
+              Crevia Connect
+            </span>
+          </div>
+          
+          {/* Main Headline */}
+          <h1 className="font-serif text-6xl md:text-8xl font-bold text-foreground mb-8 leading-[1.1] animate-fade-in">
+            Where creators and brands{" "}
+            <span className="text-gradient-bronze">create magic</span>
           </h1>
-          <p className="text-bronze text-xl md:text-2xl mb-12 font-light">
-            Real partnerships. Real work. One unified workspace.
+          
+          {/* Subtitle */}
+          <p className="text-muted-foreground text-xl md:text-2xl mb-16 max-w-3xl mx-auto font-light leading-relaxed animate-fade-in">
+            The ultimate collaboration workspace. Discover opportunities, manage campaigns, 
+            and build partnerships—all powered by AI.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in">
             {!isAuthenticated ? (
               <>
                 <Button 
                   size="lg" 
-                  className="bg-bronze hover:bg-bronze/90 text-background font-medium px-8"
+                  className="bg-bronze hover:bg-bronze/90 text-background font-semibold px-10 py-6 text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                   onClick={() => navigate("/auth")}
                 >
-                  Get Started
+                  Get Started Free
                 </Button>
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="border-foreground/20 text-foreground hover:bg-foreground/5"
+                  className="border-2 border-border text-foreground hover:bg-accent/50 font-medium px-10 py-6 text-lg rounded-full transition-all duration-300"
                 >
-                  Watch How It Works
+                  See How It Works
                 </Button>
               </>
             ) : (
               <Button 
                 size="lg" 
-                className="bg-bronze hover:bg-bronze/90 text-background font-medium px-8"
+                className="bg-bronze hover:bg-bronze/90 text-background font-semibold px-10 py-6 text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                 onClick={() => {
                   const element = document.getElementById('dashboard');
                   element?.scrollIntoView({ behavior: 'smooth' });
@@ -104,6 +112,22 @@ const CreviaConnect = () => {
                 Go to Dashboard
               </Button>
             )}
+          </div>
+
+          {/* Feature highlights - subtle */}
+          <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto animate-fade-in">
+            <div className="text-center">
+              <div className="text-4xl font-bold text-bronze mb-2">AI-Powered</div>
+              <p className="text-sm text-muted-foreground">Smart matching & insights</p>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-bronze mb-2">All-in-One</div>
+              <p className="text-sm text-muted-foreground">Chat, manage, & deliver</p>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-bronze mb-2">Secure</div>
+              <p className="text-sm text-muted-foreground">Escrow-protected payments</p>
+            </div>
           </div>
         </div>
       </section>
