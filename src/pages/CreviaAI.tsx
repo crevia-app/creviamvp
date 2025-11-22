@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { 
   Lightbulb, 
   Users, 
@@ -18,7 +19,8 @@ import {
   Paperclip,
   Trash2,
   PanelLeftClose,
-  PanelLeft
+  PanelLeft,
+  Menu
 } from "lucide-react";
 
 interface ChatHistory {
@@ -49,6 +51,7 @@ const CreviaAI = () => {
   const [input, setInput] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = () => {
@@ -120,9 +123,89 @@ const CreviaAI = () => {
     }
   ];
 
+  const renderSidebarContent = () => (
+    <>
+      {/* New Chat Button */}
+      <div className="p-3">
+        <Button 
+          onClick={() => {
+            handleNewChat();
+            setMobileSidebarOpen(false);
+          }}
+          className="w-full justify-start gap-2 bg-bronze hover:bg-bronze/90 text-background font-poppins"
+          size="sm"
+        >
+          <Plus className="w-4 h-4" />
+          New Chat
+        </Button>
+      </div>
+
+      {/* Search Chats */}
+      <div className="px-3 pb-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+          <Input 
+            placeholder="Search chats..." 
+            className="pl-9 h-9 text-sm bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-bronze"
+          />
+        </div>
+      </div>
+
+      <Separator className="bg-white/10" />
+
+      {/* Your Chats Label */}
+      <div className="px-3 py-2">
+        <p className="text-xs font-poppins font-medium text-white/50 uppercase tracking-wider">
+          Your Chats
+        </p>
+      </div>
+
+      {/* Chat History */}
+      <ScrollArea className="flex-1 px-2">
+        <div className="space-y-1 pb-3">
+          {chatHistories.map((chat) => (
+            <div
+              key={chat.id}
+              onClick={() => {
+                setActiveChat(chat.id);
+                setMobileSidebarOpen(false);
+              }}
+              className={`w-full text-left p-2.5 rounded-lg text-sm transition-all group relative cursor-pointer ${
+                activeChat === chat.id 
+                  ? 'bg-white/10 text-white' 
+                  : 'text-white/70 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <div className="flex items-start gap-2">
+                <MessageSquare className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-poppins font-medium truncate text-sm">
+                    {chat.title}
+                  </p>
+                  <p className="text-xs text-white/40 mt-0.5">
+                    {chat.timestamp.toLocaleDateString()}
+                  </p>
+                </div>
+                <button 
+                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded transition-opacity"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setChatHistories(chatHistories.filter(c => c.id !== chat.id));
+                  }}
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-white/40 hover:text-red-400" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
+    </>
+  );
+
   return (
     <div className="h-full flex overflow-hidden">
-      {/* Sidebar - Fixed Position */}
+      {/* Desktop Sidebar - Fixed Position */}
       <div 
         className={`bg-black text-white border-r border-white/10 transition-all duration-300 flex-shrink-0 fixed left-[240px] top-16 bottom-0 z-20 ${
           sidebarCollapsed ? 'w-0 md:w-[60px]' : 'w-0 md:w-[260px]'
@@ -148,79 +231,7 @@ const CreviaAI = () => {
             </Button>
           </div>
 
-          {!sidebarCollapsed && (
-            <>
-              {/* New Chat Button */}
-              <div className="p-3">
-                <Button 
-                  onClick={handleNewChat}
-                  className="w-full justify-start gap-2 bg-bronze hover:bg-bronze/90 text-background font-poppins"
-                  size="sm"
-                >
-                  <Plus className="w-4 h-4" />
-                  New Chat
-                </Button>
-              </div>
-
-              {/* Search Chats */}
-              <div className="px-3 pb-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                  <Input 
-                    placeholder="Search chats..." 
-                    className="pl-9 h-9 text-sm bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-bronze"
-                  />
-                </div>
-              </div>
-
-              <Separator className="bg-white/10" />
-
-              {/* Your Chats Label */}
-              <div className="px-3 py-2">
-                <p className="text-xs font-poppins font-medium text-white/50 uppercase tracking-wider">
-                  Your Chats
-                </p>
-              </div>
-
-              {/* Chat History */}
-              <ScrollArea className="flex-1 px-2">
-                <div className="space-y-1 pb-3">
-                  {chatHistories.map((chat) => (
-                    <div
-                      key={chat.id}
-                      onClick={() => setActiveChat(chat.id)}
-                      className={`w-full text-left p-2.5 rounded-lg text-sm transition-all group relative cursor-pointer ${
-                        activeChat === chat.id 
-                          ? 'bg-white/10 text-white' 
-                          : 'text-white/70 hover:bg-white/5 hover:text-white'
-                      }`}
-                    >
-                      <div className="flex items-start gap-2">
-                        <MessageSquare className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-poppins font-medium truncate text-sm">
-                            {chat.title}
-                          </p>
-                          <p className="text-xs text-white/40 mt-0.5">
-                            {chat.timestamp.toLocaleDateString()}
-                          </p>
-                        </div>
-                        <button 
-                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded transition-opacity"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setChatHistories(chatHistories.filter(c => c.id !== chat.id));
-                          }}
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-white/40 hover:text-red-400" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </>
-          )}
+          {!sidebarCollapsed && renderSidebarContent()}
 
           {/* Collapsed Sidebar Icons */}
           {sidebarCollapsed && (
@@ -245,6 +256,18 @@ const CreviaAI = () => {
         </div>
       </div>
 
+      {/* Mobile Sidebar Sheet */}
+      <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
+        <SheetContent side="left" className="bg-black border-white/10 w-[280px] p-0">
+          <SheetHeader className="p-3 border-b border-white/10">
+            <SheetTitle className="font-poppins font-semibold text-sm text-white">Kira AI</SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col h-[calc(100%-60px)]">
+            {renderSidebarContent()}
+          </div>
+        </SheetContent>
+      </Sheet>
+
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden md:ml-[260px]">
         {/* Hero Section - Compact */}
@@ -265,9 +288,21 @@ const CreviaAI = () => {
 
         {/* Chat Interface */}
         <div className="flex-1 flex flex-col relative overflow-hidden">
-          {/* Toggle button for collapsed sidebar */}
+          {/* Mobile Menu Button */}
+          <div className="md:hidden absolute top-4 left-4 z-10">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setMobileSidebarOpen(true)}
+              className="h-10 w-10 bg-background/95 backdrop-blur border-border/40 hover:bg-muted"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Toggle button for collapsed sidebar (Desktop only) */}
           {sidebarCollapsed && (
-            <div className="absolute top-4 left-4 z-10">
+            <div className="hidden md:block absolute top-4 left-4 z-10">
               <Button
                 variant="outline"
                 size="icon"
