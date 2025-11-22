@@ -35,7 +35,7 @@ const BrandConnect = () => {
       <div className="flex flex-1 w-full">
         <ConnectSidebarDesktop userType="brand" />
         
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto md:ml-[220px]">
           <div className="container mx-auto px-4 py-8">
             {renderContent()}
           </div>

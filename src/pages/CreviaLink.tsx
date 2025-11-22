@@ -243,7 +243,7 @@ const CreviaLink = () => {
       <div className="flex flex-1 w-full overflow-hidden">
         <LinkSidebarDesktop userType={profile?.user_type || "creator"} />
         
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto md:ml-[220px]">
           <div className="container mx-auto px-4 md:px-6 py-8">
             {/* Editor Content */}
             <div className="max-w-5xl mx-auto">
