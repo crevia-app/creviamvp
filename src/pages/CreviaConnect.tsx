@@ -123,14 +123,6 @@ const CreviaConnect = () => {
       {/* Personalized Dashboard (only for authenticated users) */}
       {isAuthenticated && (
         <div id="dashboard">
-          {/* Kira AI Banner */}
-          <div className="bg-gradient-to-r from-primary/10 to-bronze/10 border-y border-border/50 py-3">
-            <div className="container mx-auto px-6 flex items-center justify-center gap-2 text-sm">
-              <Sparkles className="h-4 w-4 text-bronze" />
-              <span className="text-muted-foreground">Powered by <span className="font-semibold text-foreground">Kira AI</span> — your smart collaboration assistant.</span>
-            </div>
-          </div>
-          
           {userType === "creator" && <CreatorConnect />}
           {userType === "brand" && <BrandConnect />}
         </div>
