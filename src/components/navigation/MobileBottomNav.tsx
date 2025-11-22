@@ -79,6 +79,21 @@ const MobileBottomNav = () => {
                   About
                 </Button>
               </Link>
+              <Link to="/profile/help">
+                <Button variant="ghost" className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5">
+                  Help & Support
+                </Button>
+              </Link>
+              <Link to="/privacy-policy">
+                <Button variant="ghost" className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5">
+                  Privacy Policy
+                </Button>
+              </Link>
+              <Link to="/terms-of-service">
+                <Button variant="ghost" className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5">
+                  Terms of Service
+                </Button>
+              </Link>
               <Link to="/profile/settings">
                 <Button variant="ghost" className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5">
                   Settings

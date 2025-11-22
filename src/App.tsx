@@ -25,6 +25,8 @@ import Help from "./pages/profile/Help";
 import Feedback from "./pages/profile/Feedback";
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import AppLayout from "./components/navigation/AppLayout";
 
 const queryClient = new QueryClient();
@@ -42,6 +44,8 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/about" element={<About />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/user-type-selection" element={<UserTypeSelection />} />
             <Route path="/signup/creator" element={<CreatorSignup />} />
             <Route path="/signup/brand" element={<BrandSignup />} />
