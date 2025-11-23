@@ -108,20 +108,25 @@ const BrandSignup = () => {
               checked={agreedToTerms}
               onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
               className="mt-1"
+              required
             />
             <Label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
               I agree to the{" "}
-              <Link to="/terms" className="text-bronze hover:text-bronze-dark font-semibold bronze-underline">
+              <Link to="/terms-of-service" className="text-bronze hover:text-bronze-dark font-semibold bronze-underline" target="_blank">
                 Terms and Conditions
               </Link>
               {" "}and{" "}
-              <Link to="/privacy" className="text-bronze hover:text-bronze-dark font-semibold bronze-underline">
+              <Link to="/privacy-policy" className="text-bronze hover:text-bronze-dark font-semibold bronze-underline" target="_blank">
                 Privacy Policy
               </Link>
             </Label>
           </div>
 
-          <Button type="submit" className="w-full h-12 bg-bronze hover:bg-bronze-dark font-semibold">
+          <Button 
+            type="submit" 
+            className="w-full h-12 bg-bronze hover:bg-bronze-dark font-semibold"
+            disabled={!agreedToTerms}
+          >
             Create Account
           </Button>
         </form>
