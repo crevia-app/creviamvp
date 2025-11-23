@@ -45,7 +45,7 @@ const ConnectSidebarDesktop = ({ userType }: ConnectSidebarDesktopProps) => {
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col bg-black text-white border-r border-border/20 transition-all duration-200 ease-in-out fixed left-[240px] top-16 bottom-0 z-20",
+        "hidden md:flex flex-col bg-black text-white border-r border-border/20 transition-all duration-300 ease-in-out fixed left-[100px] top-16 bottom-0 z-20",
         collapsed ? "w-[70px]" : "w-[220px]"
       )}
     >
