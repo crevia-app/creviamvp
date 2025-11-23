@@ -207,7 +207,7 @@ const CreviaAI = () => {
     <div className="h-full flex overflow-hidden">
       {/* Desktop Sidebar - Fixed Position */}
       <div 
-        className={`bg-black text-white border-r border-white/10 transition-all duration-300 flex-shrink-0 fixed left-[240px] top-16 bottom-0 z-20 ${
+        className={`bg-black text-white border-r border-white/10 transition-all duration-300 flex-shrink-0 fixed left-[100px] top-16 bottom-0 z-20 ${
           sidebarCollapsed ? 'w-0 md:w-[60px]' : 'w-0 md:w-[260px]'
         } overflow-hidden`}
       >
@@ -269,7 +269,7 @@ const CreviaAI = () => {
       </Sheet>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden md:ml-[260px]">
+      <div className="flex-1 flex flex-col overflow-hidden md:ml-[360px]">
         {/* Mobile Menu Button - Positioned below TopBar */}
         <Button
           variant="ghost"
