@@ -61,7 +61,7 @@ const Home = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative pt-24 md:pt-32 pb-16 md:pb-20 px-6 md:px-6 min-h-[90vh] flex items-center overflow-hidden">
+      <section className="relative pt-24 md:pt-32 pb-12 md:pb-20 px-4 md:px-6 min-h-[85vh] md:min-h-[90vh] flex items-center overflow-hidden">
         {/* Background Image with Overlay */}
         <div 
           className="absolute inset-0 bg-cover bg-center animate-scale-in"
@@ -75,22 +75,22 @@ const Home = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/85 to-background/60 dark:from-background/90 dark:via-background/75 dark:to-background/40" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-background/60" />
         
-        <div className="container mx-auto max-w-6xl relative z-10">
-          <div className="text-left max-w-3xl space-y-6 md:space-y-8 animate-fade-in" style={{ animationDelay: '0.3s', animationDuration: '0.8s' }}>
-            <h1 className="font-vollkorn text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.15] animate-fade-in" style={{ animationDelay: '0.5s', animationDuration: '0.8s' }}>
+        <div className="container mx-auto max-w-6xl relative z-10 px-2">
+          <div className="text-left max-w-3xl space-y-4 md:space-y-8 animate-fade-in" style={{ animationDelay: '0.3s', animationDuration: '0.8s' }}>
+            <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold leading-[1.15] animate-fade-in" style={{ animationDelay: '0.5s', animationDuration: '0.8s' }}>
               Empowering creators to{" "}
               <span className="text-gradient-bronze">own their digital careers</span>
             </h1>
-            <p className="text-xl sm:text-xl md:text-2xl lg:text-3xl text-foreground/80 font-poppins leading-relaxed animate-fade-in" style={{ animationDelay: '0.7s', animationDuration: '0.8s' }}>
+            <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-foreground/80 font-poppins leading-relaxed animate-fade-in" style={{ animationDelay: '0.7s', animationDuration: '0.8s' }}>
               Tools that help you collaborate, grow, and earn — all in one simple platform.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 pt-4 animate-fade-in" style={{ animationDelay: '0.9s', animationDuration: '0.8s' }}>
+            <div className="flex flex-col sm:flex-row gap-3 pt-2 animate-fade-in" style={{ animationDelay: '0.9s', animationDuration: '0.8s' }}>
               <Link to="/user-type-selection" className="w-full sm:w-auto">
-                <Button size="lg" className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-lg px-10 py-7 font-poppins font-semibold hover-scale shadow-lg">
+                <Button size="lg" className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-base md:text-lg px-8 md:px-10 py-6 md:py-7 font-poppins font-semibold hover-scale shadow-lg">
                   Get Started
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg px-10 py-7 font-poppins font-semibold hover-scale border-2 border-bronze/30 hover:border-bronze hover:bg-bronze/10">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto text-base md:text-lg px-8 md:px-10 py-6 md:py-7 font-poppins font-semibold hover-scale border-2 border-bronze/30 hover:border-bronze hover:bg-bronze/10">
                 Learn More
               </Button>
             </div>
@@ -100,9 +100,9 @@ const Home = () => {
       </section>
 
       {/* Demo Section */}
-      <section className="py-16 md:py-20 px-6 md:px-6 bg-secondary/20">
+      <section className="py-12 md:py-20 px-4 md:px-6 bg-secondary/20">
         <div className="container mx-auto max-w-6xl">
-          <div className="rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-bronze/10 to-background border border-bronze/20 animate-fade-in">
+          <div className="rounded-xl md:rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-bronze/10 to-background border border-bronze/20 animate-fade-in">
             <div className="aspect-video">
               <iframe 
                 className="w-full h-full"
@@ -117,39 +117,39 @@ const Home = () => {
       </section>
 
       {/* What Crevia Solves */}
-      <section className="py-16 md:py-20 px-6 md:px-6 bg-secondary/30">
+      <section className="py-12 md:py-20 px-4 md:px-6 bg-secondary/30">
         <div className="container mx-auto max-w-6xl">
-          <h2 className="font-vollkorn text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-12 md:mb-16">
+          <h2 className="font-vollkorn text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-10 md:mb-16 px-2">
             What <span className="text-gradient-bronze">Crevia</span> Solves
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            <Card className="p-8 hover-lift border-bronze/20 animate-fade-in-up stagger-1 group">
-              <div className="w-14 h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-bronze/20 group-hover:scale-110">
-                <Users className="w-7 h-7 text-bronze transition-transform duration-300 group-hover:rotate-6" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+            <Card className="p-6 md:p-8 hover-lift border-bronze/20 animate-fade-in-up stagger-1 group">
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-4 md:mb-6 transition-all duration-300 group-hover:bg-bronze/20 group-hover:scale-110">
+                <Users className="w-6 h-6 md:w-7 md:h-7 text-bronze transition-transform duration-300 group-hover:rotate-6" />
               </div>
-              <h3 className="font-vollkorn text-2xl font-bold mb-4">Find collaborations effortlessly</h3>
-              <p className="text-muted-foreground text-base leading-relaxed">
+              <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3 md:mb-4">Find collaborations effortlessly</h3>
+              <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
                 Connect with brands and creators that align with your vision, without the endless searching.
               </p>
             </Card>
 
-            <Card className="p-8 hover-lift border-bronze/20 animate-fade-in-up stagger-2 group">
-              <div className="w-14 h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-bronze/20 group-hover:scale-110">
-                <Globe className="w-7 h-7 text-bronze transition-transform duration-300 group-hover:rotate-6" />
+            <Card className="p-6 md:p-8 hover-lift border-bronze/20 animate-fade-in-up stagger-2 group">
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-4 md:mb-6 transition-all duration-300 group-hover:bg-bronze/20 group-hover:scale-110">
+                <Globe className="w-6 h-6 md:w-7 md:h-7 text-bronze transition-transform duration-300 group-hover:rotate-6" />
               </div>
-              <h3 className="font-vollkorn text-2xl font-bold mb-4">Manage everything in one place</h3>
-              <p className="text-muted-foreground text-base leading-relaxed">
+              <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3 md:mb-4">Manage everything in one place</h3>
+              <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
                 From campaigns to payments, keep your entire creator business organized and professional.
               </p>
             </Card>
 
-            <Card className="p-8 hover-lift border-bronze/20 animate-fade-in-up stagger-3 group">
-              <div className="w-14 h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-6 transition-all duration-300 group-hover:bg-bronze/20 group-hover:scale-110">
-                <TrendingUp className="w-7 h-7 text-bronze transition-transform duration-300 group-hover:rotate-6" />
+            <Card className="p-6 md:p-8 hover-lift border-bronze/20 animate-fade-in-up stagger-3 group">
+              <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-4 md:mb-6 transition-all duration-300 group-hover:bg-bronze/20 group-hover:scale-110">
+                <TrendingUp className="w-6 h-6 md:w-7 md:h-7 text-bronze transition-transform duration-300 group-hover:rotate-6" />
               </div>
-              <h3 className="font-vollkorn text-2xl font-bold mb-4">Grow with AI guidance</h3>
-              <p className="text-muted-foreground text-base leading-relaxed">
+              <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3 md:mb-4">Grow with AI guidance</h3>
+              <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
                 Get personalized recommendations and insights to level up your creator journey.
               </p>
             </Card>

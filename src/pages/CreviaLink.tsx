@@ -252,7 +252,7 @@ const CreviaLink = () => {
           "flex-1 overflow-auto transition-all duration-300",
           sidebarCollapsed ? "md:ml-[170px]" : "md:ml-[320px]" // 100 (main) + 70/220 (link)
         )}>
-          <div className="container mx-auto px-4 md:px-6 py-8">
+          <div className="container mx-auto px-3 md:px-6 py-4 md:py-8">
             {/* Editor Content */}
             <div className="max-w-5xl mx-auto">
 
