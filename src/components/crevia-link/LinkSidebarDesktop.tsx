@@ -14,12 +14,19 @@ import { cn } from "@/lib/utils";
 
 interface LinkSidebarDesktopProps {
   userType: "creator" | "brand";
+  onCollapsedChange?: (collapsed: boolean) => void;
 }
 
-const LinkSidebarDesktop = ({ userType }: LinkSidebarDesktopProps) => {
+const LinkSidebarDesktop = ({ userType, onCollapsedChange }: LinkSidebarDesktopProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const currentTab = new URLSearchParams(location.search).get("tab") || "profile";
+
+  const handleToggleCollapse = () => {
+    const newCollapsed = !collapsed;
+    setCollapsed(newCollapsed);
+    onCollapsedChange?.(newCollapsed);
+  };
 
   // Same items for both creators and brands for Crevia Link
   const items = [
@@ -45,7 +52,7 @@ const LinkSidebarDesktop = ({ userType }: LinkSidebarDesktopProps) => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={handleToggleCollapse}
           className="h-9 w-9 text-white hover:text-bronze hover:bg-white/10 transition-colors shrink-0"
         >
           {collapsed ? (

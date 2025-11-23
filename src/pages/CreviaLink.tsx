@@ -16,6 +16,7 @@ import { AddButtonDialog } from "@/components/crevia-link/AddButtonDialog";
 import { ButtonItem } from "@/components/crevia-link/ButtonItem";
 import LinkSidebarDesktop from "@/components/crevia-link/LinkSidebarDesktop";
 import LinkTabsMobile from "@/components/crevia-link/LinkTabsMobile";
+import { cn } from "@/lib/utils";
 
 const CreviaLink = () => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const CreviaLink = () => {
   const [saving, setSaving] = useState(false);
   const [showAddButton, setShowAddButton] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   const currentTab = new URLSearchParams(location.search).get("tab") || "profile";
 
@@ -241,9 +243,15 @@ const CreviaLink = () => {
       <LinkTabsMobile userType={profile?.user_type || "creator"} />
       
       <div className="flex flex-1 w-full overflow-hidden">
-        <LinkSidebarDesktop userType={profile?.user_type || "creator"} />
+        <LinkSidebarDesktop 
+          userType={profile?.user_type || "creator"} 
+          onCollapsedChange={setSidebarCollapsed}
+        />
         
-        <main className="flex-1 overflow-auto md:ml-[220px]">
+        <main className={cn(
+          "flex-1 overflow-auto transition-all duration-300",
+          sidebarCollapsed ? "md:ml-[70px]" : "md:ml-[220px]"
+        )}>
           <div className="container mx-auto px-4 md:px-6 py-8">
             {/* Editor Content */}
             <div className="max-w-5xl mx-auto">
