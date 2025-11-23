@@ -23,18 +23,10 @@ interface MainSidebarProps {
   userType: "creator" | "brand";
   profile: any;
   onProfileClick: () => void;
-  onCollapsedChange?: (collapsed: boolean) => void;
 }
 
-const MainSidebar = ({ userType, profile, onProfileClick, onCollapsedChange }: MainSidebarProps) => {
-  const [collapsed, setCollapsed] = useState(false);
+const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) => {
   const location = useLocation();
-
-  const handleToggleCollapse = () => {
-    const newCollapsed = !collapsed;
-    setCollapsed(newCollapsed);
-    onCollapsedChange?.(newCollapsed);
-  };
 
   const navItems = [
     { id: "home", label: "Home", icon: Home, path: "/dashboard" },
@@ -51,26 +43,9 @@ const MainSidebar = ({ userType, profile, onProfileClick, onCollapsedChange }: M
   };
 
   return (
-    <aside
-      className={cn(
-        "hidden md:flex flex-col bg-black text-white border-r border-white/10 transition-all duration-300 ease-in-out fixed left-0 top-16 bottom-0 z-30",
-        collapsed ? "w-[72px]" : "w-[240px]"
-      )}
-    >
-      {/* Toggle Button */}
-      <div className="flex items-center justify-end p-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleToggleCollapse}
-          className="h-8 w-8 text-white/60 hover:text-bronze hover:bg-white/5"
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
-      </div>
-
+    <aside className="hidden md:flex flex-col bg-black text-white border-r border-white/10 fixed left-0 top-16 bottom-0 z-30 w-[100px]">
       {/* Main Navigation */}
-      <nav className="flex-1 px-3 space-y-1">
+      <nav className="flex-1 py-4 space-y-2">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
@@ -80,28 +55,26 @@ const MainSidebar = ({ userType, profile, onProfileClick, onCollapsedChange }: M
               key={item.id}
               to={item.path}
               className={cn(
-                "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200",
+                "flex flex-col items-center justify-center gap-1.5 px-3 py-3 transition-all duration-200",
                 active
-                  ? "bg-bronze/10 text-bronze"
-                  : "text-white/80 hover:text-bronze hover:bg-white/5"
+                  ? "text-bronze"
+                  : "text-white/70 hover:text-bronze hover:bg-white/5"
               )}
             >
               <div className={cn(
-                "p-2 rounded-lg transition-all",
-                active && "bg-bronze/20"
+                "p-2.5 rounded-xl transition-all",
+                active && "bg-bronze/15"
               )}>
                 <Icon 
                   className={cn(
-                    "h-5 w-5 transition-all",
-                    active && "drop-shadow-[0_0_8px_rgba(207,129,80,0.6)]"
+                    "h-6 w-6 transition-all",
+                    active && "drop-shadow-[0_0_10px_rgba(207,129,80,0.5)]"
                   )} 
                 />
               </div>
-              {!collapsed && (
-                <span className="font-poppins text-sm font-medium truncate">
-                  {item.label}
-                </span>
-              )}
+              <span className="font-poppins text-[11px] font-medium text-center leading-tight">
+                {item.label}
+              </span>
             </Link>
           );
         })}
@@ -109,20 +82,13 @@ const MainSidebar = ({ userType, profile, onProfileClick, onCollapsedChange }: M
         {/* More Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button
-              className={cn(
-                "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 w-full",
-                "text-white/80 hover:text-bronze hover:bg-white/5"
-              )}
-            >
-              <div className="p-2 rounded-lg">
-                <MoreHorizontal className="h-5 w-5" />
+            <button className="flex flex-col items-center justify-center gap-1.5 px-3 py-3 transition-all duration-200 w-full text-white/70 hover:text-bronze hover:bg-white/5">
+              <div className="p-2.5 rounded-xl">
+                <MoreHorizontal className="h-6 w-6" />
               </div>
-              {!collapsed && (
-                <span className="font-poppins text-sm font-medium truncate">
-                  More
-                </span>
-              )}
+              <span className="font-poppins text-[11px] font-medium text-center leading-tight">
+                More
+              </span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 bg-black border-white/10">
@@ -154,27 +120,17 @@ const MainSidebar = ({ userType, profile, onProfileClick, onCollapsedChange }: M
       <div className="p-3 border-t border-white/10">
         <button
           onClick={onProfileClick}
-          className={cn(
-            "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 w-full",
-            "text-white/80 hover:text-bronze hover:bg-white/5"
-          )}
+          className="flex flex-col items-center justify-center gap-1.5 px-2 py-2 rounded-xl transition-all duration-200 w-full text-white/70 hover:text-bronze hover:bg-white/5"
         >
-          <Avatar className="h-9 w-9">
+          <Avatar className="h-10 w-10">
             <AvatarImage src={profile?.avatar_url} />
-            <AvatarFallback className="bg-bronze text-white">
+            <AvatarFallback className="bg-bronze text-white text-sm">
               {profile?.display_name?.charAt(0) || profile?.email?.charAt(0) || "U"}
             </AvatarFallback>
           </Avatar>
-          {!collapsed && (
-            <div className="flex-1 text-left truncate">
-              <p className="font-poppins text-sm font-medium truncate">
-                {profile?.display_name || "User"}
-              </p>
-              <p className="text-xs text-white/50 truncate capitalize">
-                {userType}
-              </p>
-            </div>
-          )}
+          <span className="font-poppins text-[11px] font-medium text-center leading-tight truncate w-full">
+            {profile?.display_name || "User"}
+          </span>
         </button>
       </div>
     </aside>

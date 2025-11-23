@@ -30,7 +30,6 @@ const CreviaLink = () => {
   const [showAddButton, setShowAddButton] = useState(false);
   const [copied, setCopied] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [mainSidebarCollapsed, setMainSidebarCollapsed] = useState(false);
   
   const currentTab = new URLSearchParams(location.search).get("tab") || "profile";
 
@@ -247,15 +246,11 @@ const CreviaLink = () => {
         <LinkSidebarDesktop 
           userType={profile?.user_type || "creator"} 
           onCollapsedChange={setSidebarCollapsed}
-          mainSidebarCollapsed={mainSidebarCollapsed}
         />
         
         <main className={cn(
           "flex-1 overflow-auto transition-all duration-300",
-          mainSidebarCollapsed && sidebarCollapsed ? "md:ml-[142px]" : // both collapsed: 72 + 70
-          mainSidebarCollapsed ? "md:ml-[292px]" : // only main collapsed: 72 + 220
-          sidebarCollapsed ? "md:ml-[310px]" : // only link collapsed: 240 + 70
-          "md:ml-[460px]" // both expanded: 240 + 220
+          sidebarCollapsed ? "md:ml-[170px]" : "md:ml-[320px]" // 100 (main) + 70/220 (link)
         )}>
           <div className="container mx-auto px-4 md:px-6 py-8">
             {/* Editor Content */}

@@ -15,10 +15,9 @@ import { cn } from "@/lib/utils";
 interface LinkSidebarDesktopProps {
   userType: "creator" | "brand";
   onCollapsedChange?: (collapsed: boolean) => void;
-  mainSidebarCollapsed?: boolean;
 }
 
-const LinkSidebarDesktop = ({ userType, onCollapsedChange, mainSidebarCollapsed = false }: LinkSidebarDesktopProps) => {
+const LinkSidebarDesktop = ({ userType, onCollapsedChange }: LinkSidebarDesktopProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const currentTab = new URLSearchParams(location.search).get("tab") || "profile";
@@ -41,8 +40,7 @@ const LinkSidebarDesktop = ({ userType, onCollapsedChange, mainSidebarCollapsed 
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col bg-black text-white border-r border-border/20 transition-all duration-300 ease-in-out fixed top-16 bottom-0 z-20",
-        mainSidebarCollapsed ? "left-[72px]" : "left-[240px]",
+        "hidden md:flex flex-col bg-black text-white border-r border-border/20 transition-all duration-300 ease-in-out fixed left-[100px] top-16 bottom-0 z-20",
         collapsed ? "w-[70px]" : "w-[220px]"
       )}
     >
