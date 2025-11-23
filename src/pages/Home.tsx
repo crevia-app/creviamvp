@@ -276,7 +276,7 @@ const Home = () => {
             </button>
 
             {/* Testimonials - 1 on mobile, 2 on desktop */}
-            <div className="overflow-hidden px-6 md:px-0">
+            <div className="overflow-hidden px-3 md:px-0">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mx-auto md:max-w-none">
                 {/* Mobile: Show single testimonial */}
                 <Card className="md:hidden p-10 border-bronze/20 hover:border-bronze/40 transition-all duration-300 bg-background hover:shadow-xl">
