@@ -257,88 +257,48 @@ const Home = () => {
             </h2>
           </div>
 
-          <div className="relative max-w-7xl mx-auto">
-            {/* Navigation Buttons */}
+          <div className="relative max-w-4xl mx-auto px-4 md:px-0">
+            {/* Navigation Buttons - Hidden on mobile */}
             <button
               onClick={prevTestimonial}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-16 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-background border border-border hover:border-bronze hover:bg-bronze/5 transition-all duration-300 flex items-center justify-center shadow-md group"
+              className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-16 z-10 w-12 h-12 rounded-full bg-background border border-border hover:border-bronze hover:bg-bronze/5 transition-all duration-300 items-center justify-center shadow-md group"
               aria-label="Previous testimonial"
             >
-              <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground group-hover:text-bronze transition-colors" />
+              <ChevronLeft className="w-6 h-6 text-muted-foreground group-hover:text-bronze transition-colors" />
             </button>
             
             <button
               onClick={nextTestimonial}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-16 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-background border border-border hover:border-bronze hover:bg-bronze/5 transition-all duration-300 flex items-center justify-center shadow-md group"
+              className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-16 z-10 w-12 h-12 rounded-full bg-background border border-border hover:border-bronze hover:bg-bronze/5 transition-all duration-300 items-center justify-center shadow-md group"
               aria-label="Next testimonial"
             >
-              <ChevronRight className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground group-hover:text-bronze transition-colors" />
+              <ChevronRight className="w-6 h-6 text-muted-foreground group-hover:text-bronze transition-colors" />
             </button>
 
-            {/* Testimonials Grid - Show 3 cards at a time on desktop, 1 on mobile */}
+            {/* Single Testimonial Card - mobile optimized */}
             <div className="overflow-hidden">
-              <div 
-                className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 transition-all duration-500"
-              >
-                {testimonials.slice(currentTestimonial, currentTestimonial + 3).map((testimonial, index) => (
-                  <Card 
-                    key={currentTestimonial + index}
-                    className="p-6 md:p-8 border-bronze/20 hover:border-bronze/40 transition-all duration-300 bg-background hover:shadow-xl"
-                  >
-                    {/* Avatar */}
-                    <div className={`w-14 h-14 md:w-16 md:h-16 rounded-full ${testimonial.image} mb-5 shadow-lg`} />
-                    
-                    {/* Stars */}
-                    <div className="flex gap-1 mb-4">
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="w-4 h-4 fill-bronze text-bronze" />
-                      ))}
-                    </div>
-                    
-                    {/* Content */}
-                    <p className="text-muted-foreground text-sm md:text-base leading-relaxed mb-6">
-                      "{testimonial.content}"
-                    </p>
-                    
-                    {/* Author */}
-                    <div className="border-t border-border pt-4">
-                      <h4 className="font-vollkorn font-bold text-base">{testimonial.name}</h4>
-                      <p className="text-muted-foreground text-sm">{testimonial.role}</p>
-                    </div>
-                  </Card>
-                ))}
+              <Card className="p-6 md:p-8 border-bronze/20 hover:border-bronze/40 transition-all duration-300 bg-background hover:shadow-xl max-w-2xl mx-auto">
+                {/* Avatar */}
+                <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full ${testimonials[currentTestimonial].image} mb-5 shadow-lg mx-auto md:mx-0`} />
                 
-                {/* Fill remaining slots if less than 3 testimonials visible */}
-                {currentTestimonial + 3 > testimonials.length && 
-                  testimonials.slice(0, (currentTestimonial + 3) - testimonials.length).map((testimonial, index) => (
-                    <Card 
-                      key={index}
-                      className="p-6 md:p-8 border-bronze/20 hover:border-bronze/40 transition-all duration-300 bg-background hover:shadow-xl"
-                    >
-                      {/* Avatar */}
-                      <div className={`w-14 h-14 md:w-16 md:h-16 rounded-full ${testimonial.image} mb-5 shadow-lg`} />
-                      
-                      {/* Stars */}
-                      <div className="flex gap-1 mb-4">
-                        {[...Array(testimonial.rating)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-bronze text-bronze" />
-                        ))}
-                      </div>
-                      
-                      {/* Content */}
-                      <p className="text-muted-foreground text-sm md:text-base leading-relaxed mb-6">
-                        "{testimonial.content}"
-                      </p>
-                      
-                      {/* Author */}
-                      <div className="border-t border-border pt-4">
-                        <h4 className="font-vollkorn font-bold text-base">{testimonial.name}</h4>
-                        <p className="text-muted-foreground text-sm">{testimonial.role}</p>
-                      </div>
-                    </Card>
-                  ))
-                }
-              </div>
+                {/* Stars */}
+                <div className="flex gap-1 mb-4 justify-center md:justify-start">
+                  {[...Array(testimonials[currentTestimonial].rating)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 md:w-5 md:h-5 fill-bronze text-bronze" />
+                  ))}
+                </div>
+                
+                {/* Content */}
+                <p className="text-muted-foreground text-base md:text-lg leading-relaxed mb-6 text-center md:text-left">
+                  "{testimonials[currentTestimonial].content}"
+                </p>
+                
+                {/* Author */}
+                <div className="border-t border-border pt-4 text-center md:text-left">
+                  <h4 className="font-vollkorn font-bold text-lg md:text-xl">{testimonials[currentTestimonial].name}</h4>
+                  <p className="text-muted-foreground text-sm md:text-base">{testimonials[currentTestimonial].role}</p>
+                </div>
+              </Card>
             </div>
 
             {/* Dots Indicator */}
