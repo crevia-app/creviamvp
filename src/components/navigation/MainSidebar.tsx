@@ -23,11 +23,18 @@ interface MainSidebarProps {
   userType: "creator" | "brand";
   profile: any;
   onProfileClick: () => void;
+  onCollapsedChange?: (collapsed: boolean) => void;
 }
 
-const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) => {
+const MainSidebar = ({ userType, profile, onProfileClick, onCollapsedChange }: MainSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+
+  const handleToggleCollapse = () => {
+    const newCollapsed = !collapsed;
+    setCollapsed(newCollapsed);
+    onCollapsedChange?.(newCollapsed);
+  };
 
   const navItems = [
     { id: "home", label: "Home", icon: Home, path: "/dashboard" },
@@ -55,7 +62,7 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={handleToggleCollapse}
           className="h-8 w-8 text-white/60 hover:text-bronze hover:bg-white/5"
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
