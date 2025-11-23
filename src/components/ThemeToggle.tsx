@@ -25,27 +25,32 @@ export function ThemeToggle() {
 
   return (
     <div className="space-y-4">
-      <Label>Theme Preference</Label>
-      <div className="grid grid-cols-3 gap-3">
+      <div>
+        <Label className="text-base font-semibold">Theme Preference</Label>
+        <p className="text-sm text-muted-foreground mt-1">Choose how Crevia looks to you</p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {themes.map(({ value, label, icon: Icon }) => (
           <Button
             key={value}
             variant={theme === value ? "default" : "outline"}
-            className={`h-20 flex-col gap-2 ${
+            className={`h-24 flex-col gap-3 transition-all ${
               theme === value 
-                ? "bg-bronze hover:bg-bronze-dark text-white" 
-                : "hover:border-bronze"
+                ? "bg-bronze hover:bg-bronze-dark text-white border-bronze" 
+                : "hover:border-bronze hover:bg-bronze/5"
             }`}
             onClick={() => setTheme(value)}
           >
-            <Icon className="w-5 h-5" />
-            <span className="text-sm">{label}</span>
+            <Icon className="w-6 h-6" />
+            <span className="text-sm font-medium">{label}</span>
           </Button>
         ))}
       </div>
-      <p className="text-sm text-muted-foreground">
-        Current theme: <span className="font-medium capitalize">{theme}</span>
-      </p>
+      <div className="pt-2">
+        <p className="text-sm text-muted-foreground">
+          Current theme: <span className="font-medium text-foreground capitalize">{theme}</span>
+        </p>
+      </div>
     </div>
   );
 }
