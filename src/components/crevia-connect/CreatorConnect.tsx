@@ -35,7 +35,7 @@ const CreatorConnect = () => {
       <div className="flex flex-1 w-full">
         <ConnectSidebarDesktop userType="creator" />
         
-        <main className="flex-1 overflow-auto md:ml-[220px]">
+        <main className="flex-1 overflow-auto md:ml-[320px]">
           <div className="container mx-auto px-4 py-8">
             {renderContent()}
           </div>
