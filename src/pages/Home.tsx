@@ -276,22 +276,22 @@ const Home = () => {
             </button>
 
             {/* Testimonials - 1 on mobile, 2 on desktop */}
-            <div className="overflow-hidden px-12 md:px-0">
+            <div className="overflow-hidden px-6 md:px-0">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mx-auto md:max-w-none">
                 {/* Mobile: Show single testimonial */}
-                <Card className="md:hidden p-8 border-bronze/20 hover:border-bronze/40 transition-all duration-300 bg-background hover:shadow-xl">
-                  <div className={`w-20 h-20 rounded-full ${testimonials[currentTestimonial].image} mb-6 shadow-lg`} />
-                  <div className="flex gap-1 mb-5">
+                <Card className="md:hidden p-10 border-bronze/20 hover:border-bronze/40 transition-all duration-300 bg-background hover:shadow-xl">
+                  <div className={`w-24 h-24 rounded-full ${testimonials[currentTestimonial].image} mb-8 shadow-lg`} />
+                  <div className="flex gap-1.5 mb-6">
                     {[...Array(testimonials[currentTestimonial].rating)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 fill-bronze text-bronze" />
+                      <Star key={i} className="w-6 h-6 fill-bronze text-bronze" />
                     ))}
                   </div>
-                  <p className="text-muted-foreground text-base leading-relaxed mb-6">
+                  <p className="text-muted-foreground text-lg leading-relaxed mb-8">
                     "{testimonials[currentTestimonial].content}"
                   </p>
-                  <div className="border-t border-border pt-5">
-                    <h4 className="font-vollkorn font-bold text-xl">{testimonials[currentTestimonial].name}</h4>
-                    <p className="text-muted-foreground text-sm mt-1">{testimonials[currentTestimonial].role}</p>
+                  <div className="border-t border-border pt-6">
+                    <h4 className="font-vollkorn font-bold text-2xl mb-2">{testimonials[currentTestimonial].name}</h4>
+                    <p className="text-muted-foreground text-base">{testimonials[currentTestimonial].role}</p>
                   </div>
                 </Card>
 
