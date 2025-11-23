@@ -17,7 +17,6 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
-  const [mainSidebarCollapsed, setMainSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -68,10 +67,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           userType={userType} 
           profile={profile}
           onProfileClick={() => setProfileDrawerOpen(true)}
-          onCollapsedChange={setMainSidebarCollapsed}
         />
         
-        <main className={`flex-1 overflow-auto pb-16 md:pb-0 transition-all duration-300 ${mainSidebarCollapsed ? 'md:ml-[72px]' : 'md:ml-[240px]'}`}>
+        <main className="flex-1 overflow-auto pb-16 md:pb-0 md:ml-[100px]">
           {children}
         </main>
       </div>
