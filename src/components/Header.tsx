@@ -17,8 +17,8 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 w-full bg-background/80 backdrop-blur-md z-50 border-b border-border/50 animate-fade-in">
-      <nav className="container mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
+    <header className="fixed top-0 w-full bg-background/95 backdrop-blur-md z-50 border-b border-border/50 animate-fade-in">
+      <nav className="container mx-auto px-3 md:px-6 py-3 flex items-center justify-between max-w-7xl">
         <Link to="/" className="flex items-center gap-2 group">
           <div className="w-7 h-7 md:w-8 md:h-8 bg-bronze rounded-lg transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110"></div>
           <span className="font-vollkorn text-xl md:text-2xl font-bold transition-colors duration-300 group-hover:text-bronze">Crevia</span>
@@ -90,28 +90,14 @@ const Header = () => {
           </Sheet>
 
           {/* Desktop User Actions (Unauthenticated Only) */}
-          <div className="hidden lg:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-2 xl:gap-3">
             <Link to="/auth">
-              <Button variant="ghost" className="font-poppins font-semibold transition-all duration-300 hover-scale">
+              <Button variant="ghost" size="sm" className="font-poppins font-semibold transition-all duration-300 hover-scale text-sm">
                 Log In
               </Button>
             </Link>
             <Link to="/user-type-selection">
-              <Button className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold transition-all duration-300 hover-lift hover-glow">
-                Get Started
-              </Button>
-            </Link>
-          </div>
-
-          {/* Mobile User Actions (Unauthenticated Only) */}
-          <div className="flex lg:hidden items-center gap-2">
-            <Link to="/auth">
-              <Button variant="ghost" size="sm" className="font-poppins font-semibold">
-                Log In
-              </Button>
-            </Link>
-            <Link to="/user-type-selection">
-              <Button size="sm" className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold">
+              <Button size="sm" className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold transition-all duration-300 hover-lift hover-glow text-sm">
                 Get Started
               </Button>
             </Link>
