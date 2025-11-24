@@ -207,9 +207,9 @@ const CreviaAI = () => {
     <div className="h-full flex overflow-hidden">
       {/* Desktop Sidebar - Fixed Position */}
       <div 
-        className={`bg-black text-white border-r border-white/10 transition-all duration-300 flex-shrink-0 fixed left-[100px] top-16 bottom-0 z-20 ${
+        className={`bg-black text-white transition-all duration-300 flex-shrink-0 fixed left-[100px] top-16 bottom-0 z-20 ${
           sidebarCollapsed ? 'w-0 md:w-[60px]' : 'w-0 md:w-[260px]'
-        } overflow-hidden`}
+        } ${!sidebarCollapsed ? 'border-r border-white/10' : ''} overflow-hidden`}
       >
         <div className="h-full flex flex-col">
           {/* Sidebar Header */}
