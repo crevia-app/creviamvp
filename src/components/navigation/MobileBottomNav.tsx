@@ -19,6 +19,7 @@ const MobileBottomNav = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [userType, setUserType] = useState<"creator" | "brand" | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -46,6 +47,12 @@ const MobileBottomNav = () => {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
+    setSheetOpen(false);
+  };
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setSheetOpen(false);
   };
 
   const navItems = [
@@ -77,7 +84,7 @@ const MobileBottomNav = () => {
         })}
 
         {/* More Sheet */}
-        <Sheet>
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
             <button className="flex flex-col items-center justify-center gap-1 text-white/60">
               <MoreHorizontal className="h-5 w-5" />
@@ -114,46 +121,62 @@ const MobileBottomNav = () => {
             )}
             
             <div className="grid gap-2 pb-4">
-              <Link to="/crevia-link">
-                <Button variant="ghost" className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5">
-                  Crevia Link
-                </Button>
-              </Link>
-              <Link to="/about">
-                <Button variant="ghost" className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5">
-                  About
-                </Button>
-              </Link>
-              <Link to="/profile/help">
-                <Button variant="ghost" className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5">
-                  Help & Support
-                </Button>
-              </Link>
-              <Link to="/privacy-policy">
-                <Button variant="ghost" className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5">
-                  Privacy Policy
-                </Button>
-              </Link>
-              <Link to="/terms-of-service">
-                <Button variant="ghost" className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5">
-                  Terms of Service
-                </Button>
-              </Link>
-              <Link to="/profile/settings">
-                <Button variant="ghost" className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5">
-                  Settings
-                </Button>
-              </Link>
-              <Link to="/profile/payments-billing">
-                <Button variant="ghost" className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5">
-                  Payments & Billing
-                </Button>
-              </Link>
-              <Link to="/dashboard">
-                <Button variant="ghost" className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5">
-                  My Dashboard
-                </Button>
-              </Link>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
+                onClick={() => handleNavigation("/crevia-link")}
+              >
+                Crevia Link
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
+                onClick={() => handleNavigation("/about")}
+              >
+                About
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
+                onClick={() => handleNavigation("/profile/help")}
+              >
+                Help & Support
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
+                onClick={() => handleNavigation("/privacy-policy")}
+              >
+                Privacy Policy
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
+                onClick={() => handleNavigation("/terms-of-service")}
+              >
+                Terms of Service
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
+                onClick={() => handleNavigation("/profile/settings")}
+              >
+                Settings
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
+                onClick={() => handleNavigation("/profile/payments-billing")}
+              >
+                Payments & Billing
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
+                onClick={() => handleNavigation("/dashboard")}
+              >
+                My Dashboard
+              </Button>
               <Button 
                 variant="ghost" 
                 className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
