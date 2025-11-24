@@ -43,7 +43,7 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
   };
 
   return (
-    <aside className="hidden md:flex flex-col bg-black text-white border-r border-white/10 fixed left-0 top-16 bottom-0 z-30 w-[100px]">
+    <aside className="hidden md:flex flex-col bg-black text-white fixed left-0 top-16 bottom-0 z-30 w-[100px]">
       {/* Main Navigation */}
       <nav className="flex-1 py-4 space-y-2">
         {navItems.map((item) => {
@@ -117,7 +117,7 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
       </nav>
 
       {/* Profile Avatar at Bottom */}
-      <div className="p-3 border-t border-white/10">
+      <div className="p-3">
         <button
           onClick={onProfileClick}
           className="flex flex-col items-center justify-center gap-1.5 px-2 py-2 rounded-xl transition-all duration-200 w-full text-white/70 hover:text-bronze hover:bg-white/5"
