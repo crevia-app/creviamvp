@@ -151,7 +151,7 @@ const CreviaAI = () => {
         </div>
       </div>
 
-      <Separator className="bg-white/10" />
+      <Separator className="bg-white/10 hidden" />
 
       {/* Your Chats Label */}
       <div className="px-3 py-2">
@@ -205,15 +205,15 @@ const CreviaAI = () => {
 
   return (
     <div className="h-full flex overflow-hidden">
-      {/* Desktop Sidebar - Fixed Position */}
+      {/* Desktop Sidebar - Hidden on mobile, no borders */}
       <div 
-        className={`bg-black text-white transition-all duration-300 flex-shrink-0 fixed left-[100px] top-16 bottom-0 z-20 ${
-          sidebarCollapsed ? 'w-0 md:w-[60px]' : 'w-0 md:w-[260px]'
-        } ${!sidebarCollapsed ? 'border-r border-white/10' : ''} overflow-hidden`}
+        className={`hidden md:block bg-black text-white transition-all duration-300 flex-shrink-0 fixed left-[100px] top-16 bottom-0 z-20 ${
+          sidebarCollapsed ? 'w-[60px]' : 'w-[260px]'
+        } overflow-hidden`}
       >
         <div className="h-full flex flex-col">
           {/* Sidebar Header */}
-          <div className="p-3 flex items-center justify-between border-b border-white/10">
+          <div className="p-3 flex items-center justify-between">
             {!sidebarCollapsed && (
               <h2 className="font-poppins font-semibold text-sm">Kira AI</h2>
             )}
@@ -258,8 +258,8 @@ const CreviaAI = () => {
 
       {/* Mobile Sidebar Sheet */}
       <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
-        <SheetContent side="left" className="bg-black border-white/10 w-[280px] p-0">
-          <SheetHeader className="p-3 border-b border-white/10">
+        <SheetContent side="left" className="bg-black w-[280px] p-0 border-none">
+          <SheetHeader className="p-3">
             <SheetTitle className="font-poppins font-semibold text-sm text-white">Kira AI</SheetTitle>
           </SheetHeader>
           <div className="flex flex-col h-[calc(100%-60px)]">
@@ -281,7 +281,7 @@ const CreviaAI = () => {
         </Button>
 
         {/* Hero Section - Compact */}
-        <div className="bg-gradient-to-b from-muted/30 to-background py-4 md:py-6 px-3 md:px-4 border-b border-border/40">
+        <div className="bg-gradient-to-b from-muted/30 to-background py-4 md:py-6 px-3 md:px-4">
           <div className="max-w-4xl mx-auto text-center">
             <div className="mb-2 md:mb-3 flex justify-center">
               <AnimatedKira />
@@ -340,7 +340,7 @@ const CreviaAI = () => {
           </div>
 
           {/* Input Area */}
-          <div className="border-t border-border/50 bg-card p-3 md:p-6">
+          <div className="bg-card p-3 md:p-6">
             <div className="max-w-3xl mx-auto">
               {selectedFile && (
                 <div className="mb-3 flex items-center gap-2 p-2 bg-muted rounded-lg text-sm">
@@ -400,7 +400,7 @@ const CreviaAI = () => {
         </div>
 
         {/* What Kira Can Do */}
-        <div className="py-8 md:py-12 px-3 md:px-4 bg-muted/30 border-t border-border/40">
+        <div className="py-8 md:py-12 px-3 md:px-4 bg-muted/30">
           <div className="max-w-4xl mx-auto">
             <h2 className="font-vollkorn text-xl md:text-2xl lg:text-3xl font-bold mb-6 md:mb-8 text-center">
               What Kira Can Do
