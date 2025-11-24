@@ -29,10 +29,6 @@ const Header = () => {
             Home
           </Link>
           
-          <Link to="/pricing" className="text-sm font-medium hover:text-bronze transition-all duration-300 bronze-underline">
-            Pricing
-          </Link>
-          
           <Link to="/about" className="text-sm font-medium hover:text-bronze transition-all duration-300 bronze-underline">
             About
           </Link>
@@ -55,14 +51,6 @@ const Header = () => {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Home
-                </Link>
-                
-                <Link 
-                  to="/pricing" 
-                  className="text-base font-medium hover:text-bronze transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Pricing
                 </Link>
                 
                 <Link 
