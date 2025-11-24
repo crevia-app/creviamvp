@@ -1,4 +1,4 @@
-import kiraLion from "@/assets/kira-lion.png";
+import kiraLion from "@/assets/kira-mascot-new.png";
 
 export const AnimatedKira = () => {
   return (
