@@ -23,6 +23,7 @@ import Verification from "./pages/profile/Verification";
 import Settings from "./pages/profile/Settings";
 import Help from "./pages/profile/Help";
 import Feedback from "./pages/profile/Feedback";
+import Pricing from "./pages/Pricing";
 import About from "./pages/About";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -41,6 +42,7 @@ const App = () => (
             {/* Public routes */}
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/pricing" element={<Pricing />} />
             <Route path="/about" element={<About />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />

@@ -1,35 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Check, Sparkles } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { supabase } from "@/integrations/supabase/client";
 
 const Pricing = () => {
   const navigate = useNavigate();
-  const [userType, setUserType] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    checkUserType();
-  }, []);
-
-  const checkUserType = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (session) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("user_type")
-        .eq("id", session.user.id)
-        .single();
-      
-      setUserType(profile?.user_type || null);
-    }
-    setLoading(false);
-  };
+  const [selectedType, setSelectedType] = useState<"creator" | "brand">("creator");
 
   const creatorPlans = [
     {
@@ -138,62 +117,56 @@ const Pricing = () => {
     },
   ];
 
-  const plans = userType === "creator" ? creatorPlans : userType === "brand" ? brandPlans : creatorPlans;
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="container mx-auto px-6 pt-32 text-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  const plans = selectedType === "creator" ? creatorPlans : brandPlans;
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
       {/* Hero Section */}
-      <section className="pt-24 md:pt-32 pb-16 md:pb-20 px-6 md:px-6">
+      <section className="pt-24 md:pt-32 pb-16 md:pb-20 px-4 md:px-6">
         <div className="container mx-auto max-w-6xl text-center">
           <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-6 md:mb-8 leading-tight">
             Simple, <span className="text-gradient-bronze">Transparent</span> Pricing
           </h1>
-          <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8 md:mb-10 leading-relaxed">
-            {userType === "creator" 
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8 md:mb-10 leading-relaxed">
+            {selectedType === "creator" 
               ? "Choose the plan that fits your creator journey"
-              : userType === "brand"
-              ? "Find the perfect plan to connect with creators"
-              : "Choose the plan that fits your needs"}
+              : "Find the perfect plan to connect with creators"}
           </p>
           
-          {!userType && (
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10 md:mb-12 max-w-md mx-auto">
-              <Button 
-                variant="outline" 
-                size="lg"
-                onClick={() => setUserType("creator")}
-                className="w-full sm:w-auto font-poppins font-semibold text-base py-6"
-              >
-                I'm a Creator
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg"
-                onClick={() => setUserType("brand")}
-                className="w-full sm:w-auto font-poppins font-semibold text-base py-6"
-              >
-                I'm a Brand
-              </Button>
-            </div>
-          )}
+          {/* User Type Toggle */}
+          <div className="inline-flex items-center gap-2 p-1 bg-secondary/50 rounded-full mb-10 md:mb-12">
+            <Button
+              variant={selectedType === "creator" ? "default" : "ghost"}
+              size="lg"
+              onClick={() => setSelectedType("creator")}
+              className={`rounded-full px-6 md:px-8 font-poppins font-semibold text-sm md:text-base transition-all ${
+                selectedType === "creator" 
+                  ? "bg-bronze hover:bg-bronze-dark text-white shadow-md" 
+                  : "hover:bg-transparent"
+              }`}
+            >
+              Creator Pricing
+            </Button>
+            <Button
+              variant={selectedType === "brand" ? "default" : "ghost"}
+              size="lg"
+              onClick={() => setSelectedType("brand")}
+              className={`rounded-full px-6 md:px-8 font-poppins font-semibold text-sm md:text-base transition-all ${
+                selectedType === "brand" 
+                  ? "bg-bronze hover:bg-bronze-dark text-white shadow-md" 
+                  : "hover:bg-transparent"
+              }`}
+            >
+              Brand Pricing
+            </Button>
+          </div>
         </div>
       </section>
 
       {/* Pricing Cards */}
-      <section className="pb-16 md:pb-20 px-6 md:px-6">
+      <section className="pb-16 md:pb-20 px-4 md:px-6">
         <div className="container mx-auto max-w-7xl">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {plans.map((plan, index) => (
@@ -250,7 +223,7 @@ const Pricing = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-16 md:py-20 px-6 md:px-6 bg-secondary/30">
+      <section className="py-16 md:py-20 px-4 md:px-6 bg-secondary/30">
         <div className="container mx-auto max-w-4xl">
           <h2 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-12 md:mb-16">
             Frequently Asked <span className="text-gradient-bronze">Questions</span>
@@ -274,7 +247,7 @@ const Pricing = () => {
             <Card className="p-6 md:p-8">
               <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3">Is there a free trial?</h3>
               <p className="text-muted-foreground text-base leading-relaxed">
-                {userType === "creator" 
+                {selectedType === "creator" 
                   ? "Yes! All creators start with our Free plan. You can try Pro features with a 14-day free trial."
                   : "Yes! We offer a 14-day free trial for all paid plans. No credit card required to start."}
               </p>
@@ -291,13 +264,13 @@ const Pricing = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 md:py-20 px-6 md:px-6">
+      <section className="py-16 md:py-20 px-4 md:px-6">
         <div className="container mx-auto max-w-4xl text-center">
           <h2 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
             Ready to get started?
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground mb-8 leading-relaxed">
-            Join thousands of {userType === "brand" ? "brands" : "creators"} already using Crevia
+            Join thousands of {selectedType === "brand" ? "brands" : "creators"} already using Crevia
           </p>
           <Link to="/user-type-selection">
             <Button size="lg" className="bg-bronze hover:bg-bronze-dark text-lg px-12 py-7 font-poppins font-semibold shadow-lg hover-scale">
