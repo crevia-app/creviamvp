@@ -252,61 +252,63 @@ const CreviaLink = () => {
           "flex-1 overflow-auto transition-all duration-300",
           sidebarCollapsed ? "md:ml-[170px]" : "md:ml-[320px]" // 100 (main) + 70/220 (link)
         )}>
-          <div className="container mx-auto px-3 md:px-6 py-4 md:py-8">
+          <div className="container mx-auto px-4 md:px-6 py-4 md:py-8 max-w-4xl">
             {/* Editor Content */}
-            <div className="max-w-5xl mx-auto">
+            <div className="w-full">
 
           {/* Profile Tab */}
           {currentTab === "profile" && (
             <>
               {/* Hero Section - Only in Profile Tab */}
-              <div className="text-center mb-10 md:mb-16">
-                <div className="inline-flex items-center gap-2 mb-3 md:mb-4 text-bronze">
-                  <Link2 className="w-5 h-5 md:w-6 md:h-6" />
-                  <span className="text-xs md:text-sm font-poppins font-semibold">CREVIA LINK</span>
+              <div className="text-center mb-8 md:mb-12 px-2">
+                <div className="inline-flex items-center gap-2 mb-2 md:mb-3 text-bronze">
+                  <Link2 className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="text-xs font-poppins font-semibold">CREVIA LINK</span>
                 </div>
-                <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6 px-2">
+                <h1 className="font-vollkorn text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4">
                   Your premium link-in-bio
                 </h1>
-                <p className="text-base md:text-lg text-muted-foreground font-poppins max-w-2xl mx-auto mb-6 md:mb-8 px-4">
+                <p className="text-sm md:text-base text-muted-foreground font-poppins max-w-xl mx-auto mb-4 md:mb-6">
                   Beautiful, customizable, and powerful. Share everything you create in one elegant page.
                 </p>
               </div>
 
               {/* Action Buttons - Only in Profile Tab */}
-              <div className="flex flex-col sm:flex-row flex-wrap gap-3 md:gap-4 justify-center px-4 mb-10 md:mb-16">
+              <div className="flex flex-col gap-2 md:gap-3 mb-6 md:mb-10">
                 <Button
-                  size="lg"
+                  size="default"
                   onClick={() => window.open(`/${linkProfile?.username}`, "_blank")}
-                  className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold"
+                  className="w-full bg-bronze hover:bg-bronze-dark font-poppins font-semibold"
                 >
                   <Eye className="w-4 h-4 mr-2" />
                   Preview Your Page
                 </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="font-poppins font-semibold"
-                >
-                  {saving ? "Saving..." : "Save Changes"}
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={handleCopyLink}
-                  className="font-poppins font-semibold"
-                >
-                  {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-                  {copied ? "Copied!" : "Copy Link"}
-                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    size="default"
+                    variant="outline"
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="font-poppins font-semibold"
+                  >
+                    {saving ? "Saving..." : "Save"}
+                  </Button>
+                  <Button
+                    size="default"
+                    variant="outline"
+                    onClick={handleCopyLink}
+                    className="font-poppins font-semibold"
+                  >
+                    {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                    {copied ? "Copied!" : "Copy Link"}
+                  </Button>
+                </div>
               </div>
             
-              <Card className="p-8">
-                <h3 className="font-vollkorn text-2xl font-bold mb-6">Profile Information</h3>
+              <Card className="p-4 md:p-6">
+                <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-4 md:mb-6">Profile Information</h3>
                 
-                <div className="space-y-6">
+                <div className="space-y-4 md:space-y-6">
                   <div>
                     <Label htmlFor="username">Username</Label>
                     <div className="flex items-center gap-2 mt-2">
@@ -365,12 +367,13 @@ const CreviaLink = () => {
 
           {/* Buttons Tab */}
           {currentTab === "buttons" && (
-            <Card className="p-8">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="font-vollkorn text-2xl font-bold">Links & Buttons</h3>
+            <Card className="p-4 md:p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 md:mb-6">
+                <h3 className="font-vollkorn text-xl md:text-2xl font-bold">Links & Buttons</h3>
                 <Button 
-                  className="bg-bronze hover:bg-bronze-dark"
+                  className="bg-bronze hover:bg-bronze-dark w-full sm:w-auto"
                   onClick={() => setShowAddButton(true)}
+                  size="default"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Button
@@ -378,9 +381,9 @@ const CreviaLink = () => {
               </div>
               
               {buttons.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Link2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>No buttons yet. Click "Add Button" to get started.</p>
+                <div className="text-center py-8 md:py-12 text-muted-foreground">
+                  <Link2 className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-3 md:mb-4 opacity-50" />
+                  <p className="text-sm md:text-base">No buttons yet. Click "Add Button" to get started.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -402,13 +405,13 @@ const CreviaLink = () => {
           {currentTab === "appearance" && (
             <div className="space-y-6">
               {/* Typography Section */}
-              <Card className="p-8">
-                <div className="flex items-center gap-2 mb-6">
-                  <Type className="w-5 h-5 text-bronze" />
-                  <h3 className="font-vollkorn text-2xl font-bold">Typography</h3>
+              <Card className="p-4 md:p-6">
+                <div className="flex items-center gap-2 mb-4 md:mb-6">
+                  <Type className="w-4 h-4 md:w-5 md:h-5 text-bronze" />
+                  <h3 className="font-vollkorn text-xl md:text-2xl font-bold">Typography</h3>
                 </div>
                 
-                <div className="space-y-6">
+                <div className="space-y-4 md:space-y-6">
                   <div>
                     <Label htmlFor="fontFamily">Font Family</Label>
                     <Select
@@ -461,13 +464,13 @@ const CreviaLink = () => {
               </Card>
 
               {/* Theme & Colors Section */}
-              <Card className="p-8">
-                <div className="flex items-center gap-2 mb-6">
-                  <Palette className="w-5 h-5 text-bronze" />
-                  <h3 className="font-vollkorn text-2xl font-bold">Theme & Colors</h3>
+              <Card className="p-4 md:p-6">
+                <div className="flex items-center gap-2 mb-4 md:mb-6">
+                  <Palette className="w-4 h-4 md:w-5 md:h-5 text-bronze" />
+                  <h3 className="font-vollkorn text-xl md:text-2xl font-bold">Theme & Colors</h3>
                 </div>
                 
-                <div className="space-y-6">
+                <div className="space-y-4 md:space-y-6">
                   <div>
                     <Label>Color Scheme</Label>
                     <RadioGroup
