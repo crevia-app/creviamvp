@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Paperclip, Image as ImageIcon, File, X, Check, CheckCheck, Download } from "lucide-react";
+import { Send, Paperclip, Image as ImageIcon, File, X, Check, CheckCheck, Download, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import NewConversationDialog from "./NewConversationDialog";
@@ -327,112 +327,125 @@ const CreviaChat = () => {
   };
 
   return (
-    <div className="space-y-4">
-      {currentUserId && currentUserType && (
-        <NewConversationDialog 
-          currentUserId={currentUserId}
-          currentUserType={currentUserType}
-          onConversationCreated={handleNewConversation}
-        />
-      )}
-      <div className="grid grid-cols-12 gap-6 h-[600px]">
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Conversations</CardTitle>
-          </CardHeader>
-        <CardContent className="p-0">
-          <ScrollArea className="h-[500px]">
+    <div className="flex flex-col h-full">
+      {/* Header with New Conversation */}
+      <div className="flex items-center justify-between p-3 md:p-4 border-b bg-background/95 backdrop-blur">
+        <h2 className="font-vollkorn text-lg md:text-xl font-bold">Messages</h2>
+        {currentUserId && currentUserType && (
+          <NewConversationDialog 
+            currentUserId={currentUserId}
+            currentUserType={currentUserType}
+            onConversationCreated={handleNewConversation}
+          />
+        )}
+      </div>
+
+      {/* Mobile/Tablet: Stack vertically, Desktop: Side by side */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        {/* Conversations List */}
+        <div className={`${selectedConversation ? 'hidden md:flex' : 'flex'} md:w-80 border-b md:border-b-0 md:border-r flex-col bg-muted/30`}>
+          <ScrollArea className="flex-1">
             {conversations.length === 0 ? (
-              <div className="p-4 text-center text-muted-foreground">
-                No conversations yet
+              <div className="p-6 text-center text-muted-foreground">
+                <p className="text-sm">No conversations yet</p>
               </div>
             ) : (
-              conversations.map((conv) => (
-                <div
-                  key={conv.userId}
-                  className={`p-4 hover:bg-accent cursor-pointer border-b transition-colors ${
-                    selectedConversation?.userId === conv.userId ? "bg-accent" : ""
-                  }`}
-                  onClick={() => setSelectedConversation(conv)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-semibold">
+              <div className="divide-y">
+                {conversations.map((conv) => (
+                  <div
+                    key={conv.userId}
+                    className={`p-3 hover:bg-accent/50 cursor-pointer transition-colors ${
+                      selectedConversation?.userId === conv.userId ? "bg-accent" : ""
+                    }`}
+                    onClick={() => setSelectedConversation(conv)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-primary/10 flex items-center justify-center text-sm md:text-base font-semibold flex-shrink-0">
                         {conv.profile?.avatar_url ? (
-                          <img src={conv.profile.avatar_url} alt="" className="h-12 w-12 rounded-full object-cover" />
+                          <img src={conv.profile.avatar_url} alt="" className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover" />
                         ) : (
                           conv.profile?.display_name?.[0]?.toUpperCase() || "U"
                         )}
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-poppins font-medium truncate text-sm md:text-base">{conv.profile?.display_name || "User"}</p>
+                        <p className="text-xs md:text-sm text-muted-foreground truncate">{conv.lastMessage}</p>
+                      </div>
+                      {conv.lastMessageTime && (
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {formatTime(conv.lastMessageTime)}
+                        </span>
+                      )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{conv.profile?.display_name || "User"}</p>
-                      <p className="text-sm text-muted-foreground truncate">{conv.lastMessage}</p>
-                    </div>
-                    {conv.lastMessageTime && (
-                      <span className="text-xs text-muted-foreground">
-                        {formatTime(conv.lastMessageTime)}
-                      </span>
-                    )}
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </ScrollArea>
-        </CardContent>
-      </Card>
+        </div>
 
-      <Card className="col-span-8">
-        {selectedConversation ? (
-          <>
-            <CardHeader className="border-b">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-semibold">
-                  {selectedConversation.profile?.avatar_url ? (
-                    <img src={selectedConversation.profile.avatar_url} alt="" className="h-10 w-10 rounded-full object-cover" />
-                  ) : (
-                    selectedConversation.profile?.display_name?.[0]?.toUpperCase() || "U"
-                  )}
-                </div>
-                <div>
-                  <CardTitle className="text-lg">{selectedConversation.profile?.display_name || "User"}</CardTitle>
-                  {otherUserTyping && <p className="text-sm text-muted-foreground">typing...</p>}
+        {/* Chat Area */}
+        <div className={`${selectedConversation ? 'flex' : 'hidden md:flex'} flex-1 flex-col bg-background`}>
+          {selectedConversation ? (
+            <>
+              {/* Chat Header */}
+              <div className="p-3 md:p-4 border-b bg-background/95 backdrop-blur">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedConversation(null)}
+                    className="md:hidden -ml-2"
+                  >
+                    ← Back
+                  </Button>
+                  <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                    {selectedConversation.profile?.avatar_url ? (
+                      <img src={selectedConversation.profile.avatar_url} alt="" className="h-8 w-8 md:h-10 md:w-10 rounded-full object-cover" />
+                    ) : (
+                      selectedConversation.profile?.display_name?.[0]?.toUpperCase() || "U"
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-poppins font-semibold text-sm md:text-base truncate">{selectedConversation.profile?.display_name || "User"}</p>
+                    {otherUserTyping && <p className="text-xs md:text-sm text-muted-foreground">typing...</p>}
+                  </div>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[420px] p-4">
-                <div className="space-y-4">
+
+              {/* Messages */}
+              <ScrollArea className="flex-1 p-3 md:p-4">
+                <div className="space-y-3 md:space-y-4 max-w-3xl mx-auto">
                   {messages.map((msg) => (
                     <div
                       key={msg.id}
                       className={`flex ${msg.sender_id === currentUserId ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-[70%] rounded-lg p-3 ${
+                        className={`max-w-[85%] md:max-w-[70%] rounded-2xl px-3 md:px-4 py-2 md:py-3 ${
                           msg.sender_id === currentUserId
-                            ? "bg-primary text-primary-foreground"
+                            ? "bg-bronze text-background"
                             : "bg-muted"
                         }`}
                       >
                         {msg.file_url && (
-                          <div className="mb-2 p-2 rounded bg-background/10 flex items-center gap-2">
+                          <div className="mb-2 p-2 rounded-lg bg-background/10 flex items-center gap-2">
                             {getFileIcon(msg.file_type)}
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{msg.file_name}</p>
+                              <p className="text-xs md:text-sm font-medium truncate">{msg.file_name}</p>
                               <p className="text-xs opacity-70">{formatFileSize(msg.file_size)}</p>
                             </div>
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => downloadFile(msg.file_url, msg.file_name)}
-                              className="h-8 w-8 p-0"
+                              className="h-7 w-7 p-0"
                             >
-                              <Download className="h-4 w-4" />
+                              <Download className="h-3 w-3 md:h-4 md:w-4" />
                             </Button>
                           </div>
                         )}
-                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                        <p className="text-xs md:text-sm whitespace-pre-wrap">{msg.content}</p>
                         <div className="flex items-center gap-1 mt-1">
                           <p className="text-xs opacity-70">
                             {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -450,21 +463,22 @@ const CreviaChat = () => {
                 </div>
               </ScrollArea>
 
-              <div className="p-4 border-t">
+              {/* Input Area */}
+              <div className="p-3 md:p-4 border-t bg-background/95 backdrop-blur">
                 {selectedFile && (
                   <div className="mb-2 p-2 bg-muted rounded-lg flex items-center gap-2">
                     {getFileIcon(selectedFile.type)}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                      <p className="text-xs md:text-sm font-medium truncate">{selectedFile.name}</p>
                       <p className="text-xs text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
                     </div>
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => setSelectedFile(null)}
-                      className="h-8 w-8 p-0"
+                      className="h-7 w-7 p-0"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3 w-3 md:h-4 md:w-4" />
                     </Button>
                   </div>
                 )}
@@ -481,6 +495,7 @@ const CreviaChat = () => {
                     size="icon"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploadingFile}
+                    className="flex-shrink-0"
                   >
                     <Paperclip className="h-4 w-4" />
                   </Button>
@@ -494,26 +509,29 @@ const CreviaChat = () => {
                         sendMessage();
                       }
                     }}
-                    className="min-h-[44px] max-h-[120px] resize-none"
-                    rows={1}
+                    className="flex-1 min-h-[60px] max-h-[120px] resize-none text-sm"
+                    disabled={uploadingFile}
                   />
-                  <Button 
-                    onClick={sendMessage} 
-                    size="icon"
+                  <Button
+                    onClick={sendMessage}
                     disabled={uploadingFile || (!newMessage.trim() && !selectedFile)}
+                    className="self-end bg-bronze hover:bg-bronze/90 text-background flex-shrink-0"
                   >
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-            </CardContent>
-          </>
-        ) : (
-          <CardContent className="flex items-center justify-center h-full">
-            <p className="text-muted-foreground">Select a conversation to start chatting</p>
-          </CardContent>
-        )}
-      </Card>
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              <div className="text-center p-6">
+                <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p className="text-base md:text-lg font-medium mb-2">No conversation selected</p>
+                <p className="text-sm">Choose a conversation or start a new one</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
