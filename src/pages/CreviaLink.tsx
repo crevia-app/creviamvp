@@ -252,9 +252,9 @@ const CreviaLink = () => {
           "flex-1 overflow-auto transition-all duration-300 bg-background",
           sidebarCollapsed ? "md:ml-[170px]" : "md:ml-[320px]"
         )}>
-          <div className="w-full max-w-2xl mx-auto px-6 sm:px-8 md:px-10 py-8 sm:py-10 md:py-12">
+          <div className="w-full max-w-3xl mx-auto px-6 sm:px-8 md:px-10 py-10 sm:py-12 md:py-14">
             {/* Editor Content */}
-            <div className="w-full space-y-8 md:space-y-10">
+            <div className="w-full space-y-10 md:space-y-12">
 
           {/* Profile Tab */}
           {currentTab === "profile" && (
@@ -413,17 +413,17 @@ const CreviaLink = () => {
 
           {/* Appearance Tab */}
           {currentTab === "appearance" && (
-            <div className="space-y-8 md:space-y-10">
+            <div className="space-y-8 md:space-y-10 pb-8">
               {/* Typography Section */}
               <Card className="p-6 md:p-8 border-border/50">
-                <div className="flex items-center gap-3 mb-7">
-                  <Type className="w-6 h-6 text-bronze" />
+                <div className="flex items-center gap-3 mb-8">
+                  <Type className="w-6 h-6 text-bronze flex-shrink-0" />
                   <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">Typography</h3>
                 </div>
                 
-                <div className="space-y-4 md:space-y-6">
+                <div className="space-y-6 md:space-y-7">
                   <div>
-                    <Label htmlFor="fontFamily">Font Family</Label>
+                    <Label htmlFor="fontFamily" className="text-base font-medium mb-3 block">Font Family</Label>
                     <Select
                       value={linkProfile?.background?.font_family || "poppins"}
                       onValueChange={(value) => setLinkProfile({ 
@@ -431,7 +431,7 @@ const CreviaLink = () => {
                         background: { ...linkProfile?.background, font_family: value }
                       })}
                     >
-                      <SelectTrigger className="mt-2">
+                      <SelectTrigger className="mt-2 h-12 text-base">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -445,13 +445,13 @@ const CreviaLink = () => {
                         <SelectItem value="space-grotesk">Space Grotesk (Tech Sans)</SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-muted-foreground mt-2">
+                    <p className="text-sm text-muted-foreground mt-3">
                       Choose a font that matches your brand personality
                     </p>
                   </div>
 
                   <div>
-                    <Label htmlFor="fontSize">Text Size</Label>
+                    <Label htmlFor="fontSize" className="text-base font-medium mb-3 block">Text Size</Label>
                     <Select
                       value={linkProfile?.background?.font_size || "medium"}
                       onValueChange={(value) => setLinkProfile({ 
@@ -459,7 +459,7 @@ const CreviaLink = () => {
                         background: { ...linkProfile?.background, font_size: value }
                       })}
                     >
-                      <SelectTrigger className="mt-2">
+                      <SelectTrigger className="mt-2 h-12 text-base">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -474,15 +474,15 @@ const CreviaLink = () => {
               </Card>
 
               {/* Theme & Colors Section */}
-              <Card className="p-5 md:p-7 border-border/50">
-                <div className="flex items-center gap-3 mb-6">
-                  <Palette className="w-5 h-5 text-bronze" />
-                  <h3 className="font-vollkorn text-xl md:text-2xl font-bold">Theme & Colors</h3>
+              <Card className="p-6 md:p-8 border-border/50">
+                <div className="flex items-center gap-3 mb-8">
+                  <Palette className="w-6 h-6 text-bronze flex-shrink-0" />
+                  <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">Theme & Colors</h3>
                 </div>
                 
-                <div className="space-y-4 md:space-y-6">
+                <div className="space-y-6 md:space-y-7">
                   <div>
-                    <Label>Color Scheme</Label>
+                    <Label className="text-base font-medium mb-4 block">Color Scheme</Label>
                     <RadioGroup
                       value={linkProfile?.theme || "dark"}
                       onValueChange={(value) => setLinkProfile({ ...linkProfile, theme: value })}
@@ -579,7 +579,7 @@ const CreviaLink = () => {
                   </div>
 
                   <div>
-                    <Label>Background Style</Label>
+                    <Label className="text-base font-medium mb-3 block">Background Style</Label>
                     <Select
                       value={linkProfile?.background?.style || "solid"}
                       onValueChange={(value) => setLinkProfile({ 
@@ -587,7 +587,7 @@ const CreviaLink = () => {
                         background: { ...linkProfile?.background, style: value }
                       })}
                     >
-                      <SelectTrigger className="mt-2">
+                      <SelectTrigger className="mt-2 h-12 text-base">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -602,20 +602,20 @@ const CreviaLink = () => {
               </Card>
 
               {/* Layout & Spacing Section */}
-              <Card className="p-8">
-                <div className="flex items-center gap-2 mb-6">
-                  <Layout className="w-5 h-5 text-bronze" />
-                  <h3 className="font-vollkorn text-2xl font-bold">Layout & Spacing</h3>
+              <Card className="p-6 md:p-8 border-border/50">
+                <div className="flex items-center gap-3 mb-8">
+                  <Layout className="w-6 h-6 text-bronze flex-shrink-0" />
+                  <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">Layout & Spacing</h3>
                 </div>
                 
-                <div className="space-y-6">
+                <div className="space-y-6 md:space-y-7">
                   <div>
-                    <Label htmlFor="layout">Page Layout</Label>
+                    <Label htmlFor="layout" className="text-base font-medium mb-3 block">Page Layout</Label>
                     <Select
                       value={linkProfile?.layout || "centered"}
                       onValueChange={(value) => setLinkProfile({ ...linkProfile, layout: value })}
                     >
-                      <SelectTrigger className="mt-2">
+                      <SelectTrigger className="mt-2 h-12 text-base">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -629,7 +629,7 @@ const CreviaLink = () => {
                   </div>
 
                   <div>
-                    <Label>Button Style</Label>
+                    <Label className="text-base font-medium mb-4 block">Button Style</Label>
                     <RadioGroup
                       value={linkProfile?.background?.button_style || "rounded"}
                       onValueChange={(value) => setLinkProfile({ 
@@ -685,7 +685,7 @@ const CreviaLink = () => {
                   </div>
 
                   <div>
-                    <Label>Button Spacing</Label>
+                    <Label className="text-base font-medium mb-4 block">Button Spacing</Label>
                     <div className="mt-4">
                       <Slider
                         value={[linkProfile?.background?.button_spacing || 12]}
@@ -698,14 +698,14 @@ const CreviaLink = () => {
                         step={4}
                         className="w-full"
                       />
-                      <p className="text-xs text-muted-foreground mt-2">
+                      <p className="text-sm text-muted-foreground mt-3">
                         {linkProfile?.background?.button_spacing || 12}px between buttons
                       </p>
                     </div>
                   </div>
 
                   <div>
-                    <Label>Page Width</Label>
+                    <Label className="text-base font-medium mb-3 block">Page Width</Label>
                     <Select
                       value={linkProfile?.background?.page_width || "medium"}
                       onValueChange={(value) => setLinkProfile({ 
@@ -713,7 +713,7 @@ const CreviaLink = () => {
                         background: { ...linkProfile?.background, page_width: value }
                       })}
                     >
-                      <SelectTrigger className="mt-2">
+                      <SelectTrigger className="mt-2 h-12 text-base">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -728,14 +728,14 @@ const CreviaLink = () => {
               </Card>
 
               {/* Effects & Animations */}
-              <Card className="p-8">
-                <h3 className="font-vollkorn text-2xl font-bold mb-6">Effects & Animations</h3>
+              <Card className="p-6 md:p-8 border-border/50">
+                <h3 className="font-vollkorn text-2xl md:text-3xl font-bold mb-8">Effects & Animations</h3>
                 
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Button Hover Effects</Label>
-                      <p className="text-xs text-muted-foreground">Subtle animations on hover</p>
+                <div className="space-y-6 md:space-y-7">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <Label className="text-base font-medium">Button Hover Effects</Label>
+                      <p className="text-sm text-muted-foreground mt-1">Subtle animations on hover</p>
                     </div>
                     <Switch
                       checked={linkProfile?.background?.hover_effects !== false}
@@ -746,10 +746,10 @@ const CreviaLink = () => {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Smooth Scrolling</Label>
-                      <p className="text-xs text-muted-foreground">Enhanced scroll experience</p>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <Label className="text-base font-medium">Smooth Scrolling</Label>
+                      <p className="text-sm text-muted-foreground mt-1">Enhanced scroll experience</p>
                     </div>
                     <Switch
                       checked={linkProfile?.background?.smooth_scroll !== false}
@@ -760,10 +760,10 @@ const CreviaLink = () => {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Fade-in Animation</Label>
-                      <p className="text-xs text-muted-foreground">Elements fade in on load</p>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <Label className="text-base font-medium">Fade-in Animation</Label>
+                      <p className="text-sm text-muted-foreground mt-1">Elements fade in on load</p>
                     </div>
                     <Switch
                       checked={linkProfile?.background?.fade_animation !== false}
@@ -780,14 +780,14 @@ const CreviaLink = () => {
 
           {/* Settings Tab */}
           {currentTab === "settings" && (
-            <Card className="p-8">
-              <h3 className="font-vollkorn text-2xl font-bold mb-6">Settings</h3>
+            <Card className="p-6 md:p-8 border-border/50">
+              <h3 className="font-vollkorn text-2xl md:text-3xl font-bold mb-8">Settings</h3>
               
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Contact Button</Label>
-                    <p className="text-sm text-muted-foreground">Allow visitors to contact you</p>
+              <div className="space-y-8">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <Label className="text-base font-medium">Contact Button</Label>
+                    <p className="text-sm text-muted-foreground mt-1">Allow visitors to contact you</p>
                   </div>
                   <Switch
                     checked={linkProfile?.contact_enabled || false}
@@ -798,15 +798,17 @@ const CreviaLink = () => {
                 </div>
 
                 <div className="pt-6 border-t">
-                  <h4 className="font-semibold mb-4">Analytics</h4>
+                  <h4 className="font-vollkorn text-xl font-bold mb-6">Analytics</h4>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-muted rounded-lg">
-                      <p className="text-2xl font-bold">{linkProfile?.total_visits || 0}</p>
-                      <p className="text-sm text-muted-foreground">Total Visits</p>
+                    <div className="p-5 bg-muted rounded-lg">
+                      <p className="text-3xl font-bold text-bronze">{linkProfile?.total_visits || 0}</p>
+                      <p className="text-sm text-muted-foreground mt-2">Total Visits</p>
                     </div>
-                    <div className="p-4 bg-muted rounded-lg">
-                      <p className="text-2xl font-bold">0</p>
-                      <p className="text-sm text-muted-foreground">Button Clicks</p>
+                    <div className="p-5 bg-muted rounded-lg">
+                      <p className="text-3xl font-bold text-bronze">
+                        {buttons.reduce((sum, btn) => sum + (btn.clicks || 0), 0)}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-2">Button Clicks</p>
                     </div>
                   </div>
                 </div>
@@ -816,44 +818,44 @@ const CreviaLink = () => {
 
           {/* Analytics Tab */}
           {currentTab === "analytics" && (
-            <Card className="p-8">
-              <h3 className="font-vollkorn text-2xl font-bold mb-6">Analytics</h3>
+            <Card className="p-6 md:p-8 border-border/50">
+              <h3 className="font-vollkorn text-2xl md:text-3xl font-bold mb-8">Analytics</h3>
               
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-6 bg-muted rounded-lg">
-                    <p className="text-3xl font-bold text-bronze">{linkProfile?.total_visits || 0}</p>
-                    <p className="text-sm text-muted-foreground mt-2">Total Page Views</p>
+                    <p className="text-3xl md:text-4xl font-bold text-bronze">{linkProfile?.total_visits || 0}</p>
+                    <p className="text-sm text-muted-foreground mt-3">Total Page Views</p>
                   </div>
                   <div className="p-6 bg-muted rounded-lg">
-                    <p className="text-3xl font-bold text-bronze">
+                    <p className="text-3xl md:text-4xl font-bold text-bronze">
                       {buttons.reduce((sum, btn) => sum + (btn.clicks || 0), 0)}
                     </p>
-                    <p className="text-sm text-muted-foreground mt-2">Total Link Clicks</p>
+                    <p className="text-sm text-muted-foreground mt-3">Total Link Clicks</p>
                   </div>
                   <div className="p-6 bg-muted rounded-lg">
-                    <p className="text-3xl font-bold text-bronze">{buttons.length}</p>
-                    <p className="text-sm text-muted-foreground mt-2">Active Links</p>
+                    <p className="text-3xl md:text-4xl font-bold text-bronze">{buttons.length}</p>
+                    <p className="text-sm text-muted-foreground mt-3">Active Links</p>
                   </div>
                 </div>
 
                 <div className="pt-6 border-t">
-                  <h4 className="font-semibold mb-4">Link Performance</h4>
-                  <div className="space-y-3">
+                  <h4 className="font-vollkorn text-xl font-bold mb-6">Link Performance</h4>
+                  <div className="space-y-4">
                     {buttons.map((button) => (
-                      <div key={button.id} className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                        <div>
-                          <p className="font-medium">{button.title}</p>
-                          <p className="text-xs text-muted-foreground truncate max-w-xs">{button.url}</p>
+                      <div key={button.id} className="flex items-center justify-between gap-4 p-5 bg-muted rounded-lg">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-base truncate">{button.title}</p>
+                          <p className="text-sm text-muted-foreground truncate mt-1">{button.url}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-bronze">{button.clicks || 0}</p>
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-2xl font-bold text-bronze">{button.clicks || 0}</p>
                           <p className="text-xs text-muted-foreground">clicks</p>
                         </div>
                       </div>
                     ))}
                     {buttons.length === 0 && (
-                      <p className="text-center text-muted-foreground py-8">No links yet. Add buttons to see performance data.</p>
+                      <p className="text-center text-muted-foreground py-12 text-base">No links yet. Add buttons to see performance data.</p>
                     )}
                   </div>
                 </div>
