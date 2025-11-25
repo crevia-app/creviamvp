@@ -10,6 +10,7 @@ import gallery2 from "@/assets/about-gallery-2.jpg";
 import gallery3 from "@/assets/about-gallery-3.jpg";
 import gallery4 from "@/assets/about-gallery-4.jpg";
 import creviaLogo from "@/assets/crevia-logo.png";
+import founderPhoto from "@/assets/founder-photo.jpg";
 
 const About = () => {
   const [showUpcoming, setShowUpcoming] = useState(true);
@@ -362,10 +363,12 @@ const About = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-center">
             <div className="relative order-2 md:order-1">
-              <div className="aspect-square rounded-full overflow-hidden bg-gradient-to-br from-bronze/20 to-bronze/10 border-4 border-bronze/20">
-                <div className="w-full h-full flex items-center justify-center text-bronze">
-                  <Users className="w-24 h-24 md:w-32 md:h-32" />
-                </div>
+              <div className="aspect-square rounded-full overflow-hidden border-4 border-bronze/30 shadow-2xl hover:scale-105 transition-transform duration-500">
+                <img 
+                  src={founderPhoto} 
+                  alt="Crevia Founder" 
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
             
