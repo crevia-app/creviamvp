@@ -94,20 +94,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* About Us Section */}
-      <section className="py-16 md:py-20 px-6 md:px-6">
-        <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="font-vollkorn text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 md:mb-8">About Us</h2>
-          <p className="text-lg sm:text-xl text-muted-foreground mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed">
-            Building the world's largest community of creators, entrepreneurs, and innovators. 
-            Together, we're bridging the gap between creators and brands, creating opportunities 
-            that drive impact and growth globally.
-          </p>
-          <Button size="lg" className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold text-base px-10 py-7 shadow-lg hover-scale">
-            Join Our Community
-          </Button>
-        </div>
-      </section>
 
       {/* Logo Story Section - Premium */}
       <section className="relative py-20 md:py-32 px-6 md:px-6 overflow-hidden">
