@@ -9,6 +9,7 @@ import gallery1 from "@/assets/about-gallery-1.jpg";
 import gallery2 from "@/assets/about-gallery-2.jpg";
 import gallery3 from "@/assets/about-gallery-3.jpg";
 import gallery4 from "@/assets/about-gallery-4.jpg";
+import creviaLogo from "@/assets/crevia-logo.png";
 
 const About = () => {
   const [showUpcoming, setShowUpcoming] = useState(true);
@@ -105,6 +106,78 @@ const About = () => {
           <Button size="lg" className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold text-base px-10 py-7 shadow-lg hover-scale">
             Join Our Community
           </Button>
+        </div>
+      </section>
+
+      {/* Logo Story Section - Premium */}
+      <section className="relative py-20 md:py-32 px-6 md:px-6 overflow-hidden">
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-gradient-to-br from-bronze/5 via-background to-bronze-light/10" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-bronze/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-bronze-light/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+        
+        <div className="container mx-auto max-w-5xl relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
+            {/* Logo Side */}
+            <div className="order-2 md:order-1 flex justify-center">
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-bronze to-bronze-light rounded-3xl blur-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-500" />
+                <div className="relative bg-card/50 backdrop-blur-sm p-12 md:p-16 rounded-3xl border border-bronze/20 shadow-2xl">
+                  <img 
+                    src={creviaLogo} 
+                    alt="Crevia Logo - Every story matters" 
+                    className="w-full max-w-xs mx-auto transform group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            {/* Story Side */}
+            <div className="order-1 md:order-2 space-y-8">
+              <div className="space-y-4">
+                <h2 className="font-vollkorn text-4xl sm:text-5xl md:text-6xl font-bold leading-tight">
+                  More Than a Name.
+                  <br />
+                  <span className="text-gradient-bronze">A Movement.</span>
+                </h2>
+                
+                <div className="h-1 w-20 bg-gradient-to-r from-bronze to-bronze-light rounded-full" />
+              </div>
+              
+              <div className="space-y-6 text-lg md:text-xl leading-relaxed">
+                <p className="text-foreground font-medium">
+                  <span className="text-bronze font-bold">Crevia</span> isn't just a word—it's a declaration. 
+                  <span className="font-bold"> Create. Via. Us.</span>
+                </p>
+                
+                <p className="text-muted-foreground">
+                  Your story doesn't need permission. It needs a platform. A voice. A community 
+                  that believes in the power of every narrative, every vision, every dream.
+                </p>
+                
+                <p className="text-muted-foreground">
+                  Look closer at our logo. See those dots? Each one represents <span className="text-bronze font-semibold">you</span>. 
+                  Some small, some large—all equal. Because we don't measure creators by followers. 
+                  We measure them by <span className="font-semibold text-foreground">impact</span>.
+                </p>
+                
+                <p className="text-foreground font-semibold text-2xl md:text-3xl font-vollkorn italic pt-4">
+                  Own your story. Tell it via Crevia.
+                </p>
+              </div>
+              
+              <div className="flex items-center gap-3 pt-6">
+                <div className="flex gap-2">
+                  <div className="w-2 h-2 rounded-full bg-bronze animate-pulse" />
+                  <div className="w-3 h-3 rounded-full bg-bronze-light animate-pulse" style={{ animationDelay: "0.2s" }} />
+                  <div className="w-4 h-4 rounded-full bg-bronze animate-pulse" style={{ animationDelay: "0.4s" }} />
+                  <div className="w-3 h-3 rounded-full bg-bronze-light animate-pulse" style={{ animationDelay: "0.6s" }} />
+                  <div className="w-2 h-2 rounded-full bg-bronze animate-pulse" style={{ animationDelay: "0.8s" }} />
+                </div>
+                <span className="text-sm text-muted-foreground italic">Every size. Every voice. Every story.</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
