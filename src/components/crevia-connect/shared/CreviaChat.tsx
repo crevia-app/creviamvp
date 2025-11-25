@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Paperclip, Image as ImageIcon, File, X, Check, CheckCheck, Download, MessageSquare } from "lucide-react";
+import { Send, Paperclip, Image as ImageIcon, File, X, Check, CheckCheck, Download, MessageSquare, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import NewConversationDialog from "./NewConversationDialog";
@@ -52,7 +50,6 @@ const CreviaChat = () => {
     if (user) {
       setCurrentUserId(user.id);
       
-      // Get user type from profiles
       const { data: profile } = await supabase
         .from("profiles")
         .select("user_type")
@@ -75,7 +72,6 @@ const CreviaChat = () => {
       lastMessageTime: null
     });
     
-    // Add to conversations list if not already there
     const exists = conversations.find(c => c.userId === userId);
     if (!exists) {
       setConversations(prev => [{
@@ -327,9 +323,9 @@ const CreviaChat = () => {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header with New Conversation */}
-      <div className="flex items-center justify-between p-3 md:p-4 border-b bg-background/95 backdrop-blur">
+    <div className="flex flex-col h-full bg-background">
+      {/* Header */}
+      <div className="flex items-center justify-between p-3 md:p-4 border-b bg-background/95 backdrop-blur flex-shrink-0">
         <h2 className="font-vollkorn text-lg md:text-xl font-bold">Messages</h2>
         {currentUserId && currentUserType && (
           <NewConversationDialog 
@@ -340,44 +336,46 @@ const CreviaChat = () => {
         )}
       </div>
 
-      {/* Mobile/Tablet: Stack vertically, Desktop: Side by side */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
         {/* Conversations List */}
-        <div className={`${selectedConversation ? 'hidden md:flex' : 'flex'} md:w-80 border-b md:border-b-0 md:border-r flex-col bg-muted/30`}>
+        <div className={`${selectedConversation ? 'hidden md:flex' : 'flex'} md:w-80 lg:w-96 border-b md:border-b-0 md:border-r flex-col bg-muted/20 flex-shrink-0`}>
           <ScrollArea className="flex-1">
             {conversations.length === 0 ? (
-              <div className="p-6 text-center text-muted-foreground">
+              <div className="p-8 text-center text-muted-foreground">
+                <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 <p className="text-sm">No conversations yet</p>
+                <p className="text-xs mt-1 opacity-70">Start a new conversation above</p>
               </div>
             ) : (
-              <div className="divide-y">
+              <div className="divide-y divide-border/50">
                 {conversations.map((conv) => (
-                  <div
+                  <button
                     key={conv.userId}
-                    className={`p-3 hover:bg-accent/50 cursor-pointer transition-colors ${
+                    className={`w-full text-left p-3 md:p-4 hover:bg-accent/50 cursor-pointer transition-colors ${
                       selectedConversation?.userId === conv.userId ? "bg-accent" : ""
                     }`}
                     onClick={() => setSelectedConversation(conv)}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-primary/10 flex items-center justify-center text-sm md:text-base font-semibold flex-shrink-0">
+                      <div className="h-11 w-11 md:h-12 md:w-12 rounded-full bg-bronze/20 flex items-center justify-center text-sm md:text-base font-semibold flex-shrink-0 text-bronze">
                         {conv.profile?.avatar_url ? (
-                          <img src={conv.profile.avatar_url} alt="" className="h-10 w-10 md:h-12 md:w-12 rounded-full object-cover" />
+                          <img src={conv.profile.avatar_url} alt="" className="h-11 w-11 md:h-12 md:w-12 rounded-full object-cover" />
                         ) : (
                           conv.profile?.display_name?.[0]?.toUpperCase() || "U"
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-poppins font-medium truncate text-sm md:text-base">{conv.profile?.display_name || "User"}</p>
-                        <p className="text-xs md:text-sm text-muted-foreground truncate">{conv.lastMessage}</p>
+                        <p className="font-poppins font-semibold truncate text-sm md:text-base">{conv.profile?.display_name || "User"}</p>
+                        <p className="text-xs md:text-sm text-muted-foreground truncate">{conv.lastMessage || "No messages yet"}</p>
                       </div>
                       {conv.lastMessageTime && (
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
                           {formatTime(conv.lastMessageTime)}
                         </span>
                       )}
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -385,23 +383,23 @@ const CreviaChat = () => {
         </div>
 
         {/* Chat Area */}
-        <div className={`${selectedConversation ? 'flex' : 'hidden md:flex'} flex-1 flex-col bg-background`}>
+        <div className={`${selectedConversation ? 'flex' : 'hidden md:flex'} flex-1 flex-col bg-background min-h-0`}>
           {selectedConversation ? (
             <>
               {/* Chat Header */}
-              <div className="p-3 md:p-4 border-b bg-background/95 backdrop-blur">
+              <div className="p-3 md:p-4 border-b bg-background/95 backdrop-blur flex-shrink-0">
                 <div className="flex items-center gap-3">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setSelectedConversation(null)}
-                    className="md:hidden -ml-2"
+                    className="md:hidden -ml-2 h-8 w-8 p-0"
                   >
-                    ← Back
+                    <ArrowLeft className="h-5 w-5" />
                   </Button>
-                  <div className="h-8 w-8 md:h-10 md:w-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                  <div className="h-9 w-9 md:h-10 md:w-10 rounded-full bg-bronze/20 flex items-center justify-center text-sm font-semibold flex-shrink-0 text-bronze">
                     {selectedConversation.profile?.avatar_url ? (
-                      <img src={selectedConversation.profile.avatar_url} alt="" className="h-8 w-8 md:h-10 md:w-10 rounded-full object-cover" />
+                      <img src={selectedConversation.profile.avatar_url} alt="" className="h-9 w-9 md:h-10 md:w-10 rounded-full object-cover" />
                     ) : (
                       selectedConversation.profile?.display_name?.[0]?.toUpperCase() || "U"
                     )}
@@ -415,14 +413,14 @@ const CreviaChat = () => {
 
               {/* Messages */}
               <ScrollArea className="flex-1 p-3 md:p-4">
-                <div className="space-y-3 md:space-y-4 max-w-3xl mx-auto">
+                <div className="space-y-3 md:space-y-4 max-w-3xl mx-auto pb-4">
                   {messages.map((msg) => (
                     <div
                       key={msg.id}
                       className={`flex ${msg.sender_id === currentUserId ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-[85%] md:max-w-[70%] rounded-2xl px-3 md:px-4 py-2 md:py-3 ${
+                        className={`max-w-[85%] md:max-w-[70%] rounded-2xl px-3 md:px-4 py-2.5 md:py-3 ${
                           msg.sender_id === currentUserId
                             ? "bg-bronze text-background"
                             : "bg-muted"
@@ -439,19 +437,19 @@ const CreviaChat = () => {
                               size="sm"
                               variant="ghost"
                               onClick={() => downloadFile(msg.file_url, msg.file_name)}
-                              className="h-7 w-7 p-0"
+                              className="h-7 w-7 p-0 hover:bg-background/20"
                             >
-                              <Download className="h-3 w-3 md:h-4 md:w-4" />
+                              <Download className="h-3.5 w-3.5 md:h-4 md:w-4" />
                             </Button>
                           </div>
                         )}
-                        <p className="text-xs md:text-sm whitespace-pre-wrap">{msg.content}</p>
-                        <div className="flex items-center gap-1 mt-1">
+                        {msg.content && <p className="text-xs md:text-sm whitespace-pre-wrap break-words">{msg.content}</p>}
+                        <div className="flex items-center gap-1 mt-1.5">
                           <p className="text-xs opacity-70">
                             {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>
                           {msg.sender_id === currentUserId && (
-                            <span className="opacity-70">
+                            <span className="opacity-70 ml-1">
                               {msg.status === 'read' ? <CheckCheck className="h-3 w-3" /> : <Check className="h-3 w-3" />}
                             </span>
                           )}
@@ -464,70 +462,72 @@ const CreviaChat = () => {
               </ScrollArea>
 
               {/* Input Area */}
-              <div className="p-3 md:p-4 border-t bg-background/95 backdrop-blur">
-                {selectedFile && (
-                  <div className="mb-2 p-2 bg-muted rounded-lg flex items-center gap-2">
-                    {getFileIcon(selectedFile.type)}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs md:text-sm font-medium truncate">{selectedFile.name}</p>
-                      <p className="text-xs text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
+              <div className="p-3 md:p-4 border-t bg-background/95 backdrop-blur flex-shrink-0">
+                <div className="max-w-3xl mx-auto">
+                  {selectedFile && (
+                    <div className="mb-2 p-2 bg-muted rounded-lg flex items-center gap-2">
+                      {getFileIcon(selectedFile.type)}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs md:text-sm font-medium truncate">{selectedFile.name}</p>
+                        <p className="text-xs text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setSelectedFile(null)}
+                        className="h-7 w-7 p-0"
+                      >
+                        <X className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                      </Button>
                     </div>
+                  )}
+                  <div className="flex gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      onChange={handleFileSelect}
+                      accept="image/*,.pdf,.doc,.docx,.txt"
+                    />
                     <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setSelectedFile(null)}
-                      className="h-7 w-7 p-0"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingFile}
+                      className="flex-shrink-0 h-10 w-10 md:h-11 md:w-11"
                     >
-                      <X className="h-3 w-3 md:h-4 md:w-4" />
+                      <Paperclip className="h-4 w-4 md:h-5 md:w-5" />
+                    </Button>
+                    <Textarea
+                      placeholder="Type a message..."
+                      value={newMessage}
+                      onChange={(e) => handleTyping(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          sendMessage();
+                        }
+                      }}
+                      className="flex-1 min-h-[2.5rem] max-h-[120px] resize-none text-sm md:text-base py-2.5"
+                      disabled={uploadingFile}
+                    />
+                    <Button
+                      onClick={sendMessage}
+                      disabled={uploadingFile || (!newMessage.trim() && !selectedFile)}
+                      className="self-end bg-bronze hover:bg-bronze/90 text-background flex-shrink-0 h-10 w-10 md:h-11 md:w-11 p-0"
+                    >
+                      <Send className="h-4 w-4 md:h-5 md:w-5" />
                     </Button>
                   </div>
-                )}
-                <div className="flex gap-2">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    className="hidden"
-                    onChange={handleFileSelect}
-                    accept="image/*,.pdf,.doc,.docx,.txt"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingFile}
-                    className="flex-shrink-0"
-                  >
-                    <Paperclip className="h-4 w-4" />
-                  </Button>
-                  <Textarea
-                    placeholder="Type a message..."
-                    value={newMessage}
-                    onChange={(e) => handleTyping(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        sendMessage();
-                      }
-                    }}
-                    className="flex-1 min-h-[60px] max-h-[120px] resize-none text-sm"
-                    disabled={uploadingFile}
-                  />
-                  <Button
-                    onClick={sendMessage}
-                    disabled={uploadingFile || (!newMessage.trim() && !selectedFile)}
-                    className="self-end bg-bronze hover:bg-bronze/90 text-background flex-shrink-0"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
                 </div>
               </div>
             </>
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
               <div className="text-center p-6">
-                <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <MessageSquare className="h-16 w-16 mx-auto mb-4 opacity-20" />
                 <p className="text-base md:text-lg font-medium mb-2">No conversation selected</p>
-                <p className="text-sm">Choose a conversation or start a new one</p>
+                <p className="text-sm opacity-70">Choose a conversation or start a new one</p>
               </div>
             </div>
           )}
