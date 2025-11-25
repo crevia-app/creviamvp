@@ -78,11 +78,11 @@ const Home = () => {
         <div className="container mx-auto max-w-6xl relative z-10 px-2">
           <div className="text-left max-w-3xl space-y-4 md:space-y-8 animate-fade-in" style={{ animationDelay: '0.3s', animationDuration: '0.8s' }}>
             <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold leading-[1.15] animate-fade-in" style={{ animationDelay: '0.5s', animationDuration: '0.8s' }}>
-              Empowering creators to{" "}
-              <span className="text-gradient-bronze">own their digital careers</span>
+              Your story doesn't need permission.{" "}
+              <span className="text-gradient-bronze">It needs a platform.</span>
             </h1>
             <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-foreground/80 font-poppins leading-relaxed animate-fade-in" style={{ animationDelay: '0.7s', animationDuration: '0.8s' }}>
-              Tools that help you collaborate, grow, and earn — all in one simple platform.
+              Create. Via. Us. Every size. Every voice. Every story.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 pt-2 animate-fade-in" style={{ animationDelay: '0.9s', animationDuration: '0.8s' }}>
               <Link to="/user-type-selection" className="w-full sm:w-auto">
@@ -128,9 +128,9 @@ const Home = () => {
               <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-4 md:mb-6 transition-all duration-300 group-hover:bg-bronze/20 group-hover:scale-110">
                 <Users className="w-6 h-6 md:w-7 md:h-7 text-bronze transition-transform duration-300 group-hover:rotate-6" />
               </div>
-              <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3 md:mb-4">Find collaborations effortlessly</h3>
+              <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3 md:mb-4">Connect without barriers</h3>
               <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
-                Connect with brands and creators that align with your vision, without the endless searching.
+                Find partnerships that believe in your impact, not just your follower count.
               </p>
             </Card>
 
@@ -138,9 +138,9 @@ const Home = () => {
               <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-4 md:mb-6 transition-all duration-300 group-hover:bg-bronze/20 group-hover:scale-110">
                 <Globe className="w-6 h-6 md:w-7 md:h-7 text-bronze transition-transform duration-300 group-hover:rotate-6" />
               </div>
-              <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3 md:mb-4">Manage everything in one place</h3>
+              <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3 md:mb-4">Own your narrative</h3>
               <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
-                From campaigns to payments, keep your entire creator business organized and professional.
+                Tools that put you in control of your story, your way.
               </p>
             </Card>
 
@@ -148,9 +148,9 @@ const Home = () => {
               <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-4 md:mb-6 transition-all duration-300 group-hover:bg-bronze/20 group-hover:scale-110">
                 <TrendingUp className="w-6 h-6 md:w-7 md:h-7 text-bronze transition-transform duration-300 group-hover:rotate-6" />
               </div>
-              <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3 md:mb-4">Grow with AI guidance</h3>
+              <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3 md:mb-4">Amplify your impact</h3>
               <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
-                Get personalized recommendations and insights to level up your creator journey.
+                AI-powered insights that help you tell your story better, not louder.
               </p>
             </Card>
           </div>
@@ -168,7 +168,7 @@ const Home = () => {
               Join the Movement
             </p>
             <h2 className="font-vollkorn text-3xl sm:text-4xl lg:text-5xl font-bold animate-fade-in">
-              Where top creators <span className="text-gradient-bronze">build their empires</span>
+              Where every creator <span className="text-gradient-bronze">owns their story</span>
             </h2>
           </div>
           
@@ -211,7 +211,7 @@ const Home = () => {
               <Link2 className="w-12 h-12 text-bronze mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 relative z-10" />
               <h3 className="font-vollkorn text-2xl font-bold mb-3 relative z-10">Crevia Connect</h3>
               <p className="text-muted-foreground mb-4 text-base leading-relaxed relative z-10">
-                Connect creators & brands for seamless collaborations.
+                Where stories meet opportunities. Build partnerships that matter.
               </p>
               <Button variant="ghost" className="text-bronze hover:text-bronze-dark p-0 h-auto font-semibold bronze-underline relative z-10">
                 Learn more →
@@ -223,7 +223,7 @@ const Home = () => {
               <Brain className="w-12 h-12 text-bronze mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 relative z-10" />
               <h3 className="font-vollkorn text-2xl font-bold mb-3 relative z-10">Crevia AI</h3>
               <p className="text-muted-foreground mb-4 text-base leading-relaxed relative z-10">
-                Your personal creator growth assistant, powered by Kira.
+                Kira helps you tell your story smarter, not harder.
               </p>
               <Button variant="ghost" className="text-bronze hover:text-bronze-dark p-0 h-auto font-semibold bronze-underline relative z-10">
                 Learn more →
@@ -235,7 +235,7 @@ const Home = () => {
               <Link2 className="w-12 h-12 text-bronze mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 relative z-10" />
               <h3 className="font-vollkorn text-2xl font-bold mb-3 relative z-10">Crevia Link</h3>
               <p className="text-muted-foreground mb-4 text-base leading-relaxed relative z-10">
-                Your all-in-one public link to showcase your work.
+                Your story, your way. One link. Infinite possibilities.
               </p>
               <Button variant="ghost" className="text-bronze hover:text-bronze-dark p-0 h-auto font-semibold bronze-underline relative z-10">
                 Learn more →
@@ -253,7 +253,7 @@ const Home = () => {
               Love from the community
             </p>
             <h2 className="font-vollkorn text-3xl sm:text-4xl lg:text-5xl font-bold animate-fade-in">
-              Loved by <span className="text-gradient-bronze">thousands</span> of creators
+              Real creators. <span className="text-gradient-bronze">Real impact.</span>
             </h2>
           </div>
 

@@ -24,7 +24,7 @@ const About = () => {
             Own Your <span className="text-gradient-bronze">Story</span>
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            We are on a mission to empower creators and brands to build meaningful collaborations
+            A platform where every narrative matters. Every vision counts. Every dream finds its voice.
           </p>
         </div>
         
@@ -334,8 +334,8 @@ const About = () => {
               </div>
               <h3 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">Our Mission</h3>
               <p className="text-muted-foreground text-base leading-relaxed">
-                To build the largest community of creators, innovators, and entrepreneurs 
-                by connecting them with global opportunities and fostering genuine collaboration.
+                To amplify every creator's voice—not by their reach, but by their impact. 
+                We believe your story doesn't need permission. It needs a platform.
               </p>
             </Card>
 
@@ -345,8 +345,8 @@ const About = () => {
               </div>
               <h3 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">Our Vision</h3>
               <p className="text-muted-foreground text-base leading-relaxed">
-                To create an ecosystem where creators and brands thrive together, building sustainable 
-                careers and making meaningful impact through authentic partnerships.
+                A world where every creator—big or small—owns their narrative. 
+                Where impact outweighs follower counts. Where every story finds its audience.
               </p>
             </Card>
           </div>
@@ -371,17 +371,17 @@ const About = () => {
             
             <div className="space-y-6 md:space-y-8 order-1 md:order-2">
               <p className="text-lg md:text-xl text-foreground leading-relaxed">
-                "A future we envision where millions of creators are building sustainable 
-                careers, collaborating with global brands, and shaping their narratives 
-                on their own terms."
+                "We see a future where your story doesn't need permission to thrive. 
+                Where creators are measured by impact, not metrics. Where every voice—
+                no matter the size—finds its audience."
               </p>
               <p className="text-lg md:text-xl text-foreground leading-relaxed">
-                "We are building the infrastructure to make this happen, connecting creators with the 
-                right opportunities, tools, and community to succeed. Every partnership, every campaign, 
-                every connection gets us closer to this vision."
+                "Crevia exists to make this real. To build the platform where your narrative 
+                is enough. Where partnerships value substance over statistics. Where you own 
+                your story, and we help you tell it."
               </p>
               <p className="text-base md:text-lg text-muted-foreground italic">
-                Together, let's empower the global creative economy and unlock the potential of every creator.
+                Create. Via. Us. Because every story deserves to be heard.
               </p>
             </div>
           </div>
@@ -395,7 +395,7 @@ const About = () => {
             Our <span className="text-gradient-bronze">5-Year Goal</span>
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground mb-10 md:mb-12 leading-relaxed">
-            What defines success for Crevia in the next 5 years?
+            In 5 years, this is the movement we're building:
           </p>
           
           <div className="bg-gradient-to-br from-bronze to-bronze-dark rounded-3xl p-10 md:p-12 shadow-2xl">
@@ -403,7 +403,7 @@ const About = () => {
               1 Million
             </div>
             <p className="text-lg sm:text-xl md:text-2xl text-white/90 leading-relaxed">
-              Creators and entrepreneurs empowered to earn fair income for their talents.
+              Stories told. Voices amplified. Creators owning their narrative.
             </p>
           </div>
         </div>
@@ -416,15 +416,15 @@ const About = () => {
             <div className="w-20 h-20 rounded-full bg-bronze/10 flex items-center justify-center mx-auto mb-6">
               <Heart className="w-10 h-10 text-bronze" />
             </div>
-            <h2 className="font-vollkorn text-4xl font-bold mb-6">Support Our Mission</h2>
+            <h2 className="font-vollkorn text-4xl font-bold mb-6">Own Your Story</h2>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Help us reach 1M creators by being part of the journey. Your support, 
-              partnership, or participation makes a real difference.
+              Join a movement where your narrative matters. Where impact trumps metrics. 
+              Where every creator—regardless of size—has a voice.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/user-type-selection">
                 <Button size="lg" className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold">
-                  Become a Creator
+                  Start Your Story
                 </Button>
               </Link>
               <Link to="/pricing">
