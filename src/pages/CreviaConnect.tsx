@@ -77,13 +77,13 @@ const CreviaConnect = () => {
           </div>
           
           <h1 className="font-serif text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-bold text-foreground mb-6 md:mb-8 leading-[1.1] animate-fade-in px-2">
-            Where creators and brands{" "}
-            <span className="text-gradient-bronze">create magic</span>
+            Where stories meet{" "}
+            <span className="text-gradient-bronze">opportunities</span>
           </h1>
           
           <p className="text-muted-foreground text-base md:text-xl lg:text-2xl mb-10 md:mb-16 max-w-3xl mx-auto font-light leading-relaxed animate-fade-in px-4">
-            The ultimate collaboration workspace. Discover opportunities, manage campaigns, 
-            and build partnerships—all powered by AI.
+            Build partnerships that value your impact, not your follower count. 
+            Own your collaborations. Tell your story via Crevia.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center animate-fade-in px-4">

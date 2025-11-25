@@ -45,7 +45,7 @@ const CreviaAI = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hi! I'm Kira. Ask for advice on brand deals, content, strategy, and more."
+      content: "Hi! I'm Kira. Your story deserves to be heard. Let me help you tell it better."
     }
   ]);
   const [input, setInput] = useState("");
@@ -85,7 +85,7 @@ const CreviaAI = () => {
     setActiveChat(newChat.id);
     setMessages([{
       role: "assistant",
-      content: "Hi! I'm Kira. Ask for advice on brand deals, content, strategy, and more."
+      content: "Hi! I'm Kira. Your story deserves to be heard. Let me help you tell it better."
     }]);
   };
 
