@@ -252,7 +252,7 @@ const CreviaLink = () => {
           "flex-1 overflow-auto transition-all duration-300 bg-background",
           sidebarCollapsed ? "md:ml-[170px]" : "md:ml-[320px]"
         )}>
-          <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 md:px-10 py-6 sm:py-10 md:py-14">
+          <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 md:px-10 py-8 sm:py-10 md:py-14">
             {/* Editor Content */}
             <div className="w-full space-y-6 md:space-y-12">
 
@@ -416,9 +416,9 @@ const CreviaLink = () => {
             <div className="space-y-6 md:space-y-12 pb-6 md:pb-10">
               {/* Typography Section */}
               <Card className="p-4 sm:p-6 md:p-9 border-border/50">
-                <div className="flex items-center gap-2 sm:gap-3 mb-6 md:mb-10">
-                  <Type className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-bronze flex-shrink-0" />
-                  <h3 className="font-vollkorn text-lg sm:text-2xl md:text-4xl font-bold">Typography</h3>
+                <div className="flex items-center gap-2 sm:gap-3 mb-8 md:mb-10">
+                  <Type className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-bronze flex-shrink-0" />
+                  <h3 className="font-vollkorn text-xl sm:text-2xl md:text-4xl font-bold">Typography</h3>
                 </div>
                 
                 <div className="space-y-5 md:space-y-7">
@@ -475,9 +475,9 @@ const CreviaLink = () => {
 
               {/* Theme & Colors Section */}
               <Card className="p-4 sm:p-6 md:p-9 border-border/50">
-                <div className="flex items-center gap-2 sm:gap-3 mb-6 md:mb-10">
-                  <Palette className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-bronze flex-shrink-0" />
-                  <h3 className="font-vollkorn text-lg sm:text-2xl md:text-4xl font-bold">Theme & Colors</h3>
+                <div className="flex items-center gap-2 sm:gap-3 mb-8 md:mb-10">
+                  <Palette className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-bronze flex-shrink-0" />
+                  <h3 className="font-vollkorn text-xl sm:text-2xl md:text-4xl font-bold">Theme & Colors</h3>
                 </div>
                 
                 <div className="space-y-6 md:space-y-10">
@@ -603,9 +603,9 @@ const CreviaLink = () => {
 
               {/* Layout & Spacing Section */}
               <Card className="p-4 sm:p-6 md:p-9 border-border/50">
-                <div className="flex items-center gap-2 sm:gap-3 mb-6 md:mb-10">
-                  <Layout className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-bronze flex-shrink-0" />
-                  <h3 className="font-vollkorn text-lg sm:text-2xl md:text-4xl font-bold">Layout & Spacing</h3>
+                <div className="flex items-center gap-2 sm:gap-3 mb-8 md:mb-10">
+                  <Layout className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-bronze flex-shrink-0" />
+                  <h3 className="font-vollkorn text-xl sm:text-2xl md:text-4xl font-bold">Layout & Spacing</h3>
                 </div>
                 
                 <div className="space-y-6 md:space-y-10">
@@ -729,9 +729,9 @@ const CreviaLink = () => {
 
               {/* Effects & Animations */}
               <Card className="p-4 sm:p-6 md:p-9 border-border/50">
-                <div className="flex items-center gap-2 sm:gap-3 mb-6 md:mb-10">
-                  <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-bronze flex-shrink-0" />
-                  <h3 className="font-vollkorn text-lg sm:text-2xl md:text-4xl font-bold">Effects & Animations</h3>
+                <div className="flex items-center gap-2 sm:gap-3 mb-8 md:mb-10">
+                  <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-bronze flex-shrink-0" />
+                  <h3 className="font-vollkorn text-xl sm:text-2xl md:text-4xl font-bold">Effects & Animations</h3>
                 </div>
                 
                 <div className="space-y-5 md:space-y-7">
@@ -784,7 +784,7 @@ const CreviaLink = () => {
           {/* Settings Tab */}
           {currentTab === "settings" && (
             <Card className="p-4 sm:p-6 md:p-8 border-border/50">
-              <h3 className="font-vollkorn text-xl sm:text-2xl md:text-3xl font-bold mb-6 md:mb-8">Settings</h3>
+              <h3 className="font-vollkorn text-2xl sm:text-3xl md:text-4xl font-bold mb-8 md:mb-10 text-bronze">Settings</h3>
               
               <div className="space-y-6 md:space-y-8">
                 <div className="flex items-center justify-between gap-3 md:gap-4">
@@ -822,7 +822,7 @@ const CreviaLink = () => {
           {/* Analytics Tab */}
           {currentTab === "analytics" && (
             <Card className="p-4 sm:p-6 md:p-8 border-border/50">
-              <h3 className="font-vollkorn text-xl sm:text-2xl md:text-3xl font-bold mb-6 md:mb-8">Analytics</h3>
+              <h3 className="font-vollkorn text-2xl sm:text-3xl md:text-4xl font-bold mb-8 md:mb-10 text-bronze">Analytics</h3>
               
               <div className="space-y-6 md:space-y-8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
