@@ -252,44 +252,44 @@ const CreviaLink = () => {
           "flex-1 overflow-auto transition-all duration-300 bg-background",
           sidebarCollapsed ? "md:ml-[170px]" : "md:ml-[320px]"
         )}>
-          <div className="w-full max-w-2xl mx-auto px-4 sm:px-6 md:px-8 py-6 md:py-10">
+          <div className="w-full max-w-2xl mx-auto px-6 sm:px-8 md:px-10 py-8 sm:py-10 md:py-12">
             {/* Editor Content */}
-            <div className="w-full space-y-6 md:space-y-8">
+            <div className="w-full space-y-8 md:space-y-10">
 
           {/* Profile Tab */}
           {currentTab === "profile" && (
             <>
               {/* Hero Section - Only in Profile Tab */}
-              <div className="text-center mb-8 md:mb-12">
-                <div className="inline-flex items-center gap-2 mb-3 md:mb-4 text-bronze">
-                  <Link2 className="w-4 h-4 md:w-5 md:h-5" />
-                  <span className="text-xs md:text-sm font-poppins font-semibold tracking-wider uppercase">CREVIA LINK</span>
+              <div className="text-center mb-10 md:mb-14 pt-2">
+                <div className="inline-flex items-center gap-2 mb-4 md:mb-5 text-bronze">
+                  <Link2 className="w-5 h-5 md:w-6 md:h-6" />
+                  <span className="text-sm md:text-base font-poppins font-semibold tracking-wider uppercase">CREVIA LINK</span>
                 </div>
-                <h1 className="font-vollkorn text-2xl sm:text-3xl md:text-5xl font-bold mb-3 md:mb-4 leading-tight">
+                <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-5 leading-tight px-4">
                   Your premium link-in-bio
                 </h1>
-                <p className="text-sm md:text-base text-muted-foreground font-poppins max-w-lg mx-auto leading-relaxed">
+                <p className="text-base md:text-lg text-muted-foreground font-poppins max-w-xl mx-auto leading-relaxed px-6">
                   Beautiful, customizable, and powerful. Share everything you create in one elegant page.
                 </p>
               </div>
 
               {/* Action Buttons - Only in Profile Tab */}
-              <div className="flex flex-col gap-3 mb-8 md:mb-10">
+              <div className="flex flex-col gap-4 mb-10 md:mb-12 px-2">
                 <Button
                   size="lg"
                   onClick={() => window.open(`/${linkProfile?.username}`, "_blank")}
-                  className="w-full bg-bronze hover:bg-bronze-dark font-poppins font-semibold h-12 md:h-14"
+                  className="w-full bg-bronze hover:bg-bronze-dark font-poppins font-semibold h-14 md:h-16 text-base"
                 >
                   <Eye className="w-5 h-5 mr-2" />
                   Preview Your Page
                 </Button>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <Button
                     size="lg"
                     variant="outline"
                     onClick={handleSave}
                     disabled={saving}
-                    className="font-poppins font-semibold h-12 md:h-14"
+                    className="font-poppins font-semibold h-14 md:h-16 text-base"
                   >
                     {saving ? "Saving..." : "Save"}
                   </Button>
@@ -297,7 +297,7 @@ const CreviaLink = () => {
                     size="lg"
                     variant="outline"
                     onClick={handleCopyLink}
-                    className="font-poppins font-semibold min-w-0 h-12 md:h-14"
+                    className="font-poppins font-semibold min-w-0 h-14 md:h-16 text-base"
                   >
                     {copied ? (
                       <>
@@ -314,46 +314,46 @@ const CreviaLink = () => {
                 </div>
               </div>
             
-              <Card className="p-5 md:p-7 border-border/50">
-                <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-6">Profile Information</h3>
+              <Card className="p-6 md:p-8 border-border/50">
+                <h3 className="font-vollkorn text-2xl md:text-3xl font-bold mb-7">Profile Information</h3>
                 
-                <div className="space-y-5 md:space-y-6">
+                <div className="space-y-6 md:space-y-7">
                   <div>
-                    <Label htmlFor="username" className="text-sm font-medium mb-2 block">Username</Label>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-muted-foreground text-sm whitespace-nowrap flex-shrink-0">crevia.app/</span>
+                    <Label htmlFor="username" className="text-base font-medium mb-3 block">Username</Label>
+                    <div className="flex items-center gap-3 mt-2">
+                      <span className="text-muted-foreground text-base whitespace-nowrap flex-shrink-0">crevia.app/</span>
                       <Input
                         id="username"
                         value={linkProfile?.username || ""}
                         onChange={(e) => setLinkProfile({ ...linkProfile, username: e.target.value })}
                         placeholder="yourusername"
-                        className="flex-1 h-11"
+                        className="flex-1 h-12 text-base"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="displayName" className="text-sm font-medium mb-2 block">Display Name</Label>
+                    <Label htmlFor="displayName" className="text-base font-medium mb-3 block">Display Name</Label>
                     <Input
                       id="displayName"
                       value={linkProfile?.display_name || ""}
                       onChange={(e) => setLinkProfile({ ...linkProfile, display_name: e.target.value })}
                       placeholder="Your Name"
-                      className="mt-2 h-11"
+                      className="mt-2 h-12 text-base"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="bio" className="text-sm font-medium mb-2 block">Bio (max 150 characters)</Label>
+                    <Label htmlFor="bio" className="text-base font-medium mb-3 block">Bio (max 150 characters)</Label>
                     <Textarea
                       id="bio"
                       value={linkProfile?.bio || ""}
                       onChange={(e) => setLinkProfile({ ...linkProfile, bio: e.target.value.slice(0, 150) })}
                       placeholder="Tell people about yourself..."
-                      className="mt-2 min-h-[100px] resize-none"
+                      className="mt-2 min-h-[120px] resize-none text-base"
                       maxLength={150}
                     />
-                    <p className="text-xs text-muted-foreground mt-2">
+                    <p className="text-sm text-muted-foreground mt-2">
                       {linkProfile?.bio?.length || 0}/150
                     </p>
                   </div>
@@ -377,11 +377,11 @@ const CreviaLink = () => {
 
           {/* Buttons Tab */}
           {currentTab === "buttons" && (
-            <Card className="p-5 md:p-7 border-border/50">
-              <div className="flex flex-col gap-4 mb-6">
-                <h3 className="font-vollkorn text-xl md:text-2xl font-bold">Links & Buttons</h3>
+            <Card className="p-6 md:p-8 border-border/50">
+              <div className="flex flex-col gap-5 mb-7">
+                <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">Links & Buttons</h3>
                 <Button 
-                  className="bg-bronze hover:bg-bronze-dark w-full h-12 md:h-14 font-semibold"
+                  className="bg-bronze hover:bg-bronze-dark w-full h-14 md:h-16 font-semibold text-base"
                   onClick={() => setShowAddButton(true)}
                   size="lg"
                 >
@@ -413,12 +413,12 @@ const CreviaLink = () => {
 
           {/* Appearance Tab */}
           {currentTab === "appearance" && (
-            <div className="space-y-6 md:space-y-8">
+            <div className="space-y-8 md:space-y-10">
               {/* Typography Section */}
-              <Card className="p-5 md:p-7 border-border/50">
-                <div className="flex items-center gap-3 mb-6">
-                  <Type className="w-5 h-5 text-bronze" />
-                  <h3 className="font-vollkorn text-xl md:text-2xl font-bold">Typography</h3>
+              <Card className="p-6 md:p-8 border-border/50">
+                <div className="flex items-center gap-3 mb-7">
+                  <Type className="w-6 h-6 text-bronze" />
+                  <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">Typography</h3>
                 </div>
                 
                 <div className="space-y-4 md:space-y-6">
