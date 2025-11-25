@@ -46,15 +46,35 @@ const Auth = () => {
         navigate("/user-type-selection");
       }
     } else {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
-      } else {
-        navigate("/dashboard");
+      } else if (data.user) {
+        // Fetch user profile to check account type
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("user_type")
+          .eq("id", data.user.id)
+          .single();
+
+        if (profileError || !profileData) {
+          toast({ 
+            title: "Profile not found", 
+            description: "Please complete your profile setup.",
+            variant: "destructive" 
+          });
+          navigate("/user-type-selection");
+        } else {
+          toast({ 
+            title: "Welcome back!", 
+            description: `Logged in as ${profileData.user_type}` 
+          });
+          navigate("/dashboard");
+        }
       }
     }
   };
