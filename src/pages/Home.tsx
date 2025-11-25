@@ -100,9 +100,9 @@ const Home = () => {
       </section>
 
       {/* Demo Section */}
-      <section className="py-12 md:py-20 px-4 md:px-6 bg-secondary/20">
-        <div className="container mx-auto max-w-6xl">
-          <div className="rounded-xl md:rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-bronze/10 to-background border border-bronze/20 animate-fade-in">
+      <section className="py-8 md:py-20 px-2 md:px-6 bg-secondary/20">
+        <div className="container mx-auto max-w-7xl">
+          <div className="rounded-lg md:rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-bronze/10 to-background border border-bronze/20 animate-fade-in">
             <div className="aspect-video">
               <iframe 
                 className="w-full h-full"
