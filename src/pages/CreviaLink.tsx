@@ -252,23 +252,23 @@ const CreviaLink = () => {
           "flex-1 overflow-auto transition-all duration-300",
           sidebarCollapsed ? "md:ml-[170px]" : "md:ml-[320px]" // 100 (main) + 70/220 (link)
         )}>
-          <div className="container mx-auto px-4 md:px-6 py-4 md:py-8 max-w-4xl">
+          <div className="container mx-auto px-3 md:px-6 py-4 md:py-8 max-w-4xl">
             {/* Editor Content */}
-            <div className="w-full">
+            <div className="w-full min-w-0">
 
           {/* Profile Tab */}
           {currentTab === "profile" && (
             <>
               {/* Hero Section - Only in Profile Tab */}
-              <div className="text-center mb-8 md:mb-12 px-2">
+              <div className="text-center mb-6 md:mb-12">
                 <div className="inline-flex items-center gap-2 mb-2 md:mb-3 text-bronze">
                   <Link2 className="w-4 h-4 md:w-5 md:h-5" />
-                  <span className="text-xs font-poppins font-semibold">CREVIA LINK</span>
+                  <span className="text-xs font-poppins font-semibold tracking-wide">CREVIA LINK</span>
                 </div>
-                <h1 className="font-vollkorn text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4">
+                <h1 className="font-vollkorn text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold mb-2 md:mb-4 px-2 break-words">
                   Your premium link-in-bio
                 </h1>
-                <p className="text-sm md:text-base text-muted-foreground font-poppins max-w-xl mx-auto mb-4 md:mb-6">
+                <p className="text-xs sm:text-sm md:text-base text-muted-foreground font-poppins max-w-xl mx-auto px-4">
                   Beautiful, customizable, and powerful. Share everything you create in one elegant page.
                 </p>
               </div>
@@ -278,7 +278,7 @@ const CreviaLink = () => {
                 <Button
                   size="default"
                   onClick={() => window.open(`/${linkProfile?.username}`, "_blank")}
-                  className="w-full bg-bronze hover:bg-bronze-dark font-poppins font-semibold"
+                  className="w-full bg-bronze hover:bg-bronze-dark font-poppins font-semibold text-sm sm:text-base"
                 >
                   <Eye className="w-4 h-4 mr-2" />
                   Preview Your Page
@@ -289,7 +289,7 @@ const CreviaLink = () => {
                     variant="outline"
                     onClick={handleSave}
                     disabled={saving}
-                    className="font-poppins font-semibold"
+                    className="font-poppins font-semibold text-sm sm:text-base"
                   >
                     {saving ? "Saving..." : "Save"}
                   </Button>
@@ -297,27 +297,28 @@ const CreviaLink = () => {
                     size="default"
                     variant="outline"
                     onClick={handleCopyLink}
-                    className="font-poppins font-semibold"
+                    className="font-poppins font-semibold text-sm sm:text-base min-w-0"
                   >
-                    {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-                    {copied ? "Copied!" : "Copy Link"}
+                    {copied ? <Check className="w-4 h-4 mr-1 flex-shrink-0" /> : <Copy className="w-4 h-4 mr-1 flex-shrink-0" />}
+                    <span className="truncate">{copied ? "Copied!" : "Copy Link"}</span>
                   </Button>
                 </div>
               </div>
             
-              <Card className="p-4 md:p-6">
-                <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-4 md:mb-6">Profile Information</h3>
+              <Card className="p-3 sm:p-4 md:p-6">
+                <h3 className="font-vollkorn text-lg sm:text-xl md:text-2xl font-bold mb-4 md:mb-6">Profile Information</h3>
                 
                 <div className="space-y-4 md:space-y-6">
                   <div>
-                    <Label htmlFor="username">Username</Label>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-muted-foreground">crevia.app/</span>
+                    <Label htmlFor="username" className="text-sm">Username</Label>
+                    <div className="flex items-center gap-1 sm:gap-2 mt-2">
+                      <span className="text-muted-foreground text-xs sm:text-sm whitespace-nowrap">crevia.app/</span>
                       <Input
                         id="username"
                         value={linkProfile?.username || ""}
                         onChange={(e) => setLinkProfile({ ...linkProfile, username: e.target.value })}
                         placeholder="yourusername"
+                        className="text-sm"
                       />
                     </div>
                   </div>
