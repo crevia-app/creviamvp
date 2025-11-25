@@ -413,12 +413,12 @@ const CreviaLink = () => {
 
           {/* Appearance Tab */}
           {currentTab === "appearance" && (
-            <div className="space-y-8 md:space-y-10 pb-8">
+            <div className="space-y-10 md:space-y-12 pb-10">
               {/* Typography Section */}
-              <Card className="p-6 md:p-8 border-border/50">
-                <div className="flex items-center gap-3 mb-8">
-                  <Type className="w-6 h-6 text-bronze flex-shrink-0" />
-                  <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">Typography</h3>
+              <Card className="p-7 md:p-9 border-border/50">
+                <div className="flex items-center gap-3 mb-10">
+                  <Type className="w-7 h-7 text-bronze flex-shrink-0" />
+                  <h3 className="font-vollkorn text-2xl sm:text-3xl md:text-4xl font-bold">Typography</h3>
                 </div>
                 
                 <div className="space-y-6 md:space-y-7">
@@ -474,28 +474,28 @@ const CreviaLink = () => {
               </Card>
 
               {/* Theme & Colors Section */}
-              <Card className="p-6 md:p-8 border-border/50">
-                <div className="flex items-center gap-3 mb-8">
-                  <Palette className="w-6 h-6 text-bronze flex-shrink-0" />
-                  <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">Theme & Colors</h3>
+              <Card className="p-7 md:p-9 border-border/50">
+                <div className="flex items-center gap-3 mb-10">
+                  <Palette className="w-7 h-7 text-bronze flex-shrink-0" />
+                  <h3 className="font-vollkorn text-2xl sm:text-3xl md:text-4xl font-bold">Theme & Colors</h3>
                 </div>
                 
-                <div className="space-y-6 md:space-y-7">
+                <div className="space-y-8 md:space-y-10">
                   <div>
-                    <Label className="text-base font-medium mb-4 block">Color Scheme</Label>
+                    <Label className="text-base md:text-lg font-medium mb-6 block">Color Scheme</Label>
                     <RadioGroup
                       value={linkProfile?.theme || "dark"}
                       onValueChange={(value) => setLinkProfile({ ...linkProfile, theme: value })}
-                      className="grid grid-cols-2 gap-4 mt-4"
+                      className="grid grid-cols-2 gap-5 md:gap-6 mt-4"
                     >
                       <div className="relative">
                         <RadioGroupItem value="light" id="light" className="peer sr-only" />
                         <Label
                           htmlFor="light"
-                          className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-white p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze [&:has([data-state=checked])]:border-bronze cursor-pointer"
+                          className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-white p-5 md:p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 [&:has([data-state=checked])]:border-bronze cursor-pointer transition-all"
                         >
-                          <div className="w-full h-20 rounded bg-gradient-to-br from-gray-50 to-gray-100 mb-3"></div>
-                          <span className="font-semibold">Light</span>
+                          <div className="w-full h-24 md:h-28 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 mb-4 shadow-sm"></div>
+                          <span className="font-semibold text-base">Light</span>
                         </Label>
                       </div>
 
@@ -503,10 +503,10 @@ const CreviaLink = () => {
                         <RadioGroupItem value="dark" id="dark" className="peer sr-only" />
                         <Label
                           htmlFor="dark"
-                          className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-white p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze [&:has([data-state=checked])]:border-bronze cursor-pointer"
+                          className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-white p-5 md:p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 [&:has([data-state=checked])]:border-bronze cursor-pointer transition-all"
                         >
-                          <div className="w-full h-20 rounded bg-gradient-to-br from-gray-800 to-gray-900 mb-3"></div>
-                          <span className="font-semibold">Dark</span>
+                          <div className="w-full h-24 md:h-28 rounded-lg bg-gradient-to-br from-gray-800 to-gray-900 mb-4 shadow-sm"></div>
+                          <span className="font-semibold text-base">Dark</span>
                         </Label>
                       </div>
 
@@ -514,10 +514,10 @@ const CreviaLink = () => {
                         <RadioGroupItem value="bronze" id="bronze" className="peer sr-only" />
                         <Label
                           htmlFor="bronze"
-                          className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-white p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze [&:has([data-state=checked])]:border-bronze cursor-pointer"
+                          className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-white p-5 md:p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 [&:has([data-state=checked])]:border-bronze cursor-pointer transition-all"
                         >
-                          <div className="w-full h-20 rounded bg-gradient-to-br from-bronze to-bronze-dark mb-3"></div>
-                          <span className="font-semibold">Bronze Elegance</span>
+                          <div className="w-full h-24 md:h-28 rounded-lg bg-gradient-to-br from-bronze to-bronze-dark mb-4 shadow-sm"></div>
+                          <span className="font-semibold text-base">Bronze</span>
                         </Label>
                       </div>
 
@@ -525,10 +525,10 @@ const CreviaLink = () => {
                         <RadioGroupItem value="minimal" id="minimal" className="peer sr-only" />
                         <Label
                           htmlFor="minimal"
-                          className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-white p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze [&:has([data-state=checked])]:border-bronze cursor-pointer"
+                          className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-white p-5 md:p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 [&:has([data-state=checked])]:border-bronze cursor-pointer transition-all"
                         >
-                          <div className="w-full h-20 rounded bg-white border-2 mb-3"></div>
-                          <span className="font-semibold">Minimal</span>
+                          <div className="w-full h-24 md:h-28 rounded-lg bg-white border-2 border-gray-200 mb-4 shadow-sm"></div>
+                          <span className="font-semibold text-base">Minimal</span>
                         </Label>
                       </div>
 
@@ -536,10 +536,10 @@ const CreviaLink = () => {
                         <RadioGroupItem value="sunset" id="sunset" className="peer sr-only" />
                         <Label
                           htmlFor="sunset"
-                          className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-white p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze [&:has([data-state=checked])]:border-bronze cursor-pointer"
+                          className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-white p-5 md:p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 [&:has([data-state=checked])]:border-bronze cursor-pointer transition-all"
                         >
-                          <div className="w-full h-20 rounded bg-gradient-to-br from-orange-400 to-pink-600 mb-3"></div>
-                          <span className="font-semibold">Sunset</span>
+                          <div className="w-full h-24 md:h-28 rounded-lg bg-gradient-to-br from-orange-400 to-pink-600 mb-4 shadow-sm"></div>
+                          <span className="font-semibold text-base">Sunset</span>
                         </Label>
                       </div>
 
@@ -547,10 +547,10 @@ const CreviaLink = () => {
                         <RadioGroupItem value="ocean" id="ocean" className="peer sr-only" />
                         <Label
                           htmlFor="ocean"
-                          className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-white p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze [&:has([data-state=checked])]:border-bronze cursor-pointer"
+                          className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-white p-5 md:p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 [&:has([data-state=checked])]:border-bronze cursor-pointer transition-all"
                         >
-                          <div className="w-full h-20 rounded bg-gradient-to-br from-blue-500 to-teal-400 mb-3"></div>
-                          <span className="font-semibold">Ocean</span>
+                          <div className="w-full h-24 md:h-28 rounded-lg bg-gradient-to-br from-blue-500 to-teal-400 mb-4 shadow-sm"></div>
+                          <span className="font-semibold text-base">Ocean</span>
                         </Label>
                       </div>
 
@@ -558,10 +558,10 @@ const CreviaLink = () => {
                         <RadioGroupItem value="forest" id="forest" className="peer sr-only" />
                         <Label
                           htmlFor="forest"
-                          className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-white p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze [&:has([data-state=checked])]:border-bronze cursor-pointer"
+                          className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-white p-5 md:p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 [&:has([data-state=checked])]:border-bronze cursor-pointer transition-all"
                         >
-                          <div className="w-full h-20 rounded bg-gradient-to-br from-green-600 to-emerald-800 mb-3"></div>
-                          <span className="font-semibold">Forest</span>
+                          <div className="w-full h-24 md:h-28 rounded-lg bg-gradient-to-br from-green-600 to-emerald-800 mb-4 shadow-sm"></div>
+                          <span className="font-semibold text-base">Forest</span>
                         </Label>
                       </div>
 
@@ -569,10 +569,10 @@ const CreviaLink = () => {
                         <RadioGroupItem value="royal" id="royal" className="peer sr-only" />
                         <Label
                           htmlFor="royal"
-                          className="flex flex-col items-center justify-between rounded-lg border-2 border-muted bg-white p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze [&:has([data-state=checked])]:border-bronze cursor-pointer"
+                          className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-white p-5 md:p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 [&:has([data-state=checked])]:border-bronze cursor-pointer transition-all"
                         >
-                          <div className="w-full h-20 rounded bg-gradient-to-br from-purple-600 to-indigo-800 mb-3"></div>
-                          <span className="font-semibold">Royal Purple</span>
+                          <div className="w-full h-24 md:h-28 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-800 mb-4 shadow-sm"></div>
+                          <span className="font-semibold text-base">Royal</span>
                         </Label>
                       </div>
                     </RadioGroup>
@@ -602,15 +602,15 @@ const CreviaLink = () => {
               </Card>
 
               {/* Layout & Spacing Section */}
-              <Card className="p-6 md:p-8 border-border/50">
-                <div className="flex items-center gap-3 mb-8">
-                  <Layout className="w-6 h-6 text-bronze flex-shrink-0" />
-                  <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">Layout & Spacing</h3>
+              <Card className="p-7 md:p-9 border-border/50">
+                <div className="flex items-center gap-3 mb-10">
+                  <Layout className="w-7 h-7 text-bronze flex-shrink-0" />
+                  <h3 className="font-vollkorn text-2xl sm:text-3xl md:text-4xl font-bold">Layout & Spacing</h3>
                 </div>
                 
-                <div className="space-y-6 md:space-y-7">
+                <div className="space-y-8 md:space-y-10">
                   <div>
-                    <Label htmlFor="layout" className="text-base font-medium mb-3 block">Page Layout</Label>
+                    <Label htmlFor="layout" className="text-base md:text-lg font-medium mb-4 block">Page Layout</Label>
                     <Select
                       value={linkProfile?.layout || "centered"}
                       onValueChange={(value) => setLinkProfile({ ...linkProfile, layout: value })}
@@ -629,23 +629,23 @@ const CreviaLink = () => {
                   </div>
 
                   <div>
-                    <Label className="text-base font-medium mb-4 block">Button Style</Label>
+                    <Label className="text-base md:text-lg font-medium mb-6 block">Button Style</Label>
                     <RadioGroup
                       value={linkProfile?.background?.button_style || "rounded"}
                       onValueChange={(value) => setLinkProfile({ 
                         ...linkProfile, 
                         background: { ...linkProfile?.background, button_style: value }
                       })}
-                      className="grid grid-cols-2 gap-4 mt-4"
+                      className="grid grid-cols-2 gap-5 md:gap-6 mt-4"
                     >
                       <div className="relative">
                         <RadioGroupItem value="rounded" id="rounded" className="peer sr-only" />
                         <Label
                           htmlFor="rounded"
-                          className="flex flex-col items-center justify-center rounded-lg border-2 border-muted p-4 hover:bg-accent peer-data-[state=checked]:border-bronze cursor-pointer"
+                          className="flex flex-col items-center justify-center rounded-xl border-2 border-muted p-5 md:p-6 hover:bg-accent peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
                         >
-                          <div className="w-full h-12 rounded-full bg-bronze/20 border-2 border-bronze mb-2"></div>
-                          <span className="text-sm font-medium">Rounded</span>
+                          <div className="w-full h-14 md:h-16 rounded-full bg-bronze/20 border-2 border-bronze mb-3 shadow-sm"></div>
+                          <span className="text-sm md:text-base font-medium">Rounded</span>
                         </Label>
                       </div>
 
@@ -653,10 +653,10 @@ const CreviaLink = () => {
                         <RadioGroupItem value="sharp" id="sharp" className="peer sr-only" />
                         <Label
                           htmlFor="sharp"
-                          className="flex flex-col items-center justify-center rounded-lg border-2 border-muted p-4 hover:bg-accent peer-data-[state=checked]:border-bronze cursor-pointer"
+                          className="flex flex-col items-center justify-center rounded-xl border-2 border-muted p-5 md:p-6 hover:bg-accent peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
                         >
-                          <div className="w-full h-12 bg-bronze/20 border-2 border-bronze mb-2"></div>
-                          <span className="text-sm font-medium">Sharp</span>
+                          <div className="w-full h-14 md:h-16 bg-bronze/20 border-2 border-bronze mb-3 shadow-sm"></div>
+                          <span className="text-sm md:text-base font-medium">Sharp</span>
                         </Label>
                       </div>
 
@@ -664,10 +664,10 @@ const CreviaLink = () => {
                         <RadioGroupItem value="soft" id="soft" className="peer sr-only" />
                         <Label
                           htmlFor="soft"
-                          className="flex flex-col items-center justify-center rounded-lg border-2 border-muted p-4 hover:bg-accent peer-data-[state=checked]:border-bronze cursor-pointer"
+                          className="flex flex-col items-center justify-center rounded-xl border-2 border-muted p-5 md:p-6 hover:bg-accent peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
                         >
-                          <div className="w-full h-12 rounded-lg bg-bronze/20 border-2 border-bronze mb-2"></div>
-                          <span className="text-sm font-medium">Soft</span>
+                          <div className="w-full h-14 md:h-16 rounded-lg bg-bronze/20 border-2 border-bronze mb-3 shadow-sm"></div>
+                          <span className="text-sm md:text-base font-medium">Soft</span>
                         </Label>
                       </div>
 
@@ -675,10 +675,10 @@ const CreviaLink = () => {
                         <RadioGroupItem value="pill" id="pill" className="peer sr-only" />
                         <Label
                           htmlFor="pill"
-                          className="flex flex-col items-center justify-center rounded-lg border-2 border-muted p-4 hover:bg-accent peer-data-[state=checked]:border-bronze cursor-pointer"
+                          className="flex flex-col items-center justify-center rounded-xl border-2 border-muted p-5 md:p-6 hover:bg-accent peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
                         >
-                          <div className="w-full h-12 rounded-full bg-bronze mb-2"></div>
-                          <span className="text-sm font-medium">Pill</span>
+                          <div className="w-full h-14 md:h-16 rounded-full bg-bronze mb-3 shadow-sm"></div>
+                          <span className="text-sm md:text-base font-medium">Pill</span>
                         </Label>
                       </div>
                     </RadioGroup>
@@ -728,8 +728,11 @@ const CreviaLink = () => {
               </Card>
 
               {/* Effects & Animations */}
-              <Card className="p-6 md:p-8 border-border/50">
-                <h3 className="font-vollkorn text-2xl md:text-3xl font-bold mb-8">Effects & Animations</h3>
+              <Card className="p-7 md:p-9 border-border/50">
+                <div className="flex items-center gap-3 mb-10">
+                  <Sparkles className="w-7 h-7 text-bronze flex-shrink-0" />
+                  <h3 className="font-vollkorn text-2xl sm:text-3xl md:text-4xl font-bold">Effects & Animations</h3>
+                </div>
                 
                 <div className="space-y-6 md:space-y-7">
                   <div className="flex items-center justify-between gap-4">
