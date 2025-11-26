@@ -166,6 +166,13 @@ const MobileBottomNav = () => {
               <Button 
                 variant="ghost" 
                 className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
+                onClick={() => handleNavigation("/profile/feedback")}
+              >
+                Feedback
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
                 onClick={() => handleNavigation("/profile/payments-billing")}
               >
                 Payments & Billing
