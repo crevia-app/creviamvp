@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
-import { Settings as SettingsIcon } from "lucide-react";
+import { Settings as SettingsIcon, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -16,6 +17,8 @@ const Settings = () => {
   const { toast } = useToast();
   const [profile, setProfile] = useState<any>(null);
   const [userType, setUserType] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     checkAuth();
@@ -36,6 +39,82 @@ const Settings = () => {
 
     setProfile(profileData);
     setUserType(profileData?.user_type || null);
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload an image file",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please upload an image smaller than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setUploading(true);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      // Upload to Supabase storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${session.user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('chat-files')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('chat-files')
+        .getPublicUrl(filePath);
+
+      // Update profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', session.user.id);
+
+      if (updateError) throw updateError;
+
+      setProfile({ ...profile, avatar_url: publicUrl });
+
+      toast({
+        title: "Profile picture updated",
+        description: "Your profile picture has been updated successfully",
+      });
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload profile picture. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -59,6 +138,41 @@ const Settings = () => {
           <Card className="p-4 md:p-8">
             <h2 className="font-vollkorn text-xl md:text-2xl font-bold mb-4 md:mb-6">Account Information</h2>
             <div className="space-y-4 md:space-y-6">
+              {/* Profile Picture */}
+              <div className="flex flex-col items-center gap-4 pb-4 border-b">
+                <div className="relative">
+                  <Avatar className="h-24 w-24 md:h-32 md:w-32">
+                    <AvatarImage src={profile?.avatar_url} />
+                    <AvatarFallback className="bg-bronze text-white text-2xl md:text-3xl">
+                      {profile?.display_name?.charAt(0) || profile?.email?.charAt(0) || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <button
+                    onClick={handleAvatarClick}
+                    disabled={uploading}
+                    className="absolute bottom-0 right-0 bg-bronze hover:bg-bronze-dark text-white rounded-full p-2 shadow-lg transition-colors disabled:opacity-50"
+                    aria-label="Change profile picture"
+                  >
+                    <Camera className="h-4 w-4 md:h-5 md:w-5" />
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">
+                    {uploading ? "Uploading..." : "Click camera icon to change profile picture"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Max size: 5MB • JPG, PNG, GIF
+                  </p>
+                </div>
+              </div>
+
               <div>
                 <Label htmlFor="displayName" className="text-sm md:text-base">Display Name</Label>
                 <Input
