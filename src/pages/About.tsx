@@ -34,11 +34,11 @@ const About = () => {
           <div className="container mx-auto px-6 py-4">
             <Button
               variant="ghost"
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/dashboard')}
               className="gap-2 hover:text-bronze"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back
+              Back to Dashboard
             </Button>
           </div>
         </div>
