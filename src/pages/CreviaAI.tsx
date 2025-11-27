@@ -69,12 +69,7 @@ const CreviaAI = () => {
     { id: '3', title: 'Instagram growth advice', timestamp: new Date(Date.now() - 259200000) },
   ]);
   const [activeChat, setActiveChat] = useState<string>('1');
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: currentGreeting
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -116,10 +111,7 @@ const CreviaAI = () => {
     };
     setChatHistories([newChat, ...chatHistories]);
     setActiveChat(newChat.id);
-    setMessages([{
-      role: "assistant",
-      content: currentGreeting
-    }]);
+    setMessages([]);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
