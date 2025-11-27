@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Target, Heart, Calendar, Users, MapPin } from "lucide-react";
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import gallery1 from "@/assets/about-gallery-1.jpg";
 import gallery2 from "@/assets/about-gallery-2.jpg";
@@ -16,10 +15,8 @@ const About = () => {
   const [showUpcoming, setShowUpcoming] = useState(true);
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      
       {/* Hero Gallery Section */}
-      <section className="relative pt-24 md:pt-32 pb-16 md:pb-20 overflow-hidden bg-gradient-to-br from-background via-secondary/20 to-background">
+      <section className="relative pt-12 md:pt-16 pb-16 md:pb-20 overflow-hidden bg-gradient-to-br from-background via-secondary/20 to-background">
         <div className="container mx-auto max-w-6xl text-center mb-12 md:mb-16 px-6 md:px-6 relative z-10">
           <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-6 md:mb-8 leading-tight">
             Own Your <span className="text-gradient-bronze">Story</span>
