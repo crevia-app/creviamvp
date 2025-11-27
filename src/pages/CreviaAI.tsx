@@ -1,5 +1,4 @@
-import { useState, useRef } from "react";
-import { AnimatedKira } from "@/components/AnimatedKira";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -36,6 +35,34 @@ interface Message {
 }
 
 const CreviaAI = () => {
+  // Greeting messages that rotate every 24 hours
+  const greetings = [
+    "Hi I'm Kira, your story deserves to be heard, let me help you tell it better",
+    "Hi! I'm Kira. Ready to turn your creative vision into strategic action?",
+    "Hey there! I'm Kira, your AI partner in building meaningful creator connections",
+    "Welcome! I'm Kira, here to help you craft content that truly resonates",
+    "Hi! I'm Kira. Let's transform your ideas into impactful brand collaborations"
+  ];
+
+  const getGreeting = () => {
+    const lastChange = localStorage.getItem('kira-greeting-date');
+    const storedIndex = localStorage.getItem('kira-greeting-index');
+    const today = new Date().toDateString();
+    
+    if (lastChange !== today) {
+      // Change greeting every 24 hours
+      const currentIndex = storedIndex ? parseInt(storedIndex) : 0;
+      const newIndex = (currentIndex + 1) % greetings.length;
+      localStorage.setItem('kira-greeting-date', today);
+      localStorage.setItem('kira-greeting-index', newIndex.toString());
+      return greetings[newIndex];
+    }
+    
+    const index = storedIndex ? parseInt(storedIndex) : 0;
+    return greetings[index];
+  };
+
+  const [currentGreeting, setCurrentGreeting] = useState(getGreeting());
   const [chatHistories, setChatHistories] = useState<ChatHistory[]>([
     { id: '1', title: 'Content strategy tips', timestamp: new Date(Date.now() - 86400000) },
     { id: '2', title: 'Brand collaboration ideas', timestamp: new Date(Date.now() - 172800000) },
@@ -45,7 +72,7 @@ const CreviaAI = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hi! I'm Kira. Your story deserves to be heard. Let me help you tell it better."
+      content: currentGreeting
     }
   ]);
   const [input, setInput] = useState("");
@@ -53,6 +80,12 @@ const CreviaAI = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Check for greeting update every time component mounts
+    const greeting = getGreeting();
+    setCurrentGreeting(greeting);
+  }, []);
 
   const handleSend = () => {
     if (!input.trim() && !selectedFile) return;
@@ -85,7 +118,7 @@ const CreviaAI = () => {
     setActiveChat(newChat.id);
     setMessages([{
       role: "assistant",
-      content: "Hi! I'm Kira. Your story deserves to be heard. Let me help you tell it better."
+      content: currentGreeting
     }]);
   };
 
@@ -281,15 +314,12 @@ const CreviaAI = () => {
         </Button>
 
         {/* Hero Section - Compact */}
-        <div className="bg-gradient-to-b from-muted/30 to-background py-4 md:py-6 px-3 md:px-4">
+        <div className="bg-gradient-to-b from-muted/30 to-background py-8 md:py-12 px-3 md:px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="mb-2 md:mb-3 flex justify-center">
-              <AnimatedKira />
-            </div>
-            <h1 className="font-vollkorn text-xl md:text-2xl lg:text-3xl font-bold mb-1 md:mb-2">
-              Meet Kira — your creator co-pilot
+            <h1 className="font-vollkorn text-2xl md:text-3xl lg:text-4xl font-bold mb-4 md:mb-6 bg-gradient-to-r from-bronze via-bronze-dark to-bronze bg-clip-text text-transparent">
+              {currentGreeting}
             </h1>
-            <p className="text-xs md:text-sm text-muted-foreground px-2">
+            <p className="text-sm md:text-base text-muted-foreground px-2 max-w-2xl mx-auto">
               Strategy, ideas, briefs, pitches — Kira helps you grow smarter
             </p>
           </div>
