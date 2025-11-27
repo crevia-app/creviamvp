@@ -1,9 +1,10 @@
-import { Link } from "react-router-dom";
-import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Target, Heart, Calendar, Users, MapPin } from "lucide-react";
+import { Target, Heart, Calendar, Users, MapPin, ArrowLeft } from "lucide-react";
 import Footer from "@/components/Footer";
+import { supabase } from "@/integrations/supabase/client";
 import gallery1 from "@/assets/about-gallery-1.jpg";
 import gallery2 from "@/assets/about-gallery-2.jpg";
 import gallery3 from "@/assets/about-gallery-3.jpg";
@@ -12,9 +13,37 @@ import creviaLogo from "@/assets/crevia-logo.png";
 import founderPhoto from "@/assets/founder-photo.jpg";
 
 const About = () => {
+  const navigate = useNavigate();
   const [showUpcoming, setShowUpcoming] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setIsLoggedIn(!!session);
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      {/* Back Button for logged-in users */}
+      {isLoggedIn && (
+        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/50">
+          <div className="container mx-auto px-6 py-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate(-1)}
+              className="gap-2 hover:text-bronze"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </Button>
+          </div>
+        </div>
+      )}
+      
       {/* Hero Gallery Section */}
       <section className="relative pt-12 md:pt-16 pb-16 md:pb-20 overflow-hidden bg-gradient-to-br from-background via-secondary/20 to-background">
         <div className="container mx-auto max-w-6xl text-center mb-12 md:mb-16 px-6 md:px-6 relative z-10">
