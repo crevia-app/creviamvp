@@ -77,11 +77,6 @@ const Home = () => {
         
         <div className="container mx-auto max-w-6xl relative z-10 px-2">
           <div className="text-left max-w-3xl space-y-4 md:space-y-8 animate-fade-in" style={{ animationDelay: '0.3s', animationDuration: '0.8s' }}>
-            <div className="mb-4 animate-fade-in" style={{ animationDelay: '0.4s', animationDuration: '0.8s' }}>
-              <p className="text-bronze/90 text-sm md:text-base font-semibold tracking-wide">
-                • Trusted by thousands of creators worldwide
-              </p>
-            </div>
             <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold leading-[1.15] animate-fade-in" style={{ animationDelay: '0.5s', animationDuration: '0.8s' }}>
               Connect with brands that{" "}
               <span className="text-gradient-bronze">believe in your story.</span>
