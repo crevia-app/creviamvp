@@ -8,7 +8,15 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
-import { Settings as SettingsIcon, Camera, Smartphone, Crown, Download } from "lucide-react";
+import { Settings as SettingsIcon, Camera, Smartphone, Crown, Download, Languages } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { languages } from "@/data/countries";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -21,6 +29,7 @@ const Settings = () => {
   const [isPremium, setIsPremium] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -270,7 +279,34 @@ const Settings = () => {
         <TabsContent value="appearance">
           <Card className="p-4 md:p-8">
             <h2 className="font-vollkorn text-xl md:text-2xl font-bold mb-4 md:mb-6">Appearance</h2>
-            <ThemeToggle />
+            <div className="space-y-6">
+              <div>
+                <Label className="text-sm md:text-base mb-2 block">Theme</Label>
+                <ThemeToggle />
+              </div>
+              
+              <div className="pt-4 border-t">
+                <div className="flex items-center gap-2 mb-3">
+                  <Languages className="w-5 h-5 text-bronze" />
+                  <Label className="text-sm md:text-base">Language</Label>
+                </div>
+                <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                  <SelectTrigger className="w-full md:w-80 h-11">
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {languages.map((language) => (
+                      <SelectItem key={language.code} value={language.code}>
+                        {language.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs md:text-sm text-muted-foreground mt-2">
+                  Change the language of the interface
+                </p>
+              </div>
+            </div>
           </Card>
         </TabsContent>
 
