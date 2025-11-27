@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "@/components/Header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,8 +33,7 @@ const Verification = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      <div className="container mx-auto px-6 pt-32 pb-20 max-w-4xl">
+      <div className="container mx-auto px-6 py-12 max-w-4xl">
         <div className="flex items-center gap-3 mb-2">
           <Shield className="w-8 h-8 text-bronze" />
           <h1 className="font-vollkorn text-4xl font-bold">Verification</h1>

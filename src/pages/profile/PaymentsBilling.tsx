@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import Header from "@/components/Header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,8 +31,7 @@ const PaymentsBilling = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      <div className="container mx-auto px-6 pt-32 pb-20 max-w-5xl">
+      <div className="container mx-auto px-6 py-12 max-w-5xl">
         <h1 className="font-vollkorn text-4xl font-bold mb-2">Payments & Billing</h1>
         <p className="text-muted-foreground mb-8">
           {userType === "creator" ? "Manage your earnings and payouts" : "Manage campaign payments and subscriptions"}
