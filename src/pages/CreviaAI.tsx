@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -35,14 +36,26 @@ interface Message {
 }
 
 const CreviaAI = () => {
-  // Greeting messages that rotate every 24 hours
-  const greetings = [
+  const [userType, setUserType] = useState<'creator' | 'brand' | null>(null);
+  
+  // Greeting messages that rotate every 24 hours - personalized by user type
+  const creatorGreetings = [
     "Hi I'm Kira, your story deserves to be heard, let me help you tell it better",
     "Hi! I'm Kira. Ready to turn your creative vision into strategic action?",
-    "Hey there! I'm Kira, your AI partner in building meaningful creator connections",
+    "Hey there! I'm Kira, your AI partner in building meaningful brand connections",
     "Welcome! I'm Kira, here to help you craft content that truly resonates",
-    "Hi! I'm Kira. Let's transform your ideas into impactful brand collaborations"
+    "Hi! I'm Kira. Let's transform your ideas into impactful collaborations"
   ];
+
+  const brandGreetings = [
+    "Hi I'm Kira, let's find the perfect creators to tell your brand's story",
+    "Hi! I'm Kira. Ready to connect with creators who align with your vision?",
+    "Hey there! I'm Kira, your AI partner in building authentic creator partnerships",
+    "Welcome! I'm Kira, here to help you launch campaigns that drive real results",
+    "Hi! I'm Kira. Let's create campaigns that resonate with your target audience"
+  ];
+
+  const greetings = userType === 'brand' ? brandGreetings : creatorGreetings;
 
   const getGreeting = () => {
     const lastChange = localStorage.getItem('kira-greeting-date');
@@ -77,10 +90,32 @@ const CreviaAI = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Check for greeting update every time component mounts
-    const greeting = getGreeting();
-    setCurrentGreeting(greeting);
+    // Fetch user profile to determine user type
+    const fetchUserProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile) {
+          setUserType(profile.user_type);
+        }
+      }
+    };
+
+    fetchUserProfile();
   }, []);
+
+  useEffect(() => {
+    // Check for greeting update when user type is loaded
+    if (userType) {
+      const greeting = getGreeting();
+      setCurrentGreeting(greeting);
+    }
+  }, [userType]);
 
   const handleSend = () => {
     if (!input.trim() && !selectedFile) return;
@@ -120,7 +155,7 @@ const CreviaAI = () => {
     }
   };
 
-  const capabilities = [
+  const creatorCapabilities = [
     {
       icon: <FileText className="w-6 h-6" />,
       title: "Write content plans",
@@ -133,12 +168,12 @@ const CreviaAI = () => {
     },
     {
       icon: <Lightbulb className="w-6 h-6" />,
-      title: "Draft brand briefs",
-      description: "Create professional briefs that win deals"
+      title: "Draft brand pitches",
+      description: "Create compelling pitches that win deals"
     },
     {
       icon: <BarChart3 className="w-6 h-6" />,
-      title: "Analyze data",
+      title: "Analyze your data",
       description: "Understand your metrics and performance"
     },
     {
@@ -147,6 +182,36 @@ const CreviaAI = () => {
       description: "Personalized strategies to scale your influence"
     }
   ];
+
+  const brandCapabilities = [
+    {
+      icon: <Users className="w-6 h-6" />,
+      title: "Find creators",
+      description: "Discover creators that align with your brand values"
+    },
+    {
+      icon: <Lightbulb className="w-6 h-6" />,
+      title: "Draft campaign briefs",
+      description: "Create compelling briefs that attract top creators"
+    },
+    {
+      icon: <FileText className="w-6 h-6" />,
+      title: "Plan campaigns",
+      description: "Get strategic campaign roadmaps and timelines"
+    },
+    {
+      icon: <BarChart3 className="w-6 h-6" />,
+      title: "Analyze ROI",
+      description: "Track campaign performance and creator impact"
+    },
+    {
+      icon: <TrendingUp className="w-6 h-6" />,
+      title: "Optimize strategy",
+      description: "Data-driven insights to improve your campaigns"
+    }
+  ];
+
+  const capabilities = userType === 'brand' ? brandCapabilities : creatorCapabilities;
 
   const renderSidebarContent = () => (
     <>
@@ -312,7 +377,10 @@ const CreviaAI = () => {
               {currentGreeting}
             </h1>
             <p className="text-sm md:text-base text-muted-foreground px-4 max-w-2xl mx-auto">
-              Strategy, ideas, briefs, pitches — Kira helps you grow smarter
+              {userType === 'brand' 
+                ? "Campaign strategy, creator discovery, briefs — Kira helps you build winning partnerships"
+                : "Strategy, ideas, briefs, pitches — Kira helps you grow smarter"
+              }
             </p>
           </div>
         </div>
