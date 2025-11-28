@@ -40,19 +40,19 @@ const CreviaAI = () => {
   
   // Greeting messages that rotate every 24 hours - personalized by user type
   const creatorGreetings = [
-    "Hi I'm Kira, your story deserves to be heard, let me help you tell it better",
-    "Hi! I'm Kira. Ready to turn your creative vision into strategic action?",
-    "Hey there! I'm Kira, your AI partner in building meaningful brand connections",
-    "Welcome! I'm Kira, here to help you craft content that truly resonates",
-    "Hi! I'm Kira. Let's transform your ideas into impactful collaborations"
+    "Hi 👋, let's build something great today",
+    "The world needs your story — let's tell it better",
+    "Ready to turn creative vision into action?",
+    "Your next big collaboration starts here",
+    "Let's craft content that truly resonates"
   ];
 
   const brandGreetings = [
-    "Hi I'm Kira, let's find the perfect creators to tell your brand's story",
-    "Hi! I'm Kira. Ready to connect with creators who align with your vision?",
-    "Hey there! I'm Kira, your AI partner in building authentic creator partnerships",
-    "Welcome! I'm Kira, here to help you launch campaigns that drive real results",
-    "Hi! I'm Kira. Let's create campaigns that resonate with your target audience"
+    "Hi 👋, let's find the perfect storytellers for your brand",
+    "Ready to connect with creators who share your vision?",
+    "Your next winning campaign starts here",
+    "Let's build partnerships that drive real impact",
+    "Time to create something your audience will love"
   ];
 
   const greetings = userType === 'brand' ? brandGreetings : creatorGreetings;
