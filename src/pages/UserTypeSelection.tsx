@@ -15,6 +15,9 @@ import { countries } from "@/data/countries";
 const UserTypeSelection = () => {
   const navigate = useNavigate();
   const [selectedCountry, setSelectedCountry] = useState<string>("");
+  
+  // Filter to show only Kenya for now
+  const availableCountries = countries.filter(country => country.code === "KE");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center p-6">
@@ -40,7 +43,7 @@ const UserTypeSelection = () => {
                 <SelectValue placeholder="Choose your country" />
               </SelectTrigger>
               <SelectContent>
-                {countries.map((country) => (
+                {availableCountries.map((country) => (
                   <SelectItem key={country.code} value={country.code}>
                     <span className="flex items-center gap-2">
                       <span>{country.flag}</span>
