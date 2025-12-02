@@ -92,8 +92,8 @@ export default {
           "100%": { transform: "translateX(0)", opacity: "1" },
         },
         "glow": {
-          "0%, 100%": { boxShadow: "0 0 20px rgba(207, 129, 80, 0.3)" },
-          "50%": { boxShadow: "0 0 30px rgba(207, 129, 80, 0.6)" },
+          "0%, 100%": { boxShadow: "0 0 20px rgba(255, 98, 0, 0.3)" },
+          "50%": { boxShadow: "0 0 30px rgba(255, 98, 0, 0.6)" },
         },
         "shimmer": {
           "0%": { backgroundPosition: "-1000px 0" },
