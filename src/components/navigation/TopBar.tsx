@@ -12,9 +12,9 @@ const TopBar = ({ profile, onProfileClick, hideRightElements = false }: TopBarPr
       <div className="flex h-16 items-center justify-between px-4 md:px-6">
         {/* Logo */}
         <Link to="/dashboard" className="flex items-center gap-2">
-          <img src="/crevia-logo.png" alt="Crevia" className="w-7 h-7" />
+          <img src="/crevia-logo.png" alt="Crevia" className="w-8 h-8 md:w-10 md:h-10" />
           <span className="font-vollkorn text-2xl font-bold text-white">Crevia</span>
-          <span className="text-[10px] font-poppins font-medium text-bronze bg-bronze/10 px-1.5 py-0.5 rounded-full uppercase tracking-wider">beta</span>
+          <span className="text-[8px] font-poppins font-medium text-bronze bg-bronze/10 px-1 py-0.5 rounded-full uppercase tracking-wider">beta</span>
         </Link>
       </div>
     </header>
