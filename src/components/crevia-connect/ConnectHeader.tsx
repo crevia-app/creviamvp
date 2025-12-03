@@ -15,8 +15,10 @@ const ConnectHeader = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4">
-        <Link to="/" className="font-serif text-2xl font-bold text-primary">
-          Crevia
+        <Link to="/" className="flex items-center gap-2">
+          <img src="/crevia-logo.png" alt="Crevia" className="w-7 h-7" />
+          <span className="font-vollkorn text-2xl font-bold text-primary">Crevia</span>
+          <span className="text-[10px] font-poppins font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full uppercase tracking-wider">beta</span>
         </Link>
         
         <nav className="flex items-center gap-6">
