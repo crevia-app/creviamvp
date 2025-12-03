@@ -20,8 +20,9 @@ const Header = () => {
     <header className="fixed top-0 w-full bg-background/95 backdrop-blur-md z-50 border-b border-border/50 animate-fade-in">
       <nav className="container mx-auto px-3 md:px-6 py-3 flex items-center justify-between max-w-7xl">
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-7 h-7 md:w-8 md:h-8 bg-bronze rounded-lg transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110"></div>
+          <img src="/crevia-logo.png" alt="Crevia" className="w-7 h-7 md:w-8 md:h-8 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" />
           <span className="font-vollkorn text-xl md:text-2xl font-bold transition-colors duration-300 group-hover:text-bronze">Crevia</span>
+          <span className="text-[10px] font-poppins font-medium text-bronze bg-bronze/10 px-1.5 py-0.5 rounded-full uppercase tracking-wider">beta</span>
         </Link>
         
         <div className="hidden lg:flex items-center gap-6 xl:gap-8">
