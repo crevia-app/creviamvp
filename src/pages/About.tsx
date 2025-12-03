@@ -9,7 +9,7 @@ import gallery1 from "@/assets/about-gallery-1.jpg";
 import gallery2 from "@/assets/about-gallery-2.jpg";
 import gallery3 from "@/assets/about-gallery-3.jpg";
 import gallery4 from "@/assets/about-gallery-4.jpg";
-import creviaLogo from "@/assets/crevia-logo.png";
+import creviaLogo from "@/assets/crevia-logo-full.png";
 import founderPhoto from "@/assets/founder-photo.jpg";
 
 const About = () => {
