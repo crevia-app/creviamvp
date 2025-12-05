@@ -15,10 +15,7 @@ import {
   Sparkles, 
   Send, 
   Heart,
-  Star,
   Zap,
-  ArrowRight,
-  CheckCircle2,
   Rocket
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -52,13 +49,6 @@ const Feedback = () => {
     setFeatureDescription("");
     setFeatureProblem("");
   };
-
-  const recentFeatures = [
-    { title: "AI Match Scoring", status: "shipped", votes: 234 },
-    { title: "Campaign Analytics", status: "shipped", votes: 189 },
-    { title: "Bulk Messaging", status: "building", votes: 156 },
-    { title: "Advanced Filters", status: "planned", votes: 143 },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -187,7 +177,7 @@ const Feedback = () => {
               </Card>
 
               {/* Sidebar */}
-              <div className="lg:col-span-2 space-y-4 md:space-y-6">
+              <div className="lg:col-span-2">
                 {/* Kira Message */}
                 <Card className="p-4 md:p-6 border-bronze/30 bg-gradient-to-br from-bronze/5 to-transparent">
                   <div className="flex items-start gap-3 md:gap-4">
@@ -201,28 +191,6 @@ const Feedback = () => {
                       </p>
                     </div>
                   </div>
-                </Card>
-
-                {/* Why Feedback Matters */}
-                <Card className="p-4 md:p-6 border-border/50 bg-card/50">
-                  <h3 className="font-vollkorn text-base md:text-lg font-bold mb-3 md:mb-4 flex items-center gap-2">
-                    <Heart className="w-4 h-4 md:w-5 md:h-5 text-bronze" />
-                    Why Your Feedback Matters
-                  </h3>
-                  <ul className="space-y-2 md:space-y-3 text-xs md:text-sm text-muted-foreground">
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-bronze mt-0.5 shrink-0" />
-                      <span>Every suggestion is reviewed within 48 hours</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-bronze mt-0.5 shrink-0" />
-                      <span>Top feedback influences our monthly roadmap</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-bronze mt-0.5 shrink-0" />
-                      <span>You'll be credited when your idea ships</span>
-                    </li>
-                  </ul>
                 </Card>
               </div>
             </div>
@@ -304,48 +272,8 @@ const Feedback = () => {
                 </div>
               </Card>
 
-              {/* Feature Roadmap Sidebar */}
-              <div className="lg:col-span-2 space-y-4 md:space-y-6">
-                {/* Recently Shipped */}
-                <Card className="p-4 md:p-6 border-border/50 bg-card/50">
-                  <h3 className="font-vollkorn text-base md:text-lg font-bold mb-3 md:mb-4 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-bronze" />
-                    Community-Driven Features
-                  </h3>
-                  <div className="space-y-2 md:space-y-3">
-                    {recentFeatures.map((feature, index) => (
-                      <div 
-                        key={index}
-                        className="flex items-center justify-between p-2 md:p-3 rounded-lg bg-muted/30 border border-border/50"
-                      >
-                        <div className="flex items-center gap-2 md:gap-3">
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <Star className="w-3 h-3 fill-bronze text-bronze" />
-                            <span className="text-xs">{feature.votes}</span>
-                          </div>
-                          <span className="text-xs md:text-sm font-medium">{feature.title}</span>
-                        </div>
-                        <Badge 
-                          variant={feature.status === "shipped" ? "default" : "outline"}
-                          className={`text-xs ${
-                            feature.status === "shipped" 
-                              ? "bg-green-500/20 text-green-400 border-green-500/30" 
-                              : feature.status === "building"
-                              ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
-                              : "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                          }`}
-                        >
-                          {feature.status}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                  <Button variant="ghost" className="w-full mt-3 md:mt-4 text-bronze hover:text-bronze-light hover:bg-bronze/10 text-sm">
-                    View Full Roadmap
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Card>
-
+              {/* Feature Sidebar */}
+              <div className="lg:col-span-2">
                 {/* Tips */}
                 <Card className="p-4 md:p-6 border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent">
                   <h3 className="font-semibold mb-2 md:mb-3 flex items-center gap-2 text-sm md:text-base">
@@ -451,32 +379,7 @@ const Feedback = () => {
               </Card>
 
               {/* Bug Report Sidebar */}
-              <div className="lg:col-span-2 space-y-4 md:space-y-6">
-                <Card className="p-4 md:p-6 border-red-500/30 bg-gradient-to-br from-red-500/5 to-transparent">
-                  <h3 className="font-semibold mb-2 md:mb-3 flex items-center gap-2 text-sm md:text-base">
-                    <Zap className="w-4 h-4 text-red-500" />
-                    Our Bug Response Times
-                  </h3>
-                  <div className="space-y-2 md:space-y-3 text-xs md:text-sm">
-                    <div className="flex justify-between items-center gap-2">
-                      <span className="text-muted-foreground">🔴 Critical</span>
-                      <Badge variant="outline" className="border-red-500/30 text-red-400 text-xs">2 hours</Badge>
-                    </div>
-                    <div className="flex justify-between items-center gap-2">
-                      <span className="text-muted-foreground">🟠 Major</span>
-                      <Badge variant="outline" className="border-orange-500/30 text-orange-400 text-xs">24 hours</Badge>
-                    </div>
-                    <div className="flex justify-between items-center gap-2">
-                      <span className="text-muted-foreground">🟡 Minor</span>
-                      <Badge variant="outline" className="border-yellow-500/30 text-yellow-400 text-xs">3 days</Badge>
-                    </div>
-                    <div className="flex justify-between items-center gap-2">
-                      <span className="text-muted-foreground">🟢 Cosmetic</span>
-                      <Badge variant="outline" className="border-green-500/30 text-green-400 text-xs">Next release</Badge>
-                    </div>
-                  </div>
-                </Card>
-
+              <div className="lg:col-span-2">
                 <Card className="p-4 md:p-6 border-border/50 bg-card/50">
                   <div className="flex items-start gap-3 md:gap-4">
                     <div className="w-9 h-9 md:w-10 md:h-10 bg-gradient-to-br from-bronze to-bronze-dark rounded-full flex items-center justify-center text-white font-bold shrink-0">
