@@ -98,98 +98,121 @@ const MobileBottomNav = () => {
             
             {/* Profile Info */}
             {profile && (
-              <>
-                <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 my-4">
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage src={profile?.avatar_url} />
-                    <AvatarFallback className="bg-bronze text-white">
-                      {profile?.display_name?.charAt(0) || profile?.email?.charAt(0) || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <p className="font-poppins text-sm font-semibold text-white">
-                      {profile?.display_name || "User"}
-                    </p>
-                    <p className="text-xs text-white/50 truncate">{profile?.email}</p>
-                    {userType && (
-                      <p className="text-xs text-bronze capitalize mt-1">{userType} Account</p>
-                    )}
-                  </div>
+              <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 my-4">
+                <Avatar className="h-14 w-14 ring-2 ring-bronze/30">
+                  <AvatarImage src={profile?.avatar_url} />
+                  <AvatarFallback className="bg-gradient-to-br from-bronze to-bronze-dark text-white font-semibold">
+                    {profile?.display_name?.charAt(0) || profile?.email?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="font-poppins text-base font-semibold text-white truncate">
+                    {profile?.display_name || "User"}
+                  </p>
+                  <p className="text-sm text-white/50 truncate">{profile?.email}</p>
+                  {userType && (
+                    <span className="inline-flex items-center mt-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-bronze/20 text-bronze border border-bronze/30 capitalize">
+                      {userType}
+                    </span>
+                  )}
                 </div>
-                <Separator className="bg-white/10 mb-4" />
-              </>
+              </div>
             )}
             
-            <div className="grid gap-2 pb-4">
+            <div className="space-y-6 pb-6">
+              {/* Tools Section */}
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-white/40 uppercase tracking-wider px-3 mb-2">Tools</p>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-12 text-sm font-medium rounded-xl"
+                  onClick={() => handleNavigation("/crevia-link")}
+                >
+                  Crevia Link
+                </Button>
+              </div>
+
+              <Separator className="bg-white/10" />
+
+              {/* Account Section */}
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-white/40 uppercase tracking-wider px-3 mb-2">Account</p>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-12 text-sm font-medium rounded-xl"
+                  onClick={() => handleNavigation("/profile/settings")}
+                >
+                  Settings
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-12 text-sm font-medium rounded-xl"
+                  onClick={() => handleNavigation("/profile/payments-billing")}
+                >
+                  Payments & Billing
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-12 text-sm font-medium rounded-xl"
+                  onClick={() => handleNavigation("/profile/feedback")}
+                >
+                  Feedback
+                </Button>
+              </div>
+
+              <Separator className="bg-white/10" />
+
+              {/* Support Section */}
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-white/40 uppercase tracking-wider px-3 mb-2">Support</p>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-12 text-sm font-medium rounded-xl"
+                  onClick={() => handleNavigation("/profile/help")}
+                >
+                  Help & Support
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-12 text-sm font-medium rounded-xl"
+                  onClick={() => handleNavigation("/about")}
+                >
+                  About Crevia
+                </Button>
+              </div>
+
+              <Separator className="bg-white/10" />
+
+              {/* Legal Section */}
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-white/40 uppercase tracking-wider px-3 mb-2">Legal</p>
+                <div className="flex gap-2 px-3">
+                  <Button 
+                    variant="ghost" 
+                    className="flex-1 text-white/60 hover:text-bronze hover:bg-white/5 h-10 text-xs font-medium rounded-xl"
+                    onClick={() => handleNavigation("/privacy-policy")}
+                  >
+                    Privacy
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="flex-1 text-white/60 hover:text-bronze hover:bg-white/5 h-10 text-xs font-medium rounded-xl"
+                    onClick={() => handleNavigation("/terms-of-service")}
+                  >
+                    Terms
+                  </Button>
+                </div>
+              </div>
+
+              <Separator className="bg-white/10" />
+
+              {/* Logout */}
               <Button 
                 variant="ghost" 
-                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
-                onClick={() => handleNavigation("/crevia-link")}
-              >
-                Crevia Link
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
-                onClick={() => handleNavigation("/about")}
-              >
-                About
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
-                onClick={() => handleNavigation("/profile/help")}
-              >
-                Help & Support
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
-                onClick={() => handleNavigation("/privacy-policy")}
-              >
-                Privacy Policy
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
-                onClick={() => handleNavigation("/terms-of-service")}
-              >
-                Terms of Service
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
-                onClick={() => handleNavigation("/profile/settings")}
-              >
-                Settings
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
-                onClick={() => handleNavigation("/profile/feedback")}
-              >
-                Feedback
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
-                onClick={() => handleNavigation("/profile/payments-billing")}
-              >
-                Payments & Billing
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
-                onClick={() => handleNavigation("/dashboard")}
-              >
-                My Dashboard
-              </Button>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-start text-white/80 hover:text-bronze hover:bg-white/5"
+                className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10 h-12 text-sm font-medium rounded-xl"
                 onClick={handleSignOut}
               >
-                Logout
+                Log Out
               </Button>
             </div>
           </SheetContent>
