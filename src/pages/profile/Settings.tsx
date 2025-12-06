@@ -267,6 +267,19 @@ const Settings = () => {
                   placeholder="@username"
                 />
               </div>
+              <div>
+                <Label htmlFor="bio" className="text-sm md:text-base">Short Bio</Label>
+                <textarea
+                  id="bio"
+                  value={profile?.bio || ""}
+                  className="mt-2 w-full min-h-[80px] md:min-h-[100px] p-3 text-sm md:text-base rounded-md border border-input bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 resize-none"
+                  placeholder="Tell us a little about yourself..."
+                  maxLength={160}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Max 160 characters
+                </p>
+              </div>
               <div className="pt-2">
                 <Button className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-sm md:text-base px-6 py-5 md:py-6">
                   Save Changes
