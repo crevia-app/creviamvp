@@ -19,7 +19,7 @@ const LinkTabsMobile = ({ userType }: LinkTabsMobileProps) => {
   ];
 
   return (
-    <div className="md:hidden sticky top-16 z-40 bg-background border-b border-border/40">
+    <div className="md:hidden sticky top-16 z-40 bg-background border-b border-border/40 mb-6">
       <ScrollArea className="w-full">
         <div className="flex gap-2 px-6 py-3">
           {tabs.map((tab) => {
