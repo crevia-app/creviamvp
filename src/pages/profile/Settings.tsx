@@ -191,12 +191,11 @@ const Settings = () => {
       <p className="text-sm md:text-base text-muted-foreground mb-6 md:mb-8">Manage your account preferences</p>
 
       <Tabs defaultValue="account" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 mb-6 md:mb-8 h-auto">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 mb-6 md:mb-8 h-auto">
           <TabsTrigger value="account" className="text-xs sm:text-sm py-2">Account</TabsTrigger>
           <TabsTrigger value="appearance" className="text-xs sm:text-sm py-2">Appearance</TabsTrigger>
           <TabsTrigger value="preferences" className="text-xs sm:text-sm py-2">Preferences</TabsTrigger>
           <TabsTrigger value="widgets" className="text-xs sm:text-sm py-2">Widgets</TabsTrigger>
-          <TabsTrigger value="integrations" className="text-xs sm:text-sm py-2">Integrations</TabsTrigger>
           <TabsTrigger value="privacy" className="text-xs sm:text-sm py-2">Privacy</TabsTrigger>
         </TabsList>
 
@@ -345,27 +344,6 @@ const Settings = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="integrations">
-          <Card className="p-4 md:p-8">
-            <h2 className="font-vollkorn text-xl md:text-2xl font-bold mb-4 md:mb-6">Integrations</h2>
-            <div className="space-y-3 md:space-y-4">
-              <div className="p-3 md:p-4 border rounded-lg flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-semibold text-sm md:text-base truncate">Instagram</p>
-                  <p className="text-xs md:text-sm text-muted-foreground">Not connected</p>
-                </div>
-                <Button variant="outline" size="sm" className="flex-shrink-0 text-xs md:text-sm">Connect</Button>
-              </div>
-              <div className="p-3 md:p-4 border rounded-lg flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-semibold text-sm md:text-base truncate">TikTok</p>
-                  <p className="text-xs md:text-sm text-muted-foreground">Not connected</p>
-                </div>
-                <Button variant="outline" size="sm" className="flex-shrink-0 text-xs md:text-sm">Connect</Button>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="widgets">
           <Card className="p-4 md:p-8">
