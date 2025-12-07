@@ -250,7 +250,7 @@ const CreviaLink = () => {
           sidebarCollapsed ? "md:ml-[170px]" : "md:ml-[320px]"
         )}>
           {/* Mobile: Proper spacing to prevent content cutoff */}
-          <div className="w-full max-w-3xl mx-auto px-5 sm:px-6 md:px-10 pt-6 pb-10 md:pt-14 md:pb-14 mt-4 md:mt-0">
+          <div className="w-full max-w-3xl mx-auto px-5 sm:px-6 md:px-10 pt-2 pb-10 md:pt-14 md:pb-14">
             <div className="w-full space-y-8 md:space-y-12">
 
           {/* ===== PROFILE TAB ===== */}
