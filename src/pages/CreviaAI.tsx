@@ -371,12 +371,12 @@ const CreviaAI = () => {
         </Button>
 
         {/* Hero Section - Compact */}
-        <div className="bg-gradient-to-b from-muted/30 to-background py-12 md:py-16 px-4 md:px-8">
+        <div className="bg-gradient-to-b from-muted/30 to-background py-12 md:py-16 px-4 md:px-8 pt-16 md:pt-12">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="font-vollkorn text-2xl md:text-3xl lg:text-4xl font-bold mb-4 md:mb-6 bg-gradient-to-r from-bronze via-bronze-dark to-bronze bg-clip-text text-transparent leading-tight px-4">
+            <h1 className="font-vollkorn text-2xl md:text-3xl lg:text-4xl font-bold mb-4 md:mb-6 bg-gradient-to-r from-bronze via-bronze-dark to-bronze bg-clip-text text-transparent leading-tight px-8 md:px-4">
               {currentGreeting}
             </h1>
-            <p className="text-sm md:text-base text-muted-foreground px-4 max-w-2xl mx-auto">
+            <p className="text-sm md:text-base text-muted-foreground px-8 md:px-4 max-w-2xl mx-auto">
               {userType === 'brand' 
                 ? "Campaign strategy, creator discovery, briefs — Kira helps you build winning partnerships"
                 : "Strategy, ideas, briefs, pitches — Kira helps you grow smarter"
