@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Users, Sparkles, MoreHorizontal } from "lucide-react";
+import { Home, Users, Sparkles, MoreHorizontal, Plug, Calendar, Instagram, Music2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -132,6 +132,60 @@ const MobileBottomNav = () => {
                   >
                     Crevia Link
                   </Button>
+                </div>
+
+                <Separator className="bg-white/10" />
+
+                {/* Integrations Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 px-2 mb-2">
+                    <Plug className="w-4 h-4 text-bronze" />
+                    <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Integrations</p>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
+                          <Instagram className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">Instagram</p>
+                          <p className="text-[10px] text-white/50">Not connected</p>
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" className="text-xs h-8 px-3 border-white/20 hover:bg-white/10">
+                        Connect
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center border border-white/20">
+                          <Music2 className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">TikTok</p>
+                          <p className="text-[10px] text-white/50">Not connected</p>
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" className="text-xs h-8 px-3 border-white/20 hover:bg-white/10">
+                        Connect
+                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center">
+                          <Calendar className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">Google Calendar</p>
+                          <p className="text-[10px] text-white/50">Not connected</p>
+                        </div>
+                      </div>
+                      <Button variant="outline" size="sm" className="text-xs h-8 px-3 border-white/20 hover:bg-white/10">
+                        Connect
+                      </Button>
+                    </div>
+                  </div>
                 </div>
 
                 <Separator className="bg-white/10" />
