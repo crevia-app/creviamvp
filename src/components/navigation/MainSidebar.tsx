@@ -7,7 +7,8 @@ import {
   Users, 
   MoreHorizontal,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -100,6 +101,12 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
             <DropdownMenuItem asChild>
               <Link to="/profile/help" className="text-white/80 hover:text-bronze focus:text-bronze">
                 Help & Support
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/profile/feedback" className="text-white/80 hover:text-bronze focus:text-bronze">
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Feedback
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
