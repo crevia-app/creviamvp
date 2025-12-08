@@ -13,7 +13,6 @@ import {
   Bell, 
   ShieldCheck, 
   Settings, 
-  MessageSquare, 
   LogOut,
   Puzzle
 } from "lucide-react";
@@ -42,9 +41,6 @@ const ProfileDrawer = ({ isOpen, onClose, profile, userType }: ProfileDrawerProp
     { icon: Puzzle, label: "Integrations", path: "/profile/integrations" },
   ];
 
-  const moreOptions = [
-    { icon: MessageSquare, label: "Feedback", path: "/profile/feedback" },
-  ];
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -75,27 +71,6 @@ const ProfileDrawer = ({ isOpen, onClose, profile, userType }: ProfileDrawerProp
         {/* Menu Items */}
         <nav className="space-y-1">
           {menuItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={onClose}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:text-bronze hover:bg-white/5 transition-all"
-              >
-                <Icon className="h-5 w-5" />
-                <span className="font-poppins text-sm font-medium">{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        <Separator className="bg-white/10 my-4" />
-
-        {/* More Options */}
-        <nav className="space-y-1 mb-4">
-          <p className="px-4 text-xs text-white/40 font-medium mb-2">More Options</p>
-          {moreOptions.map((item) => {
             const Icon = item.icon;
             return (
               <Link

@@ -23,6 +23,7 @@ import Verification from "./pages/profile/Verification";
 import Settings from "./pages/profile/Settings";
 import Help from "./pages/profile/Help";
 import Feedback from "./pages/profile/Feedback";
+import Integrations from "./pages/profile/Integrations";
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -64,6 +65,7 @@ const App = () => (
             <Route path="/profile/settings" element={<AppLayout><Settings /></AppLayout>} />
             <Route path="/profile/help" element={<AppLayout><Help /></AppLayout>} />
             <Route path="/profile/feedback" element={<AppLayout><Feedback /></AppLayout>} />
+            <Route path="/profile/integrations" element={<AppLayout><Integrations /></AppLayout>} />
             
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
