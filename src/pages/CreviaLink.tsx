@@ -29,7 +29,7 @@ const CreviaLink = () => {
   const [saving, setSaving] = useState(false);
   const [showAddButton, setShowAddButton] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
   
   const currentTab = new URLSearchParams(location.search).get("tab") || "profile";
 
@@ -239,16 +239,10 @@ const CreviaLink = () => {
       <LinkTabsMobile userType={profile?.user_type || "creator"} />
       
       <div className="flex flex-1 w-full overflow-hidden">
-        <LinkSidebarDesktop 
-          userType={profile?.user_type || "creator"} 
-          onCollapsedChange={setSidebarCollapsed}
-        />
+        <LinkSidebarDesktop userType={profile?.user_type || "creator"} />
         
         {/* Main Content Area with proper spacing for mobile */}
-        <main className={cn(
-          "flex-1 overflow-auto transition-all duration-300 bg-background",
-          sidebarCollapsed ? "md:ml-[170px]" : "md:ml-[320px]"
-        )}>
+        <main className="flex-1 overflow-auto bg-background md:ml-[200px]">
           {/* Mobile: Proper spacing to prevent content cutoff */}
           <div className="w-full max-w-3xl mx-auto px-5 sm:px-6 md:px-10 pt-2 pb-10 md:pt-14 md:pb-14">
             <div className="w-full space-y-8 md:space-y-12">
