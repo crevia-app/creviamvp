@@ -359,7 +359,9 @@ const CreviaAI = () => {
       </Sheet>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden md:ml-[360px]">
+      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${
+        sidebarCollapsed ? 'md:ml-[160px]' : 'md:ml-[360px]'
+      }`}>
         {/* Mobile Menu Button - Positioned below TopBar */}
         <Button
           variant="ghost"
