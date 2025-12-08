@@ -9,13 +9,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { 
-  LayoutDashboard, 
   CreditCard, 
   Bell, 
   ShieldCheck, 
   Settings, 
   MessageSquare, 
-  LogOut 
+  LogOut,
+  Puzzle
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
@@ -35,11 +35,14 @@ const ProfileDrawer = ({ isOpen, onClose, profile, userType }: ProfileDrawerProp
   };
 
   const menuItems = [
-    { icon: LayoutDashboard, label: "My Dashboard", path: "/dashboard" },
     { icon: CreditCard, label: "Payments & Billing", path: "/profile/payments-billing" },
     { icon: Bell, label: "Notifications", path: "/profile/notifications" },
     { icon: ShieldCheck, label: "Verification", path: "/profile/verification" },
     { icon: Settings, label: "Settings", path: "/profile/settings" },
+    { icon: Puzzle, label: "Integrations", path: "/profile/integrations" },
+  ];
+
+  const moreOptions = [
     { icon: MessageSquare, label: "Feedback", path: "/profile/feedback" },
   ];
 
@@ -72,6 +75,27 @@ const ProfileDrawer = ({ isOpen, onClose, profile, userType }: ProfileDrawerProp
         {/* Menu Items */}
         <nav className="space-y-1">
           {menuItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={onClose}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:text-bronze hover:bg-white/5 transition-all"
+              >
+                <Icon className="h-5 w-5" />
+                <span className="font-poppins text-sm font-medium">{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        <Separator className="bg-white/10 my-4" />
+
+        {/* More Options */}
+        <nav className="space-y-1 mb-4">
+          <p className="px-4 text-xs text-white/40 font-medium mb-2">More Options</p>
+          {moreOptions.map((item) => {
             const Icon = item.icon;
             return (
               <Link
