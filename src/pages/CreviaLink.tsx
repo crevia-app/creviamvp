@@ -241,11 +241,11 @@ const CreviaLink = () => {
       <div className="flex flex-1 w-full overflow-hidden">
         <LinkSidebarDesktop userType={profile?.user_type || "creator"} />
         
-        {/* Main Content Area with proper spacing for mobile */}
-        <main className="flex-1 overflow-auto bg-background md:ml-[200px]">
-          {/* Mobile: Proper spacing to prevent content cutoff */}
-          <div className="w-full max-w-3xl mx-auto px-5 sm:px-6 md:px-10 pt-2 pb-10 md:pt-14 md:pb-14">
-            <div className="w-full space-y-8 md:space-y-12">
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-auto bg-background md:ml-[100px]">
+          {/* Content container */}
+          <div className="w-full max-w-3xl px-5 sm:px-6 md:px-8 pt-2 pb-10 md:pt-10 md:pb-14">
+            <div className="w-full space-y-8 md:space-y-10">
 
           {/* ===== PROFILE TAB ===== */}
           {currentTab === "profile" && (
