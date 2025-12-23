@@ -20,12 +20,12 @@ const BrandSignup = () => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      toast({ title: "Error", description: "Passwords do not match", variant: "destructive" });
+      toast({ title: "Oops! 😅", description: "Passwords do not match", variant: "destructive" });
       return;
     }
 
     if (!agreedToTerms) {
-      toast({ title: "Error", description: "Please agree to the Terms and Conditions", variant: "destructive" });
+      toast({ title: "One more thing! ☝️", description: "Please agree to the Terms and Conditions", variant: "destructive" });
       return;
     }
 
@@ -41,9 +41,9 @@ const BrandSignup = () => {
     });
 
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: "Oops! 😅", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Account created! Redirecting to onboarding..." });
+      toast({ title: "Welcome aboard! 🚀", description: "Let's set up your brand profile!" });
       navigate("/onboarding/brand");
     }
   };
