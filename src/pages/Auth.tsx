@@ -46,9 +46,9 @@ const Auth = () => {
         });
 
         if (error) {
-          toast({ title: "Error", description: error.message, variant: "destructive" });
+          toast({ title: "Oops! 😅", description: error.message, variant: "destructive" });
         } else {
-          toast({ title: "Success! Please check your email to confirm your account." });
+          toast({ title: "You're in! 🎉 Please check your email to confirm your account." });
           navigate("/user-type-selection");
         }
       } else {
@@ -58,7 +58,7 @@ const Auth = () => {
         });
 
         if (error) {
-          toast({ title: "Error", description: error.message, variant: "destructive" });
+          toast({ title: "Hmm... 🤔", description: error.message, variant: "destructive" });
         } else if (data.user) {
           // Fetch user profile to check account type
           const { data: profileData, error: profileError } = await supabase
@@ -69,15 +69,15 @@ const Auth = () => {
 
           if (profileError || !profileData) {
             toast({ 
-              title: "Profile not found", 
+              title: "Almost there! 📝", 
               description: "Please complete your profile setup.",
               variant: "destructive" 
             });
             navigate("/user-type-selection");
           } else {
             toast({ 
-              title: "Welcome back!", 
-              description: `Logged in as ${profileData.user_type}` 
+              title: "Welcome back! 👋", 
+              description: `Great to see you, ${profileData.user_type}! 🌟` 
             });
             navigate("/dashboard");
           }
@@ -86,8 +86,8 @@ const Auth = () => {
     } catch (err) {
       console.error("Auth error:", err);
       toast({ 
-        title: "Connection Error", 
-        description: "Unable to connect to the server. Please check your internet connection and try again.", 
+        title: "Connection hiccup! 📡", 
+        description: "Unable to connect to the server. Please check your internet and try again.", 
         variant: "destructive" 
       });
     } finally {
@@ -107,14 +107,14 @@ const Auth = () => {
 
     if (error) {
       toast({
-        title: "Error",
+        title: "Oops! 😅",
         description: error.message,
         variant: "destructive",
       });
     } else {
       toast({
-        title: "Password reset email sent!",
-        description: "Check your inbox for the password reset link.",
+        title: "Check your inbox! 📧",
+        description: "We sent you a link to reset your password.",
       });
       setShowForgotPassword(false);
       setResetEmail("");

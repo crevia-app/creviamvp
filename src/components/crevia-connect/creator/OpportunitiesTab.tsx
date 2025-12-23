@@ -93,14 +93,14 @@ const OpportunitiesTab = () => {
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Added to wishlist",
+        title: "Added to wishlist! 💖",
+        description: "You can find it in your saved campaigns",
       });
     } catch (error) {
       console.error("Error adding to wishlist:", error);
       toast({
-        title: "Error",
-        description: "Failed to add to wishlist",
+        title: "Oops! 😅",
+        description: "Failed to add to wishlist. Try again!",
         variant: "destructive",
       });
     }
@@ -116,7 +116,7 @@ const OpportunitiesTab = () => {
   });
 
   if (loading) {
-    return <div className="text-center py-12">Loading opportunities...</div>;
+    return <div className="text-center py-12">Finding amazing opportunities... ✨</div>;
   }
 
   return (

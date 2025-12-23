@@ -35,13 +35,14 @@ const MyCampaignsTab = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, any> = {
-      pending: "default",
-      approved: "default",
-      rejected: "destructive",
-      completed: "default"
+    const statusConfig: Record<string, { variant: any; emoji: string; label: string }> = {
+      pending: { variant: "default", emoji: "⏳", label: "Pending" },
+      accepted: { variant: "default", emoji: "🎉", label: "Approved" },
+      rejected: { variant: "destructive", emoji: "😔", label: "Rejected" },
+      completed: { variant: "default", emoji: "✅", label: "Completed" }
     };
-    return <Badge variant={variants[status] || "default"}>{status}</Badge>;
+    const config = statusConfig[status] || { variant: "default", emoji: "📋", label: status };
+    return <Badge variant={config.variant}>{config.emoji} {config.label}</Badge>;
   };
 
   const activeApplications = applications.filter(app => app.status === "accepted");
@@ -49,7 +50,7 @@ const MyCampaignsTab = () => {
   const completedApplications = applications.filter(app => app.status === "completed");
 
   if (loading) {
-    return <div className="text-center py-12">Loading campaigns...</div>;
+    return <div className="text-center py-12">Loading campaigns... ⏳</div>;
   }
 
   return (

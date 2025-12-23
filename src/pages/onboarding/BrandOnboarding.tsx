@@ -52,15 +52,15 @@ const BrandOnboarding = () => {
 
   const handleNext = () => {
     if (step === 1 && !selectedType) {
-      toast({ title: "Please select your business type" });
+      toast({ title: "Hold up! ✋ Please select your business type" });
       return;
     }
     if (step === 2 && selectedGoals.length === 0) {
-      toast({ title: "Please select at least one goal" });
+      toast({ title: "Almost there! 🎯 Please select at least one goal" });
       return;
     }
     if (step === 3 && (!handle || !brandName)) {
-      toast({ title: "Please complete all fields" });
+      toast({ title: "Just a bit more! 📝 Please complete all fields" });
       return;
     }
     if (step < 4) {
@@ -69,7 +69,7 @@ const BrandOnboarding = () => {
   };
 
   const handleComplete = async () => {
-    toast({ title: "Welcome to Crevia! 🎉" });
+    toast({ title: "You're all set! 🚀 Welcome to Crevia!" });
     navigate("/");
   };
 
@@ -95,7 +95,7 @@ const BrandOnboarding = () => {
           {step === 1 && (
             <div className="space-y-6">
               <div>
-                <h2 className="font-vollkorn text-3xl font-bold mb-2">Which best describes your brand?</h2>
+                <h2 className="font-vollkorn text-3xl font-bold mb-2">Which best describes your brand? 🏢</h2>
                 <p className="text-muted-foreground">Choose one option</p>
               </div>
 
@@ -139,7 +139,7 @@ const BrandOnboarding = () => {
           {step === 2 && (
             <div className="space-y-6">
               <div>
-                <h2 className="font-vollkorn text-3xl font-bold mb-2">What do you want to achieve with creators?</h2>
+                <h2 className="font-vollkorn text-3xl font-bold mb-2">What do you want to achieve? 🎯</h2>
                 <p className="text-muted-foreground">Select all that apply</p>
               </div>
 
@@ -189,7 +189,7 @@ const BrandOnboarding = () => {
           {step === 3 && (
             <div className="space-y-6">
               <div>
-                <h2 className="font-vollkorn text-3xl font-bold mb-2">Create Your Crevia Link</h2>
+                <h2 className="font-vollkorn text-3xl font-bold mb-2">Create Your Crevia Link ✨</h2>
                 <p className="text-muted-foreground">Your brand-facing page for creators</p>
               </div>
 
@@ -272,9 +272,9 @@ const BrandOnboarding = () => {
             <div className="space-y-6">
               <div className="text-center">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-bronze to-bronze-light flex items-center justify-center mx-auto mb-4">
-                  <span className="text-3xl">🔒</span>
+                  <span className="text-3xl">✅</span>
                 </div>
-                <h2 className="font-vollkorn text-3xl font-bold mb-2">Just one step!</h2>
+                <h2 className="font-vollkorn text-3xl font-bold mb-2">Almost there! 🏆</h2>
                 <p className="text-muted-foreground">Let's confirm your brand so creators trust your campaigns</p>
               </div>
 

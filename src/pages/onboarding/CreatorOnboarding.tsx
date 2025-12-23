@@ -53,15 +53,15 @@ const CreatorOnboarding = () => {
 
   const handleNext = () => {
     if (step === 1 && selectedTypes.length === 0) {
-      toast({ title: "Please select at least one option" });
+      toast({ title: "Hold up! ✋ Please select at least one option" });
       return;
     }
     if (step === 2 && selectedGoals.length === 0) {
-      toast({ title: "Please select at least one goal" });
+      toast({ title: "Almost there! 🎯 Please select at least one goal" });
       return;
     }
     if (step === 3 && !handle) {
-      toast({ title: "Please choose a handle" });
+      toast({ title: "One more thing! 📝 Please choose a handle" });
       return;
     }
     if (step < 4) {
@@ -70,7 +70,7 @@ const CreatorOnboarding = () => {
   };
 
   const handleComplete = async () => {
-    toast({ title: "Welcome to Crevia! 🎉" });
+    toast({ title: "You're all set! 🚀 Welcome to Crevia!" });
     navigate("/");
   };
 
@@ -99,7 +99,7 @@ const CreatorOnboarding = () => {
           {step === 1 && (
             <div className="space-y-6">
               <div>
-                <h2 className="font-vollkorn text-3xl font-bold mb-2">What type of creator are you?</h2>
+                <h2 className="font-vollkorn text-3xl font-bold mb-2">What type of creator are you? 🎨</h2>
                 <p className="text-muted-foreground">Select all that apply</p>
               </div>
 
@@ -144,7 +144,7 @@ const CreatorOnboarding = () => {
           {step === 2 && (
             <div className="space-y-6">
               <div>
-                <h2 className="font-vollkorn text-3xl font-bold mb-2">What do you want to achieve on Crevia?</h2>
+                <h2 className="font-vollkorn text-3xl font-bold mb-2">What do you want to achieve? 🎯</h2>
                 <p className="text-muted-foreground">Select all that apply</p>
               </div>
 
@@ -195,7 +195,7 @@ const CreatorOnboarding = () => {
           {step === 3 && (
             <div className="space-y-6">
               <div>
-                <h2 className="font-vollkorn text-3xl font-bold mb-2">Create Your Crevia Link</h2>
+                <h2 className="font-vollkorn text-3xl font-bold mb-2">Create Your Crevia Link ✨</h2>
                 <p className="text-muted-foreground">This will be your public profile</p>
               </div>
 
@@ -276,9 +276,9 @@ const CreatorOnboarding = () => {
             <div className="space-y-6">
               <div className="text-center">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-bronze to-bronze-light flex items-center justify-center mx-auto mb-4">
-                  <span className="text-3xl">😊</span>
+                  <span className="text-3xl">🛡️</span>
                 </div>
-                <h2 className="font-vollkorn text-3xl font-bold mb-2">Let's keep Crevia safe and trusted!</h2>
+                <h2 className="font-vollkorn text-3xl font-bold mb-2">Let's keep Crevia safe! 🔒</h2>
                 <p className="text-muted-foreground">Choose your verification method</p>
               </div>
 
