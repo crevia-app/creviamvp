@@ -40,19 +40,20 @@ interface Message {
 const CreviaAI = () => {
   const { toast } = useToast();
   const [userType, setUserType] = useState<'creator' | 'brand' | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to top when page loads
   useEffect(() => {
-    // Scroll both window and the main container to top
     window.scrollTo(0, 0);
-    // Also scroll the main content container in AppLayout
     const mainContainer = document.querySelector('main.overflow-auto');
     if (mainContainer) {
       mainContainer.scrollTo(0, 0);
     }
   }, []);
+
   // Greeting messages that rotate every 24 hours - personalized by user type
   const creatorGreetings = [
     "Hey there! 👋 Let's build something great today",
@@ -78,7 +79,6 @@ const CreviaAI = () => {
     const today = new Date().toDateString();
     
     if (lastChange !== today) {
-      // Change greeting every 24 hours
       const currentIndex = storedIndex ? parseInt(storedIndex) : 0;
       const newIndex = (currentIndex + 1) % greetings.length;
       localStorage.setItem('kira-greeting-date', today);
@@ -91,24 +91,23 @@ const CreviaAI = () => {
   };
 
   const [currentGreeting, setCurrentGreeting] = useState(getGreeting());
-  const [chatHistories, setChatHistories] = useState<ChatHistory[]>([
-    { id: '1', title: 'Content strategy tips', timestamp: new Date(Date.now() - 86400000) },
-    { id: '2', title: 'Brand collaboration ideas', timestamp: new Date(Date.now() - 172800000) },
-    { id: '3', title: 'Instagram growth advice', timestamp: new Date(Date.now() - 259200000) },
-  ]);
-  const [activeChat, setActiveChat] = useState<string>('1');
+  const [chatHistories, setChatHistories] = useState<ChatHistory[]>([]);
+  const [activeChat, setActiveChat] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Fetch user profile and chat history
   useEffect(() => {
-    // Fetch user profile to determine user type
-    const fetchUserProfile = async () => {
+    const fetchUserData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        setUserId(user.id);
+        
         const { data: profile } = await supabase
           .from('profiles')
           .select('user_type')
@@ -118,14 +117,59 @@ const CreviaAI = () => {
         if (profile) {
           setUserType(profile.user_type);
         }
+
+        // Fetch chat history
+        const { data: conversations, error } = await supabase
+          .from('kira_conversations')
+          .select('*')
+          .order('updated_at', { ascending: false });
+
+        if (!error && conversations) {
+          setChatHistories(conversations.map(c => ({
+            id: c.id,
+            title: c.title,
+            timestamp: new Date(c.updated_at)
+          })));
+          
+          // Set active chat to most recent if exists
+          if (conversations.length > 0) {
+            setActiveChat(conversations[0].id);
+          }
+        }
+      }
+      setIsLoadingHistory(false);
+    };
+
+    fetchUserData();
+  }, []);
+
+  // Load messages when active chat changes
+  useEffect(() => {
+    const loadMessages = async () => {
+      if (!activeChat) {
+        setMessages([]);
+        return;
+      }
+
+      const { data: msgs, error } = await supabase
+        .from('kira_messages')
+        .select('*')
+        .eq('conversation_id', activeChat)
+        .order('created_at', { ascending: true });
+
+      if (!error && msgs) {
+        setMessages(msgs.map(m => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+          file: m.file_name || undefined
+        })));
       }
     };
 
-    fetchUserProfile();
-  }, []);
+    loadMessages();
+  }, [activeChat]);
 
   useEffect(() => {
-    // Check for greeting update when user type is loaded
     if (userType) {
       const greeting = getGreeting();
       setCurrentGreeting(greeting);
@@ -137,7 +181,30 @@ const CreviaAI = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const streamKiraResponse = useCallback(async (userMessages: Message[]) => {
+  // Save message to database
+  const saveMessage = async (conversationId: string, role: "user" | "assistant", content: string, fileName?: string) => {
+    await supabase.from('kira_messages').insert({
+      conversation_id: conversationId,
+      role,
+      content,
+      file_name: fileName
+    });
+  };
+
+  // Update conversation title based on first message
+  const updateConversationTitle = async (conversationId: string, firstMessage: string) => {
+    const title = firstMessage.slice(0, 50) + (firstMessage.length > 50 ? '...' : '');
+    await supabase
+      .from('kira_conversations')
+      .update({ title, updated_at: new Date().toISOString() })
+      .eq('id', conversationId);
+    
+    setChatHistories(prev => prev.map(c => 
+      c.id === conversationId ? { ...c, title, timestamp: new Date() } : c
+    ));
+  };
+
+  const streamKiraResponse = useCallback(async (userMessages: Message[], conversationId: string) => {
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kira-chat`;
     
     try {
@@ -229,6 +296,13 @@ const CreviaAI = () => {
           } catch { /* ignore */ }
         }
       }
+
+      // Save assistant response to database
+      if (assistantContent) {
+        await saveMessage(conversationId, "assistant", assistantContent);
+      }
+
+      return assistantContent;
     } catch (error) {
       console.error("Kira chat error:", error);
       throw error;
@@ -237,6 +311,14 @@ const CreviaAI = () => {
 
   const handleSend = async () => {
     if (!input.trim() && !selectedFile) return;
+    if (!userId) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be logged in to chat with Kira",
+        variant: "destructive",
+      });
+      return;
+    }
     
     const newMessage: Message = { 
       role: "user", 
@@ -244,21 +326,63 @@ const CreviaAI = () => {
       file: selectedFile?.name 
     };
     
+    let conversationId = activeChat;
+    
+    // Create new conversation if none exists
+    if (!conversationId) {
+      const { data: newConvo, error } = await supabase
+        .from('kira_conversations')
+        .insert({ user_id: userId, title: 'New conversation' })
+        .select()
+        .single();
+      
+      if (error || !newConvo) {
+        toast({
+          title: "Error",
+          description: "Couldn't start a new conversation",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      conversationId = newConvo.id;
+      setActiveChat(conversationId);
+      setChatHistories(prev => [{
+        id: newConvo.id,
+        title: 'New conversation',
+        timestamp: new Date()
+      }, ...prev]);
+    }
+
     const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
     setInput("");
     setSelectedFile(null);
     setIsLoading(true);
     
+    // Save user message to database
+    await saveMessage(conversationId, "user", newMessage.content, newMessage.file);
+    
+    // Update title if this is the first message
+    if (messages.length === 0) {
+      await updateConversationTitle(conversationId, newMessage.content);
+    }
+    
     try {
-      await streamKiraResponse(updatedMessages);
+      await streamKiraResponse(updatedMessages, conversationId);
+      
+      // Update conversation timestamp
+      await supabase
+        .from('kira_conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', conversationId);
+        
     } catch (error) {
       toast({
         title: "Oops! 😅",
         description: error instanceof Error ? error.message : "Couldn't reach Kira right now. Please try again!",
         variant: "destructive",
       });
-      // Add error message to chat
       setMessages(prev => [...prev, {
         role: "assistant",
         content: "Sorry, I had a little hiccup! 😅 Could you try asking me again?"
@@ -268,15 +392,40 @@ const CreviaAI = () => {
     }
   };
 
-  const handleNewChat = () => {
-    const newChat: ChatHistory = {
-      id: Date.now().toString(),
-      title: 'New conversation',
-      timestamp: new Date()
-    };
-    setChatHistories([newChat, ...chatHistories]);
-    setActiveChat(newChat.id);
-    setMessages([]);
+  const handleNewChat = async () => {
+    if (!userId) return;
+    
+    const { data: newConvo, error } = await supabase
+      .from('kira_conversations')
+      .insert({ user_id: userId, title: 'New conversation' })
+      .select()
+      .single();
+    
+    if (!error && newConvo) {
+      const newChat: ChatHistory = {
+        id: newConvo.id,
+        title: 'New conversation',
+        timestamp: new Date()
+      };
+      setChatHistories([newChat, ...chatHistories]);
+      setActiveChat(newChat.id);
+      setMessages([]);
+    }
+  };
+
+  const handleDeleteChat = async (chatId: string) => {
+    const { error } = await supabase
+      .from('kira_conversations')
+      .delete()
+      .eq('id', chatId);
+    
+    if (!error) {
+      setChatHistories(prev => prev.filter(c => c.id !== chatId));
+      if (activeChat === chatId) {
+        const remaining = chatHistories.filter(c => c.id !== chatId);
+        setActiveChat(remaining.length > 0 ? remaining[0].id : null);
+      }
+    }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -284,6 +433,10 @@ const CreviaAI = () => {
       setSelectedFile(e.target.files[0]);
     }
   };
+
+  const filteredChats = chatHistories.filter(chat => 
+    chat.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const creatorCapabilities = [
     {
@@ -366,6 +519,8 @@ const CreviaAI = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
           <Input 
             placeholder="Search chats..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9 h-9 text-sm bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-bronze"
           />
         </div>
@@ -383,14 +538,23 @@ const CreviaAI = () => {
       {/* Chat History */}
       <ScrollArea className="flex-1 px-2">
         <div className="space-y-1.5 pb-3">
-          {chatHistories.length === 0 ? (
+          {isLoadingHistory ? (
+            <div className="px-3 py-8 text-center">
+              <Loader2 className="w-6 h-6 mx-auto text-white/40 animate-spin mb-3" />
+              <p className="text-sm text-white/40 font-poppins">Loading chats...</p>
+            </div>
+          ) : filteredChats.length === 0 ? (
             <div className="px-3 py-8 text-center">
               <MessageSquare className="w-8 h-8 mx-auto text-white/20 mb-3" />
-              <p className="text-sm text-white/40 font-poppins">No chats yet</p>
-              <p className="text-xs text-white/30 mt-1">Start a new conversation!</p>
+              <p className="text-sm text-white/40 font-poppins">
+                {searchQuery ? 'No chats found' : 'No chats yet'}
+              </p>
+              <p className="text-xs text-white/30 mt-1">
+                {searchQuery ? 'Try a different search' : 'Start a new conversation!'}
+              </p>
             </div>
           ) : (
-            chatHistories.map((chat) => (
+            filteredChats.map((chat) => (
               <div
                 key={chat.id}
                 onClick={() => {
@@ -427,7 +591,7 @@ const CreviaAI = () => {
                     className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/20 rounded-lg transition-all"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setChatHistories(chatHistories.filter(c => c.id !== chat.id));
+                      handleDeleteChat(chat.id);
                     }}
                   >
                     <Trash2 className="w-3.5 h-3.5 text-white/40 hover:text-red-400" />
