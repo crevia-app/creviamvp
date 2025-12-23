@@ -29,55 +29,69 @@ const Auth = () => {
     });
   }, [navigate]);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
 
-    if (isSignup) {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/user-type-selection`,
-        },
-      });
+    try {
+      if (isSignup) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/user-type-selection`,
+          },
+        });
 
-      if (error) {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
-      } else {
-        toast({ title: "Success! Please check your email to confirm your account." });
-        navigate("/user-type-selection");
-      }
-    } else {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
-      } else if (data.user) {
-        // Fetch user profile to check account type
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("user_type")
-          .eq("id", data.user.id)
-          .single();
-
-        if (profileError || !profileData) {
-          toast({ 
-            title: "Profile not found", 
-            description: "Please complete your profile setup.",
-            variant: "destructive" 
-          });
-          navigate("/user-type-selection");
+        if (error) {
+          toast({ title: "Error", description: error.message, variant: "destructive" });
         } else {
-          toast({ 
-            title: "Welcome back!", 
-            description: `Logged in as ${profileData.user_type}` 
-          });
-          navigate("/dashboard");
+          toast({ title: "Success! Please check your email to confirm your account." });
+          navigate("/user-type-selection");
+        }
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          toast({ title: "Error", description: error.message, variant: "destructive" });
+        } else if (data.user) {
+          // Fetch user profile to check account type
+          const { data: profileData, error: profileError } = await supabase
+            .from("profiles")
+            .select("user_type")
+            .eq("id", data.user.id)
+            .single();
+
+          if (profileError || !profileData) {
+            toast({ 
+              title: "Profile not found", 
+              description: "Please complete your profile setup.",
+              variant: "destructive" 
+            });
+            navigate("/user-type-selection");
+          } else {
+            toast({ 
+              title: "Welcome back!", 
+              description: `Logged in as ${profileData.user_type}` 
+            });
+            navigate("/dashboard");
+          }
         }
       }
+    } catch (err) {
+      console.error("Auth error:", err);
+      toast({ 
+        title: "Connection Error", 
+        description: "Unable to connect to the server. Please check your internet connection and try again.", 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -202,8 +216,12 @@ const Auth = () => {
             </div>
           </div>
 
-          <Button type="submit" className="w-full h-12 bg-bronze hover:bg-bronze-dark font-semibold">
-            {isSignup ? "Create Account" : "Log In"}
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+            className="w-full h-12 bg-bronze hover:bg-bronze-dark font-semibold"
+          >
+            {isLoading ? "Please wait..." : (isSignup ? "Create Account" : "Log In")}
           </Button>
         </form>
 
