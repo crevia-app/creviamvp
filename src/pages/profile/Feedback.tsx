@@ -11,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   MessageSquare, 
   Lightbulb, 
-  Bug, 
   Sparkles, 
   Send, 
   Heart,
@@ -22,19 +21,20 @@ import { useToast } from "@/hooks/use-toast";
 
 const Feedback = () => {
   const { toast } = useToast();
-  const [feedbackType, setFeedbackType] = useState<"feedback" | "bug" | "feature">("feedback");
+  const [feedbackType, setFeedbackType] = useState<"feedback" | "bug">("feedback");
   const [category, setCategory] = useState("");
   const [message, setMessage] = useState("");
   const [featureTitle, setFeatureTitle] = useState("");
   const [featureDescription, setFeatureDescription] = useState("");
   const [featureProblem, setFeatureProblem] = useState("");
   const [emailMe, setEmailMe] = useState(true);
-  const [urgency, setUrgency] = useState("");
 
   const handleSubmitFeedback = () => {
     toast({
-      title: "Thank you for your feedback! 🎉",
-      description: "Your voice shapes Crevia's future. We'll review this carefully.",
+      title: feedbackType === "bug" ? "Bug report submitted! 🐛" : "Thank you for your feedback! 🎉",
+      description: feedbackType === "bug" 
+        ? "Our team will look into this right away." 
+        : "Your voice shapes Crevia's future. We'll review this carefully.",
     });
     setMessage("");
     setCategory("");
@@ -49,6 +49,27 @@ const Feedback = () => {
     setFeatureDescription("");
     setFeatureProblem("");
   };
+
+  const feedbackCategories = feedbackType === "bug" 
+    ? [
+        { value: "dashboard", label: "Dashboard" },
+        { value: "campaigns", label: "Campaigns" },
+        { value: "messaging", label: "Messaging" },
+        { value: "payments", label: "Payments" },
+        { value: "profile", label: "Profile" },
+        { value: "search", label: "Search/Discovery" },
+        { value: "mobile", label: "Mobile Experience" },
+        { value: "other", label: "Other" },
+      ]
+    : [
+        { value: "platform", label: "Platform Experience" },
+        { value: "payments", label: "Payments & Escrow" },
+        { value: "search", label: "Creator/Brand Discovery" },
+        { value: "campaigns", label: "Campaign Tools" },
+        { value: "messaging", label: "Messaging System" },
+        { value: "kira", label: "Kira AI Assistant" },
+        { value: "other", label: "Other" },
+      ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,40 +92,33 @@ const Feedback = () => {
             
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed px-2">
               Every piece of feedback, every feature idea—they all help us build the platform 
-              that creators and brands truly deserve. Your insights are the foundation of our roadmap.
+              that creators and brands truly deserve.
             </p>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 py-8 md:py-12 max-w-6xl">
-        <Tabs defaultValue="feedback" className="space-y-6 md:space-y-8">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 h-12 md:h-14 p-1 bg-muted/50">
+        <Tabs defaultValue="thoughts" className="space-y-6 md:space-y-8">
+          <TabsList className="grid w-full max-w-sm mx-auto grid-cols-2 h-12 md:h-14 p-1 bg-muted/50">
             <TabsTrigger 
-              value="feedback" 
-              className="data-[state=active]:bg-bronze data-[state=active]:text-white flex items-center justify-center gap-1 md:gap-2 h-full text-xs md:text-sm"
+              value="thoughts" 
+              className="data-[state=active]:bg-bronze data-[state=active]:text-white flex items-center justify-center gap-2 h-full text-sm"
             >
               <MessageSquare className="w-4 h-4" />
-              <span className="hidden xs:inline sm:inline">Feedback</span>
+              <span>Thoughts</span>
             </TabsTrigger>
             <TabsTrigger 
               value="feature"
-              className="data-[state=active]:bg-bronze data-[state=active]:text-white flex items-center justify-center gap-1 md:gap-2 h-full text-xs md:text-sm"
+              className="data-[state=active]:bg-bronze data-[state=active]:text-white flex items-center justify-center gap-2 h-full text-sm"
             >
               <Lightbulb className="w-4 h-4" />
-              <span className="hidden xs:inline sm:inline">Feature</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="bug"
-              className="data-[state=active]:bg-bronze data-[state=active]:text-white flex items-center justify-center gap-1 md:gap-2 h-full text-xs md:text-sm"
-            >
-              <Bug className="w-4 h-4" />
-              <span className="hidden xs:inline sm:inline">Bug</span>
+              <span>Feature</span>
             </TabsTrigger>
           </TabsList>
 
-          {/* General Feedback Tab */}
-          <TabsContent value="feedback" className="space-y-6 md:space-y-8">
+          {/* Share Your Thoughts Tab (Feedback + Bug) */}
+          <TabsContent value="thoughts" className="space-y-6 md:space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-8">
               {/* Feedback Form */}
               <Card className="lg:col-span-3 p-5 sm:p-6 md:p-8 border-border/50 bg-card/50 backdrop-blur-sm">
@@ -114,42 +128,71 @@ const Feedback = () => {
                   </div>
                   <div>
                     <h2 className="font-vollkorn text-xl md:text-2xl font-bold">Share Your Thoughts</h2>
-                    <p className="text-xs md:text-sm text-muted-foreground">Help us understand your experience</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">Feedback, suggestions, or bug reports</p>
                   </div>
                 </div>
 
                 <div className="space-y-4 md:space-y-6">
+                  {/* Type Selector */}
                   <div>
-                    <Label htmlFor="category" className="text-sm font-medium">What area does this relate to?</Label>
+                    <Label className="text-sm font-medium">What type of feedback is this?</Label>
+                    <div className="flex gap-3 mt-2">
+                      <Button
+                        type="button"
+                        variant={feedbackType === "feedback" ? "default" : "outline"}
+                        className={feedbackType === "feedback" 
+                          ? "flex-1 bg-bronze hover:bg-bronze-dark text-white" 
+                          : "flex-1"
+                        }
+                        onClick={() => { setFeedbackType("feedback"); setCategory(""); }}
+                      >
+                        General Feedback
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={feedbackType === "bug" ? "default" : "outline"}
+                        className={feedbackType === "bug" 
+                          ? "flex-1 bg-bronze hover:bg-bronze-dark text-white" 
+                          : "flex-1"
+                        }
+                        onClick={() => { setFeedbackType("bug"); setCategory(""); }}
+                      >
+                        Report a Bug
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="category" className="text-sm font-medium">
+                      {feedbackType === "bug" ? "Where did you encounter this?" : "What area does this relate to?"}
+                    </Label>
                     <Select value={category} onValueChange={setCategory}>
                       <SelectTrigger className="mt-2 h-11 md:h-12 bg-background/50">
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                       <SelectContent className="bg-popover border-border">
-                        <SelectItem value="platform">Platform Experience</SelectItem>
-                        <SelectItem value="payments">Payments & Escrow</SelectItem>
-                        <SelectItem value="search">Creator/Brand Discovery</SelectItem>
-                        <SelectItem value="campaigns">Campaign Tools</SelectItem>
-                        <SelectItem value="messaging">Messaging System</SelectItem>
-                        <SelectItem value="kira">Kira AI Assistant</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        {feedbackCategories.map((cat) => (
+                          <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div>
-                    <Label htmlFor="message" className="text-sm font-medium">Your Feedback</Label>
+                    <Label htmlFor="message" className="text-sm font-medium">
+                      {feedbackType === "bug" ? "Describe the bug" : "Your Feedback"}
+                    </Label>
                     <Textarea
                       id="message"
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Tell us what's on your mind. What's working well? What could be better?"
+                      placeholder={feedbackType === "bug" 
+                        ? "What happened? What did you expect instead? Include steps to reproduce if possible." 
+                        : "Tell us what's on your mind. What's working well? What could be better?"
+                      }
                       rows={5}
                       className="mt-2 bg-background/50 resize-none"
                     />
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Be as detailed as you'd like—every word helps us improve.
-                    </p>
                   </div>
 
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 md:p-4 rounded-lg bg-muted/30 border border-border/50 gap-3">
@@ -160,7 +203,7 @@ const Feedback = () => {
                         onCheckedChange={setEmailMe}
                       />
                       <Label htmlFor="emailMe" className="text-xs sm:text-sm cursor-pointer">
-                        Keep me updated on how this feedback shapes Crevia
+                        Keep me updated on this feedback
                       </Label>
                     </div>
                   </div>
@@ -171,14 +214,13 @@ const Feedback = () => {
                     disabled={!category || !message}
                   >
                     <Send className="w-4 h-4 mr-2" />
-                    Submit Feedback
+                    {feedbackType === "bug" ? "Submit Bug Report" : "Submit Feedback"}
                   </Button>
                 </div>
               </Card>
 
               {/* Sidebar */}
               <div className="lg:col-span-2">
-                {/* Kira Message */}
                 <Card className="p-4 md:p-6 border-bronze/30 bg-gradient-to-br from-bronze/5 to-transparent">
                   <div className="flex items-start gap-3 md:gap-4">
                     <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-bronze to-bronze-dark rounded-full flex items-center justify-center text-white font-bold text-base md:text-lg shrink-0">
@@ -187,7 +229,10 @@ const Feedback = () => {
                     <div>
                       <p className="font-semibold text-foreground mb-1 text-sm md:text-base">Kira says:</p>
                       <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-                        "Every single piece of feedback gets read by our team. You're not just filling out a form—you're directly influencing what we build next!"
+                        {feedbackType === "bug" 
+                          ? "Don't worry—bugs happen! Our engineering team takes every report seriously and works quickly to fix issues."
+                          : "Every single piece of feedback gets read by our team. You're directly influencing what we build next!"
+                        }
                       </p>
                     </div>
                   </div>
@@ -235,9 +280,6 @@ const Feedback = () => {
                       rows={3}
                       className="mt-2 bg-background/50 resize-none"
                     />
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Understanding the "why" helps us build the right solution.
-                    </p>
                   </div>
 
                   <div>
@@ -274,7 +316,6 @@ const Feedback = () => {
 
               {/* Feature Sidebar */}
               <div className="lg:col-span-2">
-                {/* Tips */}
                 <Card className="p-4 md:p-6 border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent">
                   <h3 className="font-semibold mb-2 md:mb-3 flex items-center gap-2 text-sm md:text-base">
                     <Lightbulb className="w-4 h-4 text-amber-500" />
@@ -298,104 +339,6 @@ const Feedback = () => {
               </div>
             </div>
           </TabsContent>
-
-          {/* Bug Report Tab */}
-          <TabsContent value="bug" className="space-y-6 md:space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-8">
-              {/* Bug Report Form */}
-              <Card className="lg:col-span-3 p-5 sm:p-6 md:p-8 border-border/50 bg-card/50 backdrop-blur-sm">
-                <div className="flex items-center gap-3 mb-5 md:mb-6">
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shrink-0">
-                    <Bug className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="font-vollkorn text-xl md:text-2xl font-bold">Report a Bug</h2>
-                    <p className="text-xs md:text-sm text-muted-foreground">Found something broken? Let us squash it!</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4 md:space-y-6">
-                  <div>
-                    <Label htmlFor="bugCategory" className="text-sm font-medium">Where did you encounter this bug?</Label>
-                    <Select value={category} onValueChange={setCategory}>
-                      <SelectTrigger className="mt-2 h-11 md:h-12 bg-background/50">
-                        <SelectValue placeholder="Select area" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover border-border">
-                        <SelectItem value="dashboard">Dashboard</SelectItem>
-                        <SelectItem value="campaigns">Campaigns</SelectItem>
-                        <SelectItem value="messaging">Messaging</SelectItem>
-                        <SelectItem value="payments">Payments</SelectItem>
-                        <SelectItem value="profile">Profile</SelectItem>
-                        <SelectItem value="search">Search/Discovery</SelectItem>
-                        <SelectItem value="mobile">Mobile Experience</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="urgency" className="text-sm font-medium">How severe is this bug?</Label>
-                    <Select value={urgency} onValueChange={setUrgency}>
-                      <SelectTrigger className="mt-2 h-11 md:h-12 bg-background/50">
-                        <SelectValue placeholder="Select severity" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover border-border">
-                        <SelectItem value="critical">🔴 Critical - Can't use platform</SelectItem>
-                        <SelectItem value="major">🟠 Major - Feature is broken</SelectItem>
-                        <SelectItem value="minor">🟡 Minor - Annoying but workable</SelectItem>
-                        <SelectItem value="cosmetic">🟢 Cosmetic - Visual issue only</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="bugDescription" className="text-sm font-medium">Describe the bug</Label>
-                    <Textarea
-                      id="bugDescription"
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      placeholder="What happened? What did you expect instead?"
-                      rows={4}
-                      className="mt-2 bg-background/50 resize-none"
-                    />
-                  </div>
-
-                  <div className="p-3 md:p-4 rounded-lg bg-red-500/10 border border-red-500/30">
-                    <p className="text-xs md:text-sm text-muted-foreground">
-                      <strong className="text-foreground">Pro tip:</strong> Include steps to reproduce the bug if possible. Screenshots help!
-                    </p>
-                  </div>
-
-                  <Button 
-                    onClick={handleSubmitFeedback}
-                    className="w-full h-11 md:h-12 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-medium"
-                    disabled={!category || !message}
-                  >
-                    <Bug className="w-4 h-4 mr-2" />
-                    Submit Bug Report
-                  </Button>
-                </div>
-              </Card>
-
-              {/* Bug Report Sidebar */}
-              <div className="lg:col-span-2">
-                <Card className="p-4 md:p-6 border-border/50 bg-card/50">
-                  <div className="flex items-start gap-3 md:gap-4">
-                    <div className="w-9 h-9 md:w-10 md:h-10 bg-gradient-to-br from-bronze to-bronze-dark rounded-full flex items-center justify-center text-white font-bold shrink-0">
-                      K
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground mb-1 text-sm md:text-base">Kira says:</p>
-                      <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-                        "Don't worry—bugs happen! You're helping us catch them and our engineering team takes every report seriously."
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            </div>
-          </TabsContent>
         </Tabs>
 
         {/* Bottom CTA */}
@@ -406,11 +349,11 @@ const Feedback = () => {
               Together, We Build Something Great
             </h3>
             <p className="text-sm md:text-base text-muted-foreground mb-4 md:mb-6">
-              Crevia isn't just a platform—it's a community. Every feature is shaped by creators and brands like you.
+              Crevia isn't just a platform—it's a community shaped by creators and brands like you.
             </p>
             <div className="flex items-center justify-center gap-2 text-bronze text-sm md:text-base">
               <Heart className="w-4 h-4 md:w-5 md:h-5 fill-bronze" />
-              <span className="font-medium">Made with love, powered by your feedback</span>
+              <span className="font-medium">Powered by your feedback</span>
             </div>
           </Card>
         </div>
