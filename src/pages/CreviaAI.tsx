@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Lightbulb, 
   Users, 
@@ -20,7 +21,8 @@ import {
   Trash2,
   PanelLeftClose,
   PanelLeft,
-  Menu
+  Menu,
+  Loader2
 } from "lucide-react";
 
 interface ChatHistory {
@@ -36,8 +38,10 @@ interface Message {
 }
 
 const CreviaAI = () => {
+  const { toast } = useToast();
   const [userType, setUserType] = useState<'creator' | 'brand' | null>(null);
-  
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   // Greeting messages that rotate every 24 hours - personalized by user type
   const creatorGreetings = [
     "Hey there! 👋 Let's build something great today",
@@ -117,7 +121,110 @@ const CreviaAI = () => {
     }
   }, [userType]);
 
-  const handleSend = () => {
+  // Scroll to bottom when messages update
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const streamKiraResponse = useCallback(async (userMessages: Message[]) => {
+    const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kira-chat`;
+    
+    try {
+      const response = await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          messages: userMessages.map(m => ({ role: m.role, content: m.content })),
+          userType: userType || 'creator',
+        }),
+      });
+
+      if (!response.ok || !response.body) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to connect to Kira");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = "";
+      let assistantContent = "";
+      let streamDone = false;
+
+      while (!streamDone) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") {
+            streamDone = true;
+            break;
+          }
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              assistantContent += content;
+              setMessages(prev => {
+                const last = prev[prev.length - 1];
+                if (last?.role === "assistant") {
+                  return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantContent } : m));
+                }
+                return [...prev, { role: "assistant", content: assistantContent }];
+              });
+            }
+          } catch {
+            textBuffer = line + "\n" + textBuffer;
+            break;
+          }
+        }
+      }
+
+      // Final flush
+      if (textBuffer.trim()) {
+        for (let raw of textBuffer.split("\n")) {
+          if (!raw) continue;
+          if (raw.endsWith("\r")) raw = raw.slice(0, -1);
+          if (raw.startsWith(":") || raw.trim() === "") continue;
+          if (!raw.startsWith("data: ")) continue;
+          const jsonStr = raw.slice(6).trim();
+          if (jsonStr === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              assistantContent += content;
+              setMessages(prev => {
+                const last = prev[prev.length - 1];
+                if (last?.role === "assistant") {
+                  return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantContent } : m));
+                }
+                return [...prev, { role: "assistant", content: assistantContent }];
+              });
+            }
+          } catch { /* ignore */ }
+        }
+      }
+    } catch (error) {
+      console.error("Kira chat error:", error);
+      throw error;
+    }
+  }, [userType]);
+
+  const handleSend = async () => {
     if (!input.trim() && !selectedFile) return;
     
     const newMessage: Message = { 
@@ -125,17 +232,29 @@ const CreviaAI = () => {
       content: input,
       file: selectedFile?.name 
     };
-    setMessages([...messages, newMessage]);
+    
+    const updatedMessages = [...messages, newMessage];
+    setMessages(updatedMessages);
     setInput("");
     setSelectedFile(null);
+    setIsLoading(true);
     
-    // Simulate Kira response
-    setTimeout(() => {
+    try {
+      await streamKiraResponse(updatedMessages);
+    } catch (error) {
+      toast({
+        title: "Oops! 😅",
+        description: error instanceof Error ? error.message : "Couldn't reach Kira right now. Please try again!",
+        variant: "destructive",
+      });
+      // Add error message to chat
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: "Hey! 😊 I'm here to help! This is a demo — the full AI integration is coming soon. But I can't wait to help you with strategies, pitches, and more! 🚀"
+        content: "Sorry, I had a little hiccup! 😅 Could you try asking me again?"
       }]);
-    }, 1000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleNewChat = () => {
@@ -405,10 +524,16 @@ const CreviaAI = () => {
           <div className="flex-1 overflow-hidden">
             <ScrollArea className="h-full px-4 md:px-6">
               <div className="max-w-3xl mx-auto py-6 space-y-6">
+                {messages.length === 0 && (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <p className="text-lg mb-2">Start chatting with Kira! 🦁</p>
+                    <p className="text-sm">Ask anything about content creation, brand partnerships, or growing your audience.</p>
+                  </div>
+                )}
                 {messages.map((msg, idx) => (
                   <div
                     key={idx}
-                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
                   >
                     <div
                       className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-3 ${
@@ -427,6 +552,15 @@ const CreviaAI = () => {
                     </div>
                   </div>
                 ))}
+                {isLoading && messages[messages.length - 1]?.role === 'user' && (
+                  <div className="flex justify-start animate-fade-in">
+                    <div className="bg-muted rounded-2xl px-4 py-3 flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="text-sm text-muted-foreground">Kira is thinking...</span>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
           </div>
@@ -470,17 +604,18 @@ const CreviaAI = () => {
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && !isLoading && handleSend()}
                   placeholder="Ask Kira anything..."
                   className="flex-1"
+                  disabled={isLoading}
                 />
                 
                 <Button 
                   onClick={handleSend}
-                  disabled={!input.trim() && !selectedFile}
+                  disabled={isLoading || (!input.trim() && !selectedFile)}
                   className="bg-bronze hover:bg-bronze-dark text-background flex-shrink-0"
                 >
-                  <Send className="w-4 h-4" />
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </Button>
               </div>
 
