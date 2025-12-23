@@ -42,6 +42,11 @@ const CreviaAI = () => {
   const [userType, setUserType] = useState<'creator' | 'brand' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to top when page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   // Greeting messages that rotate every 24 hours - personalized by user type
   const creatorGreetings = [
     "Hey there! 👋 Let's build something great today",
