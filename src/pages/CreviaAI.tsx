@@ -382,42 +382,60 @@ const CreviaAI = () => {
 
       {/* Chat History */}
       <ScrollArea className="flex-1 px-2">
-        <div className="space-y-1 pb-3">
-          {chatHistories.map((chat) => (
-            <div
-              key={chat.id}
-              onClick={() => {
-                setActiveChat(chat.id);
-                setMobileSidebarOpen(false);
-              }}
-              className={`w-full text-left p-2.5 rounded-lg text-sm transition-all group relative cursor-pointer ${
-                activeChat === chat.id 
-                  ? 'bg-white/10 text-white' 
-                  : 'text-white/70 hover:bg-white/5 hover:text-white'
-              }`}
-            >
-              <div className="flex items-start gap-2">
-                <MessageSquare className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-poppins font-medium truncate text-sm">
-                    {chat.title}
-                  </p>
-                  <p className="text-xs text-white/40 mt-0.5">
-                    {chat.timestamp.toLocaleDateString()}
-                  </p>
-                </div>
-                <button 
-                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded transition-opacity"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setChatHistories(chatHistories.filter(c => c.id !== chat.id));
-                  }}
-                >
-                  <Trash2 className="w-3.5 h-3.5 text-white/40 hover:text-red-400" />
-                </button>
-              </div>
+        <div className="space-y-1.5 pb-3">
+          {chatHistories.length === 0 ? (
+            <div className="px-3 py-8 text-center">
+              <MessageSquare className="w-8 h-8 mx-auto text-white/20 mb-3" />
+              <p className="text-sm text-white/40 font-poppins">No chats yet</p>
+              <p className="text-xs text-white/30 mt-1">Start a new conversation!</p>
             </div>
-          ))}
+          ) : (
+            chatHistories.map((chat) => (
+              <div
+                key={chat.id}
+                onClick={() => {
+                  setActiveChat(chat.id);
+                  setMobileSidebarOpen(false);
+                }}
+                className={`w-full text-left p-3 rounded-xl text-sm transition-all group relative cursor-pointer border ${
+                  activeChat === chat.id 
+                    ? 'bg-bronze/15 text-white border-bronze/30' 
+                    : 'text-white/70 hover:bg-white/5 hover:text-white border-transparent hover:border-white/10'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`p-1.5 rounded-lg flex-shrink-0 ${
+                    activeChat === chat.id ? 'bg-bronze/20' : 'bg-white/5'
+                  }`}>
+                    <MessageSquare className={`w-4 h-4 ${
+                      activeChat === chat.id ? 'text-bronze' : 'text-white/50'
+                    }`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-poppins font-medium truncate text-sm leading-tight">
+                      {chat.title}
+                    </p>
+                    <p className="text-xs text-white/40 mt-1">
+                      {chat.timestamp.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        year: chat.timestamp.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+                      })}
+                    </p>
+                  </div>
+                  <button 
+                    className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/20 rounded-lg transition-all"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setChatHistories(chatHistories.filter(c => c.id !== chat.id));
+                    }}
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-white/40 hover:text-red-400" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </ScrollArea>
     </>
