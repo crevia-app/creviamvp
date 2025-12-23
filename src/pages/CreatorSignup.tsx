@@ -20,12 +20,12 @@ const CreatorSignup = () => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      toast({ title: "Error", description: "Passwords do not match", variant: "destructive" });
+      toast({ title: "Oops! 😅", description: "Passwords do not match", variant: "destructive" });
       return;
     }
 
     if (!agreedToTerms) {
-      toast({ title: "Error", description: "Please agree to the Terms and Conditions", variant: "destructive" });
+      toast({ title: "One more thing! ☝️", description: "Please agree to the Terms and Conditions", variant: "destructive" });
       return;
     }
 
@@ -41,9 +41,9 @@ const CreatorSignup = () => {
     });
 
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({ title: "Oops! 😅", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Account created! Redirecting to onboarding..." });
+      toast({ title: "You're in! 🎉", description: "Let's set up your creator profile!" });
       navigate("/onboarding/creator");
     }
   };
