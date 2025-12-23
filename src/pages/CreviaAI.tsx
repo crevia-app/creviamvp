@@ -45,7 +45,13 @@ const CreviaAI = () => {
 
   // Scroll to top when page loads
   useEffect(() => {
+    // Scroll both window and the main container to top
     window.scrollTo(0, 0);
+    // Also scroll the main content container in AppLayout
+    const mainContainer = document.querySelector('main.overflow-auto');
+    if (mainContainer) {
+      mainContainer.scrollTo(0, 0);
+    }
   }, []);
   // Greeting messages that rotate every 24 hours - personalized by user type
   const creatorGreetings = [
