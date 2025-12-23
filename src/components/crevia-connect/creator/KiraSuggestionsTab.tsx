@@ -69,14 +69,14 @@ const KiraSuggestionsTab = () => {
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-primary" />
-            Kira's Suggestions
+            Kira's Suggestions 💡
           </h2>
           <p className="text-muted-foreground mt-1">
-            Personalized recommendations to help you succeed
+            Personalized recommendations to help you succeed ✨
           </p>
         </div>
         <Button onClick={fetchSuggestions} variant="outline">
-          Refresh
+          🔄 Refresh
         </Button>
       </div>
 
@@ -100,7 +100,7 @@ const KiraSuggestionsTab = () => {
         {suggestions.length === 0 && (
           <Card className="md:col-span-2">
             <CardContent className="pt-6 text-center text-muted-foreground">
-              No suggestions available at the moment. Complete your profile to get personalized recommendations from Kira AI.
+              🤔 No suggestions available at the moment. Complete your profile to get personalized recommendations from Kira AI! ✨
             </CardContent>
           </Card>
         )}

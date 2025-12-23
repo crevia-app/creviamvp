@@ -40,19 +40,19 @@ const CreviaAI = () => {
   
   // Greeting messages that rotate every 24 hours - personalized by user type
   const creatorGreetings = [
-    "Hi 👋, let's build something great today",
-    "The world needs your story — let's tell it better",
-    "Ready to turn creative vision into action?",
-    "Your next big collaboration starts here",
-    "Let's craft content that truly resonates"
+    "Hey there! 👋 Let's build something great today",
+    "The world needs your story 🌟 — let's tell it better",
+    "Ready to turn creative vision into action? 🚀",
+    "Your next big collaboration starts here 🤝",
+    "Let's craft content that truly resonates ✨"
   ];
 
   const brandGreetings = [
-    "Hi 👋, let's find the perfect storytellers for your brand",
-    "Ready to connect with creators who share your vision?",
-    "Your next winning campaign starts here",
-    "Let's build partnerships that drive real impact",
-    "Time to create something your audience will love"
+    "Hey there! 👋 Let's find the perfect storytellers for your brand",
+    "Ready to connect with creators who share your vision? 🎯",
+    "Your next winning campaign starts here 🏆",
+    "Let's build partnerships that drive real impact 📈",
+    "Time to create something your audience will love 💖"
   ];
 
   const greetings = userType === 'brand' ? brandGreetings : creatorGreetings;
@@ -133,7 +133,7 @@ const CreviaAI = () => {
     setTimeout(() => {
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: "I'm here to help! This is a demo - the full AI integration is coming soon."
+        content: "Hey! 😊 I'm here to help! This is a demo — the full AI integration is coming soon. But I can't wait to help you with strategies, pitches, and more! 🚀"
       }]);
     }, 1000);
   };
@@ -158,27 +158,27 @@ const CreviaAI = () => {
   const creatorCapabilities = [
     {
       icon: <FileText className="w-6 h-6" />,
-      title: "Write content plans",
+      title: "Write content plans 📝",
       description: "Get structured content calendars and topic ideas"
     },
     {
       icon: <Users className="w-6 h-6" />,
-      title: "Suggest collaborations",
+      title: "Suggest collaborations 🤝",
       description: "Find the perfect brand partnerships for your niche"
     },
     {
       icon: <Lightbulb className="w-6 h-6" />,
-      title: "Draft brand pitches",
+      title: "Draft brand pitches ✍️",
       description: "Create compelling pitches that win deals"
     },
     {
       icon: <BarChart3 className="w-6 h-6" />,
-      title: "Analyze your data",
+      title: "Analyze your data 📊",
       description: "Understand your metrics and performance"
     },
     {
       icon: <TrendingUp className="w-6 h-6" />,
-      title: "Give growth tips",
+      title: "Give growth tips 🚀",
       description: "Personalized strategies to scale your influence"
     }
   ];
@@ -186,27 +186,27 @@ const CreviaAI = () => {
   const brandCapabilities = [
     {
       icon: <Users className="w-6 h-6" />,
-      title: "Find creators",
+      title: "Find creators 🔍",
       description: "Discover creators that align with your brand values"
     },
     {
       icon: <Lightbulb className="w-6 h-6" />,
-      title: "Draft campaign briefs",
+      title: "Draft campaign briefs ✍️",
       description: "Create compelling briefs that attract top creators"
     },
     {
       icon: <FileText className="w-6 h-6" />,
-      title: "Plan campaigns",
+      title: "Plan campaigns 📋",
       description: "Get strategic campaign roadmaps and timelines"
     },
     {
       icon: <BarChart3 className="w-6 h-6" />,
-      title: "Analyze ROI",
+      title: "Analyze ROI 📈",
       description: "Track campaign performance and creator impact"
     },
     {
       icon: <TrendingUp className="w-6 h-6" />,
-      title: "Optimize strategy",
+      title: "Optimize strategy 🎯",
       description: "Data-driven insights to improve your campaigns"
     }
   ];
@@ -485,7 +485,7 @@ const CreviaAI = () => {
               </div>
 
               <p className="text-xs text-muted-foreground text-center mt-2">
-                Kira can make mistakes. Consider checking important information.
+                Kira can make mistakes — but hey, nobody's perfect! 🤷‍♀️ Double-check important info.
               </p>
             </div>
           </div>

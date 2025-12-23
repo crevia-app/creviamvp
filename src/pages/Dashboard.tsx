@@ -61,10 +61,10 @@ const Dashboard = () => {
       {/* Welcome Header */}
       <div className="space-y-2">
         <h1 className="font-vollkorn text-4xl font-bold text-foreground">
-          Welcome back, {profile?.display_name || "Creator"}.
+          Welcome back, {profile?.display_name || "Creator"} 👋
         </h1>
         <p className="text-muted-foreground font-poppins">
-          Here's what's happening with your creative journey today.
+          Here's what's happening with your creative journey today ✨
         </p>
       </div>
 
@@ -77,7 +77,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-vollkorn font-bold">$0</div>
-            <p className="text-xs text-muted-foreground">No campaigns yet</p>
+            <p className="text-xs text-muted-foreground">No campaigns yet 🚀</p>
           </CardContent>
         </Card>
         
@@ -88,7 +88,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-vollkorn font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Get started today</p>
+            <p className="text-xs text-muted-foreground">Get started today 💪</p>
           </CardContent>
         </Card>
 
@@ -120,13 +120,13 @@ const Dashboard = () => {
         {/* Top Opportunities */}
         <Card className="md:col-span-2 bg-card border-border">
           <CardHeader>
-            <CardTitle className="font-vollkorn text-xl">Your Top Opportunities</CardTitle>
+            <CardTitle className="font-vollkorn text-xl">Your Top Opportunities 🎯</CardTitle>
             <CardDescription className="font-poppins">Campaigns matched to your profile</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="text-center py-8">
               <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground font-poppins mb-4">No campaigns available yet</p>
+              <p className="text-muted-foreground font-poppins mb-4">No campaigns available yet 🔍</p>
               <Link to="/crevia-connect?tab=opportunities">
                 <Button className="gap-2">
                   Browse Opportunities <ArrowRight className="h-4 w-4" />
@@ -141,19 +141,19 @@ const Dashboard = () => {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-bronze" />
-              <CardTitle className="font-vollkorn text-xl">Kira Says</CardTitle>
+              <CardTitle className="font-vollkorn text-xl">Kira Says 💬</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
               <div className="p-3 bg-background/50 rounded-lg">
-                <p className="text-sm font-poppins">✨ Complete your profile to get better campaign matches</p>
+                <p className="text-sm font-poppins">✨ Complete your profile to get better campaign matches!</p>
               </div>
               <div className="p-3 bg-background/50 rounded-lg">
                 <p className="text-sm font-poppins">📊 Update your social metrics for more visibility</p>
               </div>
               <div className="p-3 bg-background/50 rounded-lg">
-                <p className="text-sm font-poppins">🎯 Set up your Crevia Link to showcase your work</p>
+                <p className="text-sm font-poppins">🎨 Set up your Crevia Link to showcase your work</p>
               </div>
             </div>
             <Link to="/crevia-ai">
@@ -168,7 +168,7 @@ const Dashboard = () => {
       {/* Quick Actions */}
       <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="font-vollkorn text-xl">Quick Actions</CardTitle>
+          <CardTitle className="font-vollkorn text-xl">Quick Actions ⚡</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 md:grid-cols-4">
@@ -199,11 +199,11 @@ const Dashboard = () => {
       {/* Activity Timeline */}
       <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="font-vollkorn text-xl">Recent Activity</CardTitle>
+          <CardTitle className="font-vollkorn text-xl">Recent Activity 📅</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <p className="text-muted-foreground font-poppins">No recent activity</p>
+            <p className="text-muted-foreground font-poppins">No recent activity yet 🌱</p>
           </div>
         </CardContent>
       </Card>
@@ -215,10 +215,10 @@ const Dashboard = () => {
       {/* Welcome Header */}
       <div className="space-y-2">
         <h1 className="font-vollkorn text-4xl font-bold text-foreground">
-          Welcome back, {profile?.display_name || "Brand"}.
+          Welcome back, {profile?.display_name || "Brand"} 👋
         </h1>
         <p className="text-muted-foreground font-poppins">
-          Here's your campaign overview and performance insights.
+          Here's your campaign overview and performance insights 📈
         </p>
       </div>
 
@@ -231,7 +231,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-vollkorn font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Create your first campaign</p>
+            <p className="text-xs text-muted-foreground">Create your first campaign 🚀</p>
           </CardContent>
         </Card>
         
@@ -253,7 +253,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-vollkorn font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Waiting for campaigns</p>
+            <p className="text-xs text-muted-foreground">Waiting for campaigns 🔍</p>
           </CardContent>
         </Card>
 
@@ -274,13 +274,13 @@ const Dashboard = () => {
         {/* Top Creator Recommendations */}
         <Card className="md:col-span-2 bg-card border-border">
           <CardHeader>
-            <CardTitle className="font-vollkorn text-xl">Top Creator Recommendations</CardTitle>
+            <CardTitle className="font-vollkorn text-xl">Top Creator Recommendations 🌟</CardTitle>
             <CardDescription className="font-poppins">Creators that match your brand</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="text-center py-8">
               <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground font-poppins mb-4">Create a campaign to get creator recommendations</p>
+              <p className="text-muted-foreground font-poppins mb-4">Create a campaign to get creator recommendations 💡</p>
               <Link to="/crevia-connect?tab=discovery">
                 <Button className="gap-2">
                   Discover Creators <ArrowRight className="h-4 w-4" />
@@ -295,13 +295,13 @@ const Dashboard = () => {
           <CardHeader>
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-bronze" />
-              <CardTitle className="font-vollkorn text-xl">Kira Says</CardTitle>
+              <CardTitle className="font-vollkorn text-xl">Kira Says 💬</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
               <div className="p-3 bg-background/50 rounded-lg">
-                <p className="text-sm font-poppins">🎯 Create your first campaign to start finding creators</p>
+                <p className="text-sm font-poppins">🎯 Create your first campaign to start finding creators!</p>
               </div>
               <div className="p-3 bg-background/50 rounded-lg">
                 <p className="text-sm font-poppins">📊 Complete your brand profile for better matches</p>
@@ -322,7 +322,7 @@ const Dashboard = () => {
       {/* Quick Actions */}
       <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="font-vollkorn text-xl">Quick Actions</CardTitle>
+          <CardTitle className="font-vollkorn text-xl">Quick Actions ⚡</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 md:grid-cols-4">
@@ -353,11 +353,11 @@ const Dashboard = () => {
       {/* Campaign Timeline */}
       <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle className="font-vollkorn text-xl">Campaign Timeline</CardTitle>
+          <CardTitle className="font-vollkorn text-xl">Campaign Timeline 📅</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <p className="text-muted-foreground font-poppins">No campaigns yet</p>
+            <p className="text-muted-foreground font-poppins">No campaigns yet 🌱</p>
           </div>
         </CardContent>
       </Card>
