@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
-import { Settings as SettingsIcon, Camera, Smartphone, Crown, Download, Languages } from "lucide-react";
+import { Settings as SettingsIcon, Camera, Smartphone, Download, Languages } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -26,7 +26,7 @@ const Settings = () => {
   const [profile, setProfile] = useState<any>(null);
   const [userType, setUserType] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [isPremium, setIsPremium] = useState(false);
+  const [isPremium, setIsPremium] = useState(true); // Widget feature is now available for all users
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
@@ -69,41 +69,55 @@ const Settings = () => {
     setProfile(profileData);
     setUserType(profileData?.user_type || null);
     
-    // TODO: Check premium status from database
-    // For now, simulating premium check
-    setIsPremium(false);
+    // Widget feature is now available for all users
+    setIsPremium(true);
   };
 
   const handleInstallApp = async () => {
-    if (!isPremium) {
-      toast({
-        title: "Premium Feature",
-        description: "Upgrade to premium to install widgets on your phone",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!deferredPrompt) {
+    // Check if running as PWA already
+    if (window.matchMedia('(display-mode: standalone)').matches) {
       toast({
         title: "Already Installed",
-        description: "App is already installed or not available for installation",
+        description: "Crevia is already installed on your device!",
       });
       return;
     }
 
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === 'accepted') {
-      setIsInstalled(true);
-      toast({
-        title: "App Installed!",
-        description: "Crevia has been added to your home screen",
-      });
+    // If we have the deferred prompt (Chrome/Edge/Android)
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        setIsInstalled(true);
+        toast({
+          title: "App Installed!",
+          description: "Crevia has been added to your home screen",
+        });
+      }
+      setDeferredPrompt(null);
+      return;
     }
+
+    // iOS Safari detection
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     
-    setDeferredPrompt(null);
+    if (isIOS) {
+      toast({
+        title: "Install on iOS",
+        description: "Tap the Share button (box with arrow) at the bottom of Safari, then select 'Add to Home Screen'",
+        duration: 8000,
+      });
+      return;
+    }
+
+    // For other browsers that don't support beforeinstallprompt
+    toast({
+      title: "Install Crevia",
+      description: "Open your browser menu and look for 'Install App' or 'Add to Home Screen' option",
+      duration: 6000,
+    });
   };
 
   const handleAvatarClick = () => {
@@ -349,12 +363,10 @@ const Settings = () => {
           <Card className="p-4 md:p-8">
             <div className="flex items-center justify-between mb-4 md:mb-6">
               <h2 className="font-vollkorn text-xl md:text-2xl font-bold">Mobile Widgets</h2>
-              {!isPremium && (
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-bronze/10 text-bronze rounded-full border border-bronze/20">
-                  <Crown className="w-4 h-4" />
-                  <span className="text-xs font-semibold">Premium</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-600 rounded-full border border-green-500/20">
+                <Download className="w-4 h-4" />
+                <span className="text-xs font-semibold">Free</span>
+              </div>
             </div>
             
             <div className="space-y-6">
@@ -379,20 +391,10 @@ const Settings = () => {
                   ) : (
                     <Button
                       onClick={handleInstallApp}
-                      disabled={!isPremium}
-                      className="w-full bg-bronze hover:bg-bronze-dark text-white disabled:opacity-50"
+                      className="w-full bg-bronze hover:bg-bronze-dark text-white"
                     >
-                      {!isPremium ? (
-                        <>
-                          <Crown className="w-4 h-4 mr-2" />
-                          Upgrade to Install
-                        </>
-                      ) : (
-                        <>
-                          <Download className="w-4 h-4 mr-2" />
-                          Install App
-                        </>
-                      )}
+                      <Download className="w-4 h-4 mr-2" />
+                      Install App
                     </Button>
                   )}
                 </div>
