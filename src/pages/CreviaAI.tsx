@@ -21,15 +21,20 @@ import {
   PanelLeft,
   Loader2,
   Sparkles,
-  Zap,
-  ArrowRight
+  ArrowRight,
+  FolderOpen,
+  ChevronRight
 } from "lucide-react";
 import kiraImage from "@/assets/kira-mascot-new.png";
+import { CreateProjectDialog } from "@/components/kira/CreateProjectDialog";
+import { ProjectDetailSheet } from "@/components/kira/ProjectDetailSheet";
+import { ProjectsView } from "@/components/kira/ProjectsView";
 
 interface ChatHistory {
   id: string;
   title: string;
   timestamp: Date;
+  project_id?: string | null;
 }
 
 interface Message {
@@ -37,6 +42,17 @@ interface Message {
   content: string;
   file?: string;
 }
+
+interface Project {
+  id: string;
+  name: string;
+  description: string | null;
+  custom_instructions: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+type ViewMode = "chat" | "projects";
 
 const CreviaAI = () => {
   const { toast } = useToast();
@@ -87,7 +103,9 @@ const CreviaAI = () => {
 
   const [currentGreeting, setCurrentGreeting] = useState(getGreeting());
   const [chatHistories, setChatHistories] = useState<ChatHistory[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [activeChat, setActiveChat] = useState<string | null>(null);
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -95,6 +113,13 @@ const CreviaAI = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // View modes and dialogs
+  const [viewMode, setViewMode] = useState<ViewMode>("chat");
+  const [createProjectOpen, setCreateProjectOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [projectDetailOpen, setProjectDetailOpen] = useState(false);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -112,6 +137,7 @@ const CreviaAI = () => {
           setUserType(profile.user_type);
         }
 
+        // Load conversations
         const { data: conversations, error } = await supabase
           .from('kira_conversations')
           .select('*')
@@ -121,13 +147,26 @@ const CreviaAI = () => {
           setChatHistories(conversations.map(c => ({
             id: c.id,
             title: c.title,
-            timestamp: new Date(c.updated_at)
+            timestamp: new Date(c.updated_at),
+            project_id: c.project_id
           })));
           
           if (conversations.length > 0) {
             setActiveChat(conversations[0].id);
+            setActiveProjectId(conversations[0].project_id || null);
           }
         }
+
+        // Load projects
+        const { data: projectsData, error: projectsError } = await supabase
+          .from('kira_projects')
+          .select('*')
+          .order('updated_at', { ascending: false });
+
+        if (!projectsError && projectsData) {
+          setProjects(projectsData);
+        }
+        setIsLoadingProjects(false);
       }
       setIsLoadingHistory(false);
     };
@@ -192,8 +231,13 @@ const CreviaAI = () => {
     ));
   };
 
+  const getActiveProject = () => {
+    return projects.find(p => p.id === activeProjectId);
+  };
+
   const streamKiraResponse = useCallback(async (userMessages: Message[], conversationId: string) => {
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kira-chat`;
+    const activeProject = getActiveProject();
     
     try {
       const response = await fetch(CHAT_URL, {
@@ -205,6 +249,11 @@ const CreviaAI = () => {
         body: JSON.stringify({
           messages: userMessages.map(m => ({ role: m.role, content: m.content })),
           userType: userType || 'creator',
+          projectContext: activeProject ? {
+            name: activeProject.name,
+            description: activeProject.description,
+            customInstructions: activeProject.custom_instructions
+          } : null
         }),
       });
 
@@ -293,7 +342,7 @@ const CreviaAI = () => {
       console.error("Kira chat error:", error);
       throw error;
     }
-  }, [userType]);
+  }, [userType, activeProjectId, projects]);
 
   const handleSend = async () => {
     if (!input.trim() && !selectedFile) return;
@@ -317,7 +366,11 @@ const CreviaAI = () => {
     if (!conversationId) {
       const { data: newConvo, error } = await supabase
         .from('kira_conversations')
-        .insert({ user_id: userId, title: 'New conversation' })
+        .insert({ 
+          user_id: userId, 
+          title: 'New conversation',
+          project_id: activeProjectId 
+        })
         .select()
         .single();
       
@@ -335,7 +388,8 @@ const CreviaAI = () => {
       setChatHistories(prev => [{
         id: newConvo.id,
         title: 'New conversation',
-        timestamp: new Date()
+        timestamp: new Date(),
+        project_id: activeProjectId
       }, ...prev]);
     }
 
@@ -374,12 +428,16 @@ const CreviaAI = () => {
     }
   };
 
-  const handleNewChat = async () => {
+  const handleNewChat = async (projectId?: string | null) => {
     if (!userId) return;
     
     const { data: newConvo, error } = await supabase
       .from('kira_conversations')
-      .insert({ user_id: userId, title: 'New conversation' })
+      .insert({ 
+        user_id: userId, 
+        title: 'New conversation',
+        project_id: projectId ?? null
+      })
       .select()
       .single();
     
@@ -387,11 +445,14 @@ const CreviaAI = () => {
       const newChat: ChatHistory = {
         id: newConvo.id,
         title: 'New conversation',
-        timestamp: new Date()
+        timestamp: new Date(),
+        project_id: projectId ?? null
       };
       setChatHistories([newChat, ...chatHistories]);
       setActiveChat(newChat.id);
+      setActiveProjectId(projectId ?? null);
       setMessages([]);
+      setViewMode("chat");
     }
   };
 
@@ -416,9 +477,34 @@ const CreviaAI = () => {
     }
   };
 
+  const handleProjectCreated = (project: Project) => {
+    setProjects(prev => [project, ...prev]);
+  };
+
+  const handleProjectUpdated = (project: Project) => {
+    setProjects(prev => prev.map(p => p.id === project.id ? project : p));
+    setSelectedProject(project);
+  };
+
+  const handleProjectDeleted = (projectId: string) => {
+    setProjects(prev => prev.filter(p => p.id !== projectId));
+    if (activeProjectId === projectId) {
+      setActiveProjectId(null);
+    }
+  };
+
+  const handleConversationSelect = (conversationId: string, projectId: string) => {
+    setActiveChat(conversationId);
+    setActiveProjectId(projectId);
+    setViewMode("chat");
+  };
+
   const filteredChats = chatHistories.filter(chat => 
     chat.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const generalChats = filteredChats.filter(c => !c.project_id);
+  const projectChats = filteredChats.filter(c => c.project_id);
 
   const quickActions = userType === 'brand' ? [
     { icon: Users, label: "Find creators", prompt: "Help me find creators for my next campaign" },
@@ -435,6 +521,8 @@ const CreviaAI = () => {
   const handleQuickAction = (prompt: string) => {
     setInput(prompt);
   };
+
+  const activeProject = getActiveProject();
 
   return (
     <div className="h-[calc(100vh-64px)] flex bg-background">
@@ -467,7 +555,7 @@ const CreviaAI = () => {
         {/* New Chat Button */}
         <div className="p-3">
           <Button 
-            onClick={handleNewChat}
+            onClick={() => handleNewChat(null)}
             className={`w-full gap-2 bg-bronze hover:bg-bronze/90 text-background font-poppins ${
               sidebarCollapsed ? 'px-0 justify-center' : 'justify-start'
             }`}
@@ -493,8 +581,35 @@ const CreviaAI = () => {
           </div>
         )}
 
-        {/* Chat List */}
+        {/* Navigation */}
         {!sidebarCollapsed && (
+          <div className="px-3 space-y-1 mb-2">
+            <button
+              onClick={() => setViewMode("chat")}
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                viewMode === "chat" ? "bg-bronze/10 text-foreground" : "text-muted-foreground hover:bg-muted/50"
+              }`}
+            >
+              <MessageSquare className="w-4 h-4" />
+              Chats
+            </button>
+            <button
+              onClick={() => setViewMode("projects")}
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                viewMode === "projects" ? "bg-bronze/10 text-foreground" : "text-muted-foreground hover:bg-muted/50"
+              }`}
+            >
+              <FolderOpen className="w-4 h-4" />
+              Projects
+              <span className="ml-auto text-xs bg-muted px-1.5 py-0.5 rounded">
+                {projects.length}
+              </span>
+            </button>
+          </div>
+        )}
+
+        {/* Chat List */}
+        {!sidebarCollapsed && viewMode === "chat" && (
           <>
             <div className="px-3 py-2">
               <p className="text-xs font-poppins font-medium text-muted-foreground uppercase tracking-wider">
@@ -509,7 +624,7 @@ const CreviaAI = () => {
                     <Loader2 className="w-5 h-5 mx-auto text-muted-foreground animate-spin mb-2" />
                     <p className="text-xs text-muted-foreground">Loading...</p>
                   </div>
-                ) : filteredChats.length === 0 ? (
+                ) : generalChats.length === 0 && projectChats.length === 0 ? (
                   <div className="py-8 text-center">
                     <MessageSquare className="w-6 h-6 mx-auto text-muted-foreground/50 mb-2" />
                     <p className="text-xs text-muted-foreground">
@@ -517,31 +632,81 @@ const CreviaAI = () => {
                     </p>
                   </div>
                 ) : (
-                  filteredChats.map((chat) => (
-                    <div
-                      key={chat.id}
-                      onClick={() => setActiveChat(chat.id)}
-                      className={`group flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-all ${
-                        activeChat === chat.id 
-                          ? 'bg-bronze/10 text-foreground' 
-                          : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                      }`}
-                    >
-                      <MessageSquare className={`w-4 h-4 flex-shrink-0 ${
-                        activeChat === chat.id ? 'text-bronze' : ''
-                      }`} />
-                      <span className="flex-1 text-sm truncate">{chat.title}</span>
-                      <button 
-                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-destructive/10 rounded transition-all"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteChat(chat.id);
+                  <>
+                    {generalChats.map((chat) => (
+                      <div
+                        key={chat.id}
+                        onClick={() => {
+                          setActiveChat(chat.id);
+                          setActiveProjectId(null);
+                          setViewMode("chat");
                         }}
+                        className={`group flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-all ${
+                          activeChat === chat.id 
+                            ? 'bg-bronze/10 text-foreground' 
+                            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                        }`}
                       >
-                        <Trash2 className="w-3 h-3 text-muted-foreground hover:text-destructive" />
-                      </button>
-                    </div>
-                  ))
+                        <MessageSquare className={`w-4 h-4 flex-shrink-0 ${
+                          activeChat === chat.id ? 'text-bronze' : ''
+                        }`} />
+                        <span className="flex-1 text-sm truncate">{chat.title}</span>
+                        <button 
+                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-destructive/10 rounded transition-all"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteChat(chat.id);
+                          }}
+                        >
+                          <Trash2 className="w-3 h-3 text-muted-foreground hover:text-destructive" />
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* Project Chats */}
+                    {projects.map(project => {
+                      const projectConversations = projectChats.filter(c => c.project_id === project.id);
+                      if (projectConversations.length === 0) return null;
+                      
+                      return (
+                        <div key={project.id} className="mt-3">
+                          <button
+                            onClick={() => {
+                              setSelectedProject(project);
+                              setProjectDetailOpen(true);
+                            }}
+                            className="w-full flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <FolderOpen className="w-3 h-3" />
+                            <span className="truncate">{project.name}</span>
+                            <ChevronRight className="w-3 h-3 ml-auto" />
+                          </button>
+                          <div className="space-y-1 mt-1">
+                            {projectConversations.slice(0, 3).map((chat) => (
+                              <div
+                                key={chat.id}
+                                onClick={() => {
+                                  setActiveChat(chat.id);
+                                  setActiveProjectId(project.id);
+                                  setViewMode("chat");
+                                }}
+                                className={`group flex items-center gap-2 p-2 pl-7 rounded-lg cursor-pointer transition-all ${
+                                  activeChat === chat.id 
+                                    ? 'bg-bronze/10 text-foreground' 
+                                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                                }`}
+                              >
+                                <MessageSquare className={`w-3.5 h-3.5 flex-shrink-0 ${
+                                  activeChat === chat.id ? 'text-bronze' : ''
+                                }`} />
+                                <span className="flex-1 text-sm truncate">{chat.title}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
                 )}
               </div>
             </ScrollArea>
@@ -554,9 +719,18 @@ const CreviaAI = () => {
             <Button
               variant="ghost"
               size="icon"
+              onClick={() => { setSidebarCollapsed(false); setViewMode("chat"); }}
               className="w-10 h-10 text-muted-foreground hover:text-foreground"
             >
-              <Search className="h-4 w-4" />
+              <MessageSquare className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => { setSidebarCollapsed(false); setViewMode("projects"); }}
+              className="w-10 h-10 text-muted-foreground hover:text-foreground"
+            >
+              <FolderOpen className="h-4 w-4" />
             </Button>
           </div>
         )}
@@ -577,7 +751,7 @@ const CreviaAI = () => {
           <div className="flex flex-col h-[calc(100%-56px)]">
             <div className="p-3">
               <Button 
-                onClick={() => { handleNewChat(); setMobileSidebarOpen(false); }}
+                onClick={() => { handleNewChat(null); setMobileSidebarOpen(false); }}
                 className="w-full justify-start gap-2 bg-bronze hover:bg-bronze/90 text-background"
                 size="sm"
               >
@@ -598,6 +772,31 @@ const CreviaAI = () => {
               </div>
             </div>
 
+            {/* Navigation */}
+            <div className="px-3 space-y-1 mb-2">
+              <button
+                onClick={() => { setViewMode("chat"); }}
+                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  viewMode === "chat" ? "bg-bronze/10 text-foreground" : "text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                <MessageSquare className="w-4 h-4" />
+                Chats
+              </button>
+              <button
+                onClick={() => { setViewMode("projects"); setMobileSidebarOpen(false); }}
+                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  viewMode === "projects" ? "bg-bronze/10 text-foreground" : "text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                <FolderOpen className="w-4 h-4" />
+                Projects
+                <span className="ml-auto text-xs bg-muted px-1.5 py-0.5 rounded">
+                  {projects.length}
+                </span>
+              </button>
+            </div>
+
             <div className="px-3 py-2">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent Chats</p>
             </div>
@@ -607,7 +806,12 @@ const CreviaAI = () => {
                 {filteredChats.map((chat) => (
                   <div
                     key={chat.id}
-                    onClick={() => { setActiveChat(chat.id); setMobileSidebarOpen(false); }}
+                    onClick={() => { 
+                      setActiveChat(chat.id); 
+                      setActiveProjectId(chat.project_id || null);
+                      setMobileSidebarOpen(false);
+                      setViewMode("chat");
+                    }}
                     className={`group flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-all ${
                       activeChat === chat.id 
                         ? 'bg-bronze/10' 
@@ -624,190 +828,240 @@ const CreviaAI = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile Header */}
-        <div className="md:hidden h-12 flex items-center gap-3 px-4 border-b border-border/50">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setMobileSidebarOpen(true)}
-            className="h-8 w-8"
-          >
-            <PanelLeft className="h-4 w-4" />
-          </Button>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-bronze to-bronze-dark flex items-center justify-center">
-              <Sparkles className="w-3 h-3 text-background" />
+      {/* Main Content Area */}
+      {viewMode === "projects" ? (
+        <ProjectsView
+          projects={projects}
+          isLoading={isLoadingProjects}
+          onCreateProject={() => setCreateProjectOpen(true)}
+          onSelectProject={(project) => {
+            setSelectedProject(project);
+            setProjectDetailOpen(true);
+          }}
+        />
+      ) : (
+        /* Main Chat Area */
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Mobile Header */}
+          <div className="md:hidden h-12 flex items-center gap-3 px-4 border-b border-border/50">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileSidebarOpen(true)}
+              className="h-8 w-8"
+            >
+              <PanelLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-bronze to-bronze-dark flex items-center justify-center">
+                <Sparkles className="w-3 h-3 text-background" />
+              </div>
+              <span className="font-poppins font-semibold text-sm">Kira</span>
             </div>
-            <span className="font-poppins font-semibold text-sm">Kira</span>
           </div>
-        </div>
 
-        {/* Messages Area */}
-        <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full">
-            <div className="max-w-3xl mx-auto px-4 py-6">
-              {messages.length === 0 ? (
-                /* Empty State */
-                <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center mb-6 ring-4 ring-bronze/10">
-                    <img src={kiraImage} alt="Kira" className="w-14 h-14 object-contain" />
-                  </div>
-                  
-                  <h1 className="font-vollkorn text-2xl md:text-3xl font-bold mb-3 bg-gradient-to-r from-bronze to-bronze-dark bg-clip-text text-transparent">
-                    {currentGreeting}
-                  </h1>
-                  
-                  <p className="text-muted-foreground text-sm md:text-base max-w-md mb-8">
-                    {userType === 'brand' 
-                      ? "I can help with creator discovery, campaign briefs, and strategy"
-                      : "I can help with content ideas, brand pitches, and growth strategies"
-                    }
-                  </p>
+          {/* Project Context Banner */}
+          {activeProject && (
+            <button
+              onClick={() => {
+                setSelectedProject(activeProject);
+                setProjectDetailOpen(true);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-bronze/5 border-b border-bronze/20 hover:bg-bronze/10 transition-colors"
+            >
+              <FolderOpen className="w-4 h-4 text-bronze" />
+              <span className="text-sm font-medium">{activeProject.name}</span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground ml-auto" />
+            </button>
+          )}
 
-                  {/* Quick Actions */}
-                  <div className="grid grid-cols-2 gap-3 w-full max-w-lg">
-                    {quickActions.map((action, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleQuickAction(action.prompt)}
-                        className="group flex items-center gap-3 p-4 rounded-xl bg-card border border-border/50 hover:border-bronze/50 hover:bg-muted/50 transition-all text-left"
-                      >
-                        <div className="p-2 rounded-lg bg-bronze/10 text-bronze group-hover:bg-bronze group-hover:text-background transition-all">
-                          <action.icon className="w-4 h-4" />
-                        </div>
-                        <span className="text-sm font-medium">{action.label}</span>
-                        <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                /* Messages */
-                <div className="space-y-6">
-                  {messages.map((msg, idx) => (
-                    <div
-                      key={idx}
-                      className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''} animate-fade-in`}
-                    >
-                      {/* Avatar */}
-                      <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${
-                        msg.role === 'user' 
-                          ? 'bg-bronze text-background' 
-                          : 'bg-gradient-to-br from-bronze/20 to-bronze-dark/20'
-                      }`}>
-                        {msg.role === 'user' ? (
-                          <span className="text-xs font-semibold">You</span>
-                        ) : (
-                          <img src={kiraImage} alt="Kira" className="w-5 h-5 object-contain" />
-                        )}
-                      </div>
+          {/* Messages Area */}
+          <div className="flex-1 overflow-hidden">
+            <ScrollArea className="h-full">
+              <div className="max-w-3xl mx-auto px-4 py-6">
+                {messages.length === 0 ? (
+                  /* Empty State */
+                  <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center mb-6 ring-4 ring-bronze/10">
+                      <img src={kiraImage} alt="Kira" className="w-14 h-14 object-contain" />
+                    </div>
+                    
+                    <h1 className="font-vollkorn text-2xl md:text-3xl font-bold mb-3 bg-gradient-to-r from-bronze to-bronze-dark bg-clip-text text-transparent">
+                      {activeProject ? `Working on ${activeProject.name}` : currentGreeting}
+                    </h1>
+                    
+                    <p className="text-muted-foreground text-sm md:text-base max-w-md mb-8">
+                      {activeProject 
+                        ? activeProject.description || "Start chatting with project context"
+                        : userType === 'brand' 
+                          ? "I can help with creator discovery, campaign briefs, and strategy"
+                          : "I can help with content ideas, brand pitches, and growth strategies"
+                      }
+                    </p>
 
-                      {/* Message */}
-                      <div className={`flex-1 ${msg.role === 'user' ? 'text-right' : ''}`}>
-                        <div
-                          className={`inline-block max-w-[85%] rounded-2xl px-4 py-3 ${
-                            msg.role === 'user'
-                              ? 'bg-bronze text-background rounded-tr-md'
-                              : 'bg-muted rounded-tl-md'
-                          }`}
+                    {/* Quick Actions */}
+                    <div className="grid grid-cols-2 gap-3 w-full max-w-lg">
+                      {quickActions.map((action, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleQuickAction(action.prompt)}
+                          className="group flex items-center gap-3 p-4 rounded-xl bg-card border border-border/50 hover:border-bronze/50 hover:bg-muted/50 transition-all text-left"
                         >
-                          <p className="text-sm md:text-base whitespace-pre-wrap text-left">{msg.content}</p>
-                          {msg.file && (
-                            <div className="mt-2 flex items-center gap-2 text-xs opacity-70">
-                              <Paperclip className="w-3 h-3" />
-                              {msg.file}
-                            </div>
+                          <div className="p-2 rounded-lg bg-bronze/10 text-bronze group-hover:bg-bronze group-hover:text-background transition-all">
+                            <action.icon className="w-4 h-4" />
+                          </div>
+                          <span className="text-sm font-medium">{action.label}</span>
+                          <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  /* Messages */
+                  <div className="space-y-6">
+                    {messages.map((msg, idx) => (
+                      <div
+                        key={idx}
+                        className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''} animate-fade-in`}
+                      >
+                        {/* Avatar */}
+                        <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${
+                          msg.role === 'user' 
+                            ? 'bg-bronze text-background' 
+                            : 'bg-gradient-to-br from-bronze/20 to-bronze-dark/20'
+                        }`}>
+                          {msg.role === 'user' ? (
+                            <span className="text-xs font-semibold">You</span>
+                          ) : (
+                            <img src={kiraImage} alt="Kira" className="w-5 h-5 object-contain" />
                           )}
                         </div>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {/* Loading indicator */}
-                  {isLoading && messages[messages.length - 1]?.role === 'user' && (
-                    <div className="flex gap-3 animate-fade-in">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center">
-                        <img src={kiraImage} alt="Kira" className="w-5 h-5 object-contain" />
-                      </div>
-                      <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <Loader2 className="w-4 h-4 animate-spin text-bronze" />
-                          <span className="text-sm text-muted-foreground">Thinking...</span>
+
+                        {/* Message */}
+                        <div className={`flex-1 ${msg.role === 'user' ? 'text-right' : ''}`}>
+                          <div
+                            className={`inline-block max-w-[85%] rounded-2xl px-4 py-3 ${
+                              msg.role === 'user'
+                                ? 'bg-bronze text-background rounded-tr-md'
+                                : 'bg-muted rounded-tl-md'
+                            }`}
+                          >
+                            <p className="text-sm md:text-base whitespace-pre-wrap text-left">{msg.content}</p>
+                            {msg.file && (
+                              <div className="mt-2 flex items-center gap-2 text-xs opacity-70">
+                                <Paperclip className="w-3 h-3" />
+                                {msg.file}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-                  <div ref={messagesEndRef} />
+                    ))}
+                    
+                    {/* Loading indicator */}
+                    {isLoading && messages[messages.length - 1]?.role === 'user' && (
+                      <div className="flex gap-3 animate-fade-in">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center">
+                          <img src={kiraImage} alt="Kira" className="w-5 h-5 object-contain" />
+                        </div>
+                        <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin text-bronze" />
+                            <span className="text-sm text-muted-foreground">Thinking...</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+
+          {/* Input Area */}
+          <div className="border-t border-border/50 bg-card/50 p-4">
+            <div className="max-w-3xl mx-auto">
+              {selectedFile && (
+                <div className="mb-3 flex items-center gap-2 p-2 bg-muted rounded-lg text-sm">
+                  <Paperclip className="w-4 h-4 text-muted-foreground" />
+                  <span className="flex-1 truncate">{selectedFile.name}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedFile(null)}
+                    className="h-6 w-6 p-0"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
                 </div>
               )}
-            </div>
-          </ScrollArea>
-        </div>
-
-        {/* Input Area */}
-        <div className="border-t border-border/50 bg-card/50 p-4">
-          <div className="max-w-3xl mx-auto">
-            {selectedFile && (
-              <div className="mb-3 flex items-center gap-2 p-2 bg-muted rounded-lg text-sm">
-                <Paperclip className="w-4 h-4 text-muted-foreground" />
-                <span className="flex-1 truncate">{selectedFile.name}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSelectedFile(null)}
-                  className="h-6 w-6 p-0"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </Button>
-              </div>
-            )}
-            
-            <div className="flex gap-2 items-end">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileSelect}
-                className="hidden"
-                accept="image/*,.pdf,.doc,.docx,.txt"
-              />
               
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => fileInputRef.current?.click()}
-                className="h-11 w-11 flex-shrink-0 rounded-xl"
-              >
-                <Paperclip className="w-4 h-4" />
-              </Button>
-
-              <div className="flex-1 relative">
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && !isLoading && handleSend()}
-                  placeholder="Ask Kira anything..."
-                  className="h-11 pr-12 rounded-xl bg-muted/50 border-border/50 focus:border-bronze"
-                  disabled={isLoading}
+              <div className="flex gap-2 items-end">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  accept="image/*,.pdf,.doc,.docx,.txt"
                 />
-                <Button 
-                  onClick={handleSend}
-                  disabled={isLoading || (!input.trim() && !selectedFile)}
+                
+                <Button
+                  variant="outline"
                   size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 rounded-lg bg-bronze hover:bg-bronze-dark text-background"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-11 w-11 flex-shrink-0 rounded-xl"
                 >
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  <Paperclip className="w-4 h-4" />
                 </Button>
-              </div>
-            </div>
 
-            <p className="text-xs text-muted-foreground text-center mt-3">
-              Kira may occasionally make mistakes. Please verify important information.
-            </p>
+                <div className="flex-1 relative">
+                  <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && !isLoading && handleSend()}
+                    placeholder={activeProject ? `Ask Kira about ${activeProject.name}...` : "Ask Kira anything..."}
+                    className="h-11 pr-12 rounded-xl bg-muted/50 border-border/50 focus:border-bronze"
+                    disabled={isLoading}
+                  />
+                  <Button 
+                    onClick={handleSend}
+                    disabled={isLoading || (!input.trim() && !selectedFile)}
+                    size="icon"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 rounded-lg bg-bronze hover:bg-bronze-dark text-background"
+                  >
+                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              <p className="text-xs text-muted-foreground text-center mt-3">
+                Kira may occasionally make mistakes. Please verify important information.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Dialogs */}
+      {userId && (
+        <CreateProjectDialog
+          open={createProjectOpen}
+          onOpenChange={setCreateProjectOpen}
+          userId={userId}
+          onProjectCreated={handleProjectCreated}
+        />
+      )}
+
+      <ProjectDetailSheet
+        project={selectedProject}
+        open={projectDetailOpen}
+        onOpenChange={setProjectDetailOpen}
+        onProjectUpdated={handleProjectUpdated}
+        onProjectDeleted={handleProjectDeleted}
+        onConversationSelect={handleConversationSelect}
+        onNewChat={(projectId) => handleNewChat(projectId)}
+      />
     </div>
   );
 };
