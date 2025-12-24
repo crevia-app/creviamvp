@@ -49,18 +49,22 @@ const ConnectSidebarDesktop = ({ userType }: ConnectSidebarDesktopProps) => {
         collapsed ? "w-[70px]" : "w-[220px]"
       )}
     >
-      <div className="flex items-center justify-end p-4">
+      {/* Collapse button - compact at top */}
+      <div className={cn(
+        "flex items-center p-2 border-b border-border/10",
+        collapsed ? "justify-center" : "justify-end"
+      )}>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setCollapsed(!collapsed)}
-          className="h-8 w-8 text-white hover:text-bronze hover:bg-white/10"
+          className="h-7 w-7 text-white/60 hover:text-bronze hover:bg-white/10"
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
       </div>
 
-      <nav className="flex-1 px-2 space-y-1">
+      <nav className="flex-1 px-2 py-2 space-y-1">
         {items.map((item) => {
           const isActive = currentTab === item.id;
           const Icon = item.icon;
@@ -70,7 +74,7 @@ const ConnectSidebarDesktop = ({ userType }: ConnectSidebarDesktopProps) => {
               key={item.id}
               to={`/crevia-connect?tab=${item.id}`}
               className={cn(
-                "flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
                 isActive
                   ? "bg-bronze/10 text-bronze"
                   : "text-white/80 hover:text-bronze hover:bg-white/5"
