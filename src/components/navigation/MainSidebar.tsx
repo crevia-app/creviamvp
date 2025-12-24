@@ -93,29 +93,29 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 bg-black border-white/10">
-            <DropdownMenuItem asChild className="hover:bg-white/10 focus:bg-white/10">
-              <Link to="/about" className="text-white/80 hover:text-white focus:text-white">
+            <DropdownMenuItem asChild className="hover:bg-transparent focus:bg-transparent">
+              <Link to="/about" className="text-white/80 hover:text-bronze focus:text-bronze">
                 About
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className="hover:bg-white/10 focus:bg-white/10">
-              <Link to="/profile/help" className="text-white/80 hover:text-white focus:text-white">
+            <DropdownMenuItem asChild className="hover:bg-transparent focus:bg-transparent">
+              <Link to="/profile/help" className="text-white/80 hover:text-bronze focus:text-bronze">
                 Help & Support
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className="hover:bg-white/10 focus:bg-white/10">
-              <Link to="/profile/feedback" className="text-white/80 hover:text-white focus:text-white">
+            <DropdownMenuItem asChild className="hover:bg-transparent focus:bg-transparent">
+              <Link to="/profile/feedback" className="text-white/80 hover:text-bronze focus:text-bronze">
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Feedback
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className="hover:bg-white/10 focus:bg-white/10">
-              <Link to="/privacy-policy" className="text-white/80 hover:text-white focus:text-white">
+            <DropdownMenuItem asChild className="hover:bg-transparent focus:bg-transparent">
+              <Link to="/privacy-policy" className="text-white/80 hover:text-bronze focus:text-bronze">
                 Privacy Policy
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className="hover:bg-white/10 focus:bg-white/10">
-              <Link to="/terms-of-service" className="text-white/80 hover:text-white focus:text-white">
+            <DropdownMenuItem asChild className="hover:bg-transparent focus:bg-transparent">
+              <Link to="/terms-of-service" className="text-white/80 hover:text-bronze focus:text-bronze">
                 Terms of Service
               </Link>
             </DropdownMenuItem>
