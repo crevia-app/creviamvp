@@ -1,0 +1,44 @@
+-- Create kira_projects table
+CREATE TABLE public.kira_projects (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT,
+  custom_instructions TEXT,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- Add project_id to kira_conversations
+ALTER TABLE public.kira_conversations 
+ADD COLUMN project_id UUID REFERENCES public.kira_projects(id) ON DELETE SET NULL;
+
+-- Enable RLS
+ALTER TABLE public.kira_projects ENABLE ROW LEVEL SECURITY;
+
+-- RLS policies for kira_projects
+CREATE POLICY "Users can view own projects"
+ON public.kira_projects
+FOR SELECT
+USING (user_id = auth.uid());
+
+CREATE POLICY "Users can create own projects"
+ON public.kira_projects
+FOR INSERT
+WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can update own projects"
+ON public.kira_projects
+FOR UPDATE
+USING (user_id = auth.uid());
+
+CREATE POLICY "Users can delete own projects"
+ON public.kira_projects
+FOR DELETE
+USING (user_id = auth.uid());
+
+-- Trigger for updated_at
+CREATE TRIGGER update_kira_projects_updated_at
+BEFORE UPDATE ON public.kira_projects
+FOR EACH ROW
+EXECUTE FUNCTION public.update_updated_at_column();
