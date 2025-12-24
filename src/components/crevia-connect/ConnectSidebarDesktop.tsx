@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { 
   Search, 
@@ -16,10 +15,11 @@ import { cn } from "@/lib/utils";
 
 interface ConnectSidebarDesktopProps {
   userType: "creator" | "brand";
+  collapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
-const ConnectSidebarDesktop = ({ userType }: ConnectSidebarDesktopProps) => {
-  const [collapsed, setCollapsed] = useState(false);
+const ConnectSidebarDesktop = ({ userType, collapsed, onToggleCollapse }: ConnectSidebarDesktopProps) => {
   const location = useLocation();
   const currentTab = new URLSearchParams(location.search).get("tab") || 
     (userType === "creator" ? "opportunities" : "discovery");
@@ -46,25 +46,25 @@ const ConnectSidebarDesktop = ({ userType }: ConnectSidebarDesktopProps) => {
     <aside
       className={cn(
         "hidden md:flex flex-col bg-black text-white border-r border-border/20 transition-all duration-300 ease-in-out fixed left-[100px] top-16 bottom-0 z-20",
-        collapsed ? "w-[70px]" : "w-[220px]"
+        collapsed ? "w-[60px]" : "w-[200px]"
       )}
     >
-      {/* Collapse button - compact at top */}
+      {/* Collapse button */}
       <div className={cn(
-        "flex items-center p-2 border-b border-border/10",
+        "flex items-center p-2",
         collapsed ? "justify-center" : "justify-end"
       )}>
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={onToggleCollapse}
           className="h-7 w-7 text-white/60 hover:text-bronze hover:bg-white/10"
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
       </div>
 
-      <nav className="flex-1 px-2 py-2 space-y-1">
+      <nav className="flex-1 px-2 py-1 space-y-1">
         {items.map((item) => {
           const isActive = currentTab === item.id;
           const Icon = item.icon;
