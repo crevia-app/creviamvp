@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import ConnectSidebarDesktop from "./ConnectSidebarDesktop";
 import ConnectTabsMobile from "./ConnectTabsMobile";
@@ -6,10 +7,12 @@ import MyCampaignsTab from "./creator/MyCampaignsTab";
 import AnalyticsTab from "./creator/AnalyticsTab";
 import KiraSuggestionsTab from "./creator/KiraSuggestionsTab";
 import CreviaChat from "./shared/CreviaChat";
+import { cn } from "@/lib/utils";
 
 const CreatorConnect = () => {
   const location = useLocation();
   const currentTab = new URLSearchParams(location.search).get("tab") || "opportunities";
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const renderContent = () => {
     switch (currentTab) {
@@ -33,9 +36,16 @@ const CreatorConnect = () => {
       <ConnectTabsMobile userType="creator" />
       
       <div className="flex flex-1 w-full">
-        <ConnectSidebarDesktop userType="creator" />
+        <ConnectSidebarDesktop 
+          userType="creator" 
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
         
-        <main className="flex-1 overflow-auto md:ml-[220px]">
+        <main className={cn(
+          "flex-1 overflow-auto transition-all duration-300",
+          sidebarCollapsed ? "md:ml-[160px]" : "md:ml-[300px]"
+        )}>
           <div className="container mx-auto px-4 py-4 md:py-6">
             {renderContent()}
           </div>
