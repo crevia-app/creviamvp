@@ -32,7 +32,7 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
   const navItems = [
     { id: "home", label: "Home", icon: Home, path: "/dashboard" },
     { id: "connect", label: "Crevia Connect", icon: Users, path: "/crevia-connect" },
-    { id: "kira", label: "Crevia AI", icon: Sparkles, path: "/crevia-ai" },
+    { id: "kira", label: "Kira", icon: Sparkles, path: "/kira" },
     { id: "link", label: "Crevia Link", icon: Link2, path: "/crevia-link" },
   ];
 

@@ -59,7 +59,7 @@ const MobileBottomNav = () => {
   const navItems = [
     { id: "home", label: "Home", icon: Home, path: "/dashboard" },
     { id: "connect", label: "Connect", icon: Users, path: "/crevia-connect" },
-    { id: "kira", label: "Kira", icon: Sparkles, path: "/crevia-ai" },
+    { id: "kira", label: "Kira", icon: Sparkles, path: "/kira" },
   ];
 
   return (
