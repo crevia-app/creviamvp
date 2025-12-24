@@ -28,7 +28,7 @@ const ConnectSidebarDesktop = ({ userType, collapsed, onToggleCollapse }: Connec
   const creatorItems = [
     { id: "opportunities", label: "Opportunities", icon: Search },
     { id: "campaigns", label: "My Campaigns", icon: Briefcase },
-    { id: "payments", label: "Payments", icon: Wallet },
+    { id: "payments", label: "Crevia Pay", icon: Wallet },
     { id: "analytics", label: "Analytics", icon: BarChart3 },
     { id: "kira", label: "Kira Suggestions", icon: Sparkles },
     { id: "chat", label: "Crevia Chat", icon: MessageSquare },
@@ -37,7 +37,7 @@ const ConnectSidebarDesktop = ({ userType, collapsed, onToggleCollapse }: Connec
   const brandItems = [
     { id: "discovery", label: "Creator Discovery", icon: Search },
     { id: "campaigns", label: "Campaign Manager", icon: FolderKanban },
-    { id: "payments", label: "Payments", icon: Wallet },
+    { id: "payments", label: "Crevia Pay", icon: Wallet },
     { id: "creators", label: "My Creators", icon: Users },
     { id: "kira", label: "Kira for Brands", icon: Sparkles },
     { id: "chat", label: "Crevia Chat", icon: MessageSquare },

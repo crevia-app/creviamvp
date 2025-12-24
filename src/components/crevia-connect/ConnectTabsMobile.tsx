@@ -14,7 +14,7 @@ const ConnectTabsMobile = ({ userType }: ConnectTabsMobileProps) => {
   const creatorTabs = [
     { id: "opportunities", label: "Opportunities" },
     { id: "campaigns", label: "My Campaigns" },
-    { id: "payments", label: "Payments" },
+    { id: "payments", label: "Crevia Pay" },
     { id: "analytics", label: "Analytics" },
     { id: "kira", label: "Kira" },
     { id: "chat", label: "Crevia Chat" },
@@ -23,7 +23,7 @@ const ConnectTabsMobile = ({ userType }: ConnectTabsMobileProps) => {
   const brandTabs = [
     { id: "discovery", label: "Creator Discovery" },
     { id: "campaigns", label: "Campaigns" },
-    { id: "payments", label: "Payments" },
+    { id: "payments", label: "Crevia Pay" },
     { id: "creators", label: "My Creators" },
     { id: "kira", label: "Kira for Brands" },
     { id: "chat", label: "Crevia Chat" },
