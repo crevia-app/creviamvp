@@ -23,8 +23,18 @@ import {
   Sparkles,
   ArrowRight,
   FolderOpen,
-  ChevronRight
+  ChevronRight,
+  Image,
+  FileUp,
+  X
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import kiraImage from "@/assets/kira-mascot-new.png";
 import { CreateProjectDialog } from "@/components/kira/CreateProjectDialog";
 import { ProjectDetailSheet } from "@/components/kira/ProjectDetailSheet";
@@ -54,7 +64,7 @@ interface Project {
 
 type ViewMode = "chat" | "projects";
 
-const CreviaAI = () => {
+const Kira = () => {
   const { toast } = useToast();
   const [userType, setUserType] = useState<'creator' | 'brand' | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -875,167 +885,200 @@ const CreviaAI = () => {
             </button>
           )}
 
-          {/* Messages Area */}
-          <div className="flex-1 overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className="max-w-3xl mx-auto px-4 py-6">
-                {messages.length === 0 ? (
-                  /* Empty State */
-                  <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center mb-6 ring-4 ring-bronze/10">
-                      <img src={kiraImage} alt="Kira" className="w-14 h-14 object-contain" />
-                    </div>
-                    
-                    <h1 className="font-vollkorn text-2xl md:text-3xl font-bold mb-3 bg-gradient-to-r from-bronze to-bronze-dark bg-clip-text text-transparent">
-                      {activeProject ? `Working on ${activeProject.name}` : currentGreeting}
-                    </h1>
-                    
-                    <p className="text-muted-foreground text-sm md:text-base max-w-md mb-8">
-                      {activeProject 
-                        ? activeProject.description || "Start chatting with project context"
-                        : userType === 'brand' 
-                          ? "I can help with creator discovery, campaign briefs, and strategy"
-                          : "I can help with content ideas, brand pitches, and growth strategies"
-                      }
-                    </p>
+          {/* Messages Area - Premium Centered Layout */}
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <ScrollArea className="flex-1">
+              <div className="min-h-full flex flex-col justify-center px-4 py-8">
+                <div className="max-w-2xl mx-auto w-full">
+                  {messages.length === 0 ? (
+                    /* Empty State - Claude-style centered */
+                    <div className="flex flex-col items-center justify-center py-12 md:py-24 text-center">
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center mb-8 ring-4 ring-bronze/10">
+                        <img src={kiraImage} alt="Kira" className="w-12 h-12 md:w-14 md:h-14 object-contain" />
+                      </div>
+                      
+                      <h1 className="font-vollkorn text-2xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-bronze to-bronze-dark bg-clip-text text-transparent">
+                        {activeProject ? `Working on ${activeProject.name}` : currentGreeting}
+                      </h1>
+                      
+                      <p className="text-muted-foreground text-sm md:text-base max-w-md mb-12">
+                        {activeProject 
+                          ? activeProject.description || "Start chatting with project context"
+                          : userType === 'brand' 
+                            ? "I can help with creator discovery, campaign briefs, and strategy"
+                            : "I can help with content ideas, brand pitches, and growth strategies"
+                        }
+                      </p>
 
-                    {/* Quick Actions */}
-                    <div className="grid grid-cols-2 gap-3 w-full max-w-lg">
-                      {quickActions.map((action, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => handleQuickAction(action.prompt)}
-                          className="group flex items-center gap-3 p-4 rounded-xl bg-card border border-border/50 hover:border-bronze/50 hover:bg-muted/50 transition-all text-left"
-                        >
-                          <div className="p-2 rounded-lg bg-bronze/10 text-bronze group-hover:bg-bronze group-hover:text-background transition-all">
-                            <action.icon className="w-4 h-4" />
-                          </div>
-                          <span className="text-sm font-medium">{action.label}</span>
-                          <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  /* Messages */
-                  <div className="space-y-6">
-                    {messages.map((msg, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''} animate-fade-in`}
-                      >
-                        {/* Avatar */}
-                        <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${
-                          msg.role === 'user' 
-                            ? 'bg-bronze text-background' 
-                            : 'bg-gradient-to-br from-bronze/20 to-bronze-dark/20'
-                        }`}>
-                          {msg.role === 'user' ? (
-                            <span className="text-xs font-semibold">You</span>
-                          ) : (
-                            <img src={kiraImage} alt="Kira" className="w-5 h-5 object-contain" />
-                          )}
-                        </div>
-
-                        {/* Message */}
-                        <div className={`flex-1 ${msg.role === 'user' ? 'text-right' : ''}`}>
-                          <div
-                            className={`inline-block max-w-[85%] rounded-2xl px-4 py-3 ${
-                              msg.role === 'user'
-                                ? 'bg-bronze text-background rounded-tr-md'
-                                : 'bg-muted rounded-tl-md'
-                            }`}
+                      {/* Quick Actions */}
+                      <div className="grid grid-cols-2 gap-3 w-full max-w-lg">
+                        {quickActions.map((action, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleQuickAction(action.prompt)}
+                            className="group flex items-center gap-3 p-4 rounded-xl bg-card border border-border/50 hover:border-bronze/50 hover:bg-muted/50 transition-all text-left"
                           >
-                            <p className="text-sm md:text-base whitespace-pre-wrap text-left">{msg.content}</p>
-                            {msg.file && (
-                              <div className="mt-2 flex items-center gap-2 text-xs opacity-70">
-                                <Paperclip className="w-3 h-3" />
-                                {msg.file}
-                              </div>
+                            <div className="p-2 rounded-lg bg-bronze/10 text-bronze group-hover:bg-bronze group-hover:text-background transition-all">
+                              <action.icon className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-medium">{action.label}</span>
+                            <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    /* Messages */
+                    <div className="space-y-6 py-4">
+                      {messages.map((msg, idx) => (
+                        <div
+                          key={idx}
+                          className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''} animate-fade-in`}
+                        >
+                          {/* Avatar */}
+                          <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${
+                            msg.role === 'user' 
+                              ? 'bg-bronze text-background' 
+                              : 'bg-gradient-to-br from-bronze/20 to-bronze-dark/20'
+                          }`}>
+                            {msg.role === 'user' ? (
+                              <span className="text-xs font-semibold">You</span>
+                            ) : (
+                              <img src={kiraImage} alt="Kira" className="w-5 h-5 object-contain" />
                             )}
                           </div>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {/* Loading indicator */}
-                    {isLoading && messages[messages.length - 1]?.role === 'user' && (
-                      <div className="flex gap-3 animate-fade-in">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center">
-                          <img src={kiraImage} alt="Kira" className="w-5 h-5 object-contain" />
-                        </div>
-                        <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <Loader2 className="w-4 h-4 animate-spin text-bronze" />
-                            <span className="text-sm text-muted-foreground">Thinking...</span>
+
+                          {/* Message */}
+                          <div className={`flex-1 ${msg.role === 'user' ? 'text-right' : ''}`}>
+                            <div
+                              className={`inline-block max-w-[85%] rounded-2xl px-4 py-3 ${
+                                msg.role === 'user'
+                                  ? 'bg-bronze text-background rounded-tr-md'
+                                  : 'bg-muted rounded-tl-md'
+                              }`}
+                            >
+                              <p className="text-sm md:text-base whitespace-pre-wrap text-left">{msg.content}</p>
+                              {msg.file && (
+                                <div className="mt-2 flex items-center gap-2 text-xs opacity-70">
+                                  <Paperclip className="w-3 h-3" />
+                                  {msg.file}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                    <div ref={messagesEndRef} />
-                  </div>
-                )}
+                      ))}
+                      
+                      {/* Loading indicator */}
+                      {isLoading && messages[messages.length - 1]?.role === 'user' && (
+                        <div className="flex gap-3 animate-fade-in">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center">
+                            <img src={kiraImage} alt="Kira" className="w-5 h-5 object-contain" />
+                          </div>
+                          <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <Loader2 className="w-4 h-4 animate-spin text-bronze" />
+                              <span className="text-sm text-muted-foreground">Thinking...</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  )}
+                </div>
               </div>
             </ScrollArea>
           </div>
 
-          {/* Input Area */}
-          <div className="border-t border-border/50 bg-card/50 p-4">
-            <div className="max-w-3xl mx-auto">
+          {/* Input Area - Premium Centered with Claude-style + menu */}
+          <div className="p-4 md:p-6 bg-background">
+            <div className="max-w-2xl mx-auto">
               {selectedFile && (
-                <div className="mb-3 flex items-center gap-2 p-2 bg-muted rounded-lg text-sm">
-                  <Paperclip className="w-4 h-4 text-muted-foreground" />
+                <div className="mb-3 flex items-center gap-2 p-3 bg-muted rounded-xl text-sm border border-border/50">
+                  <Paperclip className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   <span className="flex-1 truncate">{selectedFile.name}</span>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setSelectedFile(null)}
-                    className="h-6 w-6 p-0"
+                    className="h-6 w-6 p-0 hover:bg-destructive/10"
                   >
-                    <Trash2 className="w-3 h-3" />
+                    <X className="w-3 h-3" />
                   </Button>
                 </div>
               )}
               
-              <div className="flex gap-2 items-end">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  accept="image/*,.pdf,.doc,.docx,.txt"
+              <div className="bg-card rounded-2xl border border-border/50 p-3 shadow-lg">
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && !isLoading && handleSend()}
+                  placeholder={activeProject ? `Ask Kira about ${activeProject.name}...` : "How can I help you today?"}
+                  className="border-0 bg-transparent h-12 text-base focus-visible:ring-0 px-1 placeholder:text-muted-foreground/70"
+                  disabled={isLoading}
                 />
                 
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="h-11 w-11 flex-shrink-0 rounded-xl"
-                >
-                  <Paperclip className="w-4 h-4" />
-                </Button>
-
-                <div className="flex-1 relative">
-                  <Input
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && !isLoading && handleSend()}
-                    placeholder={activeProject ? `Ask Kira about ${activeProject.name}...` : "Ask Kira anything..."}
-                    className="h-11 pr-12 rounded-xl bg-muted/50 border-border/50 focus:border-bronze"
-                    disabled={isLoading}
-                  />
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      accept="image/*,.pdf,.doc,.docx,.txt"
+                    />
+                    
+                    {/* Claude-style + Dropdown */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 rounded-lg hover:bg-muted"
+                        >
+                          <Plus className="w-5 h-5 text-muted-foreground" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-56">
+                        <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="gap-3 cursor-pointer">
+                          <Image className="w-4 h-4 text-muted-foreground" />
+                          <div className="flex flex-col">
+                            <span className="font-medium">Add images</span>
+                            <span className="text-xs text-muted-foreground">Upload photos or screenshots</span>
+                          </div>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="gap-3 cursor-pointer">
+                          <FileUp className="w-4 h-4 text-muted-foreground" />
+                          <div className="flex flex-col">
+                            <span className="font-medium">Add files</span>
+                            <span className="text-xs text-muted-foreground">PDF, DOC, TXT files</span>
+                          </div>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setViewMode("projects")} className="gap-3 cursor-pointer">
+                          <FolderOpen className="w-4 h-4 text-muted-foreground" />
+                          <div className="flex flex-col">
+                            <span className="font-medium">Use project</span>
+                            <span className="text-xs text-muted-foreground">Add project context</span>
+                          </div>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  
                   <Button 
                     onClick={handleSend}
                     disabled={isLoading || (!input.trim() && !selectedFile)}
                     size="icon"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 rounded-lg bg-bronze hover:bg-bronze-dark text-background"
+                    className="h-9 w-9 rounded-lg bg-bronze hover:bg-bronze-dark text-background"
                   >
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   </Button>
                 </div>
               </div>
 
-              <p className="text-xs text-muted-foreground text-center mt-3">
+              <p className="text-xs text-muted-foreground text-center mt-4">
                 Kira may occasionally make mistakes. Please verify important information.
               </p>
             </div>
@@ -1066,4 +1109,4 @@ const CreviaAI = () => {
   );
 };
 
-export default CreviaAI;
+export default Kira;
