@@ -279,6 +279,65 @@ export type Database = {
           },
         ]
       }
+      creator_payout_methods: {
+        Row: {
+          bank_account_name: string | null
+          bank_account_number: string | null
+          bank_name: string | null
+          card_expiry: string | null
+          card_holder_name: string | null
+          card_last_four: string | null
+          created_at: string
+          creator_id: string
+          id: string
+          is_default: boolean | null
+          method_type: string
+          mpesa_name: string | null
+          mpesa_phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
+          card_expiry?: string | null
+          card_holder_name?: string | null
+          card_last_four?: string | null
+          created_at?: string
+          creator_id: string
+          id?: string
+          is_default?: boolean | null
+          method_type: string
+          mpesa_name?: string | null
+          mpesa_phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
+          card_expiry?: string | null
+          card_holder_name?: string | null
+          card_last_four?: string | null
+          created_at?: string
+          creator_id?: string
+          id?: string
+          is_default?: boolean | null
+          method_type?: string
+          mpesa_name?: string | null
+          mpesa_phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_payout_methods_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       creator_profiles: {
         Row: {
           campaign_clicks: number | null
@@ -367,6 +426,89 @@ export type Database = {
           submitted_at?: string | null
         }
         Relationships: []
+      }
+      escrow_payments: {
+        Row: {
+          application_id: string | null
+          brand_id: string
+          campaign_id: string | null
+          card_last_four: string | null
+          created_at: string
+          creator_id: string
+          first_payment_amount: number
+          first_payment_status: string | null
+          id: string
+          mpesa_phone: string | null
+          payment_method: string | null
+          second_payment_amount: number
+          second_payment_status: string | null
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          application_id?: string | null
+          brand_id: string
+          campaign_id?: string | null
+          card_last_four?: string | null
+          created_at?: string
+          creator_id: string
+          first_payment_amount: number
+          first_payment_status?: string | null
+          id?: string
+          mpesa_phone?: string | null
+          payment_method?: string | null
+          second_payment_amount: number
+          second_payment_status?: string | null
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string | null
+          brand_id?: string
+          campaign_id?: string | null
+          card_last_four?: string | null
+          created_at?: string
+          creator_id?: string
+          first_payment_amount?: number
+          first_payment_status?: string | null
+          id?: string
+          mpesa_phone?: string | null
+          payment_method?: string | null
+          second_payment_amount?: number
+          second_payment_status?: string | null
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escrow_payments_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escrow_payments_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escrow_payments_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escrow_payments_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       kira_conversations: {
         Row: {
@@ -731,6 +873,50 @@ export type Database = {
             columns: ["sender_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          escrow_id: string | null
+          id: string
+          payment_method: string | null
+          payment_phase: string
+          status: string | null
+          transaction_reference: string | null
+          transaction_type: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          escrow_id?: string | null
+          id?: string
+          payment_method?: string | null
+          payment_phase: string
+          status?: string | null
+          transaction_reference?: string | null
+          transaction_type: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          escrow_id?: string | null
+          id?: string
+          payment_method?: string | null
+          payment_phase?: string
+          status?: string | null
+          transaction_reference?: string | null
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_escrow_id_fkey"
+            columns: ["escrow_id"]
+            isOneToOne: false
+            referencedRelation: "escrow_payments"
             referencedColumns: ["id"]
           },
         ]
