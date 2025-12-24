@@ -29,14 +29,14 @@ const CreatorConnect = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col h-full">
       <ConnectTabsMobile userType="creator" />
       
       <div className="flex flex-1 w-full">
         <ConnectSidebarDesktop userType="creator" />
         
-        <main className="flex-1 overflow-auto md:ml-[320px]">
-          <div className="container mx-auto px-4 py-8">
+        <main className="flex-1 overflow-auto md:ml-[220px]">
+          <div className="container mx-auto px-4 py-4 md:py-6">
             {renderContent()}
           </div>
         </main>
