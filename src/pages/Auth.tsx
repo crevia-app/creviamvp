@@ -40,8 +40,8 @@ const Auth = () => {
           .eq("id", session.user.id)
           .single();
 
-        if (!profileData) {
-          navigate("/user-type-selection");
+        if (!profileData || !profileData.user_type) {
+          navigate("/onboarding");
         } else {
           navigate("/dashboard");
         }
@@ -135,7 +135,7 @@ const Auth = () => {
           toast({ title: "Oops! 😅", description: error.message, variant: "destructive" });
         } else {
           toast({ title: "You're in! 🎉 Please check your email to confirm your account." });
-          navigate("/user-type-selection");
+          navigate("/onboarding");
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -159,7 +159,7 @@ const Auth = () => {
               description: "Please complete your profile setup.",
               variant: "destructive" 
             });
-            navigate("/user-type-selection");
+            navigate("/onboarding");
           } else {
             toast({ 
               title: "Welcome back! 👋", 
