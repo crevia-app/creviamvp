@@ -31,20 +31,52 @@ const Auth = () => {
     });
 
     // Listen for auth state changes (for OAuth redirects)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        // Check if user has a profile
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("user_type")
-          .eq("id", session.user.id)
-          .single();
+        // Defer the async check with setTimeout to avoid deadlock
+        setTimeout(async () => {
+          // Check if user has completed onboarding by checking for creator/brand profile
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("user_type, handle, display_name")
+            .eq("id", session.user.id)
+            .single();
 
-        if (!profileData || !profileData.user_type) {
-          navigate("/onboarding");
-        } else {
+          if (!profileData?.user_type) {
+            navigate("/onboarding");
+            return;
+          }
+
+          // Check if they have completed the extended onboarding
+          if (profileData.user_type === "creator") {
+            const { data: creatorProfile } = await supabase
+              .from("creator_profiles")
+              .select("id, creator_types")
+              .eq("profile_id", session.user.id)
+              .single();
+            
+            // If no creator profile or no creator_types selected, send to onboarding
+            if (!creatorProfile?.creator_types || creatorProfile.creator_types.length === 0) {
+              navigate("/onboarding");
+              return;
+            }
+          } else if (profileData.user_type === "brand") {
+            const { data: brandProfile } = await supabase
+              .from("brand_profiles")
+              .select("id, business_type")
+              .eq("profile_id", session.user.id)
+              .single();
+            
+            // If no brand profile or no business_type selected, send to onboarding
+            if (!brandProfile?.business_type) {
+              navigate("/onboarding");
+              return;
+            }
+          }
+
+          // Onboarding complete, go to dashboard
           navigate("/dashboard");
-        }
+        }, 0);
       }
     });
 
@@ -153,11 +185,34 @@ const Auth = () => {
             .eq("id", data.user.id)
             .single();
 
-          if (profileError || !profileData) {
+          if (profileError || !profileData?.user_type) {
+            navigate("/onboarding");
+            return;
+          }
+
+          // Check if they have completed the extended onboarding
+          let onboardingComplete = false;
+          
+          if (profileData.user_type === "creator") {
+            const { data: creatorProfile } = await supabase
+              .from("creator_profiles")
+              .select("id, creator_types")
+              .eq("profile_id", data.user.id)
+              .single();
+            onboardingComplete = !!(creatorProfile?.creator_types && creatorProfile.creator_types.length > 0);
+          } else if (profileData.user_type === "brand") {
+            const { data: brandProfile } = await supabase
+              .from("brand_profiles")
+              .select("id, business_type")
+              .eq("profile_id", data.user.id)
+              .single();
+            onboardingComplete = !!brandProfile?.business_type;
+          }
+
+          if (!onboardingComplete) {
             toast({ 
               title: "Almost there! 📝", 
-              description: "Please complete your profile setup.",
-              variant: "destructive" 
+              description: "Please complete your profile setup."
             });
             navigate("/onboarding");
           } else {
