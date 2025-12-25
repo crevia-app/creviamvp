@@ -202,11 +202,30 @@ const KiraOnboarding = () => {
         .single();
 
       if (profile?.user_type) {
-        // Check if onboarding is already complete
-        if (profile.handle && profile.handle !== profile.display_name?.toLowerCase().replace(/\s/g, "")) {
+        // Check if onboarding is already complete by checking creator/brand profiles
+        let onboardingComplete = false;
+        
+        if (profile.user_type === "creator") {
+          const { data: creatorProfile } = await supabase
+            .from("creator_profiles")
+            .select("id, creator_types")
+            .eq("profile_id", session.user.id)
+            .single();
+          onboardingComplete = !!(creatorProfile?.creator_types && creatorProfile.creator_types.length > 0);
+        } else if (profile.user_type === "brand") {
+          const { data: brandProfile } = await supabase
+            .from("brand_profiles")
+            .select("id, business_type")
+            .eq("profile_id", session.user.id)
+            .single();
+          onboardingComplete = !!brandProfile?.business_type;
+        }
+
+        if (onboardingComplete) {
           navigate("/dashboard");
           return;
         }
+        
         setUserType(profile.user_type as "creator" | "brand");
       }
       
