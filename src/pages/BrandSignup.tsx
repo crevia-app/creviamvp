@@ -25,7 +25,7 @@ const BrandSignup = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/onboarding/brand`,
+          redirectTo: `${window.location.origin}/onboarding`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -58,7 +58,7 @@ const BrandSignup = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
-          redirectTo: `${window.location.origin}/onboarding/brand`,
+          redirectTo: `${window.location.origin}/onboarding`,
         },
       });
 
@@ -109,7 +109,7 @@ const BrandSignup = () => {
       toast({ title: "Oops! 😅", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Welcome aboard! 🚀", description: "Let's set up your brand profile!" });
-      navigate("/onboarding/brand");
+      navigate("/onboarding");
     }
   };
 
