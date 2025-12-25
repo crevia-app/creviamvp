@@ -9,8 +9,7 @@ import Auth from "./pages/Auth";
 import UserTypeSelection from "./pages/UserTypeSelection";
 import CreatorSignup from "./pages/CreatorSignup";
 import BrandSignup from "./pages/BrandSignup";
-import CreatorOnboarding from "./pages/onboarding/CreatorOnboarding";
-import BrandOnboarding from "./pages/onboarding/BrandOnboarding";
+import KiraOnboarding from "./pages/onboarding/KiraOnboarding";
 import Dashboard from "./pages/Dashboard";
 import CreviaConnect from "./pages/CreviaConnect";
 import Kira from "./pages/Kira";
@@ -50,8 +49,7 @@ const App = () => (
             <Route path="/user-type-selection" element={<UserTypeSelection />} />
             <Route path="/signup/creator" element={<CreatorSignup />} />
             <Route path="/signup/brand" element={<BrandSignup />} />
-            <Route path="/onboarding/creator" element={<CreatorOnboarding />} />
-            <Route path="/onboarding/brand" element={<BrandOnboarding />} />
+            <Route path="/onboarding" element={<KiraOnboarding />} />
             <Route path="/:username" element={<PublicProfile />} />
             
             {/* Protected routes with AppLayout */}
