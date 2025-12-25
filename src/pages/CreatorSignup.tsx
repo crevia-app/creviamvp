@@ -25,7 +25,7 @@ const CreatorSignup = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/onboarding/creator`,
+          redirectTo: `${window.location.origin}/onboarding`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -58,7 +58,7 @@ const CreatorSignup = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
-          redirectTo: `${window.location.origin}/onboarding/creator`,
+          redirectTo: `${window.location.origin}/onboarding`,
         },
       });
 
@@ -109,7 +109,7 @@ const CreatorSignup = () => {
       toast({ title: "Oops! 😅", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "You're in! 🎉", description: "Let's set up your creator profile!" });
-      navigate("/onboarding/creator");
+      navigate("/onboarding");
     }
   };
 
