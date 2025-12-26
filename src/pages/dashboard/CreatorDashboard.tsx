@@ -34,7 +34,7 @@ const CreatorDashboard = () => {
 
   return (
     <div className="container mx-auto px-6 py-8 max-w-7xl">
-      <div className="mb-8">
+      <div className="mb-8 animate-fade-in">
         <h1 className="font-vollkorn text-4xl font-bold mb-2">
           Welcome back, {profile?.display_name || profile?.handle}!
         </h1>
@@ -43,15 +43,15 @@ const CreatorDashboard = () => {
 
       {/* Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-        <Card className="p-6">
+        <Card className="p-6 animate-fade-in stagger-1 animate-stagger hover:shadow-lg transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5">
           <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="w-4 h-4 text-bronze" />
+            <DollarSign className="w-4 h-4 text-bronze transition-transform duration-300 group-hover:scale-110" />
             <p className="text-sm text-muted-foreground">Total Earnings</p>
           </div>
           <p className="text-3xl font-bold">$0</p>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-6 animate-fade-in stagger-2 animate-stagger hover:shadow-lg transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5">
           <div className="flex items-center gap-2 mb-2">
             <Briefcase className="w-4 h-4 text-bronze" />
             <p className="text-sm text-muted-foreground">Active Campaigns</p>
@@ -59,7 +59,7 @@ const CreatorDashboard = () => {
           <p className="text-3xl font-bold">0</p>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-6 animate-fade-in stagger-3 animate-stagger hover:shadow-lg transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5">
           <div className="flex items-center gap-2 mb-2">
             <Calendar className="w-4 h-4 text-bronze" />
             <p className="text-sm text-muted-foreground">Pending Approvals</p>
@@ -67,7 +67,7 @@ const CreatorDashboard = () => {
           <p className="text-3xl font-bold">0</p>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-6 animate-fade-in stagger-4 animate-stagger hover:shadow-lg transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5">
           <div className="flex items-center gap-2 mb-2">
             <MessageSquare className="w-4 h-4 text-bronze" />
             <p className="text-sm text-muted-foreground">Messages</p>
@@ -75,7 +75,7 @@ const CreatorDashboard = () => {
           <p className="text-3xl font-bold">0</p>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-6 animate-fade-in stagger-5 animate-stagger hover:shadow-lg transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign className="w-4 h-4 text-bronze" />
             <p className="text-sm text-muted-foreground">Next Payout</p>
@@ -83,7 +83,7 @@ const CreatorDashboard = () => {
           <p className="text-3xl font-bold">$0</p>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-6 animate-fade-in stagger-6 animate-stagger hover:shadow-lg transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="w-4 h-4 text-bronze" />
             <p className="text-sm text-muted-foreground">Visibility Score</p>
@@ -93,9 +93,9 @@ const CreatorDashboard = () => {
       </div>
 
       {/* Kira Insights */}
-      <Card className="p-8 mb-8 bg-gradient-to-br from-bronze/5 to-bronze/10">
+      <Card className="p-8 mb-8 bg-gradient-to-br from-bronze/5 to-bronze/10 animate-fade-in stagger-7 animate-stagger hover:shadow-lg transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)]">
         <div className="flex items-center gap-3 mb-6">
-          <Sparkles className="w-6 h-6 text-bronze" />
+          <Sparkles className="w-6 h-6 text-bronze animate-float" />
           <h2 className="font-vollkorn text-2xl font-bold">Kira Insights</h2>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">

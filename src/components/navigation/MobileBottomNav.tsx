@@ -74,11 +74,14 @@ const MobileBottomNav = () => {
               key={item.id}
               to={item.path}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 transition-colors",
+                "flex flex-col items-center justify-center gap-1 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] group",
                 active ? "text-bronze" : "text-white/60"
               )}
             >
-              <Icon className={cn("h-5 w-5", active && "drop-shadow-[0_0_8px_rgba(207,129,80,0.5)]")} />
+              <Icon className={cn(
+                "h-5 w-5 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-110", 
+                active && "drop-shadow-[0_0_8px_rgba(207,129,80,0.5)]"
+              )} />
               <span className="font-poppins text-xs font-medium">{item.label}</span>
             </Link>
           );

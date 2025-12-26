@@ -56,24 +56,24 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
               key={item.id}
               to={item.path}
               className={cn(
-                "flex flex-col items-center justify-center gap-1.5 px-3 py-3 transition-all duration-200",
+                "flex flex-col items-center justify-center gap-1.5 px-3 py-3 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] group",
                 active
                   ? "text-bronze"
                   : "text-white/70 hover:text-bronze hover:bg-white/5"
               )}
             >
               <div className={cn(
-                "p-2.5 rounded-xl transition-all",
+                "p-2.5 rounded-xl transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105",
                 active && "bg-bronze/15"
               )}>
                 <Icon 
                   className={cn(
-                    "h-6 w-6 transition-all",
+                    "h-6 w-6 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)]",
                     active && "drop-shadow-[0_0_10px_rgba(207,129,80,0.5)]"
                   )} 
                 />
               </div>
-              <span className="font-poppins text-[11px] font-medium text-center leading-tight">
+              <span className="font-poppins text-[11px] font-medium text-center leading-tight transition-all duration-300">
                 {item.label}
               </span>
             </Link>
@@ -83,9 +83,9 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
         {/* More Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex flex-col items-center justify-center gap-1.5 px-3 py-3 transition-all duration-200 w-full text-white/70 hover:text-bronze hover:bg-white/5">
-              <div className="p-2.5 rounded-xl">
-                <MoreHorizontal className="h-6 w-6" />
+            <button className="flex flex-col items-center justify-center gap-1.5 px-3 py-3 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] w-full text-white/70 hover:text-bronze hover:bg-white/5 group">
+              <div className="p-2.5 rounded-xl transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105">
+                <MoreHorizontal className="h-6 w-6 transition-all duration-300" />
               </div>
               <span className="font-poppins text-[11px] font-medium text-center leading-tight">
                 More
@@ -127,7 +127,7 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
       <div className="p-3">
         <button
           onClick={onProfileClick}
-          className="flex flex-col items-center justify-center gap-1.5 px-2 py-2 rounded-xl transition-all duration-200 w-full text-white/70 hover:text-bronze hover:bg-white/5"
+          className="flex flex-col items-center justify-center gap-1.5 px-2 py-2 rounded-xl transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] w-full text-white/70 hover:text-bronze hover:bg-white/5 group"
         >
           <Avatar className="h-10 w-10">
             <AvatarImage src={profile?.avatar_url} />
