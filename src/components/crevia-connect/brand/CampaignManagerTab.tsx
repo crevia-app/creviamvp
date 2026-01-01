@@ -57,9 +57,14 @@ const CampaignManagerTab = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Campaign Manager</h2>
-        <Button onClick={() => setShowCreateDialog(true)}>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold mb-1">Campaigns</h2>
+          <p className="text-muted-foreground">
+            Launch influencer marketing campaigns and collaborate with creators
+          </p>
+        </div>
+        <Button onClick={() => setShowCreateDialog(true)} className="bg-bronze hover:bg-bronze-dark text-white">
           <Plus className="mr-2 h-4 w-4" />
           Create Campaign
         </Button>
