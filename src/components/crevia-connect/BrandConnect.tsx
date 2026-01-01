@@ -4,6 +4,7 @@ import ConnectSidebarDesktop from "./ConnectSidebarDesktop";
 import ConnectTabsMobile from "./ConnectTabsMobile";
 import CreatorDiscoveryTab from "./brand/CreatorDiscoveryTab";
 import CampaignManagerTab from "./brand/CampaignManagerTab";
+import ProjectManagerTab from "./brand/ProjectManagerTab";
 import MyCreatorsTab from "./brand/MyCreatorsTab";
 import KiraForBrandsTab from "./brand/KiraForBrandsTab";
 import CreviaChat from "./shared/CreviaChat";
@@ -21,6 +22,8 @@ const BrandConnect = () => {
         return <CreatorDiscoveryTab />;
       case "campaigns":
         return <CampaignManagerTab />;
+      case "projects":
+        return <ProjectManagerTab />;
       case "payments":
         return <PaymentsTab userType="brand" />;
       case "creators":
