@@ -64,9 +64,9 @@ const UserTypeSelection = () => {
             <div className="w-16 h-16 rounded-2xl bg-bronze/10 group-hover:bg-bronze flex items-center justify-center mb-6 transition-colors">
               <Users className="w-8 h-8 text-bronze group-hover:text-white transition-colors" />
             </div>
-            <h2 className="font-vollkorn text-3xl font-bold mb-3">Creator</h2>
+            <h2 className="font-vollkorn text-3xl font-bold mb-3">Creative</h2>
             <p className="text-muted-foreground">
-              Sell products & services
+              Creators, freelancers & artists
             </p>
           </Card>
 
@@ -79,7 +79,7 @@ const UserTypeSelection = () => {
             </div>
             <h2 className="font-vollkorn text-3xl font-bold mb-3">Brand</h2>
             <p className="text-muted-foreground">
-              Find & hire creators
+              Find & hire creatives
             </p>
           </Card>
         </div>

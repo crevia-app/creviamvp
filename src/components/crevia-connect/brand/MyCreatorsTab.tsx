@@ -34,15 +34,15 @@ const MyCreatorsTab = () => {
   };
 
   if (loading) {
-    return <div className="text-center py-12">Loading creators...</div>;
+    return <div className="text-center py-12">Loading creatives...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2">My Creators</h2>
+        <h2 className="text-2xl font-bold mb-2">My Creatives</h2>
         <p className="text-muted-foreground">
-          Creators you've worked with or favorited
+          Creators and freelancers you've worked with or favorited
         </p>
       </div>
 
@@ -85,7 +85,7 @@ const MyCreatorsTab = () => {
       {favorites.length === 0 && (
         <Card>
           <CardContent className="pt-6 text-center text-muted-foreground">
-            No favorited creators yet. Start discovering creators from the Creator Discovery tab!
+            No favorited creatives yet. Start discovering talent from the Talent Discovery tab!
           </CardContent>
         </Card>
       )}

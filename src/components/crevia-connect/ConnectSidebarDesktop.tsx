@@ -35,10 +35,10 @@ const ConnectSidebarDesktop = ({ userType, collapsed, onToggleCollapse }: Connec
   ];
 
   const brandItems = [
-    { id: "discovery", label: "Creator Discovery", icon: Search },
+    { id: "discovery", label: "Talent Discovery", icon: Search },
     { id: "campaigns", label: "Campaign Manager", icon: FolderKanban },
     { id: "payments", label: "Crevia Pay", icon: Wallet },
-    { id: "creators", label: "My Creators", icon: Users },
+    { id: "creators", label: "My Creatives", icon: Users },
     { id: "kira", label: "Kira for Brands", icon: Sparkles },
     { id: "chat", label: "Crevia Chat", icon: MessageSquare },
   ];

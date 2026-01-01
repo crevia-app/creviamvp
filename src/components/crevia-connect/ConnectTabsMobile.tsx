@@ -21,10 +21,10 @@ const ConnectTabsMobile = ({ userType }: ConnectTabsMobileProps) => {
   ];
 
   const brandTabs = [
-    { id: "discovery", label: "Creator Discovery" },
+    { id: "discovery", label: "Talent Discovery" },
     { id: "campaigns", label: "Campaigns" },
     { id: "payments", label: "Crevia Pay" },
-    { id: "creators", label: "My Creators" },
+    { id: "creators", label: "My Creatives" },
     { id: "kira", label: "Kira for Brands" },
     { id: "chat", label: "Crevia Chat" },
   ];
