@@ -9,7 +9,8 @@ import {
   FolderKanban,
   ChevronLeft,
   ChevronRight,
-  Wallet
+  Wallet,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -36,7 +37,8 @@ const ConnectSidebarDesktop = ({ userType, collapsed, onToggleCollapse }: Connec
 
   const brandItems = [
     { id: "discovery", label: "Talent Discovery", icon: Search },
-    { id: "campaigns", label: "Campaign Manager", icon: FolderKanban },
+    { id: "campaigns", label: "Campaigns", icon: FolderKanban },
+    { id: "projects", label: "Projects", icon: Briefcase },
     { id: "payments", label: "Crevia Pay", icon: Wallet },
     { id: "creators", label: "My Creatives", icon: Users },
     { id: "kira", label: "Kira for Brands", icon: Sparkles },
