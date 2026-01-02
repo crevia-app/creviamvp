@@ -55,6 +55,10 @@ const MyCampaignsTab = () => {
 
   return (
     <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold">My Campaigns</h2>
+        <p className="text-muted-foreground">Track your influencer campaign applications and collaborations</p>
+      </div>
       <Tabs defaultValue="active">
         <TabsList>
           <TabsTrigger value="active">Active ({activeApplications.length})</TabsTrigger>
