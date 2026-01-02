@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Heart, Sparkles } from "lucide-react";
+import { Search, Filter, Heart, Sparkles, Zap, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import CampaignDetailDialog from "../shared/CampaignDetailDialog";
 
@@ -18,6 +18,7 @@ const OpportunitiesTab = () => {
   const [selectedPlatform, setSelectedPlatform] = useState("all");
   const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
   const [matchScores, setMatchScores] = useState<Record<string, number>>({});
+  const [bestMatches, setBestMatches] = useState<any[]>([]);
 
   useEffect(() => {
     fetchCampaigns();
@@ -63,8 +64,9 @@ const OpportunitiesTab = () => {
     if (!creatorProfile) return;
 
     const scores: Record<string, number> = {};
+    const scoredCampaigns: { campaign: any; score: number }[] = [];
     
-    for (const campaign of campaignsList.slice(0, 5)) {
+    for (const campaign of campaignsList.slice(0, 10)) {
       try {
         const { data } = await supabase.functions.invoke("ai-match-score", {
           body: { campaign, creator: creatorProfile }
@@ -72,6 +74,7 @@ const OpportunitiesTab = () => {
         
         if (data?.score) {
           scores[campaign.id] = data.score;
+          scoredCampaigns.push({ campaign, score: data.score });
         }
       } catch (err) {
         console.error("Error calculating match score:", err);
@@ -79,6 +82,13 @@ const OpportunitiesTab = () => {
     }
     
     setMatchScores(scores);
+    
+    // Set top 3 best matches sorted by score
+    const topMatches = scoredCampaigns
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map(item => ({ ...item.campaign, matchScore: item.score }));
+    setBestMatches(topMatches);
   };
 
   const addToWishlist = async (campaignId: string) => {
@@ -120,7 +130,89 @@ const OpportunitiesTab = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-bold">Opportunities</h2>
+        <p className="text-muted-foreground">Discover campaigns and gigs tailored to your creative skills</p>
+      </div>
+
+      {/* Kira's Best Matches Section */}
+      {bestMatches.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-full bg-gradient-to-r from-primary/20 to-bronze/20">
+              <Zap className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                Kira's Best Matches
+                <Badge variant="secondary" className="text-xs">AI Powered</Badge>
+              </h3>
+              <p className="text-sm text-muted-foreground">Handpicked opportunities based on your profile & skills</p>
+            </div>
+          </div>
+          
+          <div className="grid gap-4 md:grid-cols-3">
+            {bestMatches.map((campaign, index) => (
+              <Card 
+                key={campaign.id} 
+                className="relative overflow-hidden cursor-pointer group hover-lift border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-bronze/5"
+                onClick={() => setSelectedCampaign(campaign)}
+              >
+                {/* Best Match Badge */}
+                <div className="absolute top-0 right-0 bg-gradient-to-l from-primary to-bronze text-primary-foreground text-xs px-3 py-1 rounded-bl-lg font-medium flex items-center gap-1">
+                  <TrendingUp className="h-3 w-3" />
+                  {campaign.matchScore}% Match
+                </div>
+                
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-base group-hover:text-bronze transition-colors pr-16">
+                      {campaign.title}
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                    {campaign.description}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {campaign.platforms?.slice(0, 2).map((platform: string) => (
+                      <Badge key={platform} variant="outline" className="text-xs">{platform}</Badge>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-bronze">${campaign.budget}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToWishlist(campaign.id);
+                      }}
+                      className="h-8 w-8 p-0 hover:text-bronze"
+                    >
+                      <Heart className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Divider */}
+      {bestMatches.length > 0 && (
+        <div className="flex items-center gap-4">
+          <div className="h-px flex-1 bg-border" />
+          <span className="text-sm text-muted-foreground">Browse All Opportunities</span>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+      )}
+
+      {/* Search and Filters */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -162,6 +254,7 @@ const OpportunitiesTab = () => {
         </div>
       </div>
 
+      {/* All Campaigns Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredCampaigns.map((campaign, index) => (
           <Card key={campaign.id} className="hover-lift hover-glow cursor-pointer group animate-fade-in-up"
@@ -208,6 +301,12 @@ const OpportunitiesTab = () => {
           </Card>
         ))}
       </div>
+
+      {filteredCampaigns.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">No opportunities found matching your criteria 🔍</p>
+        </div>
+      )}
 
       {selectedCampaign && (
         <CampaignDetailDialog
