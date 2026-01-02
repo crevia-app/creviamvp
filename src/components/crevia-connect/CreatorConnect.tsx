@@ -4,6 +4,7 @@ import ConnectSidebarDesktop from "./ConnectSidebarDesktop";
 import ConnectTabsMobile from "./ConnectTabsMobile";
 import OpportunitiesTab from "./creator/OpportunitiesTab";
 import MyCampaignsTab from "./creator/MyCampaignsTab";
+import MyProjectsTab from "./creator/MyProjectsTab";
 import AnalyticsTab from "./creator/AnalyticsTab";
 import KiraSuggestionsTab from "./creator/KiraSuggestionsTab";
 import CreviaChat from "./shared/CreviaChat";
@@ -21,6 +22,8 @@ const CreatorConnect = () => {
         return <OpportunitiesTab />;
       case "campaigns":
         return <MyCampaignsTab />;
+      case "projects":
+        return <MyProjectsTab />;
       case "payments":
         return <PaymentsTab userType="creator" />;
       case "analytics":

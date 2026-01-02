@@ -28,7 +28,8 @@ const ConnectSidebarDesktop = ({ userType, collapsed, onToggleCollapse }: Connec
 
   const creatorItems = [
     { id: "opportunities", label: "Opportunities", icon: Search },
-    { id: "campaigns", label: "My Campaigns", icon: Briefcase },
+    { id: "campaigns", label: "My Campaigns", icon: FolderKanban },
+    { id: "projects", label: "My Projects", icon: Briefcase },
     { id: "payments", label: "Crevia Pay", icon: Wallet },
     { id: "analytics", label: "Analytics", icon: BarChart3 },
     { id: "kira", label: "Kira Suggestions", icon: Sparkles },
