@@ -24,10 +24,9 @@ interface ConnectSidebarDesktopProps {
 const ConnectSidebarDesktop = ({ userType, collapsed, onToggleCollapse }: ConnectSidebarDesktopProps) => {
   const location = useLocation();
   const currentTab = new URLSearchParams(location.search).get("tab") || 
-    (userType === "creator" ? "opportunities" : "discovery");
+    (userType === "creator" ? "campaigns" : "discovery");
 
   const creatorItems = [
-    { id: "opportunities", label: "Opportunities", icon: Search },
     { id: "campaigns", label: "My Campaigns", icon: FolderKanban },
     { id: "projects", label: "My Projects", icon: Briefcase },
     { id: "payments", label: "Crevia Pay", icon: Wallet },
