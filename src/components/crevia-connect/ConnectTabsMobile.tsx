@@ -9,10 +9,9 @@ interface ConnectTabsMobileProps {
 const ConnectTabsMobile = ({ userType }: ConnectTabsMobileProps) => {
   const location = useLocation();
   const currentTab = new URLSearchParams(location.search).get("tab") || 
-    (userType === "creator" ? "opportunities" : "discovery");
+    (userType === "creator" ? "campaigns" : "discovery");
 
   const creatorTabs = [
-    { id: "opportunities", label: "Opportunities" },
     { id: "campaigns", label: "My Campaigns" },
     { id: "projects", label: "My Projects" },
     { id: "payments", label: "Crevia Pay" },
