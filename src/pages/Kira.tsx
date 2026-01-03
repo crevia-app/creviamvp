@@ -26,7 +26,8 @@ import {
   ChevronRight,
   Image,
   FileUp,
-  X
+  X,
+  Mic
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -39,6 +40,7 @@ import kiraImage from "@/assets/kira-mascot-new.png";
 import { CreateProjectDialog } from "@/components/kira/CreateProjectDialog";
 import { ProjectDetailSheet } from "@/components/kira/ProjectDetailSheet";
 import { ProjectsView } from "@/components/kira/ProjectsView";
+import { VoiceChatDialog } from "@/components/kira/VoiceChatDialog";
 
 interface ChatHistory {
   id: string;
@@ -130,6 +132,7 @@ const Kira = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [projectDetailOpen, setProjectDetailOpen] = useState(false);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+  const [voiceChatOpen, setVoiceChatOpen] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -1056,6 +1059,13 @@ const Kira = () => {
                           </div>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setVoiceChatOpen(true)} className="gap-3 cursor-pointer">
+                          <Mic className="w-4 h-4 text-muted-foreground" />
+                          <div className="flex flex-col">
+                            <span className="font-medium">Voice chat</span>
+                            <span className="text-xs text-muted-foreground">Talk with Kira</span>
+                          </div>
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setViewMode("projects")} className="gap-3 cursor-pointer">
                           <FolderOpen className="w-4 h-4 text-muted-foreground" />
                           <div className="flex flex-col">
@@ -1104,6 +1114,17 @@ const Kira = () => {
         onProjectDeleted={handleProjectDeleted}
         onConversationSelect={handleConversationSelect}
         onNewChat={(projectId) => handleNewChat(projectId)}
+      />
+
+      <VoiceChatDialog
+        open={voiceChatOpen}
+        onOpenChange={setVoiceChatOpen}
+        userType={userType}
+        projectContext={getActiveProject() ? {
+          name: getActiveProject()!.name,
+          description: getActiveProject()!.description,
+          customInstructions: getActiveProject()!.custom_instructions
+        } : null}
       />
     </div>
   );
