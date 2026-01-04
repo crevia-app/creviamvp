@@ -89,6 +89,19 @@ const PublicProfile = () => {
         return "bg-gradient-to-br from-green-700 to-emerald-900 text-white";
       case "royal":
         return "bg-gradient-to-br from-purple-700 to-indigo-900 text-white";
+      // Premium African Heritage Themes
+      case "sahara-gold":
+        // Inspired by Saharan desert dunes at golden hour with deep terracotta and liquid gold
+        return "bg-[radial-gradient(ellipse_at_top,#D4A853_0%,#4A2C17_50%,#2C1810_100%)] text-amber-50";
+      case "kente-luxe":
+        // Inspired by Ghanaian Kente cloth with obsidian black and 24k gold accents
+        return "bg-[radial-gradient(ellipse_at_bottom_right,#C4A000_0%,#2D2D00_40%,#1A1A0A_100%)] text-yellow-50";
+      case "kilimanjaro":
+        // Inspired by Mt. Kilimanjaro's majesty - from deep night sky to icy peak
+        return "bg-[linear-gradient(135deg,#0A1628_0%,#1E3A5F_50%,#87CEEB_100%)] text-white";
+      case "serengeti-dusk":
+        // Inspired by Serengeti sunset - deep plum to warm amber glow
+        return "bg-[radial-gradient(ellipse_at_top_left,#E8A87C_0%,#4A1942_60%,#1A0A14_100%)] text-orange-50";
       default:
         return "bg-gray-900 text-white";
     }
