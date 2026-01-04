@@ -89,19 +89,19 @@ const PublicProfile = () => {
         return "bg-gradient-to-br from-green-700 to-emerald-900 text-white";
       case "royal":
         return "bg-gradient-to-br from-purple-700 to-indigo-900 text-white";
-      // Premium African Heritage Themes
+      // African Heritage Collection
       case "maasai":
-        // Maasai (East Africa) - Iconic red shuka, blue beadwork, and savanna green
-        return "bg-[linear-gradient(135deg,#0D0D0D_0%,#1A0A0A_30%,#2D0A0A_100%)] text-red-50 [--accent:#C41E3A] [--accent-secondary:#1E40AF]";
-      case "ndebele":
-        // Ndebele (South Africa) - Bold geometric primary colors on deep black
-        return "bg-[radial-gradient(ellipse_at_bottom,#0A0A14_0%,#0D0D0D_50%,#000000_100%)] text-yellow-50 [--accent:#DC2626] [--accent-secondary:#1E3A8A]";
-      case "amazigh":
-        // Amazigh/Berber (North Africa) - Desert terracotta, indigo, and saffron gold
-        return "bg-[linear-gradient(160deg,#0A1628_0%,#1A2744_40%,#2D3A52_100%)] text-amber-50 [--accent:#B45309] [--accent-secondary:#1E3A5F]";
+        // Maasai (Kenya) - Bold red shuka, royal blue beadwork, vibrant green
+        return "bg-[linear-gradient(135deg,#1A0505_0%,#2D0808_50%,#0D0D1A_100%)] text-white [background-image:linear-gradient(135deg,#1A0505_0%,#2D0808_50%,#0D0D1A_100%),repeating-linear-gradient(0deg,transparent,transparent_40px,rgba(227,28,37,0.1)_40px,rgba(227,28,37,0.1)_41px)]";
       case "kente":
-        // Kente (West Africa/Ghana) - Royal gold, forest green, and heritage red
-        return "bg-[radial-gradient(ellipse_at_top_right,#1A1A0A_0%,#0D1A0D_50%,#0A0A0A_100%)] text-yellow-50 [--accent:#CA8A04] [--accent-secondary:#15803D]";
+        // Kente (Ghana) - Royal gold, forest green, heritage red on black
+        return "bg-[linear-gradient(180deg,#0A0A05_0%,#141405_50%,#0D1A0D_100%)] text-yellow-50 [background-image:linear-gradient(180deg,#0A0A05_0%,#141405_50%,#0D1A0D_100%),repeating-linear-gradient(90deg,rgba(234,179,8,0.08)_0px,rgba(234,179,8,0.08)_2px,transparent_2px,transparent_20px)]";
+      case "ndebele":
+        // Ndebele (South Africa) - Bold primary geometric: blue, green, yellow, red
+        return "bg-[radial-gradient(ellipse_at_center,#0A1428_0%,#050A14_50%,#000000_100%)] text-white [background-image:radial-gradient(ellipse_at_center,#0A1428_0%,#050A14_50%,#000000_100%),repeating-linear-gradient(45deg,rgba(29,78,216,0.05)_0px,rgba(29,78,216,0.05)_1px,transparent_1px,transparent_10px)]";
+      case "ankara":
+        // Ankara (Nigeria/West Africa) - Vibrant purple, orange, green wax print
+        return "bg-[conic-gradient(from_180deg_at_50%_50%,#0D0514_0deg,#140A1A_180deg,#0A1410_360deg)] text-orange-50 [background-image:conic-gradient(from_180deg_at_50%_50%,#0D0514_0deg,#140A1A_180deg,#0A1410_360deg),repeating-radial-gradient(circle_at_center,transparent_0px,transparent_20px,rgba(249,115,22,0.03)_20px,rgba(249,115,22,0.03)_21px)]";
       default:
         return "bg-gray-900 text-white";
     }
