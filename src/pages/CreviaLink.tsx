@@ -489,21 +489,27 @@ const CreviaLink = () => {
                         { value: "ocean", label: "Ocean", gradient: "from-blue-500 to-teal-400" },
                         { value: "forest", label: "Forest", gradient: "from-green-600 to-emerald-800" },
                         { value: "royal", label: "Royal", gradient: "from-purple-600 to-indigo-800" },
-                        // African Heritage Collection
-                        { value: "maasai", label: "Maasai 🇰🇪", gradient: "from-[#E31C25] via-[#1E3A8A] to-[#16A34A]", premium: true },
-                        { value: "kente", label: "Kente 🇬🇭", gradient: "from-[#16A34A] via-[#EAB308] to-[#DC2626]", premium: true },
-                        { value: "ndebele", label: "Ndebele 🇿🇦", gradient: "from-[#1D4ED8] via-[#16A34A] to-[#FACC15]", premium: true },
-                        { value: "ankara", label: "Ankara 🇳🇬", gradient: "from-[#7C3AED] via-[#F97316] to-[#16A34A]", premium: true },
+                        // African Heritage Collection - Bold solid colors
+                        { value: "maasai", label: "Maasai 🇰🇪", color: "#C41E3A", premium: true },
+                        { value: "kente", label: "Kente 🇬🇭", color: "#FFD700", premium: true },
+                        { value: "ndebele", label: "Ndebele 🇿🇦", color: "#1E40AF", premium: true },
+                        { value: "ankara", label: "Ankara 🇳🇬", color: "#F97316", premium: true },
                       ].map((theme) => (
                         <div key={theme.value} className="relative">
                           <RadioGroupItem value={theme.value} id={theme.value} className="peer sr-only" />
                           <Label
                             htmlFor={theme.value}
-                            className="flex flex-col items-center justify-between rounded-lg md:rounded-xl border-2 border-muted bg-white p-3 sm:p-4 md:p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
+                            className={cn(
+                              "flex flex-col items-center justify-between rounded-lg md:rounded-xl border-2 border-muted bg-white p-3 sm:p-4 md:p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all",
+                              theme.premium && "ring-1 ring-amber-400/50"
+                            )}
                           >
-                            <div className={cn("w-full h-16 sm:h-20 md:h-28 rounded-md md:rounded-lg mb-2 sm:mb-3 md:mb-4 shadow-sm", 
-                              theme.value === "minimal" ? theme.gradient : `bg-gradient-to-br ${theme.gradient}`
-                            )}></div>
+                            <div 
+                              className={cn("w-full h-16 sm:h-20 md:h-28 rounded-md md:rounded-lg mb-2 sm:mb-3 md:mb-4 shadow-sm", 
+                                theme.gradient && (theme.value === "minimal" ? theme.gradient : `bg-gradient-to-br ${theme.gradient}`)
+                              )}
+                              style={theme.color ? { backgroundColor: theme.color } : undefined}
+                            />
                             <span className="font-semibold text-xs sm:text-sm md:text-base">{theme.label}</span>
                           </Label>
                         </div>
