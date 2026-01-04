@@ -90,18 +90,18 @@ const PublicProfile = () => {
       case "royal":
         return "bg-gradient-to-br from-purple-700 to-indigo-900 text-white";
       // Premium African Heritage Themes
-      case "sahara-gold":
-        // Inspired by Saharan desert dunes at golden hour with deep terracotta and liquid gold
-        return "bg-[radial-gradient(ellipse_at_top,#D4A853_0%,#4A2C17_50%,#2C1810_100%)] text-amber-50";
-      case "kente-luxe":
-        // Inspired by Ghanaian Kente cloth with obsidian black and 24k gold accents
-        return "bg-[radial-gradient(ellipse_at_bottom_right,#C4A000_0%,#2D2D00_40%,#1A1A0A_100%)] text-yellow-50";
-      case "kilimanjaro":
-        // Inspired by Mt. Kilimanjaro's majesty - from deep night sky to icy peak
-        return "bg-[linear-gradient(135deg,#0A1628_0%,#1E3A5F_50%,#87CEEB_100%)] text-white";
-      case "serengeti-dusk":
-        // Inspired by Serengeti sunset - deep plum to warm amber glow
-        return "bg-[radial-gradient(ellipse_at_top_left,#E8A87C_0%,#4A1942_60%,#1A0A14_100%)] text-orange-50";
+      case "maasai":
+        // Maasai (East Africa) - Iconic red shuka, blue beadwork, and savanna green
+        return "bg-[linear-gradient(135deg,#0D0D0D_0%,#1A0A0A_30%,#2D0A0A_100%)] text-red-50 [--accent:#C41E3A] [--accent-secondary:#1E40AF]";
+      case "ndebele":
+        // Ndebele (South Africa) - Bold geometric primary colors on deep black
+        return "bg-[radial-gradient(ellipse_at_bottom,#0A0A14_0%,#0D0D0D_50%,#000000_100%)] text-yellow-50 [--accent:#DC2626] [--accent-secondary:#1E3A8A]";
+      case "amazigh":
+        // Amazigh/Berber (North Africa) - Desert terracotta, indigo, and saffron gold
+        return "bg-[linear-gradient(160deg,#0A1628_0%,#1A2744_40%,#2D3A52_100%)] text-amber-50 [--accent:#B45309] [--accent-secondary:#1E3A5F]";
+      case "kente":
+        // Kente (West Africa/Ghana) - Royal gold, forest green, and heritage red
+        return "bg-[radial-gradient(ellipse_at_top_right,#1A1A0A_0%,#0D1A0D_50%,#0A0A0A_100%)] text-yellow-50 [--accent:#CA8A04] [--accent-secondary:#15803D]";
       default:
         return "bg-gray-900 text-white";
     }

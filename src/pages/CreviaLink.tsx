@@ -490,10 +490,10 @@ const CreviaLink = () => {
                         { value: "forest", label: "Forest", gradient: "from-green-600 to-emerald-800" },
                         { value: "royal", label: "Royal", gradient: "from-purple-600 to-indigo-800" },
                         // Premium African Heritage Themes
-                        { value: "sahara-gold", label: "Sahara Gold", gradient: "from-[#2C1810] via-[#4A2C17] to-[#D4A853]", premium: true },
-                        { value: "kente-luxe", label: "Kente Luxe", gradient: "from-[#1A1A0A] via-[#2D2D00] to-[#C4A000]", premium: true },
-                        { value: "kilimanjaro", label: "Kilimanjaro", gradient: "from-[#0A1628] via-[#1E3A5F] to-[#87CEEB]", premium: true },
-                        { value: "serengeti-dusk", label: "Serengeti Dusk", gradient: "from-[#1A0A14] via-[#4A1942] to-[#E8A87C]", premium: true },
+                        { value: "maasai", label: "Maasai", gradient: "from-[#C41E3A] via-[#1E40AF] to-[#16A34A]", premium: true },
+                        { value: "ndebele", label: "Ndebele", gradient: "from-[#1E3A8A] via-[#DC2626] to-[#FACC15]", premium: true },
+                        { value: "amazigh", label: "Amazigh", gradient: "from-[#1E3A5F] via-[#B45309] to-[#D4A853]", premium: true },
+                        { value: "kente", label: "Kente", gradient: "from-[#15803D] via-[#CA8A04] to-[#B91C1C]", premium: true },
                       ].map((theme) => (
                         <div key={theme.value} className="relative">
                           <RadioGroupItem value={theme.value} id={theme.value} className="peer sr-only" />
