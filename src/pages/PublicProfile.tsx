@@ -89,19 +89,19 @@ const PublicProfile = () => {
         return "bg-gradient-to-br from-green-700 to-emerald-900 text-white";
       case "royal":
         return "bg-gradient-to-br from-purple-700 to-indigo-900 text-white";
-      // African Heritage Collection
+      // African Heritage Collection - Bold solid colors with character
       case "maasai":
-        // Maasai (Kenya) - Bold red shuka, royal blue beadwork, vibrant green
-        return "bg-[linear-gradient(135deg,#1A0505_0%,#2D0808_50%,#0D0D1A_100%)] text-white [background-image:linear-gradient(135deg,#1A0505_0%,#2D0808_50%,#0D0D1A_100%),repeating-linear-gradient(0deg,transparent,transparent_40px,rgba(227,28,37,0.1)_40px,rgba(227,28,37,0.1)_41px)]";
+        // Maasai (Kenya) - Iconic red shuka
+        return "bg-[#C41E3A] text-white";
       case "kente":
-        // Kente (Ghana) - Royal gold, forest green, heritage red on black
-        return "bg-[linear-gradient(180deg,#0A0A05_0%,#141405_50%,#0D1A0D_100%)] text-yellow-50 [background-image:linear-gradient(180deg,#0A0A05_0%,#141405_50%,#0D1A0D_100%),repeating-linear-gradient(90deg,rgba(234,179,8,0.08)_0px,rgba(234,179,8,0.08)_2px,transparent_2px,transparent_20px)]";
+        // Kente (Ghana) - Royal gold
+        return "bg-[#FFD700] text-black";
       case "ndebele":
-        // Ndebele (South Africa) - Bold primary geometric: blue, green, yellow, red
-        return "bg-[radial-gradient(ellipse_at_center,#0A1428_0%,#050A14_50%,#000000_100%)] text-white [background-image:radial-gradient(ellipse_at_center,#0A1428_0%,#050A14_50%,#000000_100%),repeating-linear-gradient(45deg,rgba(29,78,216,0.05)_0px,rgba(29,78,216,0.05)_1px,transparent_1px,transparent_10px)]";
+        // Ndebele (South Africa) - Bold blue
+        return "bg-[#1E40AF] text-white";
       case "ankara":
-        // Ankara (Nigeria/West Africa) - Vibrant purple, orange, green wax print
-        return "bg-[conic-gradient(from_180deg_at_50%_50%,#0D0514_0deg,#140A1A_180deg,#0A1410_360deg)] text-orange-50 [background-image:conic-gradient(from_180deg_at_50%_50%,#0D0514_0deg,#140A1A_180deg,#0A1410_360deg),repeating-radial-gradient(circle_at_center,transparent_0px,transparent_20px,rgba(249,115,22,0.03)_20px,rgba(249,115,22,0.03)_21px)]";
+        // Ankara (Nigeria) - Vibrant orange
+        return "bg-[#F97316] text-black";
       default:
         return "bg-gray-900 text-white";
     }
