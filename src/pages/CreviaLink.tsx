@@ -489,11 +489,11 @@ const CreviaLink = () => {
                         { value: "ocean", label: "Ocean", gradient: "from-blue-500 to-teal-400" },
                         { value: "forest", label: "Forest", gradient: "from-green-600 to-emerald-800" },
                         { value: "royal", label: "Royal", gradient: "from-purple-600 to-indigo-800" },
-                        // Premium African Heritage Themes
-                        { value: "maasai", label: "Maasai", gradient: "from-[#C41E3A] via-[#1E40AF] to-[#16A34A]", premium: true },
-                        { value: "ndebele", label: "Ndebele", gradient: "from-[#1E3A8A] via-[#DC2626] to-[#FACC15]", premium: true },
-                        { value: "amazigh", label: "Amazigh", gradient: "from-[#1E3A5F] via-[#B45309] to-[#D4A853]", premium: true },
-                        { value: "kente", label: "Kente", gradient: "from-[#15803D] via-[#CA8A04] to-[#B91C1C]", premium: true },
+                        // African Heritage Collection
+                        { value: "maasai", label: "Maasai 🇰🇪", gradient: "from-[#E31C25] via-[#1E3A8A] to-[#16A34A]", premium: true },
+                        { value: "kente", label: "Kente 🇬🇭", gradient: "from-[#16A34A] via-[#EAB308] to-[#DC2626]", premium: true },
+                        { value: "ndebele", label: "Ndebele 🇿🇦", gradient: "from-[#1D4ED8] via-[#16A34A] to-[#FACC15]", premium: true },
+                        { value: "ankara", label: "Ankara 🇳🇬", gradient: "from-[#7C3AED] via-[#F97316] to-[#16A34A]", premium: true },
                       ].map((theme) => (
                         <div key={theme.value} className="relative">
                           <RadioGroupItem value={theme.value} id={theme.value} className="peer sr-only" />
