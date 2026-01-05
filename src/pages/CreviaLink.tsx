@@ -489,12 +489,81 @@ const CreviaLink = () => {
                         { value: "ocean", label: "Ocean", gradient: "from-blue-500 to-teal-400" },
                         { value: "forest", label: "Forest", gradient: "from-green-600 to-emerald-800" },
                         { value: "royal", label: "Royal", gradient: "from-purple-600 to-indigo-800" },
-                        // African Heritage Collection - Bold solid colors
-                        { value: "maasai", label: "Maasai 🇰🇪", color: "#C41E3A", premium: true },
-                        { value: "kente", label: "Kente 🇬🇭", color: "#FFD700", premium: true },
-                        { value: "ndebele", label: "Ndebele 🇿🇦", color: "#1E40AF", premium: true },
-                        { value: "ankara", label: "Ankara 🇳🇬", color: "#F97316", premium: true },
-                      ].map((theme) => (
+                        // African Heritage Collection - Authentic patterns
+                        { value: "maasai", label: "Maasai 🇰🇪", africanPattern: "maasai", premium: true },
+                        { value: "kente", label: "Kente 🇬🇭", africanPattern: "kente", premium: true },
+                        { value: "ndebele", label: "Ndebele 🇿🇦", africanPattern: "ndebele", premium: true },
+                        { value: "ankara", label: "Ankara 🇳🇬", africanPattern: "ankara", premium: true },
+                      ].map((theme) => {
+                        // African pattern styles
+                        const getAfricanPatternStyle = (pattern: string) => {
+                          switch (pattern) {
+                            case "maasai":
+                              // Maasai beadwork - red, blue, yellow, white stripes
+                              return {
+                                background: `
+                                  repeating-linear-gradient(
+                                    0deg,
+                                    #C41E3A 0px, #C41E3A 8px,
+                                    #1E40AF 8px, #1E40AF 12px,
+                                    #FFD700 12px, #FFD700 16px,
+                                    #C41E3A 16px, #C41E3A 24px,
+                                    #FFFFFF 24px, #FFFFFF 28px,
+                                    #1E40AF 28px, #1E40AF 32px
+                                  )
+                                `
+                              };
+                            case "kente":
+                              // Kente cloth - gold, green, red, black geometric
+                              return {
+                                background: `
+                                  linear-gradient(90deg, 
+                                    #FFD700 0%, #FFD700 25%, 
+                                    #228B22 25%, #228B22 50%, 
+                                    #C41E3A 50%, #C41E3A 75%, 
+                                    #1a1a1a 75%, #1a1a1a 100%
+                                  ),
+                                  repeating-linear-gradient(
+                                    0deg,
+                                    transparent 0px, transparent 4px,
+                                    rgba(0,0,0,0.3) 4px, rgba(0,0,0,0.3) 8px
+                                  )
+                                `,
+                                backgroundBlendMode: 'multiply'
+                              };
+                            case "ndebele":
+                              // Ndebele - bold geometric with blue, red, yellow, white
+                              return {
+                                background: `
+                                  linear-gradient(135deg,
+                                    #1E40AF 0%, #1E40AF 20%,
+                                    #FFD700 20%, #FFD700 30%,
+                                    #C41E3A 30%, #C41E3A 50%,
+                                    #FFFFFF 50%, #FFFFFF 60%,
+                                    #228B22 60%, #228B22 80%,
+                                    #1E40AF 80%, #1E40AF 100%
+                                  )
+                                `
+                              };
+                            case "ankara":
+                              // Ankara wax print - orange, brown, yellow circular patterns
+                              return {
+                                background: `
+                                  radial-gradient(circle at 25% 25%, #F97316 20%, transparent 20%),
+                                  radial-gradient(circle at 75% 75%, #8B4513 20%, transparent 20%),
+                                  radial-gradient(circle at 50% 50%, #FFD700 15%, transparent 15%),
+                                  radial-gradient(circle at 25% 75%, #C41E3A 10%, transparent 10%),
+                                  radial-gradient(circle at 75% 25%, #228B22 10%, transparent 10%),
+                                  #F97316
+                                `,
+                                backgroundSize: '40px 40px'
+                              };
+                            default:
+                              return {};
+                          }
+                        };
+                        
+                        return (
                         <div key={theme.value} className="relative">
                           <RadioGroupItem value={theme.value} id={theme.value} className="peer sr-only" />
                           <Label
@@ -508,12 +577,13 @@ const CreviaLink = () => {
                               className={cn("w-full h-16 sm:h-20 md:h-28 rounded-md md:rounded-lg mb-2 sm:mb-3 md:mb-4 shadow-sm", 
                                 theme.gradient && (theme.value === "minimal" ? theme.gradient : `bg-gradient-to-br ${theme.gradient}`)
                               )}
-                              style={theme.color ? { backgroundColor: theme.color } : undefined}
+                              style={theme.africanPattern ? getAfricanPatternStyle(theme.africanPattern) : undefined}
                             />
                             <span className="font-semibold text-xs sm:text-sm md:text-base">{theme.label}</span>
                           </Label>
                         </div>
-                      ))}
+                        );
+                      })}
                     </RadioGroup>
                   </div>
 
