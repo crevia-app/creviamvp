@@ -74,36 +74,108 @@ const PublicProfile = () => {
     const theme = profile?.theme || "dark";
     switch (theme) {
       case "light":
-        return "bg-white text-gray-900";
+        return { className: "bg-white text-gray-900" };
       case "dark":
-        return "bg-gray-900 text-white";
+        return { className: "bg-gray-900 text-white" };
       case "bronze":
-        return "bg-gradient-to-br from-[#1a1a1a] to-[#2d2520] text-white";
+        return { className: "bg-gradient-to-br from-[#1a1a1a] to-[#2d2520] text-white" };
       case "minimal":
-        return "bg-gray-50 text-gray-800";
+        return { className: "bg-gray-50 text-gray-800" };
       case "sunset":
-        return "bg-gradient-to-br from-orange-500 to-pink-600 text-white";
+        return { className: "bg-gradient-to-br from-orange-500 to-pink-600 text-white" };
       case "ocean":
-        return "bg-gradient-to-br from-blue-600 to-teal-500 text-white";
+        return { className: "bg-gradient-to-br from-blue-600 to-teal-500 text-white" };
       case "forest":
-        return "bg-gradient-to-br from-green-700 to-emerald-900 text-white";
+        return { className: "bg-gradient-to-br from-green-700 to-emerald-900 text-white" };
       case "royal":
-        return "bg-gradient-to-br from-purple-700 to-indigo-900 text-white";
-      // African Heritage Collection - Bold solid colors with character
+        return { className: "bg-gradient-to-br from-purple-700 to-indigo-900 text-white" };
+      // African Heritage Collection - Authentic patterns with character
       case "maasai":
-        // Maasai (Kenya) - Iconic red shuka
-        return "bg-[#C41E3A] text-white";
+        // Maasai beadwork - colorful horizontal stripes like traditional beaded jewelry
+        return {
+          className: "text-white",
+          style: {
+            background: `
+              repeating-linear-gradient(
+                0deg,
+                #C41E3A 0px, #C41E3A 12px,
+                #1E40AF 12px, #1E40AF 18px,
+                #FFD700 18px, #FFD700 24px,
+                #C41E3A 24px, #C41E3A 36px,
+                #FFFFFF 36px, #FFFFFF 42px,
+                #1E40AF 42px, #1E40AF 48px,
+                #228B22 48px, #228B22 54px,
+                #FFD700 54px, #FFD700 60px
+              )
+            `
+          }
+        };
       case "kente":
-        // Kente (Ghana) - Royal gold
-        return "bg-[#FFD700] text-black";
+        // Kente cloth - woven geometric pattern with gold, green, red, black
+        return {
+          className: "text-white",
+          style: {
+            background: `
+              repeating-linear-gradient(
+                90deg,
+                #FFD700 0px, #FFD700 20px,
+                #228B22 20px, #228B22 40px,
+                #C41E3A 40px, #C41E3A 60px,
+                #1a1a1a 60px, #1a1a1a 80px
+              ),
+              repeating-linear-gradient(
+                0deg,
+                transparent 0px, transparent 8px,
+                rgba(0,0,0,0.2) 8px, rgba(0,0,0,0.2) 16px
+              )
+            `,
+            backgroundBlendMode: 'multiply'
+          }
+        };
       case "ndebele":
-        // Ndebele (South Africa) - Bold blue
-        return "bg-[#1E40AF] text-white";
+        // Ndebele geometric art - bold blocks of blue, yellow, red, white, green
+        return {
+          className: "text-white",
+          style: {
+            background: `
+              linear-gradient(to right,
+                #1E40AF 0%, #1E40AF 15%,
+                #FFD700 15%, #FFD700 25%,
+                #C41E3A 25%, #C41E3A 45%,
+                #FFFFFF 45%, #FFFFFF 55%,
+                #228B22 55%, #228B22 70%,
+                #FFD700 70%, #FFD700 80%,
+                #1E40AF 80%, #1E40AF 100%
+              ),
+              repeating-linear-gradient(
+                0deg,
+                transparent 0px, transparent 40px,
+                rgba(0,0,0,0.15) 40px, rgba(0,0,0,0.15) 45px,
+                transparent 45px, transparent 90px
+              )
+            `
+          }
+        };
       case "ankara":
-        // Ankara (Nigeria) - Vibrant orange
-        return "bg-[#F97316] text-black";
+        // Ankara wax print - vibrant circular and organic patterns
+        return {
+          className: "text-white",
+          style: {
+            background: `
+              radial-gradient(circle at 20% 30%, #F97316 25%, transparent 25%),
+              radial-gradient(circle at 80% 70%, #8B4513 20%, transparent 20%),
+              radial-gradient(circle at 50% 50%, #FFD700 18%, transparent 18%),
+              radial-gradient(circle at 20% 80%, #C41E3A 15%, transparent 15%),
+              radial-gradient(circle at 80% 20%, #228B22 15%, transparent 15%),
+              radial-gradient(circle at 60% 40%, #1E40AF 12%, transparent 12%),
+              radial-gradient(circle at 35% 60%, #FFD700 10%, transparent 10%),
+              #F97316
+            `,
+            backgroundSize: '120px 120px'
+          }
+        };
       default:
-        return "bg-gray-900 text-white";
+        return { className: "bg-gray-900 text-white" };
     }
   };
 
@@ -220,10 +292,12 @@ const PublicProfile = () => {
   const smoothScroll = profile?.background?.smooth_scroll !== false;
   const fadeAnimation = profile?.background?.fade_animation !== false;
 
+  const themeStyles = getThemeStyles();
+  
   return (
     <div 
-      className={`min-h-screen ${getThemeStyles()} ${getFontFamily()} ${getFontSize()} py-12 px-6`}
-      style={{ scrollBehavior: smoothScroll ? 'smooth' : 'auto' }}
+      className={`min-h-screen ${themeStyles.className} ${getFontFamily()} ${getFontSize()} py-12 px-6`}
+      style={{ scrollBehavior: smoothScroll ? 'smooth' : 'auto', ...themeStyles.style }}
     >
       <div className={`${getPageWidth()} ${layoutClass} ${fadeAnimation ? 'animate-fade-in' : ''}`}>
         {/* Profile Header */}
