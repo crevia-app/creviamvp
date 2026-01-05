@@ -18,7 +18,11 @@ import LinkSidebarDesktop from "@/components/crevia-link/LinkSidebarDesktop";
 import LinkTabsMobile from "@/components/crevia-link/LinkTabsMobile";
 import { cn } from "@/lib/utils";
 
-const CreviaLink = () => {
+interface CreviaLinkProps {
+  isEmbedded?: boolean;
+}
+
+const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();

@@ -2,13 +2,13 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { 
   Home, 
-  Link2, 
   Sparkles, 
   Users, 
   MoreHorizontal,
   ChevronLeft,
   ChevronRight,
-  MessageSquare
+  MessageSquare,
+  Briefcase
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -31,9 +31,9 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
 
   const navItems = [
     { id: "home", label: "Home", icon: Home, path: "/dashboard" },
-    { id: "connect", label: "Crevia Connect", icon: Users, path: "/crevia-connect" },
     { id: "kira", label: "Kira", icon: Sparkles, path: "/kira" },
-    { id: "link", label: "Crevia Link", icon: Link2, path: "/crevia-link" },
+    { id: "studio", label: "Crevia Studio", icon: Briefcase, path: "/crevia-studio" },
+    { id: "connect", label: "Crevia Connect", icon: Users, path: "/crevia-connect" },
   ];
 
   const isActive = (path: string) => {
