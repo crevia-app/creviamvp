@@ -279,6 +279,87 @@ export type Database = {
           },
         ]
       }
+      contracts: {
+        Row: {
+          client_email: string | null
+          client_name: string
+          client_signature: string | null
+          client_signed_at: string | null
+          content: string | null
+          contract_type: string
+          created_at: string
+          creator_signature: string | null
+          creator_signed_at: string | null
+          currency: string | null
+          deliverables: string[] | null
+          end_date: string | null
+          exclusivity: boolean | null
+          exclusivity_details: string | null
+          id: string
+          payment_terms: string | null
+          start_date: string | null
+          status: string
+          termination_clause: string | null
+          title: string
+          updated_at: string
+          usage_rights: string | null
+          user_id: string
+          value: number | null
+        }
+        Insert: {
+          client_email?: string | null
+          client_name: string
+          client_signature?: string | null
+          client_signed_at?: string | null
+          content?: string | null
+          contract_type?: string
+          created_at?: string
+          creator_signature?: string | null
+          creator_signed_at?: string | null
+          currency?: string | null
+          deliverables?: string[] | null
+          end_date?: string | null
+          exclusivity?: boolean | null
+          exclusivity_details?: string | null
+          id?: string
+          payment_terms?: string | null
+          start_date?: string | null
+          status?: string
+          termination_clause?: string | null
+          title: string
+          updated_at?: string
+          usage_rights?: string | null
+          user_id: string
+          value?: number | null
+        }
+        Update: {
+          client_email?: string | null
+          client_name?: string
+          client_signature?: string | null
+          client_signed_at?: string | null
+          content?: string | null
+          contract_type?: string
+          created_at?: string
+          creator_signature?: string | null
+          creator_signed_at?: string | null
+          currency?: string | null
+          deliverables?: string[] | null
+          end_date?: string | null
+          exclusivity?: boolean | null
+          exclusivity_details?: string | null
+          id?: string
+          payment_terms?: string | null
+          start_date?: string | null
+          status?: string
+          termination_clause?: string | null
+          title?: string
+          updated_at?: string
+          usage_rights?: string | null
+          user_id?: string
+          value?: number | null
+        }
+        Relationships: []
+      }
       creator_payout_methods: {
         Row: {
           bank_account_name: string | null
@@ -509,6 +590,110 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      invoice_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+          quantity: number
+          total: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+          quantity?: number
+          total: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          quantity?: number
+          total?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          client_address: string | null
+          client_email: string | null
+          client_name: string
+          created_at: string
+          currency: string | null
+          discount_amount: number | null
+          due_date: string
+          id: string
+          invoice_number: string
+          issue_date: string
+          notes: string | null
+          status: string
+          subtotal: number
+          tax_amount: number | null
+          tax_rate: number | null
+          terms: string | null
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_address?: string | null
+          client_email?: string | null
+          client_name: string
+          created_at?: string
+          currency?: string | null
+          discount_amount?: number | null
+          due_date: string
+          id?: string
+          invoice_number: string
+          issue_date?: string
+          notes?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number | null
+          tax_rate?: number | null
+          terms?: string | null
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_address?: string | null
+          client_email?: string | null
+          client_name?: string
+          created_at?: string
+          currency?: string | null
+          discount_amount?: number | null
+          due_date?: string
+          id?: string
+          invoice_number?: string
+          issue_date?: string
+          notes?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number | null
+          tax_rate?: number | null
+          terms?: string | null
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       kira_conversations: {
         Row: {
@@ -975,6 +1160,98 @@ export type Database = {
           verification_status?:
             | Database["public"]["Enums"]["verification_status"]
             | null
+        }
+        Relationships: []
+      }
+      rate_card_services: {
+        Row: {
+          base_price: number
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          order_index: number
+          price_type: string | null
+          rate_card_id: string
+          service_name: string
+          turnaround_days: number | null
+        }
+        Insert: {
+          base_price: number
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_index?: number
+          price_type?: string | null
+          rate_card_id: string
+          service_name: string
+          turnaround_days?: number | null
+        }
+        Update: {
+          base_price?: number
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_index?: number
+          price_type?: string | null
+          rate_card_id?: string
+          service_name?: string
+          turnaround_days?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rate_card_services_rate_card_id_fkey"
+            columns: ["rate_card_id"]
+            isOneToOne: false
+            referencedRelation: "rate_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rate_cards: {
+        Row: {
+          created_at: string
+          currency: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          share_slug: string | null
+          theme: string | null
+          updated_at: string
+          user_id: string
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          share_slug?: string | null
+          theme?: string | null
+          updated_at?: string
+          user_id: string
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          share_slug?: string | null
+          theme?: string | null
+          updated_at?: string
+          user_id?: string
+          valid_from?: string | null
+          valid_until?: string | null
         }
         Relationships: []
       }
