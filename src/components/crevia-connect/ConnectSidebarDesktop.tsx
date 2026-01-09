@@ -8,9 +8,7 @@ import {
   Users,
   FolderKanban,
   ChevronLeft,
-  ChevronRight,
-  Wallet,
-  FileText
+  ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -29,7 +27,6 @@ const ConnectSidebarDesktop = ({ userType, collapsed, onToggleCollapse }: Connec
   const creatorItems = [
     { id: "campaigns", label: "My Campaigns", icon: FolderKanban },
     { id: "projects", label: "My Projects", icon: Briefcase },
-    { id: "payments", label: "Crevia Pay", icon: Wallet },
     { id: "analytics", label: "Analytics", icon: BarChart3 },
     { id: "kira", label: "Kira Suggestions", icon: Sparkles },
     { id: "chat", label: "Crevia Chat", icon: MessageSquare },
@@ -39,7 +36,6 @@ const ConnectSidebarDesktop = ({ userType, collapsed, onToggleCollapse }: Connec
     { id: "discovery", label: "Talent Discovery", icon: Search },
     { id: "campaigns", label: "Campaigns", icon: FolderKanban },
     { id: "projects", label: "Projects", icon: Briefcase },
-    { id: "payments", label: "Crevia Pay", icon: Wallet },
     { id: "creators", label: "My Creatives", icon: Users },
     { id: "kira", label: "Kira for Brands", icon: Sparkles },
     { id: "chat", label: "Crevia Chat", icon: MessageSquare },

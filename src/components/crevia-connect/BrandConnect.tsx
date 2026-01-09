@@ -8,7 +8,6 @@ import ProjectManagerTab from "./brand/ProjectManagerTab";
 import MyCreatorsTab from "./brand/MyCreatorsTab";
 import KiraForBrandsTab from "./brand/KiraForBrandsTab";
 import CreviaChat from "./shared/CreviaChat";
-import PaymentsTab from "./shared/PaymentsTab";
 import { cn } from "@/lib/utils";
 
 const BrandConnect = () => {
@@ -24,8 +23,6 @@ const BrandConnect = () => {
         return <CampaignManagerTab />;
       case "projects":
         return <ProjectManagerTab />;
-      case "payments":
-        return <PaymentsTab userType="brand" />;
       case "creators":
         return <MyCreatorsTab />;
       case "kira":

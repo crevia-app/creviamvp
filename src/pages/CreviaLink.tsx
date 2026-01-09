@@ -238,6 +238,151 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     );
   }
 
+  // When embedded in Crevia Studio, use a cleaner layout without the sidebar
+  if (isEmbedded) {
+    const embeddedTab = new URLSearchParams(location.search).get("section") || "profile";
+    
+    return (
+      <div className="bg-background">
+        {/* Embedded Tab Navigation */}
+        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border/40">
+          <div className="flex gap-1 px-4 md:px-6 py-3 overflow-x-auto scrollbar-none">
+            {[
+              { id: "profile", label: "Profile" },
+              { id: "buttons", label: "Buttons" },
+              { id: "appearance", label: "Appearance" },
+              { id: "settings", label: "Settings" },
+              { id: "analytics", label: "Analytics" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => navigate(`/crevia-studio?tab=link&section=${tab.id}`)}
+                className={cn(
+                  "px-4 py-2 rounded-lg font-poppins text-sm font-medium whitespace-nowrap transition-all",
+                  embeddedTab === tab.id
+                    ? "bg-bronze/10 text-bronze"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Embedded Content */}
+        <div className="max-w-3xl mx-auto px-4 md:px-6 py-6 md:py-8">
+          {embeddedTab === "profile" && (
+            <Card className="p-6 border-border/50">
+              <h3 className="font-vollkorn text-2xl font-bold mb-6">Profile Information</h3>
+              <div className="space-y-5">
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Username</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground text-sm">crevia.app/</span>
+                    <Input
+                      value={linkProfile?.username || ""}
+                      onChange={(e) => setLinkProfile({ ...linkProfile, username: e.target.value })}
+                      placeholder="yourusername"
+                      className="flex-1 h-11"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Display Name</Label>
+                  <Input
+                    value={linkProfile?.display_name || ""}
+                    onChange={(e) => setLinkProfile({ ...linkProfile, display_name: e.target.value })}
+                    placeholder="Your Name"
+                    className="h-11"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Bio</Label>
+                  <Textarea
+                    value={linkProfile?.bio || ""}
+                    onChange={(e) => setLinkProfile({ ...linkProfile, bio: e.target.value.slice(0, 150) })}
+                    placeholder="Tell people about yourself..."
+                    className="min-h-[100px] resize-none"
+                    maxLength={150}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">{linkProfile?.bio?.length || 0}/150</p>
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <Button onClick={handleSave} disabled={saving} className="bg-bronze hover:bg-bronze-dark">
+                    {saving ? "Saving..." : "Save Changes"}
+                  </Button>
+                  <Button variant="outline" onClick={() => window.open(`/${linkProfile?.username}`, "_blank")}>
+                    <Eye className="w-4 h-4 mr-2" />
+                    Preview
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {embeddedTab === "buttons" && (
+            <Card className="p-6 border-border/50">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-vollkorn text-2xl font-bold">Links & Buttons</h3>
+                <Button onClick={() => setShowAddButton(true)} className="bg-bronze hover:bg-bronze-dark">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Button
+                </Button>
+              </div>
+              {buttons.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Link2 className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                  <p>No buttons yet. Add one to get started.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {buttons.map((button) => (
+                    <ButtonItem
+                      key={button.id}
+                      button={button}
+                      onEdit={() => {}}
+                      onDelete={handleDeleteButton}
+                      onToggleVisibility={handleToggleVisibility}
+                    />
+                  ))}
+                </div>
+              )}
+            </Card>
+          )}
+
+          {embeddedTab === "appearance" && (
+            <Card className="p-6 border-border/50">
+              <h3 className="font-vollkorn text-2xl font-bold mb-6">Appearance</h3>
+              <p className="text-muted-foreground">Customize your link page appearance.</p>
+            </Card>
+          )}
+
+          {embeddedTab === "settings" && (
+            <Card className="p-6 border-border/50">
+              <h3 className="font-vollkorn text-2xl font-bold mb-6">Settings</h3>
+              <p className="text-muted-foreground">Configure your link settings.</p>
+            </Card>
+          )}
+
+          {embeddedTab === "analytics" && (
+            <Card className="p-6 border-border/50">
+              <h3 className="font-vollkorn text-2xl font-bold mb-6">Analytics</h3>
+              <p className="text-muted-foreground">View your link performance analytics.</p>
+            </Card>
+          )}
+        </div>
+
+        <AddButtonDialog
+          open={showAddButton}
+          onOpenChange={setShowAddButton}
+          onAdd={handleAddButton}
+        />
+      </div>
+    );
+  }
+
+  // Standalone view with sidebar
   return (
     <div className="h-full flex flex-col bg-background">
       <LinkTabsMobile userType={profile?.user_type || "creator"} />
