@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Link2, FileText, FileSignature, Receipt, Sparkles } from "lucide-react";
+import { Wallet, Link2, Receipt, FileSignature, FileText, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Import tab content
 import CreviaLink from "./CreviaLink";
+import WalletTab from "@/components/studio/WalletTab";
 import SmartInvoicesTab from "@/components/studio/SmartInvoicesTab";
 import ContractsTab from "@/components/studio/ContractsTab";
 import RateCardsTab from "@/components/studio/RateCardsTab";
@@ -13,19 +14,41 @@ import RateCardsTab from "@/components/studio/RateCardsTab";
 const CreviaStudio = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
+  const [userType, setUserType] = useState<"creator" | "brand">("creator");
   
-  const activeTab = searchParams.get("tab") || "link";
+  const activeTab = searchParams.get("tab") || "wallet";
 
   useEffect(() => {
-    setLoading(false);
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("user_type")
+          .eq("id", session.user.id)
+          .single();
+        
+        if (profile?.user_type) {
+          setUserType(profile.user_type);
+        }
+      }
+      setLoading(false);
+    };
+    checkUser();
   }, []);
 
-  const studioTabs = [
+  // Base tabs for all users
+  const baseTabs = [
+    { id: "wallet", label: "Crevia Wallet", icon: Wallet },
     { id: "link", label: "Crevia Link", icon: Link2 },
     { id: "invoices", label: "Smart Invoices", icon: Receipt },
     { id: "contracts", label: "Contracts", icon: FileSignature },
-    { id: "rate-cards", label: "Rate Cards", icon: FileText },
   ];
+
+  // Add Rate Cards only for creators
+  const studioTabs = userType === "creator" 
+    ? [...baseTabs, { id: "rate-cards", label: "Rate Cards", icon: FileText }]
+    : baseTabs;
 
   const handleTabChange = (tabId: string) => {
     setSearchParams({ tab: tabId });
@@ -59,7 +82,7 @@ const CreviaStudio = () => {
           </div>
           
           {/* Tabs */}
-          <div className="flex gap-1 overflow-x-auto pb-1 -mb-px">
+          <div className="flex gap-1 overflow-x-auto pb-1 -mb-px scrollbar-none">
             {studioTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -76,7 +99,8 @@ const CreviaStudio = () => {
                   )}
                 >
                   <Icon className="h-4 w-4" />
-                  {tab.label}
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden">{tab.label.split(' ').pop()}</span>
                 </button>
               );
             })}
@@ -86,10 +110,11 @@ const CreviaStudio = () => {
 
       {/* Tab Content */}
       <div className="flex-1">
+        {activeTab === "wallet" && <WalletTab userType={userType} />}
         {activeTab === "link" && <CreviaLink isEmbedded />}
         {activeTab === "invoices" && <SmartInvoicesTab />}
         {activeTab === "contracts" && <ContractsTab />}
-        {activeTab === "rate-cards" && <RateCardsTab />}
+        {activeTab === "rate-cards" && userType === "creator" && <RateCardsTab />}
       </div>
     </div>
   );

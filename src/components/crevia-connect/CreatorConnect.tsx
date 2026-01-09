@@ -7,7 +7,6 @@ import MyProjectsTab from "./creator/MyProjectsTab";
 import AnalyticsTab from "./creator/AnalyticsTab";
 import KiraSuggestionsTab from "./creator/KiraSuggestionsTab";
 import CreviaChat from "./shared/CreviaChat";
-import PaymentsTab from "./shared/PaymentsTab";
 import { cn } from "@/lib/utils";
 
 const CreatorConnect = () => {
@@ -21,8 +20,6 @@ const CreatorConnect = () => {
         return <MyCampaignsTab />;
       case "projects":
         return <MyProjectsTab />;
-      case "payments":
-        return <PaymentsTab userType="creator" />;
       case "analytics":
         return <AnalyticsTab />;
       case "kira":
