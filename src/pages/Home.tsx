@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Users, TrendingUp, Sparkles, Link2, Brain, Globe, ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { Sparkles, Link2, Brain, FileText, Wallet, ChevronLeft, ChevronRight, Star } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useState } from "react";
@@ -14,35 +14,35 @@ const Home = () => {
     {
       name: "Sarah Chen",
       role: "Beauty & Lifestyle Creator",
-      content: "Crevia has completely transformed how I manage my brand partnerships. The AI matching is incredibly accurate, and I've tripled my collaborations in just 3 months.",
+      content: "Crevia's tools have completely transformed how I run my business. From contracts to invoices to my link-in-bio, everything is in one place. I finally feel like a real CEO.",
       rating: 5,
       image: "bg-gradient-to-br from-pink-400 to-rose-500"
     },
     {
       name: "Marcus Rodriguez",
       role: "Tech Reviewer",
-      content: "The all-in-one workspace is a game-changer. From discovery to payment, everything is seamless. I've saved countless hours and increased my revenue by 200%.",
+      content: "The all-in-one workspace is a game-changer. I create invoices, manage contracts, and track everything seamlessly. Saved me 10+ hours a week.",
       rating: 5,
       image: "bg-gradient-to-br from-blue-500 to-cyan-500"
     },
     {
       name: "Amelia Thompson",
       role: "Food & Travel Blogger",
-      content: "Finally, a platform that understands creators. The escrow system gives me peace of mind, and Kira AI's suggestions have helped me find perfect brand matches.",
+      content: "Finally, tools built for creators. Kira AI helps me stay organized and Crevia Studio makes me look professional. My business has never run smoother.",
       rating: 5,
       image: "bg-gradient-to-br from-amber-400 to-orange-500"
     },
     {
       name: "David Kim",
       role: "Fitness Influencer",
-      content: "Crevia's campaign management tools are unmatched. I can track everything in one place, and the professional workspace has elevated my entire business.",
+      content: "From chaos to clarity. Crevia gave me the systems I needed to scale. The invoicing and contract features alone are worth it.",
       rating: 5,
       image: "bg-gradient-to-br from-green-400 to-emerald-500"
     },
     {
       name: "Luna Martinez",
       role: "Fashion Designer",
-      content: "The collaboration features are incredible. I love how easy it is to communicate with brands and manage multiple campaigns simultaneously. Absolutely essential!",
+      content: "I used to juggle 5 different apps. Now I have one beautiful dashboard. My Crevia Link with the Kente theme? *Chef's kiss*. Pure African excellence.",
       rating: 5,
       image: "bg-gradient-to-br from-purple-500 to-violet-600"
     }
@@ -78,21 +78,23 @@ const Home = () => {
         <div className="container mx-auto max-w-6xl relative z-10 px-2">
           <div className="text-left max-w-3xl space-y-4 md:space-y-8 animate-fade-in" style={{ animationDelay: '0.3s', animationDuration: '0.8s' }}>
             <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold leading-[1.15] animate-fade-in" style={{ animationDelay: '0.5s', animationDuration: '0.8s' }}>
-              Connect with brands that{" "}
-              <span className="text-gradient-bronze">believe in your story.</span>
+              The operating system for{" "}
+              <span className="text-gradient-bronze">creators who mean business.</span>
             </h1>
             <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-foreground/80 font-poppins leading-relaxed animate-fade-in" style={{ animationDelay: '0.7s', animationDuration: '0.8s' }}>
-              AI-powered matchmaking, seamless collaboration tools, and secure payments—all in one platform built for creators.
+              Smart tools to run your creative business—invoices, contracts, payments, and your link-in-bio. All in one place.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 pt-2 animate-fade-in" style={{ animationDelay: '0.9s', animationDuration: '0.8s' }}>
               <Link to="/user-type-selection" className="w-full sm:w-auto">
                 <Button size="lg" className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-base md:text-lg px-8 md:px-10 py-6 md:py-7 font-poppins font-semibold hover-scale shadow-lg">
-                  Get Started
+                  Start Free
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="w-full sm:w-auto text-base md:text-lg px-8 md:px-10 py-6 md:py-7 font-poppins font-semibold hover-scale border-2 border-bronze/30 hover:border-bronze hover:bg-bronze/10">
-                Learn More
-              </Button>
+              <Link to="/about">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto text-base md:text-lg px-8 md:px-10 py-6 md:py-7 font-poppins font-semibold hover-scale border-2 border-bronze/30 hover:border-bronze hover:bg-bronze/10">
+                  Learn More
+                </Button>
+              </Link>
             </div>
           </div>
 
@@ -116,41 +118,41 @@ const Home = () => {
         </div>
       </section>
 
-      {/* What Crevia Solves */}
+      {/* What Crevia Does */}
       <section className="py-12 md:py-20 px-4 md:px-6 bg-secondary/30">
         <div className="container mx-auto max-w-6xl">
           <h2 className="font-vollkorn text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-10 md:mb-16 px-2">
-            What <span className="text-gradient-bronze">Crevia</span> Solves
+            Run your business like a <span className="text-gradient-bronze">pro</span>
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
             <Card className="p-6 md:p-8 hover-lift border-bronze/20 animate-fade-in-up stagger-1 group">
               <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-4 md:mb-6 transition-all duration-300 group-hover:bg-bronze/20 group-hover:scale-110">
-                <Users className="w-6 h-6 md:w-7 md:h-7 text-bronze transition-transform duration-300 group-hover:rotate-6" />
+                <FileText className="w-6 h-6 md:w-7 md:h-7 text-bronze transition-transform duration-300 group-hover:rotate-6" />
               </div>
-              <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3 md:mb-4">Connect without barriers</h3>
+              <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3 md:mb-4">Invoices & Contracts</h3>
               <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
-                Find partnerships that believe in your impact, not just your follower count.
+                Create professional invoices and legally-sound contracts in minutes. Get paid faster.
               </p>
             </Card>
 
             <Card className="p-6 md:p-8 hover-lift border-bronze/20 animate-fade-in-up stagger-2 group">
               <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-4 md:mb-6 transition-all duration-300 group-hover:bg-bronze/20 group-hover:scale-110">
-                <Globe className="w-6 h-6 md:w-7 md:h-7 text-bronze transition-transform duration-300 group-hover:rotate-6" />
+                <Wallet className="w-6 h-6 md:w-7 md:h-7 text-bronze transition-transform duration-300 group-hover:rotate-6" />
               </div>
-              <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3 md:mb-4">Own your narrative</h3>
+              <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3 md:mb-4">Payments Made Easy</h3>
               <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
-                Tools that put you in control of your story, your way.
+                Send and receive payments securely. Track earnings. Manage your creative finances.
               </p>
             </Card>
 
             <Card className="p-6 md:p-8 hover-lift border-bronze/20 animate-fade-in-up stagger-3 group">
               <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-bronze/10 flex items-center justify-center mb-4 md:mb-6 transition-all duration-300 group-hover:bg-bronze/20 group-hover:scale-110">
-                <TrendingUp className="w-6 h-6 md:w-7 md:h-7 text-bronze transition-transform duration-300 group-hover:rotate-6" />
+                <Brain className="w-6 h-6 md:w-7 md:h-7 text-bronze transition-transform duration-300 group-hover:rotate-6" />
               </div>
-              <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3 md:mb-4">Amplify your impact</h3>
+              <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3 md:mb-4">AI-Powered Assistant</h3>
               <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
-                AI-powered insights that help you tell your story better, not louder.
+                Meet Kira. Your AI companion that helps you work smarter and grow faster.
               </p>
             </Card>
           </div>
@@ -168,7 +170,7 @@ const Home = () => {
               Join the Movement
             </p>
             <h2 className="font-vollkorn text-3xl sm:text-4xl lg:text-5xl font-bold animate-fade-in">
-              Where every creator <span className="text-gradient-bronze">owns their story</span>
+              Creators who <span className="text-gradient-bronze">own their story</span>
             </h2>
           </div>
           
@@ -202,16 +204,16 @@ const Home = () => {
       <section className="py-16 md:py-20 px-6 md:px-6">
         <div className="container mx-auto max-w-6xl">
           <h2 className="font-vollkorn text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-12 md:mb-16">
-            Powerful <span className="text-gradient-bronze">Products</span>
+            Your <span className="text-gradient-bronze">Toolkit</span>
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             <Card className="p-8 bg-gradient-to-br from-bronze/5 to-background hover-lift hover-glow border-bronze/20 animate-fade-in-up stagger-1 group overflow-hidden relative">
               <div className="shimmer absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <Link2 className="w-12 h-12 text-bronze mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 relative z-10" />
-              <h3 className="font-vollkorn text-2xl font-bold mb-3 relative z-10">Crevia Connect</h3>
+              <Sparkles className="w-12 h-12 text-bronze mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 relative z-10" />
+              <h3 className="font-vollkorn text-2xl font-bold mb-3 relative z-10">Crevia Studio</h3>
               <p className="text-muted-foreground mb-4 text-base leading-relaxed relative z-10">
-                Where stories meet opportunities. Build partnerships that matter.
+                Your business command center. Invoices, contracts, rate cards, and wallet—all in one.
               </p>
               <Button variant="ghost" className="text-bronze hover:text-bronze-dark p-0 h-auto font-semibold bronze-underline relative z-10">
                 Learn more →
@@ -221,9 +223,9 @@ const Home = () => {
             <Card className="p-8 bg-gradient-to-br from-bronze/5 to-background hover-lift hover-glow border-bronze/20 animate-fade-in-up stagger-2 group overflow-hidden relative">
               <div className="shimmer absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <Brain className="w-12 h-12 text-bronze mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 relative z-10" />
-              <h3 className="font-vollkorn text-2xl font-bold mb-3 relative z-10">Crevia AI</h3>
+              <h3 className="font-vollkorn text-2xl font-bold mb-3 relative z-10">Kira AI</h3>
               <p className="text-muted-foreground mb-4 text-base leading-relaxed relative z-10">
-                Kira helps you tell your story smarter, not harder.
+                Your AI-powered business partner. Get suggestions, automate tasks, work smarter.
               </p>
               <Button variant="ghost" className="text-bronze hover:text-bronze-dark p-0 h-auto font-semibold bronze-underline relative z-10">
                 Learn more →
@@ -235,7 +237,7 @@ const Home = () => {
               <Link2 className="w-12 h-12 text-bronze mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 relative z-10" />
               <h3 className="font-vollkorn text-2xl font-bold mb-3 relative z-10">Crevia Link</h3>
               <p className="text-muted-foreground mb-4 text-base leading-relaxed relative z-10">
-                Your story, your way. One link. Infinite possibilities.
+                Your premium link-in-bio. Beautiful African-inspired themes. One link, infinite possibilities.
               </p>
               <Button variant="ghost" className="text-bronze hover:text-bronze-dark p-0 h-auto font-semibold bronze-underline relative z-10">
                 Learn more →
@@ -253,7 +255,7 @@ const Home = () => {
               Love from the community
             </p>
             <h2 className="font-vollkorn text-3xl sm:text-4xl lg:text-5xl font-bold animate-fade-in">
-              Real creators. <span className="text-gradient-bronze">Real impact.</span>
+              Real creators. <span className="text-gradient-bronze">Real results.</span>
             </h2>
           </div>
 
@@ -302,20 +304,20 @@ const Home = () => {
                   return (
                     <Card 
                       key={index}
-                      className="hidden md:block p-8 border-bronze/20 hover:border-bronze/40 transition-all duration-300 bg-background hover:shadow-xl"
+                      className="hidden md:block p-10 border-bronze/20 hover:border-bronze/40 transition-all duration-300 bg-background hover:shadow-xl"
                     >
-                      <div className={`w-16 h-16 rounded-full ${testimonial.image} mb-5 shadow-lg`} />
-                      <div className="flex gap-1 mb-4">
+                      <div className={`w-24 h-24 rounded-full ${testimonial.image} mb-8 shadow-lg`} />
+                      <div className="flex gap-1.5 mb-6">
                         {[...Array(testimonial.rating)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-bronze text-bronze" />
+                          <Star key={i} className="w-6 h-6 fill-bronze text-bronze" />
                         ))}
                       </div>
-                      <p className="text-muted-foreground text-base leading-relaxed mb-6">
+                      <p className="text-muted-foreground text-lg leading-relaxed mb-8">
                         "{testimonial.content}"
                       </p>
-                      <div className="border-t border-border pt-4">
-                        <h4 className="font-vollkorn font-bold text-base">{testimonial.name}</h4>
-                        <p className="text-muted-foreground text-sm">{testimonial.role}</p>
+                      <div className="border-t border-border pt-6">
+                        <h4 className="font-vollkorn font-bold text-2xl mb-2">{testimonial.name}</h4>
+                        <p className="text-muted-foreground text-base">{testimonial.role}</p>
                       </div>
                     </Card>
                   );
@@ -323,16 +325,16 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Dots Indicator */}
-            <div className="flex justify-center gap-2 mt-10">
+            {/* Dot indicators */}
+            <div className="flex justify-center gap-2 mt-8">
               {testimonials.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentTestimonial(index)}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    index === currentTestimonial
-                      ? "bg-bronze w-8"
-                      : "bg-bronze/30 hover:bg-bronze/50 w-2"
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    index === currentTestimonial 
+                      ? 'bg-bronze scale-125' 
+                      : 'bg-bronze/30 hover:bg-bronze/50'
                   }`}
                   aria-label={`Go to testimonial ${index + 1}`}
                 />
@@ -343,17 +345,17 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 md:py-20 px-6 md:px-6 bg-gradient-to-br from-bronze/10 via-background to-bronze/5">
+      <section className="py-16 md:py-24 px-4 md:px-6">
         <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="font-vollkorn text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 md:mb-6">
-            Ready to own your story?
+          <h2 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+            Ready to <span className="text-gradient-bronze">own your story?</span>
           </h2>
-          <p className="text-lg sm:text-xl text-muted-foreground mb-6 md:mb-8 leading-relaxed">
-            Join thousands of creators building their digital careers on Crevia.
+          <p className="text-lg sm:text-xl text-muted-foreground mb-8 leading-relaxed max-w-2xl mx-auto">
+            Join thousands of creators building real businesses with Crevia's smart tools.
           </p>
           <Link to="/user-type-selection">
-            <Button size="lg" className="bg-bronze hover:bg-bronze-dark text-lg px-10 py-7 font-poppins font-semibold shadow-lg hover-scale">
-              Start Your Journey
+            <Button size="lg" className="bg-bronze hover:bg-bronze-dark text-lg px-12 py-7 font-poppins font-semibold shadow-lg hover-scale">
+              Get Started Free
             </Button>
           </Link>
         </div>
