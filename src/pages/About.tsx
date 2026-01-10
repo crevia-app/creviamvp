@@ -51,7 +51,7 @@ const About = () => {
             Own Your <span className="text-gradient-bronze">Story</span>
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            A platform where every narrative matters. Every vision counts. Every dream finds its voice.
+            We build smart tools so creators can run their businesses like pros. No gatekeepers. No limits.
           </p>
         </div>
         
@@ -164,18 +164,18 @@ const About = () => {
                 </p>
                 
                 <p className="text-muted-foreground">
-                  Your story doesn't need permission. It needs a platform. A voice. A community 
-                  that believes in the power of every narrative, every vision, every dream.
+                  We believe every creator deserves professional-grade tools. Not just the ones with millions of followers. 
+                  That's why we're building the operating system for creative businesses.
                 </p>
                 
                 <p className="text-muted-foreground">
                   Look closer at our logo. See those dots? Each one represents <span className="text-bronze font-semibold">you</span>. 
                   Some small, some large—all equal. Because we don't measure creators by followers. 
-                  We measure them by <span className="font-semibold text-foreground">impact</span>.
+                  We measure them by <span className="font-semibold text-foreground">the businesses they build</span>.
                 </p>
                 
                 <p className="text-foreground font-semibold text-2xl md:text-3xl font-vollkorn italic pt-4">
-                  Own your story. Tell it via Crevia.
+                  Your story. Your tools. Your empire.
                 </p>
               </div>
               

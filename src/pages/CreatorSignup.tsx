@@ -25,7 +25,7 @@ const CreatorSignup = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/onboarding`,
+          redirectTo: `${window.location.origin}/dashboard`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -58,7 +58,7 @@ const CreatorSignup = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
-          redirectTo: `${window.location.origin}/onboarding`,
+          redirectTo: `${window.location.origin}/dashboard`,
         },
       });
 
@@ -108,8 +108,8 @@ const CreatorSignup = () => {
     if (error) {
       toast({ title: "Oops! 😅", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "You're in! 🎉", description: "Let's set up your creator profile!" });
-      navigate("/onboarding");
+      toast({ title: "You're in! 🎉", description: "Welcome to Crevia!" });
+      navigate("/dashboard");
     }
   };
 

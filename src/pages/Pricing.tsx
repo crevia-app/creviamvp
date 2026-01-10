@@ -15,13 +15,13 @@ const Pricing = () => {
       name: "Free",
       price: "$0",
       period: "/month",
-      description: "Perfect for getting started",
+      description: "Everything you need to start",
       features: [
-        "Basic creator profile",
-        "Apply to up to 3 campaigns/month",
-        "Access to Crevia Link",
+        "Crevia Link (link-in-bio)",
+        "Basic invoices & contracts",
+        "Crevia Wallet",
+        "Rate card builder",
         "Community support",
-        "Basic analytics",
       ],
       cta: "Get Started",
       highlighted: false,
@@ -33,32 +33,32 @@ const Pricing = () => {
       description: "For serious creators",
       features: [
         "Everything in Free",
-        "Unlimited campaign applications",
-        "Priority listing in search",
-        "Advanced analytics & insights",
-        "Kira AI recommendations",
-        "Verified badge",
-        "Premium support",
+        "Premium African themes",
+        "Unlimited invoices & contracts",
+        "Advanced analytics",
+        "Kira AI assistant",
+        "Priority support",
+        "Remove Crevia branding",
       ],
       cta: "Upgrade to Pro",
       highlighted: true,
     },
     {
-      name: "Elite",
-      price: "$99",
+      name: "Business",
+      price: "$79",
       period: "/month",
-      description: "For top-tier creators",
+      description: "For creator businesses",
       features: [
         "Everything in Pro",
+        "Team collaboration",
+        "Custom contract templates",
+        "API access",
         "Dedicated account manager",
-        "Featured in brand searches",
-        "Early access to campaigns",
-        "Personalized brand matching",
-        "Portfolio review & optimization",
-        "Direct brand outreach",
-        "Exclusive networking events",
+        "White-label options",
+        "Advanced integrations",
+        "Priority everything",
       ],
-      cta: "Go Elite",
+      cta: "Go Business",
       highlighted: false,
     },
   ];
@@ -68,13 +68,13 @@ const Pricing = () => {
       name: "Starter",
       price: "$49",
       period: "/month",
-      description: "Perfect for small brands",
+      description: "For small brands",
       features: [
-        "Post up to 2 campaigns/month",
-        "Access to creator discovery",
+        "Creator discovery",
         "Basic campaign management",
+        "Crevia Wallet for payments",
         "Standard support",
-        "Campaign analytics",
+        "Basic analytics",
       ],
       cta: "Start Free Trial",
       highlighted: false,
@@ -86,13 +86,12 @@ const Pricing = () => {
       description: "For growing brands",
       features: [
         "Everything in Starter",
-        "Unlimited campaigns",
         "AI-powered creator matching",
-        "Advanced campaign workspace",
-        "Priority creator access",
-        "Verified brand badge",
+        "Unlimited campaigns",
+        "Bulk payments",
+        "Advanced analytics",
         "Kira AI insights",
-        "Premium support",
+        "Priority support",
       ],
       cta: "Start Growth",
       highlighted: true,
@@ -105,12 +104,12 @@ const Pricing = () => {
       features: [
         "Everything in Growth",
         "Dedicated account manager",
-        "Custom integration support",
+        "Custom integrations",
         "White-label options",
-        "Bulk creator outreach",
         "Advanced reporting & ROI",
         "Custom contract templates",
         "Training & onboarding",
+        "SLA guarantee",
       ],
       cta: "Contact Sales",
       highlighted: false,
@@ -127,12 +126,12 @@ const Pricing = () => {
       <section className="pt-24 md:pt-32 pb-16 md:pb-20 px-4 md:px-6">
         <div className="container mx-auto max-w-6xl text-center">
           <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-6 md:mb-8 leading-tight">
-            Simple, <span className="text-gradient-bronze">Transparent</span> Pricing
+            Tools to <span className="text-gradient-bronze">own your story</span>
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8 md:mb-10 leading-relaxed">
             {selectedType === "creator" 
-              ? "Choose the plan that fits your creator journey"
-              : "Find the perfect plan to connect with creators"}
+              ? "Professional tools to run your creative business. Start free, upgrade when you're ready."
+              : "Find and work with creators. Simple pricing, powerful tools."}
           </p>
           
           {/* User Type Toggle */}
@@ -147,7 +146,7 @@ const Pricing = () => {
                   : "hover:bg-transparent"
               }`}
             >
-              Creator Pricing
+              For Creators
             </Button>
             <Button
               variant={selectedType === "brand" ? "default" : "ghost"}
@@ -159,7 +158,7 @@ const Pricing = () => {
                   : "hover:bg-transparent"
               }`}
             >
-              Brand Pricing
+              For Brands
             </Button>
           </div>
         </div>
@@ -231,6 +230,13 @@ const Pricing = () => {
           
           <div className="space-y-6">
             <Card className="p-6 md:p-8">
+              <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3">What's included in the free plan?</h3>
+              <p className="text-muted-foreground text-base leading-relaxed">
+                Everything you need to start: Crevia Link, basic invoices & contracts, Crevia Wallet, and rate cards. Upgrade when you need more power.
+              </p>
+            </Card>
+
+            <Card className="p-6 md:p-8">
               <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3">Can I switch plans anytime?</h3>
               <p className="text-muted-foreground text-base leading-relaxed">
                 Yes! You can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle.
@@ -240,7 +246,7 @@ const Pricing = () => {
             <Card className="p-6 md:p-8">
               <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3">What payment methods do you accept?</h3>
               <p className="text-muted-foreground text-base leading-relaxed">
-                We accept all major credit cards, debit cards, and digital payment methods including mobile money for African creators.
+                We accept all major credit cards, debit cards, and M-Pesa for African creators.
               </p>
             </Card>
 
@@ -248,15 +254,8 @@ const Pricing = () => {
               <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3">Is there a free trial?</h3>
               <p className="text-muted-foreground text-base leading-relaxed">
                 {selectedType === "creator" 
-                  ? "Yes! All creators start with our Free plan. You can try Pro features with a 14-day free trial."
+                  ? "Yes! Start free forever with our Free plan. Try Pro features with a 14-day free trial."
                   : "Yes! We offer a 14-day free trial for all paid plans. No credit card required to start."}
-              </p>
-            </Card>
-
-            <Card className="p-6 md:p-8">
-              <h3 className="font-vollkorn text-xl md:text-2xl font-bold mb-3">Can I cancel my subscription?</h3>
-              <p className="text-muted-foreground text-base leading-relaxed">
-                Yes, you can cancel your subscription at any time. You'll continue to have access until the end of your billing period.
               </p>
             </Card>
           </div>
@@ -267,10 +266,10 @@ const Pricing = () => {
       <section className="py-16 md:py-20 px-4 md:px-6">
         <div className="container mx-auto max-w-4xl text-center">
           <h2 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
-            Ready to get started?
+            Ready to own your story?
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground mb-8 leading-relaxed">
-            Join thousands of {selectedType === "brand" ? "brands" : "creators"} already using Crevia
+            Join thousands of {selectedType === "brand" ? "brands" : "creators"} building with Crevia
           </p>
           <Link to="/user-type-selection">
             <Button size="lg" className="bg-bronze hover:bg-bronze-dark text-lg px-12 py-7 font-poppins font-semibold shadow-lg hover-scale">
