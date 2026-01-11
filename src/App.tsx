@@ -9,7 +9,7 @@ import Auth from "./pages/Auth";
 import UserTypeSelection from "./pages/UserTypeSelection";
 import CreatorSignup from "./pages/CreatorSignup";
 import BrandSignup from "./pages/BrandSignup";
-import KiraOnboarding from "./pages/onboarding/KiraOnboarding";
+// KiraOnboarding removed for smoother signup flow
 import Dashboard from "./pages/Dashboard";
 import CreviaConnect from "./pages/CreviaConnect";
 import Kira from "./pages/Kira";
@@ -50,7 +50,7 @@ const App = () => (
             <Route path="/user-type-selection" element={<UserTypeSelection />} />
             <Route path="/signup/creator" element={<CreatorSignup />} />
             <Route path="/signup/brand" element={<BrandSignup />} />
-            <Route path="/onboarding" element={<KiraOnboarding />} />
+            {/* Kira onboarding removed for smoother signup flow */}
             <Route path="/:username" element={<PublicProfile />} />
             
             {/* Protected routes with AppLayout */}
