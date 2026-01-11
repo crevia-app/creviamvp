@@ -11,11 +11,12 @@ import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check } from "lucide-react";
+import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check, Globe, Shield, Bell, BarChart3, TrendingUp, MousePointer, ExternalLink } from "lucide-react";
 import { AddButtonDialog } from "@/components/crevia-link/AddButtonDialog";
 import { ButtonItem } from "@/components/crevia-link/ButtonItem";
 import LinkSidebarDesktop from "@/components/crevia-link/LinkSidebarDesktop";
 import LinkTabsMobile from "@/components/crevia-link/LinkTabsMobile";
+import LivePreview from "@/components/crevia-link/LivePreview";
 import { cn } from "@/lib/utils";
 
 interface CreviaLinkProps {
@@ -242,6 +243,31 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   if (isEmbedded) {
     const embeddedTab = new URLSearchParams(location.search).get("section") || "profile";
     
+    // African pattern styles helper
+    const getAfricanPatternStyle = (pattern: string) => {
+      switch (pattern) {
+        case "maasai":
+          return {
+            background: `repeating-linear-gradient(0deg, #C41E3A 0px, #C41E3A 8px, #1E40AF 8px, #1E40AF 12px, #FFD700 12px, #FFD700 16px, #C41E3A 16px, #C41E3A 24px, #FFFFFF 24px, #FFFFFF 28px, #1E40AF 28px, #1E40AF 32px)`
+          };
+        case "kente":
+          return {
+            background: `linear-gradient(90deg, #FFD700 0%, #FFD700 25%, #228B22 25%, #228B22 50%, #C41E3A 50%, #C41E3A 75%, #1a1a1a 75%, #1a1a1a 100%)`
+          };
+        case "ndebele":
+          return {
+            background: `linear-gradient(135deg, #1E40AF 0%, #1E40AF 20%, #FFD700 20%, #FFD700 30%, #C41E3A 30%, #C41E3A 50%, #FFFFFF 50%, #FFFFFF 60%, #228B22 60%, #228B22 80%, #1E40AF 80%, #1E40AF 100%)`
+          };
+        case "ankara":
+          return {
+            background: `radial-gradient(circle at 25% 25%, #F97316 20%, transparent 20%), radial-gradient(circle at 75% 75%, #8B4513 20%, transparent 20%), radial-gradient(circle at 50% 50%, #FFD700 15%, transparent 15%), #F97316`,
+            backgroundSize: '40px 40px'
+          };
+        default:
+          return {};
+      }
+    };
+    
     return (
       <div className="bg-background">
         {/* Embedded Tab Navigation */}
@@ -270,107 +296,377 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
           </div>
         </div>
 
-        {/* Embedded Content */}
-        <div className="max-w-3xl mx-auto px-4 md:px-6 py-6 md:py-8">
-          {embeddedTab === "profile" && (
-            <Card className="p-6 border-border/50">
-              <h3 className="font-vollkorn text-2xl font-bold mb-6">Profile Information</h3>
-              <div className="space-y-5">
-                <div>
-                  <Label className="text-sm font-medium mb-2 block">Username</Label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground text-sm">crevia.app/</span>
+        {/* Embedded Content with Preview */}
+        <div className="flex">
+          {/* Main Content */}
+          <div className="flex-1 max-w-3xl mx-auto px-4 md:px-6 py-6 md:py-8">
+            {embeddedTab === "profile" && (
+              <Card className="p-6 border-border/50">
+                <h3 className="font-vollkorn text-2xl font-bold mb-6">Profile Information</h3>
+                <div className="space-y-5">
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Username</Label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground text-sm">crevia.app/</span>
+                      <Input
+                        value={linkProfile?.username || ""}
+                        onChange={(e) => setLinkProfile({ ...linkProfile, username: e.target.value })}
+                        placeholder="yourusername"
+                        className="flex-1 h-11"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Display Name</Label>
                     <Input
-                      value={linkProfile?.username || ""}
-                      onChange={(e) => setLinkProfile({ ...linkProfile, username: e.target.value })}
-                      placeholder="yourusername"
-                      className="flex-1 h-11"
+                      value={linkProfile?.display_name || ""}
+                      onChange={(e) => setLinkProfile({ ...linkProfile, display_name: e.target.value })}
+                      placeholder="Your Name"
+                      className="h-11"
                     />
                   </div>
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Bio</Label>
+                    <Textarea
+                      value={linkProfile?.bio || ""}
+                      onChange={(e) => setLinkProfile({ ...linkProfile, bio: e.target.value.slice(0, 150) })}
+                      placeholder="Tell people about yourself..."
+                      className="min-h-[100px] resize-none"
+                      maxLength={150}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">{linkProfile?.bio?.length || 0}/150</p>
+                  </div>
+                  <div className="flex gap-3 pt-4">
+                    <Button onClick={handleSave} disabled={saving} className="bg-bronze hover:bg-bronze-dark">
+                      {saving ? "Saving..." : "Save Changes"}
+                    </Button>
+                    <Button variant="outline" onClick={() => window.open(`/${linkProfile?.username}`, "_blank")}>
+                      <Eye className="w-4 h-4 mr-2" />
+                      Preview
+                    </Button>
+                  </div>
                 </div>
-                <div>
-                  <Label className="text-sm font-medium mb-2 block">Display Name</Label>
-                  <Input
-                    value={linkProfile?.display_name || ""}
-                    onChange={(e) => setLinkProfile({ ...linkProfile, display_name: e.target.value })}
-                    placeholder="Your Name"
-                    className="h-11"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium mb-2 block">Bio</Label>
-                  <Textarea
-                    value={linkProfile?.bio || ""}
-                    onChange={(e) => setLinkProfile({ ...linkProfile, bio: e.target.value.slice(0, 150) })}
-                    placeholder="Tell people about yourself..."
-                    className="min-h-[100px] resize-none"
-                    maxLength={150}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">{linkProfile?.bio?.length || 0}/150</p>
-                </div>
-                <div className="flex gap-3 pt-4">
-                  <Button onClick={handleSave} disabled={saving} className="bg-bronze hover:bg-bronze-dark">
-                    {saving ? "Saving..." : "Save Changes"}
-                  </Button>
-                  <Button variant="outline" onClick={() => window.open(`/${linkProfile?.username}`, "_blank")}>
-                    <Eye className="w-4 h-4 mr-2" />
-                    Preview
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          )}
+              </Card>
+            )}
 
-          {embeddedTab === "buttons" && (
-            <Card className="p-6 border-border/50">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="font-vollkorn text-2xl font-bold">Links & Buttons</h3>
-                <Button onClick={() => setShowAddButton(true)} className="bg-bronze hover:bg-bronze-dark">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Button
+            {embeddedTab === "buttons" && (
+              <Card className="p-6 border-border/50">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="font-vollkorn text-2xl font-bold">Links & Buttons</h3>
+                  <Button onClick={() => setShowAddButton(true)} className="bg-bronze hover:bg-bronze-dark">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Button
+                  </Button>
+                </div>
+                {buttons.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Link2 className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                    <p>No buttons yet. Add one to get started.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {buttons.map((button) => (
+                      <ButtonItem
+                        key={button.id}
+                        button={button}
+                        onEdit={() => {}}
+                        onDelete={handleDeleteButton}
+                        onToggleVisibility={handleToggleVisibility}
+                      />
+                    ))}
+                  </div>
+                )}
+              </Card>
+            )}
+
+            {embeddedTab === "appearance" && (
+              <div className="space-y-6">
+                {/* Premium African Themes */}
+                <Card className="p-6 border-border/50">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Palette className="w-6 h-6 text-bronze" />
+                    <h3 className="font-vollkorn text-2xl font-bold">Theme & Colors</h3>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    <div>
+                      <Label className="text-sm font-medium mb-4 block">Color Scheme</Label>
+                      <RadioGroup
+                        value={linkProfile?.theme || "dark"}
+                        onValueChange={(value) => setLinkProfile({ ...linkProfile, theme: value })}
+                        className="grid grid-cols-2 md:grid-cols-3 gap-3"
+                      >
+                        {[
+                          { value: "light", label: "Light", gradient: "from-gray-50 to-gray-100" },
+                          { value: "dark", label: "Dark", gradient: "from-gray-800 to-gray-900" },
+                          { value: "bronze", label: "Bronze", gradient: "from-bronze to-bronze-dark" },
+                          { value: "sunset", label: "Sunset", gradient: "from-orange-400 to-pink-600" },
+                          { value: "ocean", label: "Ocean", gradient: "from-blue-500 to-teal-400" },
+                          { value: "forest", label: "Forest", gradient: "from-green-600 to-emerald-800" },
+                          { value: "maasai", label: "Maasai 🇰🇪", africanPattern: "maasai", premium: true },
+                          { value: "kente", label: "Kente 🇬🇭", africanPattern: "kente", premium: true },
+                          { value: "ndebele", label: "Ndebele 🇿🇦", africanPattern: "ndebele", premium: true },
+                          { value: "ankara", label: "Ankara 🇳🇬", africanPattern: "ankara", premium: true },
+                        ].map((theme) => (
+                          <div key={theme.value} className="relative">
+                            <RadioGroupItem value={theme.value} id={`embedded-${theme.value}`} className="peer sr-only" />
+                            <Label
+                              htmlFor={`embedded-${theme.value}`}
+                              className={cn(
+                                "flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-card p-4 hover:bg-accent peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all",
+                                theme.premium && "ring-1 ring-amber-400/30"
+                              )}
+                            >
+                              <div 
+                                className={cn("w-full h-16 rounded-lg mb-3 shadow-sm", 
+                                  theme.gradient && `bg-gradient-to-br ${theme.gradient}`
+                                )}
+                                style={theme.africanPattern ? getAfricanPatternStyle(theme.africanPattern) : undefined}
+                              />
+                              <span className="text-sm font-medium">{theme.label}</span>
+                              {theme.premium && (
+                                <span className="mt-1 text-[10px] font-medium text-amber-500">AFRICAN</span>
+                              )}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Typography */}
+                <Card className="p-6 border-border/50">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Type className="w-6 h-6 text-bronze" />
+                    <h3 className="font-vollkorn text-2xl font-bold">Typography</h3>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-sm font-medium mb-2 block">Font Family</Label>
+                      <Select
+                        value={linkProfile?.background?.font_family || "poppins"}
+                        onValueChange={(value) => setLinkProfile({ 
+                          ...linkProfile, 
+                          background: { ...linkProfile?.background, font_family: value }
+                        })}
+                      >
+                        <SelectTrigger className="h-11">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="poppins">Poppins (Modern)</SelectItem>
+                          <SelectItem value="vollkorn">Vollkorn (Classic)</SelectItem>
+                          <SelectItem value="inter">Inter (Clean)</SelectItem>
+                          <SelectItem value="playfair">Playfair (Elegant)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Layout */}
+                <Card className="p-6 border-border/50">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Layout className="w-6 h-6 text-bronze" />
+                    <h3 className="font-vollkorn text-2xl font-bold">Layout</h3>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-sm font-medium mb-2 block">Button Style</Label>
+                      <RadioGroup
+                        value={linkProfile?.background?.button_style || "rounded"}
+                        onValueChange={(value) => setLinkProfile({ 
+                          ...linkProfile, 
+                          background: { ...linkProfile?.background, button_style: value }
+                        })}
+                        className="grid grid-cols-2 gap-3"
+                      >
+                        {[
+                          { value: "rounded", label: "Rounded", class: "rounded-full" },
+                          { value: "sharp", label: "Sharp", class: "" },
+                          { value: "soft", label: "Soft", class: "rounded-lg" },
+                          { value: "pill", label: "Pill", class: "rounded-full bg-bronze" },
+                        ].map((style) => (
+                          <div key={style.value}>
+                            <RadioGroupItem value={style.value} id={`btn-${style.value}`} className="peer sr-only" />
+                            <Label
+                              htmlFor={`btn-${style.value}`}
+                              className="flex flex-col items-center p-4 rounded-xl border-2 border-muted peer-data-[state=checked]:border-bronze cursor-pointer"
+                            >
+                              <div className={cn("w-full h-10 mb-2", style.value === "pill" ? style.class : `${style.class} bg-bronze/20 border-2 border-bronze`)} />
+                              <span className="text-sm font-medium">{style.label}</span>
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                  </div>
+                </Card>
+
+                <Button onClick={handleSave} disabled={saving} className="w-full bg-bronze hover:bg-bronze-dark h-12">
+                  {saving ? "Saving..." : "Save Appearance"}
                 </Button>
               </div>
-              {buttons.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Link2 className="w-10 h-10 mx-auto mb-3 opacity-50" />
-                  <p>No buttons yet. Add one to get started.</p>
+            )}
+
+            {embeddedTab === "settings" && (
+              <div className="space-y-6">
+                {/* General Settings */}
+                <Card className="p-6 border-border/50">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Globe className="w-6 h-6 text-bronze" />
+                    <h3 className="font-vollkorn text-2xl font-bold">General Settings</h3>
+                  </div>
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <Label className="text-base font-medium">Contact Button</Label>
+                        <p className="text-sm text-muted-foreground mt-1">Allow visitors to contact you via email</p>
+                      </div>
+                      <Switch
+                        checked={linkProfile?.contact_enabled || false}
+                        onCheckedChange={(checked) => setLinkProfile({ ...linkProfile, contact_enabled: checked })}
+                      />
+                    </div>
+                    {linkProfile?.contact_enabled && (
+                      <div>
+                        <Label className="text-sm font-medium mb-2 block">Contact Email</Label>
+                        <Input
+                          value={linkProfile?.contact_email || ""}
+                          onChange={(e) => setLinkProfile({ ...linkProfile, contact_email: e.target.value })}
+                          placeholder="your@email.com"
+                          className="h-11"
+                        />
+                      </div>
+                    )}
+                    {profile?.is_verified && (
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <Label className="text-base font-medium">Verified Badge</Label>
+                          <p className="text-sm text-muted-foreground mt-1">Show your verified status</p>
+                        </div>
+                        <Switch
+                          checked={linkProfile?.show_verified_badge || false}
+                          onCheckedChange={(checked) => setLinkProfile({ ...linkProfile, show_verified_badge: checked })}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </Card>
+
+                {/* SEO Settings */}
+                <Card className="p-6 border-border/50">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Shield className="w-6 h-6 text-bronze" />
+                    <h3 className="font-vollkorn text-2xl font-bold">SEO & Sharing</h3>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-sm font-medium mb-2 block">Page Title</Label>
+                      <Input
+                        value={linkProfile?.seo_title || ""}
+                        onChange={(e) => setLinkProfile({ ...linkProfile, seo_title: e.target.value })}
+                        placeholder="Custom title for search engines"
+                        className="h-11"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium mb-2 block">Meta Description</Label>
+                      <Textarea
+                        value={linkProfile?.seo_description || ""}
+                        onChange={(e) => setLinkProfile({ ...linkProfile, seo_description: e.target.value })}
+                        placeholder="Description for search results..."
+                        className="min-h-[80px] resize-none"
+                      />
+                    </div>
+                  </div>
+                </Card>
+
+                <Button onClick={handleSave} disabled={saving} className="w-full bg-bronze hover:bg-bronze-dark h-12">
+                  {saving ? "Saving..." : "Save Settings"}
+                </Button>
+              </div>
+            )}
+
+            {embeddedTab === "analytics" && (
+              <div className="space-y-6">
+                {/* Overview Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <Card className="p-5 border-border/50">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 rounded-lg bg-bronze/10">
+                        <Eye className="w-5 h-5 text-bronze" />
+                      </div>
+                    </div>
+                    <p className="text-3xl font-bold text-foreground">{linkProfile?.total_visits || 0}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Total Views</p>
+                  </Card>
+                  <Card className="p-5 border-border/50">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 rounded-lg bg-green-500/10">
+                        <MousePointer className="w-5 h-5 text-green-500" />
+                      </div>
+                    </div>
+                    <p className="text-3xl font-bold text-foreground">
+                      {buttons.reduce((sum, btn) => sum + (btn.clicks || 0), 0)}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">Total Clicks</p>
+                  </Card>
+                  <Card className="p-5 border-border/50 col-span-2 md:col-span-1">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 rounded-lg bg-blue-500/10">
+                        <TrendingUp className="w-5 h-5 text-blue-500" />
+                      </div>
+                    </div>
+                    <p className="text-3xl font-bold text-foreground">
+                      {linkProfile?.total_visits ? ((buttons.reduce((sum, btn) => sum + (btn.clicks || 0), 0) / linkProfile.total_visits) * 100).toFixed(1) : 0}%
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">Click Rate</p>
+                  </Card>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {buttons.map((button) => (
-                    <ButtonItem
-                      key={button.id}
-                      button={button}
-                      onEdit={() => {}}
-                      onDelete={handleDeleteButton}
-                      onToggleVisibility={handleToggleVisibility}
-                    />
-                  ))}
-                </div>
-              )}
-            </Card>
-          )}
 
-          {embeddedTab === "appearance" && (
-            <Card className="p-6 border-border/50">
-              <h3 className="font-vollkorn text-2xl font-bold mb-6">Appearance</h3>
-              <p className="text-muted-foreground">Customize your link page appearance.</p>
-            </Card>
-          )}
+                {/* Link Performance */}
+                <Card className="p-6 border-border/50">
+                  <div className="flex items-center gap-3 mb-6">
+                    <BarChart3 className="w-6 h-6 text-bronze" />
+                    <h3 className="font-vollkorn text-2xl font-bold">Link Performance</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {buttons.length > 0 ? (
+                      buttons
+                        .sort((a, b) => (b.clicks || 0) - (a.clicks || 0))
+                        .map((button) => (
+                          <div key={button.id} className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">{button.title}</p>
+                              <p className="text-xs text-muted-foreground truncate">{button.url}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xl font-bold text-bronze">{button.clicks || 0}</p>
+                              <p className="text-xs text-muted-foreground">clicks</p>
+                            </div>
+                          </div>
+                        ))
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <BarChart3 className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                        <p>No links yet. Add buttons to see analytics.</p>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </div>
+            )}
+          </div>
 
-          {embeddedTab === "settings" && (
-            <Card className="p-6 border-border/50">
-              <h3 className="font-vollkorn text-2xl font-bold mb-6">Settings</h3>
-              <p className="text-muted-foreground">Configure your link settings.</p>
-            </Card>
-          )}
-
-          {embeddedTab === "analytics" && (
-            <Card className="p-6 border-border/50">
-              <h3 className="font-vollkorn text-2xl font-bold mb-6">Analytics</h3>
-              <p className="text-muted-foreground">View your link performance analytics.</p>
-            </Card>
-          )}
+          {/* Live Preview - Desktop Only */}
+          <div className="hidden lg:block w-[340px] sticky top-0 h-screen py-8 pr-6">
+            <div className="sticky top-8">
+              <p className="text-sm font-medium text-center text-muted-foreground mb-4">Live Preview</p>
+              <LivePreview linkProfile={linkProfile} buttons={buttons} />
+            </div>
+          </div>
         </div>
 
         <AddButtonDialog
