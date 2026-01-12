@@ -11,7 +11,6 @@ import CreatorSignup from "./pages/CreatorSignup";
 import BrandSignup from "./pages/BrandSignup";
 // KiraOnboarding removed for smoother signup flow
 import Dashboard from "./pages/Dashboard";
-import CreviaConnect from "./pages/CreviaConnect";
 import Kira from "./pages/Kira";
 import CreviaLink from "./pages/CreviaLink";
 import CreviaStudio from "./pages/CreviaStudio";
@@ -55,7 +54,6 @@ const App = () => (
             
             {/* Protected routes with AppLayout */}
             <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
-            <Route path="/crevia-connect" element={<AppLayout><CreviaConnect /></AppLayout>} />
             <Route path="/kira" element={<AppLayout><Kira /></AppLayout>} />
             <Route path="/crevia-link" element={<AppLayout><CreviaLink /></AppLayout>} />
             <Route path="/crevia-studio" element={<AppLayout><CreviaStudio /></AppLayout>} />
