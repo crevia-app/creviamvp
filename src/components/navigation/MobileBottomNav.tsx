@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Users, Sparkles, MoreHorizontal, Plug, Calendar, Instagram, Music2, Briefcase } from "lucide-react";
+import { Home, Wallet, Sparkles, MoreHorizontal, Plug, Calendar, Instagram, Music2, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -39,10 +39,25 @@ const MobileBottomNav = () => {
   }, []);
 
   const isActive = (path: string) => {
+    // Handle query params
+    const [pathOnly, query] = path.split("?");
+    const currentSearch = location.search;
+    
     if (path === "/dashboard") {
       return location.pathname === "/dashboard";
     }
-    return location.pathname.startsWith(path);
+    
+    // For wallet, check exact path + query
+    if (query) {
+      return location.pathname === pathOnly && currentSearch.includes(query);
+    }
+    
+    // For studio, only active if no wallet tab selected
+    if (pathOnly === "/crevia-studio") {
+      return location.pathname === pathOnly && !currentSearch.includes("tab=wallet");
+    }
+    
+    return location.pathname.startsWith(pathOnly);
   };
 
   const handleSignOut = async () => {
@@ -60,12 +75,12 @@ const MobileBottomNav = () => {
     { id: "home", label: "Home", icon: Home, path: "/dashboard" },
     { id: "kira", label: "Kira", icon: Sparkles, path: "/kira" },
     { id: "studio", label: "Studio", icon: Briefcase, path: "/crevia-studio" },
-    { id: "connect", label: "Connect", icon: Users, path: "/crevia-connect" },
+    { id: "wallet", label: "Wallet", icon: Wallet, path: "/crevia-studio?tab=wallet" },
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-white/10">
-      <div className="grid grid-cols-4 h-16">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-white/10 safe-area-pb">
+      <div className="grid grid-cols-5 h-16">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);

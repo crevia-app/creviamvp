@@ -536,9 +536,19 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                   </div>
                 </Card>
 
-                <Button onClick={handleSave} disabled={saving} className="w-full bg-bronze hover:bg-bronze-dark h-12">
-                  {saving ? "Saving..." : "Save Appearance"}
-                </Button>
+                <div className="flex gap-3">
+                  <Button onClick={handleSave} disabled={saving} className="flex-1 bg-bronze hover:bg-bronze-dark h-12">
+                    {saving ? "Saving..." : "Save Appearance"}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => window.open(`/${linkProfile?.username}`, "_blank")}
+                    className="h-12 lg:hidden"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Preview
+                  </Button>
+                </div>
               </div>
             )}
 
