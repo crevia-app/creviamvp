@@ -706,7 +706,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
           <div className="hidden lg:block w-[340px] sticky top-0 h-screen py-8 pr-6">
             <div className="sticky top-8">
               <p className="text-sm font-medium text-center text-muted-foreground mb-4">Live Preview</p>
-              <LivePreview linkProfile={linkProfile} buttons={buttons} />
+              <LivePreview key={`${linkProfile?.theme}-${linkProfile?.background?.button_style}`} linkProfile={linkProfile} buttons={buttons} />
             </div>
           </div>
         </div>

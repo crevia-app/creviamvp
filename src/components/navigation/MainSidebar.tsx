@@ -33,29 +33,14 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
     { id: "home", label: "Home", icon: Home, path: "/dashboard" },
     { id: "kira", label: "Kira", icon: Sparkles, path: "/kira" },
     { id: "studio", label: "Crevia Studio", icon: Briefcase, path: "/crevia-studio" },
-    { id: "wallet", label: "Crevia Wallet", icon: Wallet, path: "/crevia-studio?tab=wallet" },
+    { id: "wallet", label: "Crevia Wallet", icon: Wallet, path: "/crevia-wallet" },
   ];
 
   const isActive = (path: string) => {
-    // Handle query params
-    const [pathOnly, query] = path.split("?");
-    const currentSearch = location.search;
-    
     if (path === "/dashboard") {
       return location.pathname === "/dashboard";
     }
-    
-    // For wallet, check exact path + query
-    if (query) {
-      return location.pathname === pathOnly && currentSearch.includes(query);
-    }
-    
-    // For studio, only active if no wallet tab selected
-    if (pathOnly === "/crevia-studio") {
-      return location.pathname === pathOnly && !currentSearch.includes("tab=wallet");
-    }
-    
-    return location.pathname.startsWith(pathOnly);
+    return location.pathname === path || location.pathname.startsWith(path + "/");
   };
 
   return (

@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, User, Building2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -21,6 +22,8 @@ const Auth = () => {
   const [isResetting, setIsResetting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [userType, setUserType] = useState<"creator" | "brand">("creator");
 
   useEffect(() => {
     // Check if user is already logged in
@@ -83,8 +86,6 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const [isLoading, setIsLoading] = useState(false);
-
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     try {
@@ -107,7 +108,6 @@ const Auth = () => {
         });
         setIsGoogleLoading(false);
       }
-      // Don't set loading to false on success - redirect will happen
     } catch (err) {
       console.error("Google auth error:", err);
       toast({ 
@@ -137,7 +137,6 @@ const Auth = () => {
         });
         setIsAppleLoading(false);
       }
-      // Don't set loading to false on success - redirect will happen
     } catch (err) {
       console.error("Apple auth error:", err);
       toast({ 
@@ -160,6 +159,9 @@ const Auth = () => {
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/user-type-selection`,
+            data: {
+              user_type: userType,
+            },
           },
         });
 
@@ -277,6 +279,43 @@ const Auth = () => {
             {isSignup ? "Sign up to get started" : "Log in to continue"}
           </p>
         </div>
+
+        {/* User Type Toggle - Only show for signup */}
+        {isSignup && (
+          <div className="mb-6">
+            <Label className="text-sm font-medium text-muted-foreground mb-3 block text-center">
+              I am a...
+            </Label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setUserType("creator")}
+                className={cn(
+                  "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-300",
+                  userType === "creator"
+                    ? "border-bronze bg-bronze/10 text-bronze"
+                    : "border-border hover:border-bronze/50 text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <User className="h-6 w-6" />
+                <span className="font-poppins text-sm font-semibold">Creative</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserType("brand")}
+                className={cn(
+                  "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-300",
+                  userType === "brand"
+                    ? "border-bronze bg-bronze/10 text-bronze"
+                    : "border-border hover:border-bronze/50 text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Building2 className="h-6 w-6" />
+                <span className="font-poppins text-sm font-semibold">Brand</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           <Button 
