@@ -12,9 +12,9 @@ All colors MUST be HSL.
     --background: 0 0% 100%;
     --foreground: 0 0% 0%;
     
-    --bronze: 23 63% 43%; /* #b25d29 - Premium bronze */
-    --bronze-light: 23 63% 55%;
-    --bronze-dark: 23 63% 30%;
+    --bronze: 23 73% 49%; /* #d36725 - Premium bronze */
+    --bronze-light: 23 73% 60%;
+    --bronze-dark: 23 73% 38%;
 
     --card: 0 0% 100%;
     --card-foreground: 0 0% 0%;
@@ -22,7 +22,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 0%;
 
-    --primary: 23 63% 43%; /* Premium bronze as primary */
+    --primary: 23 73% 49%; /* Premium bronze as primary */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 96%;
@@ -31,7 +31,7 @@ All colors MUST be HSL.
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%;
 
-    --accent: 23 63% 43%;
+    --accent: 23 73% 49%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
@@ -39,7 +39,7 @@ All colors MUST be HSL.
 
     --border: 0 0% 90%;
     --input: 0 0% 90%;
-    --ring: 23 63% 43%;
+    --ring: 23 73% 49%;
 
     --radius: 0.75rem; /* 12px as per spec */
 
@@ -67,7 +67,7 @@ All colors MUST be HSL.
     --popover: 240 10% 9%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 23 63% 43%;
+    --primary: 23 73% 49%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 10%;
@@ -76,7 +76,7 @@ All colors MUST be HSL.
     --muted: 0 0% 10%;
     --muted-foreground: 0 0% 65%;
 
-    --accent: 23 63% 43%;
+    --accent: 23 73% 49%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
@@ -84,7 +84,7 @@ All colors MUST be HSL.
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 23 63% 43%;
+    --ring: 23 73% 49%;
   }
 }
 
@@ -137,7 +137,7 @@ All colors MUST be HSL.
   }
   
   .hover-glow:hover {
-    box-shadow: 0 0 24px rgba(178, 93, 41, 0.25);
+    box-shadow: 0 0 24px rgba(211, 103, 37, 0.25);
   }
 
   /* Premium card interaction */
@@ -199,7 +199,7 @@ All colors MUST be HSL.
     background: linear-gradient(
       90deg,
       transparent 0%,
-      rgba(178, 93, 41, 0.08) 50%,
+      rgba(211, 103, 37, 0.08) 50%,
       transparent 100%
     );
     background-size: 1000px 100%;
