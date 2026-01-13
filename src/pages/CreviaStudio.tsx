@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Wallet, Link2, Receipt, FileSignature, FileText, Sparkles } from "lucide-react";
+import { Link2, Receipt, FileSignature, FileText, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Import tab content
 import CreviaLink from "./CreviaLink";
-import WalletTab from "@/components/studio/WalletTab";
 import SmartInvoicesTab from "@/components/studio/SmartInvoicesTab";
 import ContractsTab from "@/components/studio/ContractsTab";
 import RateCardsTab from "@/components/studio/RateCardsTab";
@@ -16,7 +15,7 @@ const CreviaStudio = () => {
   const [loading, setLoading] = useState(true);
   const [userType, setUserType] = useState<"creator" | "brand">("creator");
   
-  const activeTab = searchParams.get("tab") || "wallet";
+  const activeTab = searchParams.get("tab") || "link";
 
   useEffect(() => {
     const checkUser = async () => {
@@ -37,9 +36,8 @@ const CreviaStudio = () => {
     checkUser();
   }, []);
 
-  // Base tabs for all users
+  // Base tabs for all users - removed wallet
   const baseTabs = [
-    { id: "wallet", label: "Crevia Wallet", icon: Wallet },
     { id: "link", label: "Crevia Link", icon: Link2 },
     { id: "invoices", label: "Smart Invoices", icon: Receipt },
     { id: "contracts", label: "Contracts", icon: FileSignature },
@@ -110,7 +108,6 @@ const CreviaStudio = () => {
 
       {/* Tab Content */}
       <div className="flex-1">
-        {activeTab === "wallet" && <WalletTab userType={userType} />}
         {activeTab === "link" && <CreviaLink isEmbedded />}
         {activeTab === "invoices" && <SmartInvoicesTab />}
         {activeTab === "contracts" && <ContractsTab />}
