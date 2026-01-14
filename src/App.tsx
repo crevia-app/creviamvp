@@ -2,13 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
-import UserTypeSelection from "./pages/UserTypeSelection";
 import CreatorSignup from "./pages/CreatorSignup";
 import BrandSignup from "./pages/BrandSignup";
+// KiraOnboarding removed for smoother signup flow
 // KiraOnboarding removed for smoother signup flow
 import Dashboard from "./pages/Dashboard";
 import Kira from "./pages/Kira";
@@ -47,7 +47,7 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
-            <Route path="/user-type-selection" element={<UserTypeSelection />} />
+            <Route path="/user-type-selection" element={<Navigate to="/auth" replace />} />
             <Route path="/signup/creator" element={<CreatorSignup />} />
             <Route path="/signup/brand" element={<BrandSignup />} />
             {/* Kira onboarding removed for smoother signup flow */}
