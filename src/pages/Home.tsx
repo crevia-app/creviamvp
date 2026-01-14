@@ -85,7 +85,7 @@ const Home = () => {
               Smart tools to run your creative business—invoices, contracts, payments, and your link-in-bio. All in one place.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 pt-2 animate-fade-in" style={{ animationDelay: '0.9s', animationDuration: '0.8s' }}>
-              <Link to="/user-type-selection" className="w-full sm:w-auto">
+              <Link to="/auth" className="w-full sm:w-auto">
                 <Button size="lg" className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-base md:text-lg px-8 md:px-10 py-6 md:py-7 font-poppins font-semibold hover-scale shadow-lg">
                   Start Free
                 </Button>

@@ -68,7 +68,7 @@ const Header = () => {
                       Log In
                     </Button>
                   </Link>
-                  <Link to="/user-type-selection" onClick={() => setMobileMenuOpen(false)}>
+                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
                     <Button className="w-full bg-bronze hover:bg-bronze-dark font-poppins font-semibold">
                       Get Started
                     </Button>
@@ -85,7 +85,7 @@ const Header = () => {
                 Log In
               </Button>
             </Link>
-            <Link to="/user-type-selection">
+            <Link to="/auth">
               <Button size="sm" className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold transition-all duration-300 hover-lift hover-glow text-sm">
                 Get Started
               </Button>
