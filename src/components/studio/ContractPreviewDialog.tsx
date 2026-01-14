@@ -8,25 +8,33 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Printer, CheckCircle2, FileSignature, Calendar, Coins, Users } from "lucide-react";
+import { Printer, CheckCircle2, FileSignature, Calendar, Coins, Users, PenTool, Send } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
+import ESignatureDialog from "./ESignatureDialog";
 
 interface ContractPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   contract: any;
+  onContractUpdate?: () => void;
 }
 
 const ContractPreviewDialog = ({
   open,
   onOpenChange,
   contract,
+  onContractUpdate,
 }: ContractPreviewDialogProps) => {
   const [profile, setProfile] = useState<any>(null);
+  const [showSignatureDialog, setShowSignatureDialog] = useState(false);
+  const [signingAs, setSigningAs] = useState<"creator" | "client">("creator");
+  const [localContract, setLocalContract] = useState(contract);
 
   useEffect(() => {
     if (contract) {
       fetchProfile();
+      setLocalContract(contract);
     }
   }, [contract]);
 
@@ -52,6 +60,67 @@ const ContractPreviewDialog = ({
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleSign = async (signature: string, signedAt: string) => {
+    if (!localContract) return;
+
+    const updateData = signingAs === "creator"
+      ? { creator_signature: signature, creator_signed_at: signedAt }
+      : { client_signature: signature, client_signed_at: signedAt };
+
+    const { error } = await supabase
+      .from("contracts")
+      .update(updateData)
+      .eq("id", localContract.id);
+
+    if (error) {
+      toast.error("Failed to save signature");
+      return;
+    }
+
+    // Update local state
+    setLocalContract({ ...localContract, ...updateData });
+
+    // Check if both have signed to update status
+    const updatedContract = { ...localContract, ...updateData };
+    if (updatedContract.creator_signature && updatedContract.client_signature) {
+      await supabase
+        .from("contracts")
+        .update({ status: "signed" })
+        .eq("id", localContract.id);
+      setLocalContract({ ...updatedContract, status: "signed" });
+    }
+
+    toast.success(`${signingAs === "creator" ? "Your" : "Client"} signature saved!`);
+    onContractUpdate?.();
+  };
+
+  const handleSendToClient = async () => {
+    if (!localContract?.client_email) {
+      toast.error("No client email address. Please add one in the contract details.");
+      return;
+    }
+
+    // Update contract status to sent
+    const { error } = await supabase
+      .from("contracts")
+      .update({ status: "sent" })
+      .eq("id", localContract.id);
+
+    if (error) {
+      toast.error("Failed to update status");
+      return;
+    }
+
+    setLocalContract({ ...localContract, status: "sent" });
+    toast.success(`Contract sent to ${localContract.client_email}. They can sign via the shared link.`);
+    onContractUpdate?.();
+  };
+
+  const openSignatureDialog = (as: "creator" | "client") => {
+    setSigningAs(as);
+    setShowSignatureDialog(true);
   };
 
   const replaceTemplatePlaceholders = (text: string) => {
@@ -235,18 +304,56 @@ const ContractPreviewDialog = ({
 
           {/* Signatures */}
           <div className="pt-8 border-t-2 border-gray-200 mt-8">
-            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-6">
-              Signatures
-            </h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                Signatures
+              </h3>
+              <div className="flex gap-2 print:hidden">
+                {!localContract.creator_signature && (
+                  <Button
+                    size="sm"
+                    onClick={() => openSignatureDialog("creator")}
+                    className="gap-2 bg-[#d36725] hover:bg-[#b8571f]"
+                  >
+                    <PenTool className="h-4 w-4" />
+                    Sign as Creator
+                  </Button>
+                )}
+                {localContract.status !== "draft" && !localContract.client_signature && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openSignatureDialog("client")}
+                    className="gap-2"
+                  >
+                    <PenTool className="h-4 w-4" />
+                    Sign as Client
+                  </Button>
+                )}
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-8">
               <div className="space-y-4">
-                <div className="h-20 border-b-2 border-gray-300 flex items-end pb-2">
-                  {contract.creator_signature ? (
-                    <span className="text-2xl font-script italic text-gray-700">
-                      {contract.creator_signature}
-                    </span>
+                <div className="h-24 border-b-2 border-gray-300 flex items-end pb-2 relative">
+                  {localContract.creator_signature ? (
+                    localContract.creator_signature.startsWith("data:image") ? (
+                      <img 
+                        src={localContract.creator_signature} 
+                        alt="Creator signature" 
+                        className="max-h-20 object-contain"
+                      />
+                    ) : (
+                      <span className="text-2xl font-vollkorn italic text-gray-700">
+                        {localContract.creator_signature}
+                      </span>
+                    )
                   ) : (
-                    <span className="text-gray-400 italic">Signature pending</span>
+                    <button 
+                      onClick={() => openSignatureDialog("creator")}
+                      className="text-gray-400 italic hover:text-[#d36725] transition-colors cursor-pointer print:cursor-default"
+                    >
+                      Click to sign
+                    </button>
                   )}
                 </div>
                 <div>
@@ -254,34 +361,67 @@ const ContractPreviewDialog = ({
                     {profile?.display_name || profile?.handle || "Creator"}
                   </p>
                   <p className="text-gray-500 text-sm">Creator</p>
-                  {contract.creator_signed_at && (
-                    <p className="text-gray-500 text-xs mt-1">
-                      Signed: {format(new Date(contract.creator_signed_at), "MMMM d, yyyy")}
+                  {localContract.creator_signed_at && (
+                    <p className="text-gray-500 text-xs mt-1 flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3 text-green-500" />
+                      Signed: {format(new Date(localContract.creator_signed_at), "MMMM d, yyyy 'at' h:mm a")}
                     </p>
                   )}
                 </div>
               </div>
               <div className="space-y-4">
-                <div className="h-20 border-b-2 border-gray-300 flex items-end pb-2">
-                  {contract.client_signature ? (
-                    <span className="text-2xl font-script italic text-gray-700">
-                      {contract.client_signature}
-                    </span>
+                <div className="h-24 border-b-2 border-gray-300 flex items-end pb-2 relative">
+                  {localContract.client_signature ? (
+                    localContract.client_signature.startsWith("data:image") ? (
+                      <img 
+                        src={localContract.client_signature} 
+                        alt="Client signature" 
+                        className="max-h-20 object-contain"
+                      />
+                    ) : (
+                      <span className="text-2xl font-vollkorn italic text-gray-700">
+                        {localContract.client_signature}
+                      </span>
+                    )
                   ) : (
-                    <span className="text-gray-400 italic">Signature pending</span>
+                    <span className="text-gray-400 italic">
+                      {localContract.status === "draft" ? "Send to client first" : "Awaiting signature"}
+                    </span>
                   )}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">{contract.client_name}</p>
+                  <p className="font-semibold text-gray-900">{localContract.client_name}</p>
                   <p className="text-gray-500 text-sm">Client</p>
-                  {contract.client_signed_at && (
-                    <p className="text-gray-500 text-xs mt-1">
-                      Signed: {format(new Date(contract.client_signed_at), "MMMM d, yyyy")}
+                  {localContract.client_signed_at && (
+                    <p className="text-gray-500 text-xs mt-1 flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3 text-green-500" />
+                      Signed: {format(new Date(localContract.client_signed_at), "MMMM d, yyyy 'at' h:mm a")}
                     </p>
                   )}
                 </div>
               </div>
             </div>
+
+            {/* Send to client button */}
+            {localContract.status === "draft" && localContract.creator_signature && !localContract.client_signature && (
+              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg print:hidden">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-blue-900">Ready to send</p>
+                    <p className="text-sm text-blue-700">
+                      You've signed the contract. Send it to {localContract.client_name} for their signature.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleSendToClient}
+                    className="gap-2 bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Send className="h-4 w-4" />
+                    Send to Client
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer */}
@@ -291,6 +431,17 @@ const ContractPreviewDialog = ({
             </p>
           </div>
         </div>
+
+        {/* E-Signature Dialog */}
+        <ESignatureDialog
+          open={showSignatureDialog}
+          onOpenChange={setShowSignatureDialog}
+          signerName={signingAs === "creator" 
+            ? (profile?.display_name || profile?.handle || "") 
+            : localContract?.client_name || ""
+          }
+          onSign={handleSign}
+        />
       </DialogContent>
     </Dialog>
   );
