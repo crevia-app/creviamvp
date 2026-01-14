@@ -91,7 +91,6 @@ const PublicProfile = () => {
         return { className: "bg-gradient-to-br from-purple-700 to-indigo-900 text-white" };
       // African Heritage Collection - Authentic patterns with character
       case "maasai":
-        // Maasai beadwork - colorful horizontal stripes like traditional beaded jewelry
         return {
           className: "text-white",
           style: {
@@ -111,7 +110,6 @@ const PublicProfile = () => {
           }
         };
       case "kente":
-        // Kente cloth - woven geometric pattern with gold, green, red, black
         return {
           className: "text-white",
           style: {
@@ -133,7 +131,6 @@ const PublicProfile = () => {
           }
         };
       case "ndebele":
-        // Ndebele geometric art - bold blocks of blue, yellow, red, white, green
         return {
           className: "text-white",
           style: {
@@ -157,7 +154,6 @@ const PublicProfile = () => {
           }
         };
       case "ankara":
-        // Ankara wax print - vibrant circular and organic patterns
         return {
           className: "text-white",
           style: {
@@ -172,6 +168,61 @@ const PublicProfile = () => {
               #F97316
             `,
             backgroundSize: '120px 120px'
+          }
+        };
+      case "amazigh":
+        return {
+          className: "text-white",
+          style: {
+            background: `
+              linear-gradient(45deg, 
+                #CD5C5C 0%, #CD5C5C 15%, 
+                #DAA520 15%, #DAA520 30%, 
+                #4B0082 30%, #4B0082 45%, 
+                #D2B48C 45%, #D2B48C 60%, 
+                #CD5C5C 60%, #CD5C5C 75%, 
+                #4B0082 75%, #4B0082 100%
+              )
+            `,
+            backgroundSize: '60px 60px'
+          }
+        };
+      case "zulu":
+        return {
+          className: "text-white",
+          style: {
+            background: `
+              repeating-linear-gradient(
+                90deg,
+                #000000 0px, #000000 6px,
+                #FFFFFF 6px, #FFFFFF 12px,
+                #C41E3A 12px, #C41E3A 18px,
+                #1E90FF 18px, #1E90FF 24px,
+                #228B22 24px, #228B22 30px,
+                #FFD700 30px, #FFD700 36px
+              )
+            `,
+            backgroundSize: '36px 100%'
+          }
+        };
+      case "ethiopian":
+        return {
+          className: "text-white",
+          style: {
+            background: `linear-gradient(180deg, #078930 0%, #078930 33%, #FCDD09 33%, #FCDD09 66%, #DA121A 66%, #DA121A 100%)`
+          }
+        };
+      case "adinkra":
+        return {
+          className: "text-white",
+          style: {
+            background: `
+              radial-gradient(circle at 50% 50%, #1a1a1a 15%, transparent 15%), 
+              radial-gradient(circle at 0% 0%, #1a1a1a 10%, transparent 10%), 
+              radial-gradient(circle at 100% 100%, #1a1a1a 10%, transparent 10%), 
+              #8B4513
+            `,
+            backgroundSize: '30px 30px'
           }
         };
       default:

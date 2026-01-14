@@ -386,6 +386,7 @@ const ContractsTab = () => {
         open={!!previewContract}
         onOpenChange={(open) => !open && setPreviewContract(null)}
         contract={previewContract}
+        onContractUpdate={fetchContracts}
       />
     </div>
   );
