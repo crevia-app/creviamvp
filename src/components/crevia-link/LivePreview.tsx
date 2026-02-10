@@ -10,46 +10,6 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
   const getThemeStyles = () => {
     const theme = linkProfile?.theme || "dark";
     
-    // Premium African pattern styles with authentic cultural colors
-    const africanPatterns: Record<string, React.CSSProperties> = {
-      // Maasai (Kenya): Red (blood/bravery), Blue (sky/energy), Black, White, Yellow/Gold
-      maasai: {
-        background: `repeating-linear-gradient(0deg, #C41E3A 0px, #C41E3A 8px, #1E40AF 8px, #1E40AF 12px, #FFD700 12px, #FFD700 16px, #C41E3A 16px, #C41E3A 24px, #FFFFFF 24px, #FFFFFF 28px, #1E40AF 28px, #1E40AF 32px)`,
-      },
-      // Kente (Ghana): Gold (royalty/wealth), Green (harvest), Red (blood/struggle), Black (maturity)
-      kente: {
-        background: `linear-gradient(90deg, #FFD700 0%, #FFD700 25%, #228B22 25%, #228B22 50%, #C41E3A 50%, #C41E3A 75%, #1a1a1a 75%, #1a1a1a 100%)`,
-      },
-      // Ndebele (South Africa): Bold primary colors in geometric house painting tradition
-      ndebele: {
-        background: `linear-gradient(135deg, #1E40AF 0%, #1E40AF 20%, #FFD700 20%, #FFD700 30%, #C41E3A 30%, #C41E3A 50%, #FFFFFF 50%, #FFFFFF 60%, #228B22 60%, #228B22 80%, #1E40AF 80%, #1E40AF 100%)`,
-      },
-      // Ankara (Nigeria): Vibrant wax print patterns with orange, brown, gold
-      ankara: {
-        background: `radial-gradient(circle at 25% 25%, #F97316 20%, transparent 20%), radial-gradient(circle at 75% 75%, #8B4513 20%, transparent 20%), radial-gradient(circle at 50% 50%, #FFD700 15%, transparent 15%), #F97316`,
-        backgroundSize: '40px 40px',
-      },
-      // Amazigh/Berber (Morocco/Algeria): Terracotta, Saffron, Indigo, Desert Sand from Atlas Mountains
-      amazigh: {
-        background: `linear-gradient(45deg, #CD5C5C 0%, #CD5C5C 15%, #DAA520 15%, #DAA520 30%, #4B0082 30%, #4B0082 45%, #D2B48C 45%, #D2B48C 60%, #CD5C5C 60%, #CD5C5C 75%, #4B0082 75%, #4B0082 100%)`,
-        backgroundSize: '60px 60px',
-      },
-      // Zulu (South Africa): Beadwork colors each with meaning - love, purity, sorrow, etc.
-      zulu: {
-        background: `repeating-linear-gradient(90deg, #000000 0px, #000000 6px, #FFFFFF 6px, #FFFFFF 12px, #C41E3A 12px, #C41E3A 18px, #1E90FF 18px, #1E90FF 24px, #228B22 24px, #228B22 30px, #FFD700 30px, #FFD700 36px)`,
-        backgroundSize: '36px 100%',
-      },
-      // Ethiopian: Flag colors (Green, Yellow, Red) with Habesha weaving overlay
-      ethiopian: {
-        background: `linear-gradient(180deg, #078930 0%, #078930 33%, #FCDD09 33%, #FCDD09 66%, #DA121A 66%, #DA121A 100%)`,
-      },
-      // Adinkra (Ghana): Akan symbols stamped on terracotta/rust fabric
-      adinkra: {
-        background: `radial-gradient(circle at 50% 50%, #1a1a1a 15%, transparent 15%), radial-gradient(circle at 0% 0%, #1a1a1a 10%, transparent 10%), radial-gradient(circle at 100% 100%, #1a1a1a 10%, transparent 10%), #8B4513`,
-        backgroundSize: '30px 30px',
-      },
-    };
-
     const gradients: Record<string, string> = {
       light: "bg-gradient-to-br from-gray-50 to-gray-100",
       dark: "bg-gradient-to-br from-gray-800 to-gray-900",
@@ -59,18 +19,22 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
       ocean: "bg-gradient-to-br from-blue-500 to-teal-400",
       forest: "bg-gradient-to-br from-green-600 to-emerald-800",
       royal: "bg-gradient-to-br from-purple-600 to-indigo-800",
+      midnight: "bg-gradient-to-br from-slate-900 to-blue-950",
+      rose: "bg-gradient-to-br from-rose-400 to-pink-300",
+      noir: "bg-gradient-to-br from-zinc-900 to-neutral-950",
+      sapphire: "bg-gradient-to-br from-blue-700 to-indigo-900",
+      burgundy: "bg-gradient-to-br from-rose-900 to-red-950",
+      emerald: "bg-gradient-to-br from-emerald-700 to-green-900",
+      lavender: "bg-gradient-to-br from-violet-400 to-purple-500",
+      champagne: "bg-gradient-to-br from-amber-100 to-yellow-50",
     };
-
-    if (africanPatterns[theme]) {
-      return { style: africanPatterns[theme], className: "" };
-    }
     
     return { style: {}, className: gradients[theme] || gradients.dark };
   };
 
   const getTextColor = () => {
     const theme = linkProfile?.theme || "dark";
-    const lightTextThemes = ["dark", "bronze", "sunset", "ocean", "forest", "royal", "maasai", "kente", "ndebele", "ankara", "amazigh", "zulu", "ethiopian", "adinkra"];
+    const lightTextThemes = ["dark", "bronze", "sunset", "ocean", "forest", "royal", "midnight", "noir", "sapphire", "burgundy", "emerald", "lavender"];
     return lightTextThemes.includes(theme) ? "text-white" : "text-gray-900";
   };
 
