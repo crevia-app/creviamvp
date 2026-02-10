@@ -136,12 +136,9 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
                   <div
                     key={button.id}
                     className={cn(
-                      "w-full py-3 px-4 text-center text-sm font-medium transition-all",
+                      "w-full py-3 px-4 text-center text-sm font-medium transition-all shadow-sm",
                       buttonStyle,
-                      linkProfile?.background?.button_style === "pill" 
-                        ? "bg-bronze text-white"
-                        : "bg-white/20 backdrop-blur-sm border border-white/30",
-                      textColor
+                      "bg-white text-gray-900"
                     )}
                   >
                     {button.title}
@@ -149,13 +146,13 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
                 ))
               ) : (
                 <>
-                  <div className={cn("w-full py-3 px-4 text-center text-sm font-medium bg-white/20 backdrop-blur-sm border border-white/30", buttonStyle, textColor)}>
+                  <div className={cn("w-full py-3 px-4 text-center text-sm font-medium shadow-sm bg-white text-gray-900", buttonStyle)}>
                     My Portfolio
                   </div>
-                  <div className={cn("w-full py-3 px-4 text-center text-sm font-medium bg-white/20 backdrop-blur-sm border border-white/30", buttonStyle, textColor)}>
+                  <div className={cn("w-full py-3 px-4 text-center text-sm font-medium shadow-sm bg-white text-gray-900", buttonStyle)}>
                     Book Me
                   </div>
-                  <div className={cn("w-full py-3 px-4 text-center text-sm font-medium bg-white/20 backdrop-blur-sm border border-white/30", buttonStyle, textColor)}>
+                  <div className={cn("w-full py-3 px-4 text-center text-sm font-medium shadow-sm bg-white text-gray-900", buttonStyle)}>
                     Latest Work
                   </div>
                 </>
