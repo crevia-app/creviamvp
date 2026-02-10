@@ -14,7 +14,7 @@ import Dashboard from "./pages/Dashboard";
 import Kira from "./pages/Kira";
 import CreviaLink from "./pages/CreviaLink";
 import CreviaStudio from "./pages/CreviaStudio";
-import CreviaConnect from "./pages/CreviaConnect";
+
 import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
 import PaymentsBilling from "./pages/profile/PaymentsBilling";
@@ -58,7 +58,6 @@ const App = () => (
             <Route path="/kira" element={<AppLayout><Kira /></AppLayout>} />
             <Route path="/crevia-link" element={<AppLayout><CreviaLink /></AppLayout>} />
             <Route path="/crevia-studio" element={<AppLayout><CreviaStudio /></AppLayout>} />
-            <Route path="/crevia-connect" element={<AppLayout><CreviaConnect /></AppLayout>} />
             <Route path="/profile/payments-billing" element={<AppLayout><PaymentsBilling /></AppLayout>} />
             <Route path="/profile/notifications" element={<AppLayout><Notifications /></AppLayout>} />
             <Route path="/profile/verification" element={<AppLayout><Verification /></AppLayout>} />
