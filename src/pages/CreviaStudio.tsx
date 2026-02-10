@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Link2, Receipt, FileSignature, FileText, Sparkles } from "lucide-react";
+import { Link2, Receipt, FileSignature, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Import tab content
 import CreviaLink from "./CreviaLink";
 import SmartInvoicesTab from "@/components/studio/SmartInvoicesTab";
 import ContractsTab from "@/components/studio/ContractsTab";
-import RateCardsTab from "@/components/studio/RateCardsTab";
 
 const CreviaStudio = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -36,17 +35,11 @@ const CreviaStudio = () => {
     checkUser();
   }, []);
 
-  // Base tabs for all users - removed wallet
-  const baseTabs = [
+  const studioTabs = [
     { id: "link", label: "Crevia Link", icon: Link2 },
     { id: "invoices", label: "Smart Invoices", icon: Receipt },
     { id: "contracts", label: "Contracts", icon: FileSignature },
   ];
-
-  // Add Rate Cards only for creators
-  const studioTabs = userType === "creator" 
-    ? [...baseTabs, { id: "rate-cards", label: "Rate Cards", icon: FileText }]
-    : baseTabs;
 
   const handleTabChange = (tabId: string) => {
     setSearchParams({ tab: tabId });
@@ -111,7 +104,6 @@ const CreviaStudio = () => {
         {activeTab === "link" && <CreviaLink isEmbedded />}
         {activeTab === "invoices" && <SmartInvoicesTab />}
         {activeTab === "contracts" && <ContractsTab />}
-        {activeTab === "rate-cards" && userType === "creator" && <RateCardsTab />}
       </div>
     </div>
   );
