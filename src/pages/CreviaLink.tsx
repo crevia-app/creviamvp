@@ -243,59 +243,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   if (isEmbedded) {
     const embeddedTab = new URLSearchParams(location.search).get("section") || "profile";
     
-    // African pattern styles helper - Premium authentic patterns
-    const getAfricanPatternStyle = (pattern: string) => {
-      switch (pattern) {
-        case "maasai":
-          // Authentic Maasai shuka colors: Red (blood), Blue (sky), Black, White, Yellow/Gold
-          return {
-            background: `repeating-linear-gradient(0deg, #C41E3A 0px, #C41E3A 8px, #1E40AF 8px, #1E40AF 12px, #FFD700 12px, #FFD700 16px, #C41E3A 16px, #C41E3A 24px, #FFFFFF 24px, #FFFFFF 28px, #1E40AF 28px, #1E40AF 32px)`
-          };
-        case "kente":
-          // Ghanaian Kente: Gold (royalty), Green (harvest), Red (blood), Black (maturity)
-          return {
-            background: `linear-gradient(90deg, #FFD700 0%, #FFD700 25%, #228B22 25%, #228B22 50%, #C41E3A 50%, #C41E3A 75%, #1a1a1a 75%, #1a1a1a 100%)`
-          };
-        case "ndebele":
-          // South African Ndebele: Bold primary colors with geometric patterns
-          return {
-            background: `linear-gradient(135deg, #1E40AF 0%, #1E40AF 20%, #FFD700 20%, #FFD700 30%, #C41E3A 30%, #C41E3A 50%, #FFFFFF 50%, #FFFFFF 60%, #228B22 60%, #228B22 80%, #1E40AF 80%, #1E40AF 100%)`
-          };
-        case "ankara":
-          // Nigerian Ankara: Vibrant oranges, browns, golds in wax print style
-          return {
-            background: `radial-gradient(circle at 25% 25%, #F97316 20%, transparent 20%), radial-gradient(circle at 75% 75%, #8B4513 20%, transparent 20%), radial-gradient(circle at 50% 50%, #FFD700 15%, transparent 15%), #F97316`,
-            backgroundSize: '40px 40px'
-          };
-        case "amazigh":
-          // Berber/Amazigh: Terracotta, Saffron, Indigo, Desert Sand - from Atlas Mountains
-          return {
-            background: `linear-gradient(45deg, #CD5C5C 0%, #CD5C5C 15%, #DAA520 15%, #DAA520 30%, #4B0082 30%, #4B0082 45%, #D2B48C 45%, #D2B48C 60%, #CD5C5C 60%, #CD5C5C 75%, #4B0082 75%, #4B0082 100%)`,
-            backgroundSize: '60px 60px'
-          };
-        case "zulu":
-          // Zulu beadwork: Black, White, Red, Blue, Green, Yellow - each color has meaning
-          return {
-            background: `repeating-linear-gradient(90deg, #000000 0px, #000000 6px, #FFFFFF 6px, #FFFFFF 12px, #C41E3A 12px, #C41E3A 18px, #1E90FF 18px, #1E90FF 24px, #228B22 24px, #228B22 30px, #FFD700 30px, #FFD700 36px)`,
-            backgroundSize: '36px 100%'
-          };
-        case "ethiopian":
-          // Ethiopian: Green, Yellow, Red (flag colors) with traditional Habesha weaving patterns
-          return {
-            background: `linear-gradient(180deg, #078930 0%, #078930 33%, #FCDD09 33%, #FCDD09 66%, #DA121A 66%, #DA121A 100%)`,
-            backgroundImage: `linear-gradient(180deg, #078930 0%, #078930 33%, #FCDD09 33%, #FCDD09 66%, #DA121A 66%, #DA121A 100%), repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)`
-          };
-        case "adinkra":
-          // Ghanaian Adinkra: Traditional black on rust/terracotta with symbol-inspired patterns
-          return {
-            background: `radial-gradient(circle at 50% 50%, #1a1a1a 15%, transparent 15%), radial-gradient(circle at 0% 0%, #1a1a1a 10%, transparent 10%), radial-gradient(circle at 100% 100%, #1a1a1a 10%, transparent 10%), #8B4513`,
-            backgroundSize: '30px 30px'
-          };
-        default:
-          return {};
-      }
-    };
-    
     return (
       <div className="bg-background">
         {/* Embedded Tab Navigation */}
@@ -428,17 +375,19 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                           { value: "light", label: "Light", gradient: "from-gray-50 to-gray-100" },
                           { value: "dark", label: "Dark", gradient: "from-gray-800 to-gray-900" },
                           { value: "bronze", label: "Bronze", gradient: "from-bronze to-bronze-dark" },
+                          { value: "minimal", label: "Minimal", gradient: "bg-white border-2 border-gray-200" },
                           { value: "sunset", label: "Sunset", gradient: "from-orange-400 to-pink-600" },
                           { value: "ocean", label: "Ocean", gradient: "from-blue-500 to-teal-400" },
                           { value: "forest", label: "Forest", gradient: "from-green-600 to-emerald-800" },
-                          { value: "maasai", label: "Maasai 🇰🇪", africanPattern: "maasai", premium: true, description: "Bold Kenyan stripes" },
-                          { value: "kente", label: "Kente 🇬🇭", africanPattern: "kente", premium: true, description: "Ghanaian royal weave" },
-                          { value: "ndebele", label: "Ndebele 🇿🇦", africanPattern: "ndebele", premium: true, description: "South African geometric" },
-                          { value: "ankara", label: "Ankara 🇳🇬", africanPattern: "ankara", premium: true, description: "Nigerian wax print" },
-                          { value: "amazigh", label: "Amazigh 🇲🇦", africanPattern: "amazigh", premium: true, description: "Berber desert motifs" },
-                          { value: "zulu", label: "Zulu 🇿🇦", africanPattern: "zulu", premium: true, description: "Beadwork color code" },
-                          { value: "ethiopian", label: "Ethiopian 🇪🇹", africanPattern: "ethiopian", premium: true, description: "Habesha weaving" },
-                          { value: "adinkra", label: "Adinkra 🇬🇭", africanPattern: "adinkra", premium: true, description: "Akan symbols" },
+                          { value: "royal", label: "Royal", gradient: "from-purple-600 to-indigo-800" },
+                          { value: "midnight", label: "Midnight", gradient: "from-slate-900 to-blue-950", premium: true },
+                          { value: "rose", label: "Rosé", gradient: "from-rose-400 to-pink-300", premium: true },
+                          { value: "noir", label: "Noir", gradient: "from-zinc-900 to-neutral-950", premium: true },
+                          { value: "sapphire", label: "Sapphire", gradient: "from-blue-700 to-indigo-900", premium: true },
+                          { value: "burgundy", label: "Burgundy", gradient: "from-rose-900 to-red-950", premium: true },
+                          { value: "emerald", label: "Emerald", gradient: "from-emerald-700 to-green-900", premium: true },
+                          { value: "lavender", label: "Lavender", gradient: "from-violet-400 to-purple-500", premium: true },
+                          { value: "champagne", label: "Champagne", gradient: "from-amber-100 to-yellow-50", premium: true },
                         ].map((theme) => (
                           <div key={theme.value} className="relative">
                             <RadioGroupItem value={theme.value} id={`embedded-${theme.value}`} className="peer sr-only" />
@@ -451,13 +400,12 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                             >
                               <div 
                                 className={cn("w-full h-16 rounded-lg mb-3 shadow-sm", 
-                                  theme.gradient && `bg-gradient-to-br ${theme.gradient}`
+                                  theme.gradient && (theme.value === "minimal" || theme.value === "champagne" ? theme.gradient : `bg-gradient-to-br ${theme.gradient}`)
                                 )}
-                                style={theme.africanPattern ? getAfricanPatternStyle(theme.africanPattern) : undefined}
                               />
                               <span className="text-sm font-medium">{theme.label}</span>
                               {theme.premium && (
-                                <span className="mt-1 text-[10px] font-medium text-amber-500">AFRICAN</span>
+                                <span className="mt-1 text-[10px] font-medium text-amber-500">PREMIUM</span>
                               )}
                             </Label>
                           </div>
@@ -976,80 +924,15 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         { value: "ocean", label: "Ocean", gradient: "from-blue-500 to-teal-400" },
                         { value: "forest", label: "Forest", gradient: "from-green-600 to-emerald-800" },
                         { value: "royal", label: "Royal", gradient: "from-purple-600 to-indigo-800" },
-                        // African Heritage Collection - Authentic patterns
-                        { value: "maasai", label: "Maasai 🇰🇪", africanPattern: "maasai", premium: true },
-                        { value: "kente", label: "Kente 🇬🇭", africanPattern: "kente", premium: true },
-                        { value: "ndebele", label: "Ndebele 🇿🇦", africanPattern: "ndebele", premium: true },
-                        { value: "ankara", label: "Ankara 🇳🇬", africanPattern: "ankara", premium: true },
+                        { value: "midnight", label: "Midnight", gradient: "from-slate-900 to-blue-950", premium: true },
+                        { value: "rose", label: "Rosé", gradient: "from-rose-400 to-pink-300", premium: true },
+                        { value: "noir", label: "Noir", gradient: "from-zinc-900 to-neutral-950", premium: true },
+                        { value: "sapphire", label: "Sapphire", gradient: "from-blue-700 to-indigo-900", premium: true },
+                        { value: "burgundy", label: "Burgundy", gradient: "from-rose-900 to-red-950", premium: true },
+                        { value: "emerald", label: "Emerald", gradient: "from-emerald-700 to-green-900", premium: true },
+                        { value: "lavender", label: "Lavender", gradient: "from-violet-400 to-purple-500", premium: true },
+                        { value: "champagne", label: "Champagne", gradient: "from-amber-100 to-yellow-50", premium: true },
                       ].map((theme) => {
-                        // African pattern styles
-                        const getAfricanPatternStyle = (pattern: string) => {
-                          switch (pattern) {
-                            case "maasai":
-                              // Maasai beadwork - red, blue, yellow, white stripes
-                              return {
-                                background: `
-                                  repeating-linear-gradient(
-                                    0deg,
-                                    #C41E3A 0px, #C41E3A 8px,
-                                    #1E40AF 8px, #1E40AF 12px,
-                                    #FFD700 12px, #FFD700 16px,
-                                    #C41E3A 16px, #C41E3A 24px,
-                                    #FFFFFF 24px, #FFFFFF 28px,
-                                    #1E40AF 28px, #1E40AF 32px
-                                  )
-                                `
-                              };
-                            case "kente":
-                              // Kente cloth - gold, green, red, black geometric
-                              return {
-                                background: `
-                                  linear-gradient(90deg, 
-                                    #FFD700 0%, #FFD700 25%, 
-                                    #228B22 25%, #228B22 50%, 
-                                    #C41E3A 50%, #C41E3A 75%, 
-                                    #1a1a1a 75%, #1a1a1a 100%
-                                  ),
-                                  repeating-linear-gradient(
-                                    0deg,
-                                    transparent 0px, transparent 4px,
-                                    rgba(0,0,0,0.3) 4px, rgba(0,0,0,0.3) 8px
-                                  )
-                                `,
-                                backgroundBlendMode: 'multiply'
-                              };
-                            case "ndebele":
-                              // Ndebele - bold geometric with blue, red, yellow, white
-                              return {
-                                background: `
-                                  linear-gradient(135deg,
-                                    #1E40AF 0%, #1E40AF 20%,
-                                    #FFD700 20%, #FFD700 30%,
-                                    #C41E3A 30%, #C41E3A 50%,
-                                    #FFFFFF 50%, #FFFFFF 60%,
-                                    #228B22 60%, #228B22 80%,
-                                    #1E40AF 80%, #1E40AF 100%
-                                  )
-                                `
-                              };
-                            case "ankara":
-                              // Ankara wax print - orange, brown, yellow circular patterns
-                              return {
-                                background: `
-                                  radial-gradient(circle at 25% 25%, #F97316 20%, transparent 20%),
-                                  radial-gradient(circle at 75% 75%, #8B4513 20%, transparent 20%),
-                                  radial-gradient(circle at 50% 50%, #FFD700 15%, transparent 15%),
-                                  radial-gradient(circle at 25% 75%, #C41E3A 10%, transparent 10%),
-                                  radial-gradient(circle at 75% 25%, #228B22 10%, transparent 10%),
-                                  #F97316
-                                `,
-                                backgroundSize: '40px 40px'
-                              };
-                            default:
-                              return {};
-                          }
-                        };
-                        
                         return (
                         <div key={theme.value} className="relative">
                           <RadioGroupItem value={theme.value} id={theme.value} className="peer sr-only" />
@@ -1062,9 +945,8 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                           >
                             <div 
                               className={cn("w-full h-16 sm:h-20 md:h-28 rounded-md md:rounded-lg mb-2 sm:mb-3 md:mb-4 shadow-sm", 
-                                theme.gradient && (theme.value === "minimal" ? theme.gradient : `bg-gradient-to-br ${theme.gradient}`)
+                                theme.gradient && (theme.value === "minimal" || theme.value === "champagne" ? theme.gradient : `bg-gradient-to-br ${theme.gradient}`)
                               )}
-                              style={theme.africanPattern ? getAfricanPatternStyle(theme.africanPattern) : undefined}
                             />
                             <span className="font-semibold text-xs sm:text-sm md:text-base">{theme.label}</span>
                           </Label>
