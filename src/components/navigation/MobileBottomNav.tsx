@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Wallet, Sparkles, MoreHorizontal, Plug, Briefcase } from "lucide-react";
+import { Home, Sparkles, MoreHorizontal, Plug, Briefcase, Handshake } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -60,7 +60,7 @@ const MobileBottomNav = () => {
     { id: "home", label: "Home", icon: Home, path: "/dashboard" },
     { id: "kira", label: "Kira", icon: Sparkles, path: "/kira" },
     { id: "studio", label: "Studio", icon: Briefcase, path: "/crevia-studio" },
-    { id: "wallet", label: "Wallet", icon: Wallet, path: "/crevia-wallet" },
+    { id: "connect", label: "Connect", icon: Handshake, path: "/crevia-connect" },
   ];
 
   return (

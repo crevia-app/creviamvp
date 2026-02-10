@@ -3,12 +3,10 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   Home, 
   Sparkles, 
-  Wallet, 
   MoreHorizontal,
-  ChevronLeft,
-  ChevronRight,
   MessageSquare,
-  Briefcase
+  Briefcase,
+  Handshake
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -33,7 +31,7 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
     { id: "home", label: "Home", icon: Home, path: "/dashboard" },
     { id: "kira", label: "Kira", icon: Sparkles, path: "/kira" },
     { id: "studio", label: "Crevia Studio", icon: Briefcase, path: "/crevia-studio" },
-    { id: "wallet", label: "Crevia Wallet", icon: Wallet, path: "/crevia-wallet" },
+    { id: "connect", label: "Crevia Connect", icon: Handshake, path: "/crevia-connect" },
   ];
 
   const isActive = (path: string) => {
