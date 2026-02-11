@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { 
   Plus, 
@@ -11,17 +10,22 @@ import {
   Send, 
   Eye,
   MoreHorizontal,
-  Download,
   Edit,
   Trash2,
   CheckCircle2,
   Clock,
   AlertCircle,
   XCircle,
-  Receipt
+  Receipt,
+  Copy,
+  Filter,
+  ArrowUpDown,
+  TrendingUp,
+  DollarSign,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, isAfter } from "date-fns";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +33,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import CreateInvoiceDialog from "./CreateInvoiceDialog";
 import InvoicePreviewDialog from "./InvoicePreviewDialog";
 
@@ -40,6 +51,7 @@ interface Invoice {
   issue_date: string;
   due_date: string;
   status: string;
+  subtotal: number;
   total: number;
   currency: string;
   created_at: string;
@@ -49,6 +61,8 @@ const SmartInvoicesTab = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "amount">("newest");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
@@ -68,7 +82,16 @@ const SmartInvoicesTab = () => {
       return;
     }
 
-    setInvoices(data || []);
+    // Auto-mark overdue invoices
+    const now = new Date();
+    const updated = (data || []).map(inv => {
+      if (inv.status === "sent" && isAfter(now, new Date(inv.due_date))) {
+        return { ...inv, status: "overdue" };
+      }
+      return inv;
+    });
+
+    setInvoices(updated);
     setLoading(false);
   };
 
@@ -83,6 +106,57 @@ const SmartInvoicesTab = () => {
       return;
     }
     toast.success("Invoice deleted");
+    fetchInvoices();
+  };
+
+  const handleDuplicate = async (invoice: Invoice) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    // Get items for the invoice
+    const { data: items } = await supabase
+      .from("invoice_items")
+      .select("*")
+      .eq("invoice_id", invoice.id);
+
+    const date = new Date();
+    const invNum = `INV-${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}-${Math.floor(Math.random() * 10000).toString().padStart(4, "0")}`;
+
+    const { data: newInvoice, error } = await supabase
+      .from("invoices")
+      .insert({
+        user_id: session.user.id,
+        invoice_number: invNum,
+        client_name: invoice.client_name,
+        client_email: invoice.client_email,
+        issue_date: new Date().toISOString().split("T")[0],
+        due_date: invoice.due_date,
+        currency: invoice.currency,
+        subtotal: invoice.subtotal,
+        total: invoice.total,
+        status: "draft",
+      })
+      .select()
+      .single();
+
+    if (error || !newInvoice) {
+      toast.error("Failed to duplicate invoice");
+      return;
+    }
+
+    if (items && items.length > 0) {
+      await supabase.from("invoice_items").insert(
+        items.map((item) => ({
+          invoice_id: newInvoice.id,
+          description: item.description,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total: item.total,
+        }))
+      );
+    }
+
+    toast.success("Invoice duplicated as draft");
     fetchInvoices();
   };
 
@@ -101,21 +175,21 @@ const SmartInvoicesTab = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const styles: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode }> = {
-      draft: { variant: "secondary", icon: <FileText className="h-3 w-3" /> },
-      sent: { variant: "default", icon: <Send className="h-3 w-3" /> },
-      paid: { variant: "outline", icon: <CheckCircle2 className="h-3 w-3 text-green-500" /> },
-      overdue: { variant: "destructive", icon: <AlertCircle className="h-3 w-3" /> },
-      cancelled: { variant: "secondary", icon: <XCircle className="h-3 w-3" /> },
+    const styles: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
+      draft: { bg: "bg-gray-100 dark:bg-gray-800", text: "text-gray-600 dark:text-gray-400", icon: <FileText className="h-3 w-3" /> },
+      sent: { bg: "bg-blue-50 dark:bg-blue-900/30", text: "text-blue-600 dark:text-blue-400", icon: <Send className="h-3 w-3" /> },
+      paid: { bg: "bg-emerald-50 dark:bg-emerald-900/30", text: "text-emerald-600 dark:text-emerald-400", icon: <CheckCircle2 className="h-3 w-3" /> },
+      overdue: { bg: "bg-red-50 dark:bg-red-900/30", text: "text-red-600 dark:text-red-400", icon: <AlertCircle className="h-3 w-3" /> },
+      cancelled: { bg: "bg-gray-100 dark:bg-gray-800", text: "text-gray-500 dark:text-gray-400", icon: <XCircle className="h-3 w-3" /> },
     };
 
     const style = styles[status] || styles.draft;
 
     return (
-      <Badge variant={style.variant} className="gap-1 capitalize">
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${style.bg} ${style.text}`}>
         {style.icon}
-        {status}
-      </Badge>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </span>
     );
   };
 
@@ -126,11 +200,18 @@ const SmartInvoicesTab = () => {
     }).format(amount);
   };
 
-  const filteredInvoices = invoices.filter(
-    (invoice) =>
-      invoice.client_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      invoice.invoice_number.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredInvoices = invoices
+    .filter((invoice) => {
+      const matchesSearch = invoice.client_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        invoice.invoice_number.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === "all" || invoice.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      if (sortBy === "amount") return Number(b.total) - Number(a.total);
+      if (sortBy === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
 
   const stats = {
     total: invoices.length,
@@ -139,220 +220,288 @@ const SmartInvoicesTab = () => {
     overdue: invoices.filter((i) => i.status === "overdue").length,
     totalValue: invoices.reduce((acc, i) => acc + Number(i.total), 0),
     paidValue: invoices.filter((i) => i.status === "paid").reduce((acc, i) => acc + Number(i.total), 0),
+    outstandingValue: invoices.filter((i) => i.status === "sent" || i.status === "overdue").reduce((acc, i) => acc + Number(i.total), 0),
   };
 
   if (loading) {
     return (
       <div className="p-6 md:p-8 space-y-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-10 bg-muted rounded w-1/3" />
-          <div className="grid grid-cols-4 gap-4">
+        <div className="animate-pulse space-y-6">
+          <div className="h-12 bg-muted rounded-xl w-2/5" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-muted rounded-xl" />
+              <div key={i} className="h-28 bg-muted rounded-2xl" />
             ))}
           </div>
-          <div className="h-64 bg-muted rounded-xl" />
+          <div className="h-24 bg-muted rounded-2xl" />
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-20 bg-muted rounded-2xl" />
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
+    <div className="p-4 md:p-8 space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="font-vollkorn text-2xl font-semibold text-foreground">
-            Smart Invoices
+          <h2 className="font-vollkorn text-2xl md:text-3xl font-bold text-foreground tracking-tight">
+            Invoices
           </h2>
-          <p className="text-sm text-muted-foreground">
-            Create and manage professional invoices
+          <p className="text-sm text-muted-foreground mt-1">
+            Create, send, and track professional invoices
           </p>
         </div>
         <Button
           onClick={() => setCreateDialogOpen(true)}
-          className="gap-2 bg-bronze hover:bg-bronze/90"
+          className="gap-2 bg-bronze hover:bg-bronze/90 shadow-lg shadow-bronze/20"
         >
           <Plus className="h-4 w-4" />
-          Create Invoice
+          New Invoice
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-gradient-to-br from-bronze/10 to-transparent border-bronze/20">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <Card className="p-4 md:p-5 border-0 bg-gradient-to-br from-bronze/10 via-bronze/5 to-transparent shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-bronze/20">
+            <div className="p-2.5 rounded-xl bg-bronze/15">
               <Receipt className="h-5 w-5 text-bronze" />
             </div>
             <div>
-              <p className="text-2xl font-semibold text-foreground">{stats.total}</p>
-              <p className="text-xs text-muted-foreground">Total Invoices</p>
+              <p className="text-2xl md:text-3xl font-bold text-foreground">{stats.total}</p>
+              <p className="text-xs text-muted-foreground font-medium">Total</p>
             </div>
           </div>
         </Card>
-        <Card className="p-4 bg-gradient-to-br from-green-500/10 to-transparent border-green-500/20">
+        <Card className="p-4 md:p-5 border-0 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-500/20">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
+            <div className="p-2.5 rounded-xl bg-emerald-500/15">
+              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
             </div>
             <div>
-              <p className="text-2xl font-semibold text-foreground">{stats.paid}</p>
-              <p className="text-xs text-muted-foreground">Paid</p>
+              <p className="text-2xl md:text-3xl font-bold text-foreground">{stats.paid}</p>
+              <p className="text-xs text-muted-foreground font-medium">Paid</p>
             </div>
           </div>
         </Card>
-        <Card className="p-4 bg-gradient-to-br from-blue-500/10 to-transparent border-blue-500/20">
+        <Card className="p-4 md:p-5 border-0 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-500/20">
+            <div className="p-2.5 rounded-xl bg-blue-500/15">
               <Clock className="h-5 w-5 text-blue-500" />
             </div>
             <div>
-              <p className="text-2xl font-semibold text-foreground">{stats.pending}</p>
-              <p className="text-xs text-muted-foreground">Pending</p>
+              <p className="text-2xl md:text-3xl font-bold text-foreground">{stats.pending}</p>
+              <p className="text-xs text-muted-foreground font-medium">Pending</p>
             </div>
           </div>
         </Card>
-        <Card className="p-4 bg-gradient-to-br from-red-500/10 to-transparent border-red-500/20">
+        <Card className="p-4 md:p-5 border-0 bg-gradient-to-br from-red-500/10 via-red-500/5 to-transparent shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-red-500/20">
+            <div className="p-2.5 rounded-xl bg-red-500/15">
               <AlertCircle className="h-5 w-5 text-red-500" />
             </div>
             <div>
-              <p className="text-2xl font-semibold text-foreground">{stats.overdue}</p>
-              <p className="text-xs text-muted-foreground">Overdue</p>
+              <p className="text-2xl md:text-3xl font-bold text-foreground">{stats.overdue}</p>
+              <p className="text-xs text-muted-foreground font-medium">Overdue</p>
             </div>
           </div>
         </Card>
       </div>
 
       {/* Revenue Summary */}
-      <Card className="p-6 bg-gradient-to-r from-bronze/5 via-background to-bronze/5 border-bronze/10">
-        <div className="flex flex-col md:flex-row justify-between gap-4">
+      <Card className="p-5 md:p-6 border-0 bg-gradient-to-r from-bronze/8 via-background to-emerald-500/8 shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
-            <p className="text-sm text-muted-foreground mb-1">Total Revenue</p>
-            <p className="text-3xl font-bold text-foreground">
+            <div className="flex items-center gap-2 mb-1">
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground font-medium">Total Revenue</p>
+            </div>
+            <p className="text-2xl md:text-3xl font-bold text-foreground">
               {formatCurrency(stats.totalValue, "KES")}
             </p>
           </div>
-          <div className="text-right">
-            <p className="text-sm text-muted-foreground mb-1">Collected</p>
-            <p className="text-3xl font-bold text-green-500">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="h-4 w-4 text-emerald-500" />
+              <p className="text-sm text-muted-foreground font-medium">Collected</p>
+            </div>
+            <p className="text-2xl md:text-3xl font-bold text-emerald-500">
               {formatCurrency(stats.paidValue, "KES")}
+            </p>
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Clock className="h-4 w-4 text-amber-500" />
+              <p className="text-sm text-muted-foreground font-medium">Outstanding</p>
+            </div>
+            <p className="text-2xl md:text-3xl font-bold text-amber-500">
+              {formatCurrency(stats.outstandingValue, "KES")}
             </p>
           </div>
         </div>
       </Card>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search invoices..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
+      {/* Search, Filter & Sort */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search invoices or clients..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 h-11"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-[140px] h-11">
+            <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="draft">Draft</SelectItem>
+            <SelectItem value="sent">Sent</SelectItem>
+            <SelectItem value="paid">Paid</SelectItem>
+            <SelectItem value="overdue">Overdue</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+          <SelectTrigger className="w-full sm:w-[140px] h-11">
+            <ArrowUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest</SelectItem>
+            <SelectItem value="oldest">Oldest</SelectItem>
+            <SelectItem value="amount">Highest Amount</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Invoices List */}
       {filteredInvoices.length === 0 ? (
-        <Card className="p-12 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-bronze/10 flex items-center justify-center mx-auto mb-4">
-            <Receipt className="h-8 w-8 text-bronze" />
+        <Card className="p-12 md:p-16 text-center border-dashed border-2">
+          <div className="w-20 h-20 rounded-3xl bg-bronze/10 flex items-center justify-center mx-auto mb-5">
+            <Receipt className="h-10 w-10 text-bronze" />
           </div>
-          <h3 className="font-vollkorn text-xl font-semibold text-foreground mb-2">
-            No invoices yet
+          <h3 className="font-vollkorn text-xl md:text-2xl font-bold text-foreground mb-2">
+            {searchQuery || statusFilter !== "all" ? "No invoices found" : "Create your first invoice"}
           </h3>
-          <p className="text-muted-foreground mb-4">
-            Create your first invoice to get started
+          <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+            {searchQuery || statusFilter !== "all"
+              ? "Try adjusting your search or filters"
+              : "Professional invoices with auto-calculations, multiple currencies, and more"}
           </p>
-          <Button
-            onClick={() => setCreateDialogOpen(true)}
-            className="gap-2 bg-bronze hover:bg-bronze/90"
-          >
-            <Plus className="h-4 w-4" />
-            Create Invoice
-          </Button>
+          {!searchQuery && statusFilter === "all" && (
+            <Button
+              onClick={() => setCreateDialogOpen(true)}
+              className="gap-2 bg-bronze hover:bg-bronze/90"
+            >
+              <Sparkles className="h-4 w-4" />
+              Create Invoice
+            </Button>
+          )}
         </Card>
       ) : (
         <div className="space-y-3">
-          {filteredInvoices.map((invoice) => (
-            <Card
-              key={invoice.id}
-              className="p-4 hover:shadow-md transition-all duration-300 hover:border-bronze/30"
-            >
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-bronze/10">
-                    <FileText className="h-5 w-5 text-bronze" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-semibold text-foreground">
-                        {invoice.invoice_number}
-                      </h4>
-                      {getStatusBadge(invoice.status)}
+          {filteredInvoices.map((invoice) => {
+            const isOverdue = invoice.status === "overdue";
+            
+            return (
+              <Card
+                key={invoice.id}
+                className={`group p-4 md:p-5 hover:shadow-lg transition-all duration-300 border cursor-pointer ${
+                  isOverdue ? "border-red-200 dark:border-red-900/50 hover:border-red-300" : "hover:border-bronze/30"
+                }`}
+                onClick={() => setPreviewInvoice(invoice)}
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-start gap-4 flex-1 min-w-0">
+                    <div className={`p-3 rounded-2xl flex-shrink-0 transition-colors ${
+                      isOverdue ? "bg-red-100 dark:bg-red-900/20" : "bg-bronze/10 group-hover:bg-bronze/15"
+                    }`}>
+                      {isOverdue ? (
+                        <AlertCircle className="h-5 w-5 text-red-500" />
+                      ) : (
+                        <FileText className="h-5 w-5 text-bronze" />
+                      )}
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {invoice.client_name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Due: {format(new Date(invoice.due_date), "MMM d, yyyy")}
-                    </p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <h4 className="font-semibold text-foreground">
+                          {invoice.invoice_number}
+                        </h4>
+                        {getStatusBadge(invoice.status)}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {invoice.client_name}
+                      </p>
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
+                        <span>Issued {format(new Date(invoice.issue_date), "MMM d, yyyy")}</span>
+                        <span>•</span>
+                        <span className={isOverdue ? "text-red-500 font-medium" : ""}>
+                          Due {format(new Date(invoice.due_date), "MMM d, yyyy")}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4" onClick={(e) => e.stopPropagation()}>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-foreground">
+                        {formatCurrency(Number(invoice.total), invoice.currency)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{invoice.currency}</p>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={() => setPreviewInvoice(invoice)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          Preview
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setEditingInvoice(invoice)}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDuplicate(invoice)}>
+                          <Copy className="h-4 w-4 mr-2" />
+                          Duplicate
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        {invoice.status === "draft" && (
+                          <DropdownMenuItem onClick={() => handleStatusChange(invoice.id, "sent")}>
+                            <Send className="h-4 w-4 mr-2" />
+                            Mark as Sent
+                          </DropdownMenuItem>
+                        )}
+                        {(invoice.status === "sent" || invoice.status === "overdue") && (
+                          <DropdownMenuItem onClick={() => handleStatusChange(invoice.id, "paid")}>
+                            <CheckCircle2 className="h-4 w-4 mr-2" />
+                            Mark as Paid
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => handleDelete(invoice.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p className="text-lg font-semibold text-foreground">
-                      {formatCurrency(Number(invoice.total), invoice.currency)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Issued: {format(new Date(invoice.issue_date), "MMM d, yyyy")}
-                    </p>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setPreviewInvoice(invoice)}>
-                        <Eye className="h-4 w-4 mr-2" />
-                        Preview
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setEditingInvoice(invoice)}>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      {invoice.status === "draft" && (
-                        <DropdownMenuItem onClick={() => handleStatusChange(invoice.id, "sent")}>
-                          <Send className="h-4 w-4 mr-2" />
-                          Mark as Sent
-                        </DropdownMenuItem>
-                      )}
-                      {invoice.status === "sent" && (
-                        <DropdownMenuItem onClick={() => handleStatusChange(invoice.id, "paid")}>
-                          <CheckCircle2 className="h-4 w-4 mr-2" />
-                          Mark as Paid
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        className="text-destructive"
-                        onClick={() => handleDelete(invoice.id)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       )}
 

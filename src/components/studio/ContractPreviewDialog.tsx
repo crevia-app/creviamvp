@@ -8,7 +8,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Printer, CheckCircle2, FileSignature, Calendar, Coins, Users, PenTool, Send } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Printer, CheckCircle2, FileSignature, Calendar, Coins, PenTool, Send, Edit3, Save, X, Download } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import ESignatureDialog from "./ESignatureDialog";
@@ -30,11 +31,16 @@ const ContractPreviewDialog = ({
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
   const [signingAs, setSigningAs] = useState<"creator" | "client">("creator");
   const [localContract, setLocalContract] = useState(contract);
+  const [isEditingContent, setIsEditingContent] = useState(false);
+  const [editableContent, setEditableContent] = useState("");
+  const [savingContent, setSavingContent] = useState(false);
 
   useEffect(() => {
     if (contract) {
       fetchProfile();
       setLocalContract(contract);
+      setEditableContent(contract.content || "");
+      setIsEditingContent(false);
     }
   }, [contract]);
 
@@ -79,10 +85,8 @@ const ContractPreviewDialog = ({
       return;
     }
 
-    // Update local state
     setLocalContract({ ...localContract, ...updateData });
 
-    // Check if both have signed to update status
     const updatedContract = { ...localContract, ...updateData };
     if (updatedContract.creator_signature && updatedContract.client_signature) {
       await supabase
@@ -96,13 +100,34 @@ const ContractPreviewDialog = ({
     onContractUpdate?.();
   };
 
-  const handleSendToClient = async () => {
-    if (!localContract?.client_email) {
-      toast.error("No client email address. Please add one in the contract details.");
+  const handleSaveContent = async () => {
+    if (!localContract) return;
+    setSavingContent(true);
+
+    const { error } = await supabase
+      .from("contracts")
+      .update({ content: editableContent })
+      .eq("id", localContract.id);
+
+    setSavingContent(false);
+
+    if (error) {
+      toast.error("Failed to save changes");
       return;
     }
 
-    // Update contract status to sent
+    setLocalContract({ ...localContract, content: editableContent });
+    setIsEditingContent(false);
+    toast.success("Contract content updated");
+    onContractUpdate?.();
+  };
+
+  const handleSendToClient = async () => {
+    if (!localContract?.client_email) {
+      toast.error("No client email. Please add one in contract details.");
+      return;
+    }
+
     const { error } = await supabase
       .from("contracts")
       .update({ status: "sent" })
@@ -114,7 +139,7 @@ const ContractPreviewDialog = ({
     }
 
     setLocalContract({ ...localContract, status: "sent" });
-    toast.success(`Contract sent to ${localContract.client_email}. They can sign via the shared link.`);
+    toast.success(`Contract sent to ${localContract.client_email}`);
     onContractUpdate?.();
   };
 
@@ -125,7 +150,6 @@ const ContractPreviewDialog = ({
 
   const replaceTemplatePlaceholders = (text: string) => {
     if (!text) return "";
-    
     return text
       .replace(/\[CREATOR_NAME\]/g, profile?.display_name || profile?.handle || "Creator")
       .replace(/\[CLIENT_NAME\]/g, contract.client_name)
@@ -149,286 +173,345 @@ const ContractPreviewDialog = ({
     ugc: "UGC Agreement",
     affiliate: "Affiliate Partnership Agreement",
     custom: "Custom Agreement",
+    uploaded: "Uploaded Contract",
+  };
+
+  const statusColors: Record<string, string> = {
+    signed: "bg-emerald-500",
+    active: "bg-green-500",
+    completed: "bg-blue-500",
+    sent: "bg-amber-500",
+    draft: "bg-gray-400",
+    cancelled: "bg-red-500",
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span className="font-vollkorn text-xl">Contract Preview</span>
-            <Button variant="outline" size="sm" onClick={handlePrint}>
-              <Printer className="h-4 w-4 mr-2" />
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+        {/* Toolbar */}
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-6 py-3 flex items-center justify-between">
+          <DialogTitle className="font-vollkorn text-lg">Contract Preview</DialogTitle>
+          <div className="flex items-center gap-2">
+            {!isEditingContent && localContract.content && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditingContent(true)}
+                className="gap-1.5"
+              >
+                <Edit3 className="h-3.5 w-3.5" />
+                Edit
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5">
+              <Printer className="h-3.5 w-3.5" />
               Print
             </Button>
-          </DialogTitle>
-        </DialogHeader>
-
-        {/* Contract Preview */}
-        <div className="bg-white text-black p-8 rounded-lg shadow-inner print:shadow-none">
-          {/* Header */}
-          <div className="border-b-4 border-gray-900 pb-6 mb-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 uppercase tracking-wide">
-                  {contractTypeLabels[contract.contract_type] || "Agreement"}
-                </h1>
-                <p className="text-gray-600 mt-1">{contract.title}</p>
-              </div>
-              <Badge className={`${
-                contract.status === "signed" || contract.status === "active" ? "bg-green-500" :
-                contract.status === "completed" ? "bg-blue-500" :
-                contract.status === "sent" ? "bg-amber-500" :
-                "bg-gray-500"
-              } text-white capitalize`}>
-                {contract.status}
-              </Badge>
-            </div>
           </div>
+        </div>
 
-          {/* Parties */}
-          <div className="grid grid-cols-2 gap-8 mb-8">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-gray-500 text-xs uppercase tracking-wide mb-2">Creator</p>
-              <p className="font-semibold text-gray-900">
-                {profile?.display_name || profile?.handle || "Creator Name"}
-              </p>
-              <p className="text-gray-600 text-sm">{profile?.email}</p>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-gray-500 text-xs uppercase tracking-wide mb-2">Client</p>
-              <p className="font-semibold text-gray-900">{contract.client_name}</p>
-              {contract.client_email && (
-                <p className="text-gray-600 text-sm">{contract.client_email}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Key Terms */}
-          <div className="grid grid-cols-3 gap-4 mb-8">
-            <div className="p-4 border border-gray-200 rounded-lg text-center">
-              <Coins className="h-5 w-5 text-gray-500 mx-auto mb-2" />
-              <p className="text-gray-500 text-xs uppercase">Contract Value</p>
-              <p className="text-xl font-bold text-gray-900">
-                {formatCurrency(contract.value)}
-              </p>
-            </div>
-            <div className="p-4 border border-gray-200 rounded-lg text-center">
-              <Calendar className="h-5 w-5 text-gray-500 mx-auto mb-2" />
-              <p className="text-gray-500 text-xs uppercase">Start Date</p>
-              <p className="font-semibold text-gray-900">
-                {contract.start_date
-                  ? format(new Date(contract.start_date), "MMM d, yyyy")
-                  : "TBD"}
-              </p>
-            </div>
-            <div className="p-4 border border-gray-200 rounded-lg text-center">
-              <Calendar className="h-5 w-5 text-gray-500 mx-auto mb-2" />
-              <p className="text-gray-500 text-xs uppercase">End Date</p>
-              <p className="font-semibold text-gray-900">
-                {contract.end_date
-                  ? format(new Date(contract.end_date), "MMM d, yyyy")
-                  : "TBD"}
-              </p>
-            </div>
-          </div>
-
-          {/* Deliverables */}
-          {contract.deliverables && contract.deliverables.length > 0 && (
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
-                Deliverables
-              </h3>
-              <ul className="space-y-2">
-                {contract.deliverables.map((item: string, index: number) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <span className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium text-gray-600 flex-shrink-0">
-                      {index + 1}
-                    </span>
-                    <span className="text-gray-700">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Terms Sections */}
-          {contract.payment_terms && (
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-2">
-                Payment Terms
-              </h3>
-              <p className="text-gray-700">{contract.payment_terms}</p>
-            </div>
-          )}
-
-          {contract.exclusivity && (
-            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-              <h3 className="text-sm font-semibold text-amber-900 uppercase tracking-wide mb-2">
-                Exclusivity Clause
-              </h3>
-              <p className="text-amber-800">{contract.exclusivity_details || "Exclusivity terms apply to this agreement."}</p>
-            </div>
-          )}
-
-          {contract.usage_rights && (
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-2">
-                Usage Rights
-              </h3>
-              <p className="text-gray-700">{contract.usage_rights}</p>
-            </div>
-          )}
-
-          {contract.termination_clause && (
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-2">
-                Termination
-              </h3>
-              <p className="text-gray-700">{contract.termination_clause}</p>
-            </div>
-          )}
-
-          {/* Full Content */}
-          {contract.content && (
-            <div className="mb-8 pt-6 border-t border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
-                Full Agreement
-              </h3>
-              <div className="whitespace-pre-wrap text-sm text-gray-700 font-mono leading-relaxed">
-                {replaceTemplatePlaceholders(contract.content)}
-              </div>
-            </div>
-          )}
-
-          {/* Signatures */}
-          <div className="pt-8 border-t-2 border-gray-200 mt-8">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
-                Signatures
-              </h3>
-              <div className="flex gap-2 print:hidden">
-                {!localContract.creator_signature && (
-                  <Button
-                    size="sm"
-                    onClick={() => openSignatureDialog("creator")}
-                    className="gap-2 bg-[#d36725] hover:bg-[#b8571f]"
-                  >
-                    <PenTool className="h-4 w-4" />
-                    Sign as Creator
-                  </Button>
-                )}
-                {localContract.status !== "draft" && !localContract.client_signature && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => openSignatureDialog("client")}
-                    className="gap-2"
-                  >
-                    <PenTool className="h-4 w-4" />
-                    Sign as Client
-                  </Button>
-                )}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <div className="h-24 border-b-2 border-gray-300 flex items-end pb-2 relative">
-                  {localContract.creator_signature ? (
-                    localContract.creator_signature.startsWith("data:image") ? (
-                      <img 
-                        src={localContract.creator_signature} 
-                        alt="Creator signature" 
-                        className="max-h-20 object-contain"
-                      />
-                    ) : (
-                      <span className="text-2xl font-vollkorn italic text-gray-700">
-                        {localContract.creator_signature}
-                      </span>
-                    )
-                  ) : (
-                    <button 
-                      onClick={() => openSignatureDialog("creator")}
-                      className="text-gray-400 italic hover:text-[#d36725] transition-colors cursor-pointer print:cursor-default"
-                    >
-                      Click to sign
-                    </button>
-                  )}
-                </div>
+        <div className="p-6">
+          {/* Contract Document */}
+          <div className="bg-white text-black rounded-xl shadow-lg overflow-hidden print:shadow-none">
+            {/* Accent bar */}
+            <div className="h-1.5 bg-gradient-to-r from-bronze via-amber-500 to-bronze" />
+            
+            <div className="p-8 md:p-10">
+              {/* Header */}
+              <div className="flex justify-between items-start mb-8 pb-6 border-b-2 border-gray-100">
                 <div>
-                  <p className="font-semibold text-gray-900">
-                    {profile?.display_name || profile?.handle || "Creator"}
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+                    {contractTypeLabels[contract.contract_type] || "Agreement"}
+                  </h1>
+                  <p className="text-gray-500 mt-1 text-lg">{contract.title}</p>
+                </div>
+                <span className={`px-3 py-1.5 rounded-full text-xs font-semibold text-white uppercase tracking-wider ${statusColors[localContract.status] || "bg-gray-400"}`}>
+                  {localContract.status}
+                </span>
+              </div>
+
+              {/* Parties */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="p-5 bg-gray-50 rounded-xl border border-gray-100">
+                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-semibold">Creator / Service Provider</p>
+                  <p className="font-bold text-gray-900 text-lg">
+                    {profile?.display_name || profile?.handle || "Creator Name"}
                   </p>
-                  <p className="text-gray-500 text-sm">Creator</p>
-                  {localContract.creator_signed_at && (
-                    <p className="text-gray-500 text-xs mt-1 flex items-center gap-1">
-                      <CheckCircle2 className="h-3 w-3 text-green-500" />
-                      Signed: {format(new Date(localContract.creator_signed_at), "MMMM d, yyyy 'at' h:mm a")}
-                    </p>
+                  <p className="text-gray-500 text-sm mt-0.5">{profile?.email}</p>
+                </div>
+                <div className="p-5 bg-gray-50 rounded-xl border border-gray-100">
+                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-semibold">Client / Brand</p>
+                  <p className="font-bold text-gray-900 text-lg">{contract.client_name}</p>
+                  {contract.client_email && (
+                    <p className="text-gray-500 text-sm mt-0.5">{contract.client_email}</p>
                   )}
                 </div>
               </div>
-              <div className="space-y-4">
-                <div className="h-24 border-b-2 border-gray-300 flex items-end pb-2 relative">
-                  {localContract.client_signature ? (
-                    localContract.client_signature.startsWith("data:image") ? (
-                      <img 
-                        src={localContract.client_signature} 
-                        alt="Client signature" 
-                        className="max-h-20 object-contain"
-                      />
-                    ) : (
-                      <span className="text-2xl font-vollkorn italic text-gray-700">
-                        {localContract.client_signature}
-                      </span>
-                    )
+
+              {/* Key Terms Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                <div className="p-4 bg-gradient-to-br from-bronze/5 to-transparent border border-bronze/10 rounded-xl text-center">
+                  <Coins className="h-5 w-5 text-bronze mx-auto mb-2" />
+                  <p className="text-gray-400 text-xs uppercase font-semibold">Value</p>
+                  <p className="text-xl font-bold text-gray-900 mt-1">
+                    {formatCurrency(contract.value)}
+                  </p>
+                </div>
+                <div className="p-4 border border-gray-100 rounded-xl text-center">
+                  <Calendar className="h-5 w-5 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-400 text-xs uppercase font-semibold">Start</p>
+                  <p className="font-semibold text-gray-900 mt-1">
+                    {contract.start_date ? format(new Date(contract.start_date), "MMM d, yyyy") : "TBD"}
+                  </p>
+                </div>
+                <div className="p-4 border border-gray-100 rounded-xl text-center">
+                  <Calendar className="h-5 w-5 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-400 text-xs uppercase font-semibold">End</p>
+                  <p className="font-semibold text-gray-900 mt-1">
+                    {contract.end_date ? format(new Date(contract.end_date), "MMM d, yyyy") : "TBD"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Deliverables */}
+              {contract.deliverables && contract.deliverables.length > 0 && contract.deliverables[0] && (
+                <div className="mb-8">
+                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    Deliverables
+                  </h3>
+                  <div className="space-y-2">
+                    {contract.deliverables.filter((d: string) => d).map((item: string, index: number) => (
+                      <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <span className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-600 flex-shrink-0">
+                          {index + 1}
+                        </span>
+                        <span className="text-gray-700 text-sm">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Terms Sections */}
+              <div className="space-y-5 mb-8">
+                {contract.payment_terms && (
+                  <div className="p-4 border-l-4 border-bronze bg-bronze/5 rounded-r-lg">
+                    <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-1">Payment Terms</h3>
+                    <p className="text-gray-700 text-sm">{contract.payment_terms}</p>
+                  </div>
+                )}
+                {contract.exclusivity && (
+                  <div className="p-4 border-l-4 border-amber-400 bg-amber-50 rounded-r-lg">
+                    <h3 className="text-xs font-bold text-amber-900 uppercase tracking-wider mb-1">Exclusivity Clause</h3>
+                    <p className="text-amber-800 text-sm">{contract.exclusivity_details || "Exclusivity terms apply."}</p>
+                  </div>
+                )}
+                {contract.usage_rights && (
+                  <div className="p-4 border-l-4 border-blue-400 bg-blue-50 rounded-r-lg">
+                    <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-1">Usage Rights</h3>
+                    <p className="text-gray-700 text-sm">{contract.usage_rights}</p>
+                  </div>
+                )}
+                {contract.termination_clause && (
+                  <div className="p-4 border-l-4 border-gray-300 bg-gray-50 rounded-r-lg">
+                    <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-1">Termination</h3>
+                    <p className="text-gray-700 text-sm">{contract.termination_clause}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Full Content - Editable */}
+              {(localContract.content || isEditingContent) && (
+                <div className="mb-8 pt-6 border-t-2 border-gray-100">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">
+                      Full Agreement
+                    </h3>
+                    {isEditingContent && (
+                      <div className="flex gap-2 print:hidden">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            setIsEditingContent(false);
+                            setEditableContent(localContract.content || "");
+                          }}
+                          className="gap-1 text-gray-500"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleSaveContent}
+                          disabled={savingContent}
+                          className="gap-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                        >
+                          <Save className="h-3.5 w-3.5" />
+                          {savingContent ? "Saving..." : "Save"}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  {isEditingContent ? (
+                    <Textarea
+                      value={editableContent}
+                      onChange={(e) => setEditableContent(e.target.value)}
+                      className="min-h-[300px] font-mono text-sm leading-relaxed bg-white border-2 border-bronze/20 focus:border-bronze"
+                    />
                   ) : (
-                    <span className="text-gray-400 italic">
-                      {localContract.status === "draft" ? "Send to client first" : "Awaiting signature"}
-                    </span>
+                    <div className="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed font-mono bg-gray-50 p-6 rounded-xl border border-gray-100">
+                      {replaceTemplatePlaceholders(localContract.content)}
+                    </div>
                   )}
                 </div>
-                <div>
-                  <p className="font-semibold text-gray-900">{localContract.client_name}</p>
-                  <p className="text-gray-500 text-sm">Client</p>
-                  {localContract.client_signed_at && (
-                    <p className="text-gray-500 text-xs mt-1 flex items-center gap-1">
-                      <CheckCircle2 className="h-3 w-3 text-green-500" />
-                      Signed: {format(new Date(localContract.client_signed_at), "MMMM d, yyyy 'at' h:mm a")}
-                    </p>
-                  )}
+              )}
+
+              {/* Signatures Section */}
+              <div className="pt-8 border-t-2 border-gray-200">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                    <FileSignature className="h-4 w-4 text-bronze" />
+                    Electronic Signatures
+                  </h3>
+                  <div className="flex gap-2 print:hidden">
+                    {!localContract.creator_signature && (
+                      <Button
+                        size="sm"
+                        onClick={() => openSignatureDialog("creator")}
+                        className="gap-2 bg-bronze hover:bg-bronze/90 shadow-md shadow-bronze/20"
+                      >
+                        <PenTool className="h-4 w-4" />
+                        Sign as Creator
+                      </Button>
+                    )}
+                    {localContract.status !== "draft" && !localContract.client_signature && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openSignatureDialog("client")}
+                        className="gap-2"
+                      >
+                        <PenTool className="h-4 w-4" />
+                        Sign as Client
+                      </Button>
+                    )}
+                  </div>
                 </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Creator Signature */}
+                  <div className="space-y-3">
+                    <div className="h-28 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center bg-gray-50/50 relative overflow-hidden">
+                      {localContract.creator_signature ? (
+                        <>
+                          <div className="absolute top-2 right-2">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-semibold">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Signed
+                            </span>
+                          </div>
+                          {localContract.creator_signature.startsWith("data:image") ? (
+                            <img src={localContract.creator_signature} alt="Signature" className="max-h-20 object-contain" />
+                          ) : (
+                            <span className="text-3xl font-vollkorn italic text-gray-700">
+                              {localContract.creator_signature}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => openSignatureDialog("creator")}
+                          className="flex flex-col items-center gap-2 text-gray-400 hover:text-bronze transition-colors print:cursor-default"
+                        >
+                          <PenTool className="h-5 w-5" />
+                          <span className="text-xs font-medium">Click to sign</span>
+                        </button>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">{profile?.display_name || profile?.handle || "Creator"}</p>
+                      <p className="text-gray-400 text-xs">Creator / Service Provider</p>
+                      {localContract.creator_signed_at && (
+                        <p className="text-emerald-600 text-xs mt-1 flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3" />
+                          {format(new Date(localContract.creator_signed_at), "MMM d, yyyy 'at' h:mm a")}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Client Signature */}
+                  <div className="space-y-3">
+                    <div className="h-28 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center bg-gray-50/50 relative overflow-hidden">
+                      {localContract.client_signature ? (
+                        <>
+                          <div className="absolute top-2 right-2">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-semibold">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Signed
+                            </span>
+                          </div>
+                          {localContract.client_signature.startsWith("data:image") ? (
+                            <img src={localContract.client_signature} alt="Signature" className="max-h-20 object-contain" />
+                          ) : (
+                            <span className="text-3xl font-vollkorn italic text-gray-700">
+                              {localContract.client_signature}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2 text-gray-400">
+                          <PenTool className="h-5 w-5" />
+                          <span className="text-xs font-medium">
+                            {localContract.status === "draft" ? "Send to client first" : "Awaiting signature"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">{localContract.client_name}</p>
+                      <p className="text-gray-400 text-xs">Client / Brand</p>
+                      {localContract.client_signed_at && (
+                        <p className="text-emerald-600 text-xs mt-1 flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3" />
+                          {format(new Date(localContract.client_signed_at), "MMM d, yyyy 'at' h:mm a")}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Send to Client CTA */}
+                {localContract.status === "draft" && localContract.creator_signature && !localContract.client_signature && (
+                  <div className="mt-6 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl print:hidden">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="font-semibold text-blue-900">Ready to send</p>
+                        <p className="text-sm text-blue-600">
+                          Send to {localContract.client_name} for their signature.
+                        </p>
+                      </div>
+                      <Button
+                        onClick={handleSendToClient}
+                        className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-md"
+                      >
+                        <Send className="h-4 w-4" />
+                        Send
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="mt-10 pt-4 border-t border-gray-100 text-center">
+                <p className="text-gray-300 text-xs">
+                  Generated with Crevia Studio • {format(new Date(), "yyyy")}
+                </p>
               </div>
             </div>
-
-            {/* Send to client button */}
-            {localContract.status === "draft" && localContract.creator_signature && !localContract.client_signature && (
-              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg print:hidden">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-blue-900">Ready to send</p>
-                    <p className="text-sm text-blue-700">
-                      You've signed the contract. Send it to {localContract.client_name} for their signature.
-                    </p>
-                  </div>
-                  <Button
-                    onClick={handleSendToClient}
-                    className="gap-2 bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Send className="h-4 w-4" />
-                    Send to Client
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="mt-8 pt-4 border-t border-gray-200 text-center">
-            <p className="text-gray-400 text-xs">
-              Generated with Crevia Studio
-            </p>
           </div>
         </div>
 
@@ -436,10 +519,7 @@ const ContractPreviewDialog = ({
         <ESignatureDialog
           open={showSignatureDialog}
           onOpenChange={setShowSignatureDialog}
-          signerName={signingAs === "creator" 
-            ? (profile?.display_name || profile?.handle || "") 
-            : localContract?.client_name || ""
-          }
+          signerName={signingAs === "creator" ? (profile?.display_name || profile?.handle || "") : localContract.client_name}
           onSign={handleSign}
         />
       </DialogContent>
