@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface LivePreviewProps {
   linkProfile: any;
@@ -69,11 +70,20 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
             {/* Profile Section */}
             <div className="text-center mb-6">
               {/* Avatar */}
-              <div className="w-20 h-20 mx-auto mb-3 rounded-full bg-gradient-to-br from-bronze/30 to-bronze-dark/30 flex items-center justify-center ring-2 ring-white/20">
-                <span className={cn("text-2xl font-bold", textColor)}>
-                  {linkProfile?.display_name?.[0]?.toUpperCase() || "U"}
-                </span>
-              </div>
+              {linkProfile?.profile_picture ? (
+                <Avatar className="w-20 h-20 mx-auto mb-3 ring-2 ring-white/20">
+                  <AvatarImage src={linkProfile.profile_picture} />
+                  <AvatarFallback className="bg-gradient-to-br from-bronze/30 to-bronze-dark/30 text-2xl font-bold">
+                    {linkProfile?.display_name?.[0]?.toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              ) : (
+                <div className="w-20 h-20 mx-auto mb-3 rounded-full bg-gradient-to-br from-bronze/30 to-bronze-dark/30 flex items-center justify-center ring-2 ring-white/20">
+                  <span className={cn("text-2xl font-bold", textColor)}>
+                    {linkProfile?.display_name?.[0]?.toUpperCase() || "U"}
+                  </span>
+                </div>
+              )}
               
               {/* Name */}
               <h2 className={cn("font-semibold text-lg mb-1", textColor)}>
