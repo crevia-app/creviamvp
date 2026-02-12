@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,17 +11,33 @@ import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check, Globe, Shield, Bell, BarChart3, TrendingUp, MousePointer, ExternalLink } from "lucide-react";
+import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check, Globe, Shield, Bell, BarChart3, TrendingUp, MousePointer, ExternalLink, Camera, AlertCircle, Users, Star } from "lucide-react";
 import { AddButtonDialog } from "@/components/crevia-link/AddButtonDialog";
 import { ButtonItem } from "@/components/crevia-link/ButtonItem";
 import LinkSidebarDesktop from "@/components/crevia-link/LinkSidebarDesktop";
 import LinkTabsMobile from "@/components/crevia-link/LinkTabsMobile";
 import LivePreview from "@/components/crevia-link/LivePreview";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface CreviaLinkProps {
   isEmbedded?: boolean;
 }
+
+// Username validation
+const validateUsername = (username: string): string | null => {
+  if (!username) return "Username is required";
+  if (username.length < 3) return "Username must be at least 3 characters";
+  if (username.length > 30) return "Username must be under 30 characters";
+  if (/^[._-]/.test(username)) return "Username cannot start with a dot, underscore, or hyphen";
+  if (/[._-]$/.test(username)) return "Username cannot end with a dot, underscore, or hyphen";
+  if (/[._-]{2,}/.test(username)) return "Username cannot have consecutive special characters";
+  if (!/^[a-zA-Z0-9._-]+$/.test(username)) return "Only letters, numbers, dots, underscores, and hyphens allowed";
+  if (/^\d+$/.test(username)) return "Username cannot be only numbers";
+  const reserved = ["admin", "support", "help", "about", "pricing", "auth", "dashboard", "api", "crevia", "kira", "settings", "profile", "signup", "login"];
+  if (reserved.includes(username.toLowerCase())) return "This username is reserved";
+  return null;
+};
 
 const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const navigate = useNavigate();
@@ -34,6 +50,9 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const [saving, setSaving] = useState(false);
   const [showAddButton, setShowAddButton] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [uploadingPicture, setUploadingPicture] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   
   const currentTab = new URLSearchParams(location.search).get("tab") || "profile";
@@ -101,6 +120,61 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
       fetchButtons();
     }
   }, [linkProfile]);
+
+  const handleUsernameChange = (value: string) => {
+    const sanitized = value.toLowerCase().trim();
+    setLinkProfile({ ...linkProfile, username: sanitized });
+    setUsernameError(validateUsername(sanitized));
+  };
+
+  const handleProfilePictureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Invalid file", description: "Please upload an image file.", variant: "destructive" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Max 5MB allowed.", variant: "destructive" });
+      return;
+    }
+
+    setUploadingPicture(true);
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const fileExt = file.name.split(".").pop();
+    const filePath = `avatars/${session.user.id}-link-${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("chat-files")
+      .upload(filePath, file);
+
+    if (uploadError) {
+      toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
+      setUploadingPicture(false);
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from("chat-files").getPublicUrl(filePath);
+
+    const { error: updateError } = await supabase
+      .from("link_profiles")
+      .update({ profile_picture: publicUrl })
+      .eq("id", linkProfile.id);
+
+    if (updateError) {
+      toast({ title: "Failed to update", description: updateError.message, variant: "destructive" });
+    } else {
+      setLinkProfile({ ...linkProfile, profile_picture: publicUrl });
+      toast({ title: "Profile picture updated!" });
+    }
+
+    setUploadingPicture(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const handleAddButton = async (buttonData: any) => {
     const maxOrder = buttons.length > 0 
@@ -173,8 +247,16 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   };
 
   const handleSave = async () => {
+    // Validate username before saving
+    const error = validateUsername(linkProfile?.username || "");
+    if (error) {
+      setUsernameError(error);
+      toast({ title: "Invalid username", description: error, variant: "destructive" });
+      return;
+    }
+
     setSaving(true);
-    const { error } = await supabase
+    const { error: saveError } = await supabase
       .from("link_profiles")
       .update({
         username: linkProfile.username,
@@ -185,13 +267,14 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
         show_verified_badge: linkProfile.show_verified_badge,
         contact_enabled: linkProfile.contact_enabled,
         background: linkProfile.background,
+        profile_picture: linkProfile.profile_picture,
       })
       .eq("id", linkProfile.id);
 
-    if (error) {
+    if (saveError) {
       toast({
         title: "Error saving",
-        description: error.message,
+        description: saveError.message,
         variant: "destructive",
       });
     } else {
@@ -230,6 +313,171 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
       });
     }
   };
+
+  // Computed analytics
+  const totalClicks = buttons.reduce((sum, btn) => sum + (btn.clicks || 0), 0);
+  const totalViews = linkProfile?.total_visits || 0;
+  const clickRate = totalViews > 0 ? ((totalClicks / totalViews) * 100).toFixed(1) : "0.0";
+  const topLink = buttons.length > 0 
+    ? [...buttons].sort((a, b) => (b.clicks || 0) - (a.clicks || 0))[0] 
+    : null;
+  const activeLinks = buttons.filter(b => b.visible !== false).length;
+
+  // Profile picture section shared between standalone and embedded
+  const renderProfilePicture = () => (
+    <div className="flex flex-col items-center gap-4 mb-6">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleProfilePictureUpload}
+      />
+      <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+        <Avatar className="h-24 w-24 ring-4 ring-bronze/20">
+          <AvatarImage src={linkProfile?.profile_picture} />
+          <AvatarFallback className="bg-bronze/10 text-bronze text-2xl font-bold">
+            {linkProfile?.display_name?.[0]?.toUpperCase() || "U"}
+          </AvatarFallback>
+        </Avatar>
+        <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <Camera className="h-6 w-6 text-white" />
+        </div>
+        {uploadingPicture && (
+          <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
+            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+      </div>
+      <p className="text-xs text-muted-foreground">Click to change profile picture</p>
+    </div>
+  );
+
+  // Username field shared
+  const renderUsernameField = (idPrefix: string = "") => (
+    <div>
+      <Label className="text-sm font-medium mb-2 block">Username</Label>
+      <div className="flex items-center gap-2">
+        <span className="text-muted-foreground text-sm whitespace-nowrap">crevia.app/</span>
+        <Input
+          value={linkProfile?.username || ""}
+          onChange={(e) => handleUsernameChange(e.target.value)}
+          placeholder="yourusername"
+          className={cn("flex-1 h-11", usernameError && "border-destructive")}
+        />
+      </div>
+      {usernameError && (
+        <p className="text-xs text-destructive mt-1.5 flex items-center gap-1">
+          <AlertCircle className="h-3 w-3" />
+          {usernameError}
+        </p>
+      )}
+      <p className="text-xs text-muted-foreground mt-1">3-30 chars. Letters, numbers, dots, underscores, hyphens. Cannot start/end with special chars.</p>
+    </div>
+  );
+
+  // Analytics section shared
+  const renderAnalytics = () => (
+    <div className="space-y-6">
+      {/* Overview Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <Card className="p-5 border-border/50">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-bronze/10">
+              <Eye className="w-5 h-5 text-bronze" />
+            </div>
+          </div>
+          <p className="text-3xl font-bold text-foreground">{totalViews}</p>
+          <p className="text-sm text-muted-foreground mt-1">Total Views</p>
+        </Card>
+        <Card className="p-5 border-border/50">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-green-500/10">
+              <MousePointer className="w-5 h-5 text-green-500" />
+            </div>
+          </div>
+          <p className="text-3xl font-bold text-foreground">{totalClicks}</p>
+          <p className="text-sm text-muted-foreground mt-1">Total Clicks</p>
+        </Card>
+        <Card className="p-5 border-border/50 col-span-2 md:col-span-1">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-blue-500/10">
+              <TrendingUp className="w-5 h-5 text-blue-500" />
+            </div>
+          </div>
+          <p className="text-3xl font-bold text-foreground">{clickRate}%</p>
+          <p className="text-sm text-muted-foreground mt-1">Click-Through Rate</p>
+        </Card>
+      </div>
+
+      {/* Additional Analytics */}
+      <div className="grid grid-cols-2 gap-4">
+        <Card className="p-5 border-border/50">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-purple-500/10">
+              <Link2 className="w-5 h-5 text-purple-500" />
+            </div>
+          </div>
+          <p className="text-3xl font-bold text-foreground">{activeLinks}</p>
+          <p className="text-sm text-muted-foreground mt-1">Active Links</p>
+        </Card>
+        <Card className="p-5 border-border/50">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-amber-500/10">
+              <Star className="w-5 h-5 text-amber-500" />
+            </div>
+          </div>
+          <p className="text-xl font-bold text-foreground truncate">{topLink?.title || "—"}</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Top Link {topLink ? `(${topLink.clicks || 0} clicks)` : ""}
+          </p>
+        </Card>
+      </div>
+
+      {/* Link Performance */}
+      <Card className="p-6 border-border/50">
+        <div className="flex items-center gap-3 mb-6">
+          <BarChart3 className="w-6 h-6 text-bronze" />
+          <h3 className="font-vollkorn text-2xl font-bold">Link Performance</h3>
+        </div>
+        <div className="space-y-3">
+          {buttons.length > 0 ? (
+            buttons
+              .sort((a, b) => (b.clicks || 0) - (a.clicks || 0))
+              .map((button) => {
+                const percentage = totalClicks > 0 ? ((button.clicks || 0) / totalClicks * 100).toFixed(0) : 0;
+                return (
+                  <div key={button.id} className="p-4 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-4 mb-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{button.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">{button.url}</p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-xl font-bold text-bronze">{button.clicks || 0}</p>
+                        <p className="text-xs text-muted-foreground">{percentage}% of clicks</p>
+                      </div>
+                    </div>
+                    {/* Progress bar */}
+                    <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-bronze rounded-full transition-all"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <BarChart3 className="w-10 h-10 mx-auto mb-3 opacity-50" />
+              <p>No links yet. Add buttons to see analytics.</p>
+            </div>
+          )}
+        </div>
+      </Card>
+    </div>
+  );
 
   if (loading) {
     return (
@@ -279,18 +527,8 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
               <Card className="p-6 border-border/50">
                 <h3 className="font-vollkorn text-2xl font-bold mb-6">Profile Information</h3>
                 <div className="space-y-5">
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">Username</Label>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground text-sm">crevia.app/</span>
-                      <Input
-                        value={linkProfile?.username || ""}
-                        onChange={(e) => setLinkProfile({ ...linkProfile, username: e.target.value })}
-                        placeholder="yourusername"
-                        className="flex-1 h-11"
-                      />
-                    </div>
-                  </div>
+                  {renderProfilePicture()}
+                  {renderUsernameField("embedded-")}
                   <div>
                     <Label className="text-sm font-medium mb-2 block">Display Name</Label>
                     <Input
@@ -356,7 +594,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
             {embeddedTab === "appearance" && (
               <div className="space-y-6">
-                {/* Premium African Themes */}
+                {/* Premium Themes */}
                 <Card className="p-6 border-border/50">
                   <div className="flex items-center gap-3 mb-6">
                     <Palette className="w-6 h-6 text-bronze" />
@@ -469,9 +707,9 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                           { value: "pill", label: "Pill", class: "rounded-full bg-bronze" },
                         ].map((style) => (
                           <div key={style.value}>
-                            <RadioGroupItem value={style.value} id={`btn-${style.value}`} className="peer sr-only" />
+                            <RadioGroupItem value={style.value} id={`emb-btn-${style.value}`} className="peer sr-only" />
                             <Label
-                              htmlFor={`btn-${style.value}`}
+                              htmlFor={`emb-btn-${style.value}`}
                               className="flex flex-col items-center p-4 rounded-xl border-2 border-muted peer-data-[state=checked]:border-bronze cursor-pointer"
                             >
                               <div className={cn("w-full h-10 mb-2", style.value === "pill" ? style.class : `${style.class} bg-bronze/20 border-2 border-bronze`)} />
@@ -579,82 +817,14 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
               </div>
             )}
 
-            {embeddedTab === "analytics" && (
-              <div className="space-y-6">
-                {/* Overview Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <Card className="p-5 border-border/50">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 rounded-lg bg-bronze/10">
-                        <Eye className="w-5 h-5 text-bronze" />
-                      </div>
-                    </div>
-                    <p className="text-3xl font-bold text-foreground">{linkProfile?.total_visits || 0}</p>
-                    <p className="text-sm text-muted-foreground mt-1">Total Views</p>
-                  </Card>
-                  <Card className="p-5 border-border/50">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 rounded-lg bg-green-500/10">
-                        <MousePointer className="w-5 h-5 text-green-500" />
-                      </div>
-                    </div>
-                    <p className="text-3xl font-bold text-foreground">
-                      {buttons.reduce((sum, btn) => sum + (btn.clicks || 0), 0)}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">Total Clicks</p>
-                  </Card>
-                  <Card className="p-5 border-border/50 col-span-2 md:col-span-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 rounded-lg bg-blue-500/10">
-                        <TrendingUp className="w-5 h-5 text-blue-500" />
-                      </div>
-                    </div>
-                    <p className="text-3xl font-bold text-foreground">
-                      {linkProfile?.total_visits ? ((buttons.reduce((sum, btn) => sum + (btn.clicks || 0), 0) / linkProfile.total_visits) * 100).toFixed(1) : 0}%
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">Click Rate</p>
-                  </Card>
-                </div>
-
-                {/* Link Performance */}
-                <Card className="p-6 border-border/50">
-                  <div className="flex items-center gap-3 mb-6">
-                    <BarChart3 className="w-6 h-6 text-bronze" />
-                    <h3 className="font-vollkorn text-2xl font-bold">Link Performance</h3>
-                  </div>
-                  <div className="space-y-3">
-                    {buttons.length > 0 ? (
-                      buttons
-                        .sort((a, b) => (b.clicks || 0) - (a.clicks || 0))
-                        .map((button) => (
-                          <div key={button.id} className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium truncate">{button.title}</p>
-                              <p className="text-xs text-muted-foreground truncate">{button.url}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-xl font-bold text-bronze">{button.clicks || 0}</p>
-                              <p className="text-xs text-muted-foreground">clicks</p>
-                            </div>
-                          </div>
-                        ))
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <BarChart3 className="w-10 h-10 mx-auto mb-3 opacity-50" />
-                        <p>No links yet. Add buttons to see analytics.</p>
-                      </div>
-                    )}
-                  </div>
-                </Card>
-              </div>
-            )}
+            {embeddedTab === "analytics" && renderAnalytics()}
           </div>
 
           {/* Live Preview - Desktop Only */}
           <div className="hidden lg:block w-[340px] sticky top-0 h-screen py-8 pr-6">
             <div className="sticky top-8">
               <p className="text-sm font-medium text-center text-muted-foreground mb-4">Live Preview</p>
-              <LivePreview key={`${linkProfile?.theme}-${linkProfile?.background?.button_style}`} linkProfile={linkProfile} buttons={buttons} />
+              <LivePreview linkProfile={linkProfile} buttons={buttons} />
             </div>
           </div>
         </div>
@@ -745,6 +915,8 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 <h3 className="font-vollkorn text-2xl md:text-3xl font-bold mb-6 md:mb-7">Profile Information</h3>
                 
                 <div className="space-y-6">
+                  {renderProfilePicture()}
+
                   <div>
                     <Label htmlFor="username" className="text-base font-medium mb-3 block">Username</Label>
                     <div className="flex items-center gap-2">
@@ -752,11 +924,18 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                       <Input
                         id="username"
                         value={linkProfile?.username || ""}
-                        onChange={(e) => setLinkProfile({ ...linkProfile, username: e.target.value })}
+                        onChange={(e) => handleUsernameChange(e.target.value)}
                         placeholder="yourusername"
-                        className="flex-1 h-12 text-base"
+                        className={cn("flex-1 h-12 text-base", usernameError && "border-destructive")}
                       />
                     </div>
+                    {usernameError && (
+                      <p className="text-xs text-destructive mt-1.5 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {usernameError}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">3-30 chars. Letters, numbers, dots, underscores, hyphens.</p>
                   </div>
 
                   <div>
@@ -805,25 +984,21 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
           {/* ===== BUTTONS TAB ===== */}
           {currentTab === "buttons" && (
             <Card className="p-6 md:p-8 border-border/50">
-              <div className="space-y-5 mb-6">
-                <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">Links & Buttons</h3>
-                <Button 
-                  className="bg-bronze hover:bg-bronze-dark w-full h-14 md:h-16 font-semibold text-base md:text-lg"
-                  onClick={() => setShowAddButton(true)}
-                  size="lg"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="font-vollkorn text-3xl md:text-4xl font-bold text-bronze">Links & Buttons</h3>
+                <Button onClick={() => setShowAddButton(true)} className="bg-bronze hover:bg-bronze-dark">
+                  <Plus className="w-4 h-4 mr-2" />
                   Add Button
                 </Button>
               </div>
               
               {buttons.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Link2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p className="text-base">No buttons yet. Click "Add Button" to get started.</p>
+                <div className="text-center py-16 text-muted-foreground">
+                  <Link2 className="w-14 h-14 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-poppins">No buttons yet. Add one to get started.</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {buttons.map((button) => (
                     <ButtonItem
                       key={button.id}
@@ -840,17 +1015,38 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
           {/* ===== APPEARANCE TAB ===== */}
           {currentTab === "appearance" && (
-            <div className="space-y-8 md:space-y-12">
+            <div className="space-y-6 md:space-y-10">
+              {/* Save Buttons */}
+              <div className="flex gap-4">
+                <Button onClick={handleSave} disabled={saving} className="flex-1 bg-bronze hover:bg-bronze-dark h-14 md:h-16 text-base md:text-lg font-poppins font-semibold">
+                  {saving ? "Saving..." : "Save Appearance"}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.open(`/${linkProfile?.username}`, "_blank")}
+                  className="h-14 md:h-16"
+                >
+                  <Eye className="w-5 h-5 mr-2" />
+                  Preview
+                </Button>
+              </div>
+
+              {/* Live Preview inline on mobile */}
+              <div className="md:hidden">
+                <p className="text-sm font-medium text-center text-muted-foreground mb-4">Live Preview</p>
+                <LivePreview linkProfile={linkProfile} buttons={buttons} />
+              </div>
+
               {/* Typography Section */}
-              <Card className="p-6 md:p-9 border-border/50">
-                <div className="flex items-center gap-3 mb-8">
-                  <Type className="w-7 h-7 md:w-8 md:h-8 text-bronze" />
-                  <h3 className="font-vollkorn text-2xl md:text-4xl font-bold">Typography</h3>
+              <Card className="p-4 sm:p-6 md:p-9 border-border/50">
+                <div className="flex items-center gap-3 mb-6 md:mb-10">
+                  <Type className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-bronze flex-shrink-0" />
+                  <h3 className="font-vollkorn text-xl sm:text-2xl md:text-4xl font-bold">Typography</h3>
                 </div>
                 
-                <div className="space-y-6">
+                <div className="space-y-6 md:space-y-10">
                   <div>
-                    <Label htmlFor="fontFamily" className="text-base font-medium mb-3 block">Font Family</Label>
+                    <Label htmlFor="fontFamily" className="text-sm sm:text-base md:text-lg font-medium mb-2 md:mb-4 block">Font Family</Label>
                     <Select
                       value={linkProfile?.background?.font_family || "poppins"}
                       onValueChange={(value) => setLinkProfile({ 
@@ -858,42 +1054,14 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         background: { ...linkProfile?.background, font_family: value }
                       })}
                     >
-                      <SelectTrigger className="h-12 text-base">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="poppins">Poppins (Modern Sans)</SelectItem>
-                        <SelectItem value="vollkorn">Vollkorn (Classic Serif)</SelectItem>
-                        <SelectItem value="inter">Inter (Clean Sans)</SelectItem>
-                        <SelectItem value="playfair">Playfair Display (Elegant Serif)</SelectItem>
-                        <SelectItem value="montserrat">Montserrat (Geometric Sans)</SelectItem>
-                        <SelectItem value="roboto">Roboto (Neutral Sans)</SelectItem>
-                        <SelectItem value="lora">Lora (Traditional Serif)</SelectItem>
-                        <SelectItem value="space-grotesk">Space Grotesk (Tech Sans)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Choose a font that matches your brand personality
-                    </p>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="fontSize" className="text-base font-medium mb-3 block">Text Size</Label>
-                    <Select
-                      value={linkProfile?.background?.font_size || "medium"}
-                      onValueChange={(value) => setLinkProfile({
-                        ...linkProfile, 
-                        background: { ...linkProfile?.background, font_size: value }
-                      })}
-                    >
                       <SelectTrigger className="mt-2 h-10 sm:h-11 md:h-12 text-sm sm:text-base">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="small">Small</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="large">Large</SelectItem>
-                        <SelectItem value="xlarge">Extra Large</SelectItem>
+                        <SelectItem value="poppins">Poppins (Modern)</SelectItem>
+                        <SelectItem value="vollkorn">Vollkorn (Classic)</SelectItem>
+                        <SelectItem value="inter">Inter (Clean)</SelectItem>
+                        <SelectItem value="playfair">Playfair (Elegant)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1023,9 +1191,9 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         { value: "pill", label: "Pill", class: "rounded-full bg-bronze" },
                       ].map((style) => (
                         <div key={style.value} className="relative">
-                          <RadioGroupItem value={style.value} id={style.value} className="peer sr-only" />
+                          <RadioGroupItem value={style.value} id={`standalone-btn-${style.value}`} className="peer sr-only" />
                           <Label
-                            htmlFor={style.value}
+                            htmlFor={`standalone-btn-${style.value}`}
                             className="flex flex-col items-center justify-center rounded-lg md:rounded-xl border-2 border-muted p-3 sm:p-4 md:p-6 hover:bg-accent peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
                           >
                             <div className={cn(
@@ -1155,71 +1323,15 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                   />
                 </div>
 
-                <div className="pt-6 border-t">
-                  <h4 className="font-vollkorn text-xl font-bold mb-6">Analytics</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-5 bg-muted rounded-lg">
-                      <p className="text-3xl font-bold text-bronze">{linkProfile?.total_visits || 0}</p>
-                      <p className="text-sm text-muted-foreground mt-2">Total Visits</p>
-                    </div>
-                    <div className="p-5 bg-muted rounded-lg">
-                      <p className="text-3xl font-bold text-bronze">
-                        {buttons.reduce((sum, btn) => sum + (btn.clicks || 0), 0)}
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-2">Button Clicks</p>
-                    </div>
-                  </div>
-                </div>
+                <Button onClick={handleSave} disabled={saving} className="w-full bg-bronze hover:bg-bronze-dark h-12">
+                  {saving ? "Saving..." : "Save Settings"}
+                </Button>
               </div>
             </Card>
           )}
 
           {/* ===== ANALYTICS TAB ===== */}
-          {currentTab === "analytics" && (
-            <Card className="p-6 md:p-8 border-border/50">
-              <h3 className="font-vollkorn text-3xl md:text-4xl font-bold mb-8 text-bronze">Analytics</h3>
-              
-              <div className="space-y-8">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="p-5 md:p-6 bg-muted rounded-lg">
-                    <p className="text-3xl md:text-4xl font-bold text-bronze">{linkProfile?.total_visits || 0}</p>
-                    <p className="text-sm text-muted-foreground mt-3">Total Page Views</p>
-                  </div>
-                  <div className="p-5 md:p-6 bg-muted rounded-lg">
-                    <p className="text-3xl md:text-4xl font-bold text-bronze">
-                      {buttons.reduce((sum, btn) => sum + (btn.clicks || 0), 0)}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-3">Total Link Clicks</p>
-                  </div>
-                  <div className="p-5 md:p-6 bg-muted rounded-lg col-span-2 md:col-span-1">
-                    <p className="text-3xl md:text-4xl font-bold text-bronze">{buttons.length}</p>
-                    <p className="text-sm text-muted-foreground mt-3">Active Links</p>
-                  </div>
-                </div>
-
-                <div className="pt-6 border-t">
-                  <h4 className="font-vollkorn text-xl font-bold mb-6">Link Performance</h4>
-                  <div className="space-y-4">
-                    {buttons.map((button) => (
-                      <div key={button.id} className="flex items-center justify-between gap-4 p-5 bg-muted rounded-lg">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-base truncate">{button.title}</p>
-                          <p className="text-sm text-muted-foreground truncate mt-1">{button.url}</p>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <p className="text-2xl font-bold text-bronze">{button.clicks || 0}</p>
-                          <p className="text-xs text-muted-foreground">clicks</p>
-                        </div>
-                      </div>
-                    ))}
-                    {buttons.length === 0 && (
-                      <p className="text-center text-muted-foreground py-12 text-base">No links yet. Add buttons to see performance data.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          )}
+          {currentTab === "analytics" && renderAnalytics()}
         </div>
           </div>
         </main>

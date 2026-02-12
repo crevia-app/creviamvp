@@ -20,7 +20,6 @@ const PublicProfile = () => {
   const loadProfile = async () => {
     if (!username) return;
 
-    // Fetch link profile
     const { data: linkProfile } = await supabase
       .from("link_profiles")
       .select("*, profiles(*)")
@@ -30,13 +29,11 @@ const PublicProfile = () => {
     if (linkProfile) {
       setProfile(linkProfile);
 
-      // Track visit
       await supabase
         .from("link_profiles")
         .update({ total_visits: (linkProfile.total_visits || 0) + 1 })
         .eq("id", linkProfile.id);
 
-      // Fetch buttons
       const { data: buttonData } = await supabase
         .from("link_buttons")
         .select("*")
@@ -46,7 +43,6 @@ const PublicProfile = () => {
 
       setButtons(buttonData || []);
 
-      // Fetch social icons
       const { data: socialData } = await supabase
         .from("link_social_icons")
         .select("*")
@@ -60,176 +56,38 @@ const PublicProfile = () => {
   };
 
   const handleButtonClick = async (buttonId: string, url: string) => {
-    // Track click
     await supabase
       .from("link_buttons")
       .update({ clicks: buttons.find(b => b.id === buttonId)?.clicks + 1 || 1 })
       .eq("id", buttonId);
 
-    // Open URL
     window.open(url, "_blank");
   };
 
   const getThemeStyles = () => {
     const theme = profile?.theme || "dark";
-    switch (theme) {
-      case "light":
-        return { className: "bg-white text-gray-900" };
-      case "dark":
-        return { className: "bg-gray-900 text-white" };
-      case "bronze":
-        return { className: "bg-gradient-to-br from-[#1a1a1a] to-[#2d2520] text-white" };
-      case "minimal":
-        return { className: "bg-gray-50 text-gray-800" };
-      case "sunset":
-        return { className: "bg-gradient-to-br from-orange-500 to-pink-600 text-white" };
-      case "ocean":
-        return { className: "bg-gradient-to-br from-blue-600 to-teal-500 text-white" };
-      case "forest":
-        return { className: "bg-gradient-to-br from-green-700 to-emerald-900 text-white" };
-      case "royal":
-        return { className: "bg-gradient-to-br from-purple-700 to-indigo-900 text-white" };
-      // African Heritage Collection - Authentic patterns with character
-      case "maasai":
-        return {
-          className: "text-white",
-          style: {
-            background: `
-              repeating-linear-gradient(
-                0deg,
-                #C41E3A 0px, #C41E3A 12px,
-                #1E40AF 12px, #1E40AF 18px,
-                #FFD700 18px, #FFD700 24px,
-                #C41E3A 24px, #C41E3A 36px,
-                #FFFFFF 36px, #FFFFFF 42px,
-                #1E40AF 42px, #1E40AF 48px,
-                #228B22 48px, #228B22 54px,
-                #FFD700 54px, #FFD700 60px
-              )
-            `
-          }
-        };
-      case "kente":
-        return {
-          className: "text-white",
-          style: {
-            background: `
-              repeating-linear-gradient(
-                90deg,
-                #FFD700 0px, #FFD700 20px,
-                #228B22 20px, #228B22 40px,
-                #C41E3A 40px, #C41E3A 60px,
-                #1a1a1a 60px, #1a1a1a 80px
-              ),
-              repeating-linear-gradient(
-                0deg,
-                transparent 0px, transparent 8px,
-                rgba(0,0,0,0.2) 8px, rgba(0,0,0,0.2) 16px
-              )
-            `,
-            backgroundBlendMode: 'multiply'
-          }
-        };
-      case "ndebele":
-        return {
-          className: "text-white",
-          style: {
-            background: `
-              linear-gradient(to right,
-                #1E40AF 0%, #1E40AF 15%,
-                #FFD700 15%, #FFD700 25%,
-                #C41E3A 25%, #C41E3A 45%,
-                #FFFFFF 45%, #FFFFFF 55%,
-                #228B22 55%, #228B22 70%,
-                #FFD700 70%, #FFD700 80%,
-                #1E40AF 80%, #1E40AF 100%
-              ),
-              repeating-linear-gradient(
-                0deg,
-                transparent 0px, transparent 40px,
-                rgba(0,0,0,0.15) 40px, rgba(0,0,0,0.15) 45px,
-                transparent 45px, transparent 90px
-              )
-            `
-          }
-        };
-      case "ankara":
-        return {
-          className: "text-white",
-          style: {
-            background: `
-              radial-gradient(circle at 20% 30%, #F97316 25%, transparent 25%),
-              radial-gradient(circle at 80% 70%, #8B4513 20%, transparent 20%),
-              radial-gradient(circle at 50% 50%, #FFD700 18%, transparent 18%),
-              radial-gradient(circle at 20% 80%, #C41E3A 15%, transparent 15%),
-              radial-gradient(circle at 80% 20%, #228B22 15%, transparent 15%),
-              radial-gradient(circle at 60% 40%, #1E40AF 12%, transparent 12%),
-              radial-gradient(circle at 35% 60%, #FFD700 10%, transparent 10%),
-              #F97316
-            `,
-            backgroundSize: '120px 120px'
-          }
-        };
-      case "amazigh":
-        return {
-          className: "text-white",
-          style: {
-            background: `
-              linear-gradient(45deg, 
-                #CD5C5C 0%, #CD5C5C 15%, 
-                #DAA520 15%, #DAA520 30%, 
-                #4B0082 30%, #4B0082 45%, 
-                #D2B48C 45%, #D2B48C 60%, 
-                #CD5C5C 60%, #CD5C5C 75%, 
-                #4B0082 75%, #4B0082 100%
-              )
-            `,
-            backgroundSize: '60px 60px'
-          }
-        };
-      case "zulu":
-        return {
-          className: "text-white",
-          style: {
-            background: `
-              repeating-linear-gradient(
-                90deg,
-                #000000 0px, #000000 6px,
-                #FFFFFF 6px, #FFFFFF 12px,
-                #C41E3A 12px, #C41E3A 18px,
-                #1E90FF 18px, #1E90FF 24px,
-                #228B22 24px, #228B22 30px,
-                #FFD700 30px, #FFD700 36px
-              )
-            `,
-            backgroundSize: '36px 100%'
-          }
-        };
-      case "ethiopian":
-        return {
-          className: "text-white",
-          style: {
-            background: `linear-gradient(180deg, #078930 0%, #078930 33%, #FCDD09 33%, #FCDD09 66%, #DA121A 66%, #DA121A 100%)`
-          }
-        };
-      case "adinkra":
-        return {
-          className: "text-white",
-          style: {
-            background: `
-              radial-gradient(circle at 50% 50%, #1a1a1a 15%, transparent 15%), 
-              radial-gradient(circle at 0% 0%, #1a1a1a 10%, transparent 10%), 
-              radial-gradient(circle at 100% 100%, #1a1a1a 10%, transparent 10%), 
-              #8B4513
-            `,
-            backgroundSize: '30px 30px'
-          }
-        };
-      default:
-        return { className: "bg-gray-900 text-white" };
-    }
+    const themeMap: Record<string, { className: string }> = {
+      light: { className: "bg-white text-gray-900" },
+      dark: { className: "bg-gray-900 text-white" },
+      bronze: { className: "bg-gradient-to-br from-[#1a1a1a] to-[#2d2520] text-white" },
+      minimal: { className: "bg-gray-50 text-gray-800" },
+      sunset: { className: "bg-gradient-to-br from-orange-500 to-pink-600 text-white" },
+      ocean: { className: "bg-gradient-to-br from-blue-600 to-teal-500 text-white" },
+      forest: { className: "bg-gradient-to-br from-green-700 to-emerald-900 text-white" },
+      royal: { className: "bg-gradient-to-br from-purple-700 to-indigo-900 text-white" },
+      midnight: { className: "bg-gradient-to-br from-slate-900 to-blue-950 text-white" },
+      rose: { className: "bg-gradient-to-br from-rose-400 to-pink-300 text-white" },
+      noir: { className: "bg-gradient-to-br from-zinc-900 to-neutral-950 text-white" },
+      sapphire: { className: "bg-gradient-to-br from-blue-700 to-indigo-900 text-white" },
+      burgundy: { className: "bg-gradient-to-br from-rose-900 to-red-950 text-white" },
+      emerald: { className: "bg-gradient-to-br from-emerald-700 to-green-900 text-white" },
+      lavender: { className: "bg-gradient-to-br from-violet-400 to-purple-500 text-white" },
+      champagne: { className: "bg-gradient-to-br from-amber-100 to-yellow-50 text-gray-900" },
+    };
+    return themeMap[theme] || themeMap.dark;
   };
 
+  // Get theme-based styles
   const getFontFamily = () => {
     const font = profile?.background?.font_family || "poppins";
     const fontMap: Record<string, string> = {
@@ -285,31 +143,21 @@ const PublicProfile = () => {
 
   const getButtonVariant = (style: string) => {
     switch (style) {
-      case "filled":
-        return "default";
-      case "outline":
-        return "outline";
-      case "minimal":
-        return "ghost";
-      default:
-        return "default";
+      case "filled": return "default";
+      case "outline": return "outline";
+      case "minimal": return "ghost";
+      default: return "default";
     }
   };
 
   const getSocialIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
-      case "instagram":
-        return <Instagram className="w-5 h-5" />;
-      case "linkedin":
-        return <Linkedin className="w-5 h-5" />;
-      case "youtube":
-        return <Youtube className="w-5 h-5" />;
-      case "email":
-        return <Mail className="w-5 h-5" />;
-      case "website":
-        return <Globe className="w-5 h-5" />;
-      default:
-        return <Globe className="w-5 h-5" />;
+      case "instagram": return <Instagram className="w-5 h-5" />;
+      case "linkedin": return <Linkedin className="w-5 h-5" />;
+      case "youtube": return <Youtube className="w-5 h-5" />;
+      case "email": return <Mail className="w-5 h-5" />;
+      case "website": return <Globe className="w-5 h-5" />;
+      default: return <Globe className="w-5 h-5" />;
     }
   };
 
@@ -348,7 +196,7 @@ const PublicProfile = () => {
   return (
     <div 
       className={`min-h-screen ${themeStyles.className} ${getFontFamily()} ${getFontSize()} py-12 px-6`}
-      style={{ scrollBehavior: smoothScroll ? 'smooth' : 'auto', ...themeStyles.style }}
+      style={{ scrollBehavior: smoothScroll ? 'smooth' : 'auto' }}
     >
       <div className={`${getPageWidth()} ${layoutClass} ${fadeAnimation ? 'animate-fade-in' : ''}`}>
         {/* Profile Header */}
@@ -357,7 +205,7 @@ const PublicProfile = () => {
             <img
               src={profile.profile_picture}
               alt={profile.display_name}
-              className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-[#CF8150]"
+              className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-[#CF8150] object-cover"
             />
           )}
           
