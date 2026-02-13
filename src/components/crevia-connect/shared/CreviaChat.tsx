@@ -1,460 +1,969 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Paperclip, Image as ImageIcon, File, X, Check, CheckCheck, Download, MessageSquare, ArrowLeft } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Send,
+  Paperclip,
+  Image as ImageIcon,
+  File,
+  X,
+  Check,
+  CheckCheck,
+  Download,
+  MessageSquare,
+  ArrowLeft,
+  Users,
+  Plus,
+  Search,
+  Shield,
+  Lock,
+  Receipt,
+  FileSignature,
+  MoreVertical,
+  UserPlus,
+  Info,
+  Hash,
+} from "lucide-react";
+import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
-import NewConversationDialog from "./NewConversationDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { format, isToday, isYesterday } from "date-fns";
+
+interface ChatRoom {
+  id: string;
+  name: string | null;
+  is_group: boolean;
+  created_by: string;
+  avatar_url: string | null;
+  updated_at: string;
+  members?: RoomMember[];
+  lastMessage?: ChatMessage | null;
+  unreadCount?: number;
+}
+
+interface RoomMember {
+  user_id: string;
+  role: string;
+  profile?: {
+    display_name: string | null;
+    handle: string;
+    avatar_url: string | null;
+    user_type: string;
+  };
+}
+
+interface ChatMessage {
+  id: string;
+  room_id: string;
+  sender_id: string;
+  content: string | null;
+  message_type: string;
+  file_url: string | null;
+  file_name: string | null;
+  file_type: string | null;
+  file_size: number | null;
+  invoice_id: string | null;
+  contract_id: string | null;
+  is_encrypted: boolean;
+  created_at: string;
+  sender?: {
+    display_name: string | null;
+    handle: string;
+    avatar_url: string | null;
+  };
+}
+
+interface AttachableInvoice {
+  id: string;
+  invoice_number: string;
+  client_name: string;
+  total: number;
+  currency: string;
+  status: string;
+}
+
+interface AttachableContract {
+  id: string;
+  title: string;
+  client_name: string;
+  status: string;
+  value: number | null;
+  currency: string;
+}
 
 const CreviaChat = () => {
-  const { toast } = useToast();
-  const [conversations, setConversations] = useState<any[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState<any>(null);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [currentUserId, setCurrentUserId] = useState("");
+  const [rooms, setRooms] = useState<ChatRoom[]>([]);
+  const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [currentUserId, setCurrentUserId] = useState<string>("");
-  const [currentUserType, setCurrentUserType] = useState<string>("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [otherUserTyping, setOtherUserTyping] = useState(false);
-  const [uploadingFile, setUploadingFile] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showNewChat, setShowNewChat] = useState(false);
+  const [showGroupCreate, setShowGroupCreate] = useState(false);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [showInvoicePicker, setShowInvoicePicker] = useState(false);
+  const [showContractPicker, setShowContractPicker] = useState(false);
+  const [showRoomInfo, setShowRoomInfo] = useState(false);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [userSearch, setUserSearch] = useState("");
+  const [groupName, setGroupName] = useState("");
+  const [selectedGroupMembers, setSelectedGroupMembers] = useState<string[]>([]);
+  const [invoices, setInvoices] = useState<AttachableInvoice[]>([]);
+  const [contracts, setContracts] = useState<AttachableContract[]>([]);
+  const [loadingRooms, setLoadingRooms] = useState(true);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Initialize
   useEffect(() => {
-    initializeChat();
+    initChat();
   }, []);
 
+  // Subscribe to new messages
   useEffect(() => {
-    if (selectedConversation) {
-      fetchMessages();
-      const channel = subscribeToMessages();
-      return () => {
-        if (channel) supabase.removeChannel(channel);
-      };
-    }
-  }, [selectedConversation]);
+    if (!currentUserId) return;
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const initializeChat = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      setCurrentUserId(user.id);
-      
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("user_type")
-        .eq("id", user.id)
-        .single();
-      
-      if (profile) {
-        setCurrentUserType(profile.user_type);
-      }
-      
-      fetchConversations(user.id);
-    }
-  };
-
-  const handleNewConversation = (userId: string, profile: any) => {
-    setSelectedConversation({
-      userId,
-      profile,
-      lastMessage: "",
-      lastMessageTime: null
-    });
-    
-    const exists = conversations.find(c => c.userId === userId);
-    if (!exists) {
-      setConversations(prev => [{
-        userId,
-        profile,
-        lastMessage: "",
-        lastMessageTime: null
-      }, ...prev]);
-    }
-  };
-
-  const fetchConversations = async (userId: string) => {
-    const { data } = await supabase
-      .from("messages")
-      .select(`
-        sender_id, 
-        receiver_id, 
-        content,
-        created_at,
-        sender:profiles!messages_sender_id_fkey(display_name, avatar_url),
-        receiver:profiles!messages_receiver_id_fkey(display_name, avatar_url)
-      `)
-      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
-      .order("created_at", { ascending: false });
-
-    if (data) {
-      const uniqueConversations = Array.from(
-        new Map(data.map(msg => {
-          const otherUserId = msg.sender_id === userId ? msg.receiver_id : msg.sender_id;
-          const profile = msg.sender_id === userId ? msg.receiver : msg.sender;
-          return [otherUserId, { 
-            userId: otherUserId, 
-            profile,
-            lastMessage: msg.content,
-            lastMessageTime: msg.created_at
-          }];
-        })).values()
-      );
-      setConversations(uniqueConversations);
-    }
-  };
-
-  const fetchMessages = async () => {
-    if (!selectedConversation || !currentUserId) return;
-
-    const { data } = await supabase
-      .from("messages")
-      .select("*")
-      .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${selectedConversation.userId}),and(sender_id.eq.${selectedConversation.userId},receiver_id.eq.${currentUserId})`)
-      .order("created_at", { ascending: true });
-
-    if (data) {
-      setMessages(data);
-      markMessagesAsRead();
-    }
-  };
-
-  const markMessagesAsRead = async () => {
-    if (!selectedConversation || !currentUserId) return;
-
-    await supabase
-      .from("messages")
-      .update({ status: 'read' })
-      .eq("receiver_id", currentUserId)
-      .eq("sender_id", selectedConversation.userId)
-      .neq("status", "read");
-  };
-
-  const subscribeToMessages = () => {
     const channel = supabase
-      .channel(`messages-${selectedConversation?.userId}`)
+      .channel("chat-realtime")
       .on(
         "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-        },
+        { event: "INSERT", schema: "public", table: "chat_messages" },
         (payload) => {
-          if (
-            (payload.new.sender_id === currentUserId && payload.new.receiver_id === selectedConversation?.userId) ||
-            (payload.new.sender_id === selectedConversation?.userId && payload.new.receiver_id === currentUserId)
-          ) {
-            setMessages((prev) => [...prev, payload.new]);
-            if (payload.new.receiver_id === currentUserId) {
-              markMessagesAsRead();
-            }
+          const newMsg = payload.new as ChatMessage;
+          // If in current room, add message
+          if (selectedRoom && newMsg.room_id === selectedRoom.id) {
+            loadSenderProfile(newMsg).then((msgWithProfile) => {
+              setMessages((prev) => [...prev, msgWithProfile]);
+            });
+            updateReadReceipt(newMsg.room_id);
           }
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "messages",
-        },
-        (payload) => {
-          setMessages((prev) =>
-            prev.map((msg) => (msg.id === payload.new.id ? payload.new : msg))
-          );
+          // Update room list
+          fetchRooms();
         }
       )
       .subscribe();
 
-    return channel;
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUserId, selectedRoom]);
+
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const loadSenderProfile = async (msg: ChatMessage): Promise<ChatMessage> => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("display_name, handle, avatar_url")
+      .eq("id", msg.sender_id)
+      .single();
+    return { ...msg, sender: data || undefined };
+  };
+
+  const initChat = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    setCurrentUserId(user.id);
+    await fetchRooms();
+  };
+
+  const fetchRooms = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Get rooms the user is a member of
+    const { data: memberRooms } = await supabase
+      .from("chat_room_members")
+      .select("room_id")
+      .eq("user_id", user.id);
+
+    if (!memberRooms || memberRooms.length === 0) {
+      setRooms([]);
+      setLoadingRooms(false);
+      return;
+    }
+
+    const roomIds = memberRooms.map((m) => m.room_id);
+
+    const { data: roomsData } = await supabase
+      .from("chat_rooms")
+      .select("*")
+      .in("id", roomIds)
+      .order("updated_at", { ascending: false });
+
+    if (!roomsData) {
+      setLoadingRooms(false);
+      return;
+    }
+
+    // For each room, get members and last message
+    const enrichedRooms: ChatRoom[] = await Promise.all(
+      roomsData.map(async (room) => {
+        // Get members with profiles
+        const { data: members } = await supabase
+          .from("chat_room_members")
+          .select("user_id, role")
+          .eq("room_id", room.id);
+
+        const memberProfiles: RoomMember[] = [];
+        if (members) {
+          for (const m of members) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("display_name, handle, avatar_url, user_type")
+              .eq("id", m.user_id)
+              .single();
+            memberProfiles.push({ ...m, profile: profile || undefined });
+          }
+        }
+
+        // Get last message
+        const { data: lastMsgs } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .eq("room_id", room.id)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        // Get unread count
+        const { data: receipt } = await supabase
+          .from("chat_read_receipts")
+          .select("last_read_at")
+          .eq("room_id", room.id)
+          .eq("user_id", user.id)
+          .single();
+
+        let unreadCount = 0;
+        if (receipt?.last_read_at) {
+          const { count } = await supabase
+            .from("chat_messages")
+            .select("*", { count: "exact", head: true })
+            .eq("room_id", room.id)
+            .neq("sender_id", user.id)
+            .gt("created_at", receipt.last_read_at);
+          unreadCount = count || 0;
+        } else if (lastMsgs && lastMsgs.length > 0) {
+          const { count } = await supabase
+            .from("chat_messages")
+            .select("*", { count: "exact", head: true })
+            .eq("room_id", room.id)
+            .neq("sender_id", user.id);
+          unreadCount = count || 0;
+        }
+
+        return {
+          ...room,
+          members: memberProfiles,
+          lastMessage: lastMsgs?.[0] || null,
+          unreadCount,
+        };
+      })
+    );
+
+    setRooms(enrichedRooms);
+    setLoadingRooms(false);
+  };
+
+  const fetchMessages = async (roomId: string) => {
+    const { data } = await supabase
+      .from("chat_messages")
+      .select("*")
+      .eq("room_id", roomId)
+      .order("created_at", { ascending: true });
+
+    if (!data) return;
+
+    // Enrich with sender profiles
+    const enriched = await Promise.all(data.map(loadSenderProfile));
+    setMessages(enriched);
+    updateReadReceipt(roomId);
+  };
+
+  const updateReadReceipt = async (roomId: string) => {
+    if (!currentUserId) return;
+    await supabase
+      .from("chat_read_receipts")
+      .upsert(
+        { room_id: roomId, user_id: currentUserId, last_read_at: new Date().toISOString() },
+        { onConflict: "room_id,user_id" }
+      );
+  };
+
+  const selectRoom = (room: ChatRoom) => {
+    setSelectedRoom(room);
+    fetchMessages(room.id);
+  };
+
+  // Get or create 1:1 room
+  const startDirectChat = async (otherUserId: string) => {
+    if (!currentUserId) return;
+
+    // Check if a 1:1 room already exists
+    const { data: myRooms } = await supabase
+      .from("chat_room_members")
+      .select("room_id")
+      .eq("user_id", currentUserId);
+
+    const { data: theirRooms } = await supabase
+      .from("chat_room_members")
+      .select("room_id")
+      .eq("user_id", otherUserId);
+
+    if (myRooms && theirRooms) {
+      const myRoomIds = new Set(myRooms.map((r) => r.room_id));
+      const commonRoomIds = theirRooms
+        .filter((r) => myRoomIds.has(r.room_id))
+        .map((r) => r.room_id);
+
+      if (commonRoomIds.length > 0) {
+        // Check for non-group room
+        const { data: existingRooms } = await supabase
+          .from("chat_rooms")
+          .select("*")
+          .in("id", commonRoomIds)
+          .eq("is_group", false);
+
+        if (existingRooms && existingRooms.length > 0) {
+          // Use existing room
+          const room = existingRooms[0];
+          setShowNewChat(false);
+          await fetchRooms();
+          const enriched = rooms.find((r) => r.id === room.id);
+          if (enriched) {
+            selectRoom(enriched);
+          } else {
+            // Fetch fresh
+            await fetchRooms();
+            selectRoom({ ...room, members: [], lastMessage: null, unreadCount: 0 });
+            fetchMessages(room.id);
+          }
+          return;
+        }
+      }
+    }
+
+    // Create new room
+    const { data: newRoom, error } = await supabase
+      .from("chat_rooms")
+      .insert({ created_by: currentUserId, is_group: false })
+      .select()
+      .single();
+
+    if (error || !newRoom) {
+      toast.error("Failed to create conversation");
+      return;
+    }
+
+    // Add both members
+    await supabase.from("chat_room_members").insert([
+      { room_id: newRoom.id, user_id: currentUserId, role: "member" },
+      { room_id: newRoom.id, user_id: otherUserId, role: "member" },
+    ]);
+
+    setShowNewChat(false);
+    await fetchRooms();
+    selectRoom({ ...newRoom, members: [], lastMessage: null, unreadCount: 0 });
+    fetchMessages(newRoom.id);
+  };
+
+  const createGroupChat = async () => {
+    if (!currentUserId || !groupName.trim() || selectedGroupMembers.length === 0) {
+      toast.error("Please add a name and at least one member");
+      return;
+    }
+
+    const { data: newRoom, error } = await supabase
+      .from("chat_rooms")
+      .insert({ name: groupName.trim(), is_group: true, created_by: currentUserId })
+      .select()
+      .single();
+
+    if (error || !newRoom) {
+      toast.error("Failed to create group");
+      return;
+    }
+
+    const memberInserts = [
+      { room_id: newRoom.id, user_id: currentUserId, role: "admin" },
+      ...selectedGroupMembers.map((uid) => ({
+        room_id: newRoom.id,
+        user_id: uid,
+        role: "member",
+      })),
+    ];
+
+    await supabase.from("chat_room_members").insert(memberInserts);
+
+    setShowGroupCreate(false);
+    setGroupName("");
+    setSelectedGroupMembers([]);
+    await fetchRooms();
+    selectRoom({ ...newRoom, members: [], lastMessage: null, unreadCount: 0 });
+    fetchMessages(newRoom.id);
+    toast.success("Group created!");
+  };
+
+  const fetchAllUsers = async () => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .neq("id", currentUserId)
+      .limit(100);
+    setAllUsers(data || []);
+  };
+
+  const sendMessage = async () => {
+    if ((!newMessage.trim() && !selectedFile) || !selectedRoom || !currentUserId) return;
+
+    try {
+      setUploadingFile(true);
+      let fileData: { url: string; name: string; type: string; size: number } | null = null;
+
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split(".").pop();
+        const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from("chat-files")
+          .upload(fileName, selectedFile);
+        if (uploadError) throw uploadError;
+        fileData = { url: fileName, name: selectedFile.name, type: selectedFile.type, size: selectedFile.size };
+      }
+
+      await supabase.from("chat_messages").insert({
+        room_id: selectedRoom.id,
+        sender_id: currentUserId,
+        content: newMessage || (fileData ? `Sent a file: ${fileData.name}` : ""),
+        message_type: fileData ? "file" : "text",
+        file_url: fileData?.url,
+        file_name: fileData?.name,
+        file_type: fileData?.type,
+        file_size: fileData?.size,
+      });
+
+      // Update room timestamp
+      await supabase
+        .from("chat_rooms")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", selectedRoom.id);
+
+      setNewMessage("");
+      setSelectedFile(null);
+    } catch (error) {
+      console.error("Send error:", error);
+      toast.error("Failed to send message");
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const sendInvoiceAttachment = async (invoice: AttachableInvoice) => {
+    if (!selectedRoom || !currentUserId) return;
+
+    await supabase.from("chat_messages").insert({
+      room_id: selectedRoom.id,
+      sender_id: currentUserId,
+      content: `📄 Invoice ${invoice.invoice_number} — ${new Intl.NumberFormat("en-KE", { style: "currency", currency: invoice.currency }).format(Number(invoice.total))} (${invoice.status})`,
+      message_type: "invoice",
+      invoice_id: invoice.id,
+    });
+
+    await supabase.from("chat_rooms").update({ updated_at: new Date().toISOString() }).eq("id", selectedRoom.id);
+    setShowInvoicePicker(false);
+    toast.success("Invoice attached!");
+  };
+
+  const sendContractAttachment = async (contract: AttachableContract) => {
+    if (!selectedRoom || !currentUserId) return;
+
+    await supabase.from("chat_messages").insert({
+      room_id: selectedRoom.id,
+      sender_id: currentUserId,
+      content: `📋 Contract: ${contract.title} — ${contract.client_name} (${contract.status})`,
+      message_type: "contract",
+      contract_id: contract.id,
+    });
+
+    await supabase.from("chat_rooms").update({ updated_at: new Date().toISOString() }).eq("id", selectedRoom.id);
+    setShowContractPicker(false);
+    toast.success("Contract attached!");
+  };
+
+  const fetchInvoices = async () => {
+    const { data } = await supabase
+      .from("invoices")
+      .select("id, invoice_number, client_name, total, currency, status")
+      .order("created_at", { ascending: false })
+      .limit(20);
+    setInvoices((data as AttachableInvoice[]) || []);
+  };
+
+  const fetchContracts = async () => {
+    const { data } = await supabase
+      .from("contracts")
+      .select("id, title, client_name, status, value, currency")
+      .order("created_at", { ascending: false })
+      .limit(20);
+    setContracts((data as AttachableContract[]) || []);
+  };
+
+  const downloadFile = async (fileUrl: string, fileName: string) => {
+    const { data, error } = await supabase.storage.from("chat-files").download(fileUrl);
+    if (error) {
+      toast.error("Download failed");
+      return;
+    }
+    const url = URL.createObjectURL(data);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 10 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Maximum file size is 10MB",
-          variant: "destructive",
-        });
+        toast.error("Max file size is 10MB");
         return;
       }
       setSelectedFile(file);
     }
   };
 
-  const uploadFile = async (file: File) => {
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
-
-    const { error: uploadError, data } = await supabase.storage
-      .from("chat-files")
-      .upload(fileName, file);
-
-    if (uploadError) throw uploadError;
-
-    const { data: { publicUrl } } = supabase.storage
-      .from("chat-files")
-      .getPublicUrl(fileName);
-
-    return {
-      url: fileName,
-      name: file.name,
-      type: file.type,
-      size: file.size,
-    };
+  // Helpers
+  const getRoomDisplayName = (room: ChatRoom) => {
+    if (room.is_group) return room.name || "Group Chat";
+    const otherMember = room.members?.find((m) => m.user_id !== currentUserId);
+    return otherMember?.profile?.display_name || otherMember?.profile?.handle || "Chat";
   };
 
-  const sendMessage = async () => {
-    if ((!newMessage.trim() && !selectedFile) || !selectedConversation || !currentUserId) return;
-
-    try {
-      setUploadingFile(true);
-      let fileData = null;
-
-      if (selectedFile) {
-        fileData = await uploadFile(selectedFile);
-      }
-
-      const { error } = await supabase
-        .from("messages")
-        .insert({
-          sender_id: currentUserId,
-          receiver_id: selectedConversation.userId,
-          content: newMessage || (fileData ? `Sent a file: ${fileData.name}` : ""),
-          file_url: fileData?.url,
-          file_name: fileData?.name,
-          file_type: fileData?.type,
-          file_size: fileData?.size,
-        });
-
-      if (error) throw error;
-
-      setNewMessage("");
-      setSelectedFile(null);
-      setIsTyping(false);
-    } catch (error) {
-      console.error("Error sending message:", error);
-      toast({
-        title: "Error",
-        description: "Failed to send message",
-        variant: "destructive",
-      });
-    } finally {
-      setUploadingFile(false);
-    }
+  const getRoomAvatar = (room: ChatRoom) => {
+    if (room.is_group) return null;
+    const otherMember = room.members?.find((m) => m.user_id !== currentUserId);
+    return otherMember?.profile?.avatar_url;
   };
 
-  const handleTyping = (value: string) => {
-    setNewMessage(value);
-    setIsTyping(value.length > 0);
-
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-
-    typingTimeoutRef.current = setTimeout(() => {
-      setIsTyping(false);
-    }, 1000);
+  const getRoomInitial = (room: ChatRoom) => {
+    const name = getRoomDisplayName(room);
+    return name[0]?.toUpperCase() || "C";
   };
 
-  const downloadFile = async (fileUrl: string, fileName: string) => {
-    try {
-      const { data, error } = await supabase.storage
-        .from("chat-files")
-        .download(fileUrl);
-
-      if (error) throw error;
-
-      const url = URL.createObjectURL(data);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Error downloading file:", error);
-      toast({
-        title: "Error",
-        description: "Failed to download file",
-        variant: "destructive",
-      });
-    }
+  const getOtherUserType = (room: ChatRoom) => {
+    if (room.is_group) return null;
+    const otherMember = room.members?.find((m) => m.user_id !== currentUserId);
+    return otherMember?.profile?.user_type;
   };
 
-  const getFileIcon = (fileType: string) => {
-    if (fileType?.startsWith("image/")) return <ImageIcon className="h-4 w-4" />;
-    return <File className="h-4 w-4" />;
+  const formatTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    if (isToday(date)) return format(date, "h:mm a");
+    if (isYesterday(date)) return "Yesterday";
+    return format(date, "MMM d");
   };
 
-  const formatFileSize = (bytes: number) => {
+  const formatFileSize = (bytes: number | null) => {
+    if (!bytes) return "";
     if (bytes < 1024) return bytes + " B";
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
     return (bytes / (1024 * 1024)).toFixed(1) + " MB";
   };
 
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
+  const groupMessagesByDate = (msgs: ChatMessage[]) => {
+    const groups: { date: string; messages: ChatMessage[] }[] = [];
+    let currentDate = "";
 
-    if (minutes < 1) return "Just now";
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days < 7) return `${days}d ago`;
-    return date.toLocaleDateString();
+    for (const msg of msgs) {
+      const msgDate = new Date(msg.created_at);
+      let dateLabel: string;
+      if (isToday(msgDate)) dateLabel = "Today";
+      else if (isYesterday(msgDate)) dateLabel = "Yesterday";
+      else dateLabel = format(msgDate, "MMMM d, yyyy");
+
+      if (dateLabel !== currentDate) {
+        currentDate = dateLabel;
+        groups.push({ date: dateLabel, messages: [msg] });
+      } else {
+        groups[groups.length - 1].messages.push(msg);
+      }
+    }
+    return groups;
   };
 
+  const filteredRooms = rooms.filter((room) => {
+    if (!searchQuery) return true;
+    const name = getRoomDisplayName(room).toLowerCase();
+    return name.includes(searchQuery.toLowerCase());
+  });
+
+  const filteredUsers = allUsers.filter(
+    (u) =>
+      u.display_name?.toLowerCase().includes(userSearch.toLowerCase()) ||
+      u.handle?.toLowerCase().includes(userSearch.toLowerCase())
+  );
+
+  const messageGroups = groupMessagesByDate(messages);
+
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-[calc(100vh-200px)] md:h-[calc(100vh-180px)] bg-background">
       {/* Header */}
       <div className="flex items-center justify-between p-3 md:p-4 border-b bg-background/95 backdrop-blur flex-shrink-0">
-        <h2 className="font-vollkorn text-lg md:text-xl font-bold">Messages</h2>
-        {currentUserId && currentUserType && (
-          <NewConversationDialog 
-            currentUserId={currentUserId}
-            currentUserType={currentUserType}
-            onConversationCreated={handleNewConversation}
-          />
-        )}
+        <div className="flex items-center gap-2">
+          <h2 className="font-vollkorn text-lg md:text-xl font-bold">Messages</h2>
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+            <Lock className="h-3 w-3" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider">Encrypted</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setShowGroupCreate(true);
+              fetchAllUsers();
+            }}
+            className="gap-1.5 hidden sm:flex"
+          >
+            <Users className="h-3.5 w-3.5" />
+            Group
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => {
+              setShowNewChat(true);
+              fetchAllUsers();
+            }}
+            className="gap-1.5 bg-bronze hover:bg-bronze/90"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">New Chat</span>
+          </Button>
+        </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
-        {/* Conversations List */}
-        <div className={`${selectedConversation ? 'hidden md:flex' : 'flex'} md:w-80 lg:w-96 border-b md:border-b-0 md:border-r flex-col bg-muted/20 flex-shrink-0`}>
+        {/* Sidebar / Room List */}
+        <div
+          className={`${selectedRoom ? "hidden md:flex" : "flex"} md:w-80 lg:w-96 border-b md:border-b-0 md:border-r flex-col bg-muted/20 flex-shrink-0`}
+        >
+          {/* Search */}
+          <div className="p-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search conversations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-10"
+              />
+            </div>
+          </div>
+
           <ScrollArea className="flex-1">
-            {conversations.length === 0 ? (
+            {loadingRooms ? (
+              <div className="p-8 text-center text-muted-foreground">
+                <div className="animate-pulse space-y-3">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="h-16 bg-muted rounded-xl" />
+                  ))}
+                </div>
+              </div>
+            ) : filteredRooms.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">No conversations yet</p>
-                <p className="text-xs mt-1 opacity-70">Start a new conversation above</p>
+                <p className="text-sm font-medium">No conversations yet</p>
+                <p className="text-xs mt-1 opacity-70">Start a new chat with anyone on Crevia</p>
               </div>
             ) : (
-              <div className="divide-y divide-border/50">
-                {conversations.map((conv) => (
-                  <button
-                    key={conv.userId}
-                    className={`w-full text-left p-3 md:p-4 hover:bg-accent/50 cursor-pointer transition-colors ${
-                      selectedConversation?.userId === conv.userId ? "bg-accent" : ""
-                    }`}
-                    onClick={() => setSelectedConversation(conv)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-11 w-11 md:h-12 md:w-12 rounded-full bg-bronze/20 flex items-center justify-center text-sm md:text-base font-semibold flex-shrink-0 text-bronze">
-                        {conv.profile?.avatar_url ? (
-                          <img src={conv.profile.avatar_url} alt="" className="h-11 w-11 md:h-12 md:w-12 rounded-full object-cover" />
-                        ) : (
-                          conv.profile?.display_name?.[0]?.toUpperCase() || "U"
-                        )}
+              <div className="px-2 pb-2 space-y-0.5">
+                {filteredRooms.map((room) => {
+                  const avatar = getRoomAvatar(room);
+                  const initial = getRoomInitial(room);
+                  const displayName = getRoomDisplayName(room);
+                  const otherType = getOtherUserType(room);
+                  const hasUnread = (room.unreadCount || 0) > 0;
+
+                  return (
+                    <button
+                      key={room.id}
+                      className={`w-full text-left p-3 rounded-xl cursor-pointer transition-all ${
+                        selectedRoom?.id === room.id
+                          ? "bg-bronze/10 border border-bronze/20"
+                          : "hover:bg-accent/50"
+                      }`}
+                      onClick={() => selectRoom(room)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="relative flex-shrink-0">
+                          <div className="h-11 w-11 rounded-full bg-bronze/20 flex items-center justify-center text-sm font-semibold text-bronze overflow-hidden">
+                            {room.is_group ? (
+                              <Users className="h-5 w-5" />
+                            ) : avatar ? (
+                              <img src={avatar} alt="" className="h-11 w-11 rounded-full object-cover" />
+                            ) : (
+                              initial
+                            )}
+                          </div>
+                          {hasUnread && (
+                            <div className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-bronze text-[10px] font-bold flex items-center justify-center text-background">
+                              {room.unreadCount! > 9 ? "9+" : room.unreadCount}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <p className={`font-poppins text-sm truncate ${hasUnread ? "font-bold" : "font-semibold"}`}>
+                                {displayName}
+                              </p>
+                              {room.is_group && (
+                                <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4">
+                                  Group
+                                </Badge>
+                              )}
+                              {otherType && (
+                                <Badge
+                                  variant="outline"
+                                  className={`text-[9px] px-1 py-0 h-4 capitalize ${
+                                    otherType === "brand"
+                                      ? "border-blue-300 text-blue-600 dark:text-blue-400"
+                                      : "border-purple-300 text-purple-600 dark:text-purple-400"
+                                  }`}
+                                >
+                                  {otherType}
+                                </Badge>
+                              )}
+                            </div>
+                            {room.lastMessage && (
+                              <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                                {formatTime(room.lastMessage.created_at)}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <Shield className="h-3 w-3 text-emerald-500 flex-shrink-0" />
+                            <p className={`text-xs truncate ${hasUnread ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                              {room.lastMessage?.content || "Start a conversation"}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-poppins font-semibold truncate text-sm md:text-base">{conv.profile?.display_name || "User"}</p>
-                        <p className="text-xs md:text-sm text-muted-foreground truncate">{conv.lastMessage || "No messages yet"}</p>
-                      </div>
-                      {conv.lastMessageTime && (
-                        <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
-                          {formatTime(conv.lastMessageTime)}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </ScrollArea>
         </div>
 
         {/* Chat Area */}
-        <div className={`${selectedConversation ? 'flex' : 'hidden md:flex'} flex-1 flex-col bg-background min-h-0`}>
-          {selectedConversation ? (
+        <div className={`${selectedRoom ? "flex" : "hidden md:flex"} flex-1 flex-col bg-background min-h-0`}>
+          {selectedRoom ? (
             <>
               {/* Chat Header */}
               <div className="p-3 md:p-4 border-b bg-background/95 backdrop-blur flex-shrink-0">
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedConversation(null)}
-                    className="md:hidden -ml-2 h-8 w-8 p-0"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                  <div className="h-9 w-9 md:h-10 md:w-10 rounded-full bg-bronze/20 flex items-center justify-center text-sm font-semibold flex-shrink-0 text-bronze">
-                    {selectedConversation.profile?.avatar_url ? (
-                      <img src={selectedConversation.profile.avatar_url} alt="" className="h-9 w-9 md:h-10 md:w-10 rounded-full object-cover" />
-                    ) : (
-                      selectedConversation.profile?.display_name?.[0]?.toUpperCase() || "U"
-                    )}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedRoom(null)}
+                      className="md:hidden -ml-2 h-8 w-8 p-0"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                    <div className="h-9 w-9 rounded-full bg-bronze/20 flex items-center justify-center text-sm font-semibold text-bronze overflow-hidden flex-shrink-0">
+                      {selectedRoom.is_group ? (
+                        <Users className="h-4 w-4" />
+                      ) : getRoomAvatar(selectedRoom) ? (
+                        <img src={getRoomAvatar(selectedRoom)!} alt="" className="h-9 w-9 rounded-full object-cover" />
+                      ) : (
+                        getRoomInitial(selectedRoom)
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-poppins font-semibold text-sm truncate">
+                        {getRoomDisplayName(selectedRoom)}
+                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <Lock className="h-2.5 w-2.5 text-emerald-500" />
+                        <span className="text-[10px] text-emerald-500 font-medium">End-to-end encrypted</span>
+                        {selectedRoom.is_group && selectedRoom.members && (
+                          <span className="text-[10px] text-muted-foreground">
+                            • {selectedRoom.members.length} members
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-poppins font-semibold text-sm md:text-base truncate">{selectedConversation.profile?.display_name || "User"}</p>
-                    {otherUserTyping && <p className="text-xs md:text-sm text-muted-foreground">typing...</p>}
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setShowRoomInfo(true)}>
+                        <Info className="h-4 w-4 mr-2" />
+                        {selectedRoom.is_group ? "Group Info" : "Contact Info"}
+                      </DropdownMenuItem>
+                      {selectedRoom.is_group && selectedRoom.created_by === currentUserId && (
+                        <DropdownMenuItem
+                          onClick={() => {
+                            fetchAllUsers();
+                            setShowGroupCreate(true);
+                          }}
+                        >
+                          <UserPlus className="h-4 w-4 mr-2" />
+                          Add Members
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
 
               {/* Messages */}
               <ScrollArea className="flex-1 p-3 md:p-4">
-                <div className="space-y-3 md:space-y-4 max-w-3xl mx-auto pb-4">
-                  {messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${msg.sender_id === currentUserId ? "justify-end" : "justify-start"}`}
-                    >
-                      <div
-                        className={`max-w-[85%] md:max-w-[70%] rounded-2xl px-3 md:px-4 py-2.5 md:py-3 ${
-                          msg.sender_id === currentUserId
-                            ? "bg-bronze text-background"
-                            : "bg-muted"
-                        }`}
-                      >
-                        {msg.file_url && (
-                          <div className="mb-2 p-2 rounded-lg bg-background/10 flex items-center gap-2">
-                            {getFileIcon(msg.file_type)}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs md:text-sm font-medium truncate">{msg.file_name}</p>
-                              <p className="text-xs opacity-70">{formatFileSize(msg.file_size)}</p>
-                            </div>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => downloadFile(msg.file_url, msg.file_name)}
-                              className="h-7 w-7 p-0 hover:bg-background/20"
-                            >
-                              <Download className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                            </Button>
-                          </div>
-                        )}
-                        {msg.content && <p className="text-xs md:text-sm whitespace-pre-wrap break-words">{msg.content}</p>}
-                        <div className="flex items-center gap-1 mt-1.5">
-                          <p className="text-xs opacity-70">
-                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                          {msg.sender_id === currentUserId && (
-                            <span className="opacity-70 ml-1">
-                              {msg.status === 'read' ? <CheckCheck className="h-3 w-3" /> : <Check className="h-3 w-3" />}
-                            </span>
-                          )}
-                        </div>
+                <div className="space-y-4 max-w-3xl mx-auto pb-4">
+                  {/* Encryption banner */}
+                  <div className="flex justify-center py-2">
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium">
+                      <Lock className="h-3 w-3" />
+                      Messages are end-to-end encrypted. Only you and {selectedRoom.is_group ? "group members" : getRoomDisplayName(selectedRoom)} can read them.
+                    </div>
+                  </div>
+
+                  {messageGroups.map((group) => (
+                    <div key={group.date}>
+                      {/* Date separator */}
+                      <div className="flex items-center gap-3 my-4">
+                        <div className="flex-1 h-px bg-border" />
+                        <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider px-2">
+                          {group.date}
+                        </span>
+                        <div className="flex-1 h-px bg-border" />
                       </div>
+
+                      {group.messages.map((msg) => {
+                        const isMine = msg.sender_id === currentUserId;
+                        const isInvoice = msg.message_type === "invoice";
+                        const isContract = msg.message_type === "contract";
+                        const isFile = msg.message_type === "file";
+
+                        return (
+                          <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"} mb-2`}>
+                            {/* Show avatar for group chats */}
+                            {!isMine && selectedRoom.is_group && (
+                              <div className="w-7 h-7 rounded-full bg-bronze/20 flex items-center justify-center text-[10px] font-semibold text-bronze mr-2 mt-1 flex-shrink-0 overflow-hidden">
+                                {msg.sender?.avatar_url ? (
+                                  <img src={msg.sender.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover" />
+                                ) : (
+                                  msg.sender?.display_name?.[0]?.toUpperCase() || "U"
+                                )}
+                              </div>
+                            )}
+                            <div className={`max-w-[85%] md:max-w-[70%]`}>
+                              {/* Sender name in groups */}
+                              {!isMine && selectedRoom.is_group && (
+                                <p className="text-[10px] font-semibold text-muted-foreground mb-0.5 ml-1">
+                                  {msg.sender?.display_name || msg.sender?.handle || "User"}
+                                </p>
+                              )}
+
+                              <div
+                                className={`rounded-2xl px-3 md:px-4 py-2.5 ${
+                                  isMine
+                                    ? "bg-bronze text-background rounded-br-md"
+                                    : "bg-muted rounded-bl-md"
+                                } ${(isInvoice || isContract) ? "border-2 " + (isMine ? "border-background/20" : "border-bronze/20") : ""}`}
+                              >
+                                {/* Invoice attachment */}
+                                {isInvoice && (
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Receipt className={`h-4 w-4 ${isMine ? "text-background/70" : "text-bronze"}`} />
+                                    <span className={`text-xs font-semibold ${isMine ? "text-background/80" : "text-bronze"}`}>
+                                      Invoice Attached
+                                    </span>
+                                  </div>
+                                )}
+
+                                {/* Contract attachment */}
+                                {isContract && (
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <FileSignature className={`h-4 w-4 ${isMine ? "text-background/70" : "text-bronze"}`} />
+                                    <span className={`text-xs font-semibold ${isMine ? "text-background/80" : "text-bronze"}`}>
+                                      Contract Attached
+                                    </span>
+                                  </div>
+                                )}
+
+                                {/* File attachment */}
+                                {isFile && msg.file_url && (
+                                  <div className="mb-2 p-2 rounded-lg bg-background/10 flex items-center gap-2">
+                                    {msg.file_type?.startsWith("image/") ? (
+                                      <ImageIcon className="h-4 w-4 flex-shrink-0" />
+                                    ) : (
+                                      <File className="h-4 w-4 flex-shrink-0" />
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-medium truncate">{msg.file_name}</p>
+                                      <p className="text-[10px] opacity-70">{formatFileSize(msg.file_size)}</p>
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => downloadFile(msg.file_url!, msg.file_name || "file")}
+                                      className="h-7 w-7 p-0 hover:bg-background/20"
+                                    >
+                                      <Download className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                )}
+
+                                {msg.content && (
+                                  <p className="text-xs md:text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                                )}
+
+                                <div className="flex items-center gap-1 mt-1">
+                                  <p className="text-[10px] opacity-60">
+                                    {format(new Date(msg.created_at), "h:mm a")}
+                                  </p>
+                                  {isMine && (
+                                    <CheckCheck className="h-3 w-3 opacity-60 ml-0.5" />
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   ))}
                   <div ref={messagesEndRef} />
@@ -466,57 +975,76 @@ const CreviaChat = () => {
                 <div className="max-w-3xl mx-auto">
                   {selectedFile && (
                     <div className="mb-2 p-2 bg-muted rounded-lg flex items-center gap-2">
-                      {getFileIcon(selectedFile.type)}
+                      <File className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs md:text-sm font-medium truncate">{selectedFile.name}</p>
-                        <p className="text-xs text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
+                        <p className="text-xs font-medium truncate">{selectedFile.name}</p>
+                        <p className="text-[10px] text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setSelectedFile(null)}
-                        className="h-7 w-7 p-0"
-                      >
-                        <X className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                      <Button size="sm" variant="ghost" onClick={() => setSelectedFile(null)} className="h-6 w-6 p-0">
+                        <X className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   )}
                   <div className="flex gap-2">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      className="hidden"
-                      onChange={handleFileSelect}
-                      accept="image/*,.pdf,.doc,.docx,.txt"
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploadingFile}
-                      className="flex-shrink-0 h-10 w-10 md:h-11 md:w-11"
-                    >
-                      <Paperclip className="h-4 w-4 md:h-5 md:w-5" />
-                    </Button>
+                    <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} />
+
+                    {/* Attach Menu */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" className="flex-shrink-0 h-10 w-10">
+                          <Plus className="h-5 w-5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-52">
+                        <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                          <Paperclip className="h-4 w-4 mr-2" />
+                          Attach File
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { fileInputRef.current?.click(); }}>
+                          <ImageIcon className="h-4 w-4 mr-2" />
+                          Send Image
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => {
+                            fetchInvoices();
+                            setShowInvoicePicker(true);
+                          }}
+                        >
+                          <Receipt className="h-4 w-4 mr-2" />
+                          Attach Invoice
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            fetchContracts();
+                            setShowContractPicker(true);
+                          }}
+                        >
+                          <FileSignature className="h-4 w-4 mr-2" />
+                          Attach Contract
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
                     <Textarea
                       placeholder="Type a message..."
                       value={newMessage}
-                      onChange={(e) => handleTyping(e.target.value)}
+                      onChange={(e) => setNewMessage(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
                           sendMessage();
                         }
                       }}
-                      className="flex-1 min-h-[2.5rem] max-h-[120px] resize-none text-sm md:text-base py-2.5"
+                      className="flex-1 min-h-[2.5rem] max-h-[100px] resize-none text-sm py-2.5"
                       disabled={uploadingFile}
                     />
                     <Button
                       onClick={sendMessage}
                       disabled={uploadingFile || (!newMessage.trim() && !selectedFile)}
-                      className="self-end bg-bronze hover:bg-bronze/90 text-background flex-shrink-0 h-10 w-10 md:h-11 md:w-11 p-0"
+                      className="self-end bg-bronze hover:bg-bronze/90 text-background flex-shrink-0 h-10 w-10 p-0"
                     >
-                      <Send className="h-4 w-4 md:h-5 md:w-5" />
+                      <Send className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
@@ -525,14 +1053,333 @@ const CreviaChat = () => {
           ) : (
             <div className="flex items-center justify-center h-full text-muted-foreground">
               <div className="text-center p-6">
-                <MessageSquare className="h-16 w-16 mx-auto mb-4 opacity-20" />
-                <p className="text-base md:text-lg font-medium mb-2">No conversation selected</p>
-                <p className="text-sm opacity-70">Choose a conversation or start a new one</p>
+                <div className="w-20 h-20 rounded-full bg-bronze/10 flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="h-10 w-10 text-bronze/50" />
+                </div>
+                <p className="text-lg font-semibold mb-1">Crevia Chat</p>
+                <p className="text-sm opacity-70 mb-1">End-to-end encrypted messaging</p>
+                <p className="text-xs opacity-50">Chat with brands, creators, or create groups</p>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* New Chat Dialog */}
+      <Dialog open={showNewChat} onOpenChange={setShowNewChat}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>New Conversation</DialogTitle>
+            <DialogDescription>Search for any user on Crevia to start chatting</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name or @handle..."
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <ScrollArea className="h-[350px]">
+              {filteredUsers.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground text-sm">
+                  {userSearch ? "No users found" : "Start typing to search"}
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {filteredUsers.map((user) => (
+                    <button
+                      key={user.id}
+                      onClick={() => startDirectChat(user.id)}
+                      className="w-full p-3 rounded-xl hover:bg-accent transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-bronze/10 flex items-center justify-center text-sm font-semibold overflow-hidden">
+                          {user.avatar_url ? (
+                            <img src={user.avatar_url} alt="" className="h-10 w-10 rounded-full object-cover" />
+                          ) : (
+                            user.display_name?.[0]?.toUpperCase() || "U"
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium truncate text-sm">{user.display_name || "User"}</p>
+                            <Badge
+                              variant="outline"
+                              className={`text-[9px] px-1 py-0 capitalize ${
+                                user.user_type === "brand"
+                                  ? "border-blue-300 text-blue-600"
+                                  : "border-purple-300 text-purple-600"
+                              }`}
+                            >
+                              {user.user_type}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">@{user.handle}</p>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Group Dialog */}
+      <Dialog open={showGroupCreate} onOpenChange={setShowGroupCreate}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-bronze" />
+              Create Group Chat
+            </DialogTitle>
+            <DialogDescription>Add a name and select members for your group</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              placeholder="Group name..."
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+            />
+            {selectedGroupMembers.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {selectedGroupMembers.map((uid) => {
+                  const user = allUsers.find((u) => u.id === uid);
+                  return (
+                    <Badge key={uid} variant="secondary" className="gap-1 pr-1">
+                      {user?.display_name || user?.handle || "User"}
+                      <button
+                        onClick={() =>
+                          setSelectedGroupMembers((prev) => prev.filter((id) => id !== uid))
+                        }
+                        className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search users to add..."
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <ScrollArea className="h-[250px]">
+              <div className="space-y-1">
+                {filteredUsers.map((user) => {
+                  const isSelected = selectedGroupMembers.includes(user.id);
+                  return (
+                    <button
+                      key={user.id}
+                      onClick={() => {
+                        if (isSelected) {
+                          setSelectedGroupMembers((prev) => prev.filter((id) => id !== user.id));
+                        } else {
+                          setSelectedGroupMembers((prev) => [...prev, user.id]);
+                        }
+                      }}
+                      className={`w-full p-3 rounded-xl transition-colors text-left ${
+                        isSelected ? "bg-bronze/10 border border-bronze/20" : "hover:bg-accent"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Checkbox checked={isSelected} className="flex-shrink-0" />
+                        <div className="h-8 w-8 rounded-full bg-bronze/10 flex items-center justify-center text-xs font-semibold overflow-hidden">
+                          {user.avatar_url ? (
+                            <img src={user.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                          ) : (
+                            user.display_name?.[0]?.toUpperCase() || "U"
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{user.display_name || "User"}</p>
+                          <p className="text-xs text-muted-foreground">@{user.handle}</p>
+                        </div>
+                        <Badge variant="outline" className="text-[9px] capitalize">
+                          {user.user_type}
+                        </Badge>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+            <Button
+              onClick={createGroupChat}
+              disabled={!groupName.trim() || selectedGroupMembers.length === 0}
+              className="w-full bg-bronze hover:bg-bronze/90 gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Create Group ({selectedGroupMembers.length} members)
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invoice Picker */}
+      <Dialog open={showInvoicePicker} onOpenChange={setShowInvoicePicker}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5 text-bronze" />
+              Attach Invoice
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[350px]">
+            {invoices.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">No invoices found</div>
+            ) : (
+              <div className="space-y-2">
+                {invoices.map((inv) => (
+                  <button
+                    key={inv.id}
+                    onClick={() => sendInvoiceAttachment(inv)}
+                    className="w-full p-4 rounded-xl border hover:border-bronze/30 hover:bg-accent/50 transition-all text-left"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-sm">{inv.invoice_number}</p>
+                        <p className="text-xs text-muted-foreground">{inv.client_name}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-sm">
+                          {new Intl.NumberFormat("en-KE", { style: "currency", currency: inv.currency }).format(Number(inv.total))}
+                        </p>
+                        <Badge variant="outline" className="text-[9px] capitalize">
+                          {inv.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Contract Picker */}
+      <Dialog open={showContractPicker} onOpenChange={setShowContractPicker}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileSignature className="h-5 w-5 text-bronze" />
+              Attach Contract
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[350px]">
+            {contracts.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">No contracts found</div>
+            ) : (
+              <div className="space-y-2">
+                {contracts.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => sendContractAttachment(c)}
+                    className="w-full p-4 rounded-xl border hover:border-bronze/30 hover:bg-accent/50 transition-all text-left"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-sm">{c.title}</p>
+                        <p className="text-xs text-muted-foreground">{c.client_name}</p>
+                      </div>
+                      <Badge variant="outline" className="text-[9px] capitalize">
+                        {c.status}
+                      </Badge>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Room Info Dialog */}
+      <Dialog open={showRoomInfo} onOpenChange={setShowRoomInfo}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedRoom?.is_group ? "Group Info" : "Contact Info"}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedRoom && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="h-16 w-16 rounded-full bg-bronze/20 flex items-center justify-center text-xl font-bold text-bronze">
+                  {selectedRoom.is_group ? (
+                    <Users className="h-8 w-8" />
+                  ) : (
+                    getRoomInitial(selectedRoom)
+                  )}
+                </div>
+                <div>
+                  <p className="font-bold text-lg">{getRoomDisplayName(selectedRoom)}</p>
+                  {selectedRoom.is_group && (
+                    <p className="text-sm text-muted-foreground">
+                      {selectedRoom.members?.length} members
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10">
+                <Shield className="h-4 w-4 text-emerald-500" />
+                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                  End-to-end encrypted
+                </span>
+              </div>
+
+              {selectedRoom.members && selectedRoom.members.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                    Members
+                  </p>
+                  <div className="space-y-2">
+                    {selectedRoom.members.map((member) => (
+                      <div key={member.user_id} className="flex items-center gap-3 p-2 rounded-lg">
+                        <div className="h-8 w-8 rounded-full bg-bronze/10 flex items-center justify-center text-xs font-semibold overflow-hidden">
+                          {member.profile?.avatar_url ? (
+                            <img src={member.profile.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                          ) : (
+                            member.profile?.display_name?.[0]?.toUpperCase() || "U"
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-medium truncate">
+                              {member.profile?.display_name || member.profile?.handle || "User"}
+                              {member.user_id === currentUserId && " (You)"}
+                            </p>
+                            {member.role === "admin" && (
+                              <Badge variant="secondary" className="text-[9px] px-1 py-0">
+                                Admin
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground capitalize">
+                            {member.profile?.user_type}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
