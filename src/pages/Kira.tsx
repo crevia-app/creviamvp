@@ -28,7 +28,6 @@ import {
   FileUp,
   X,
   Mic,
-  Layout
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -42,7 +41,7 @@ import { CreateProjectDialog } from "@/components/kira/CreateProjectDialog";
 import { ProjectDetailSheet } from "@/components/kira/ProjectDetailSheet";
 import { ProjectsView } from "@/components/kira/ProjectsView";
 import { VoiceChatDialog } from "@/components/kira/VoiceChatDialog";
-import KiraCanvas from "@/components/kira/KiraCanvas";
+
 
 interface ChatHistory {
   id: string;
@@ -66,7 +65,7 @@ interface Project {
   updated_at: string;
 }
 
-type ViewMode = "chat" | "projects" | "canvas";
+type ViewMode = "chat" | "projects";
 
 const Kira = () => {
   const { toast } = useToast();
@@ -620,18 +619,6 @@ const Kira = () => {
                 {projects.length}
               </span>
             </button>
-            <button
-              onClick={() => setViewMode("canvas")}
-              className={`hidden md:flex w-full items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                viewMode === "canvas" ? "bg-bronze/10 text-foreground" : "text-muted-foreground hover:bg-muted/50"
-              }`}
-            >
-              <Layout className="w-4 h-4" />
-              Canvas
-              <span className="ml-auto text-[10px] bg-bronze/20 text-bronze px-1.5 py-0.5 rounded font-medium">
-                NEW
-              </span>
-            </button>
           </div>
         )}
 
@@ -856,11 +843,7 @@ const Kira = () => {
       </Sheet>
 
       {/* Main Content Area */}
-      {viewMode === "canvas" ? (
-        <div className="flex-1">
-          <KiraCanvas />
-        </div>
-      ) : viewMode === "projects" ? (
+      {viewMode === "projects" ? (
         <ProjectsView
           projects={projects}
           isLoading={isLoadingProjects}
