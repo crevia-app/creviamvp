@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format, isToday, isYesterday } from "date-fns";
+import ChatMediaPanel from "./ChatMediaPanel";
 
 interface ChatRoom {
   id: string;
@@ -1307,7 +1308,7 @@ const CreviaChat = () => {
 
       {/* Room Info Dialog */}
       <Dialog open={showRoomInfo} onOpenChange={setShowRoomInfo}>
-        <DialogContent className="sm:max-w-[400px]">
+        <DialogContent className="sm:max-w-[450px]">
           <DialogHeader>
             <DialogTitle>
               {selectedRoom?.is_group ? "Group Info" : "Contact Info"}
@@ -1376,6 +1377,9 @@ const CreviaChat = () => {
                   </div>
                 </div>
               )}
+
+              {/* Media, Docs & Links Panel */}
+              <ChatMediaPanel roomId={selectedRoom.id} />
             </div>
           )}
         </DialogContent>
