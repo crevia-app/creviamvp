@@ -24,6 +24,22 @@ const Auth = () => {
   const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [userType, setUserType] = useState<"creator" | "brand">("creator");
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+
+  const validatePassword = (pwd: string): string[] => {
+    const errors: string[] = [];
+    if (pwd.length < 8) errors.push("At least 8 characters");
+    if (!/[A-Z]/.test(pwd)) errors.push("One uppercase letter");
+    if (!/[a-z]/.test(pwd)) errors.push("One lowercase letter");
+    if (!/[0-9]/.test(pwd)) errors.push("One number");
+    if (!/[^A-Za-z0-9]/.test(pwd)) errors.push("One special character");
+    return errors;
+  };
+
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+    if (isSignup) setPasswordErrors(validatePassword(value));
+  };
 
   useEffect(() => {
     // Check if user is already logged in
@@ -154,6 +170,12 @@ const Auth = () => {
 
     try {
       if (isSignup) {
+        const errors = validatePassword(password);
+        if (errors.length > 0) {
+          setPasswordErrors(errors);
+          setIsLoading(false);
+          return;
+        }
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -395,7 +417,7 @@ const Auth = () => {
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => handlePasswordChange(e.target.value)}
                 required
                 className="h-12 pr-12"
               />
@@ -413,6 +435,23 @@ const Auth = () => {
               </button>
             </div>
           </div>
+
+          {isSignup && password.length > 0 && (
+            <div className="space-y-1.5">
+              {["At least 8 characters", "One uppercase letter", "One lowercase letter", "One number", "One special character"].map((rule) => (
+                <div key={rule} className="flex items-center gap-2 text-xs">
+                  <div className={cn(
+                    "w-1.5 h-1.5 rounded-full transition-colors",
+                    passwordErrors.includes(rule) ? "bg-destructive" : "bg-primary"
+                  )} />
+                  <span className={cn(
+                    "transition-colors",
+                    passwordErrors.includes(rule) ? "text-muted-foreground" : "text-primary"
+                  )}>{rule}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           <Button 
             type="submit" 
