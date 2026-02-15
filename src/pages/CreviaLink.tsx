@@ -847,9 +847,9 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
         <LinkSidebarDesktop userType={profile?.user_type || "creator"} />
         
         {/* Main Content Area */}
-        <main className="flex-1 overflow-auto bg-background md:ml-[100px]">
+        <main className="flex-1 overflow-auto bg-background md:ml-[100px] flex">
           {/* Content container */}
-          <div className="w-full max-w-3xl px-5 sm:px-6 md:px-8 pt-2 pb-10 md:pt-10 md:pb-14">
+          <div className="flex-1 max-w-3xl px-5 sm:px-6 md:px-8 pt-2 pb-10 md:pt-10 md:pb-14">
             <div className="w-full space-y-8 md:space-y-10">
 
           {/* ===== PROFILE TAB ===== */}
@@ -1333,6 +1333,14 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
           {/* ===== ANALYTICS TAB ===== */}
           {currentTab === "analytics" && renderAnalytics()}
         </div>
+          </div>
+
+          {/* Live Preview - Desktop Only (Standalone) */}
+          <div className="hidden lg:block w-[340px] flex-shrink-0 sticky top-0 h-screen py-8 pr-6">
+            <div className="sticky top-8">
+              <p className="text-sm font-medium text-center text-muted-foreground mb-4">Live Preview</p>
+              <LivePreview linkProfile={linkProfile} buttons={buttons} />
+            </div>
           </div>
         </main>
       </div>
