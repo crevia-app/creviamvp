@@ -4,14 +4,12 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Printer, Send, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { Printer, Download, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
-import { toast } from "sonner";
 
-interface InvoiceItem {
+interface ReceiptItem {
   id: string;
   description: string;
   quantity: number;
@@ -19,18 +17,18 @@ interface InvoiceItem {
   total: number;
 }
 
-interface InvoicePreviewDialogProps {
+interface ReceiptPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   invoice: any;
 }
 
-const InvoicePreviewDialog = ({
+const ReceiptPreviewDialog = ({
   open,
   onOpenChange,
   invoice,
-}: InvoicePreviewDialogProps) => {
-  const [items, setItems] = useState<InvoiceItem[]>([]);
+}: ReceiptPreviewDialogProps) => {
+  const [items, setItems] = useState<ReceiptItem[]>([]);
   const [profile, setProfile] = useState<any>(null);
   const [businessSettings, setBusinessSettings] = useState<any>(null);
 
@@ -96,44 +94,18 @@ const InvoicePreviewDialog = ({
     window.print();
   };
 
-  const handleMarkAsSent = async () => {
-    if (!invoice) return;
-    const { error } = await supabase
-      .from("invoices")
-      .update({ status: "sent" })
-      .eq("id", invoice.id);
-    if (error) {
-      toast.error("Failed to update status");
-      return;
-    }
-    toast.success("Invoice marked as sent");
-  };
-
   if (!invoice) return null;
 
-  const statusConfig: Record<string, { bg: string; text: string; label: string; icon: React.ReactNode }> = {
-    draft: { bg: "bg-gray-100", text: "text-gray-600", label: "DRAFT", icon: <Clock className="h-4 w-4" /> },
-    sent: { bg: "bg-blue-100", text: "text-blue-700", label: "SENT", icon: <Send className="h-4 w-4" /> },
-    paid: { bg: "bg-emerald-100", text: "text-emerald-700", label: "PAID", icon: <CheckCircle2 className="h-4 w-4" /> },
-    overdue: { bg: "bg-red-100", text: "text-red-700", label: "OVERDUE", icon: <AlertCircle className="h-4 w-4" /> },
-    cancelled: { bg: "bg-gray-100", text: "text-gray-500", label: "CANCELLED", icon: <Clock className="h-4 w-4" /> },
-  };
-
-  const status = statusConfig[invoice.status] || statusConfig.draft;
+  const receiptNumber = invoice.invoice_number.replace("INV", "RCT");
+  const paidDate = new Date().toISOString();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
         {/* Toolbar */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-6 py-3 flex items-center justify-between">
-          <DialogTitle className="font-vollkorn text-lg">Invoice Preview</DialogTitle>
+          <DialogTitle className="font-vollkorn text-lg">Payment Receipt</DialogTitle>
           <div className="flex gap-2">
-            {invoice.status === "draft" && (
-              <Button variant="outline" size="sm" onClick={handleMarkAsSent} className="gap-1.5">
-                <Send className="h-3.5 w-3.5" />
-                Send
-              </Button>
-            )}
             <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5">
               <Printer className="h-3.5 w-3.5" />
               Print
@@ -142,28 +114,28 @@ const InvoicePreviewDialog = ({
         </div>
 
         <div className="p-6">
-          {/* Invoice Document */}
+          {/* Receipt Document */}
           <div className="bg-white text-black rounded-xl shadow-lg overflow-hidden print:shadow-none">
-            {/* Accent bar */}
-            <div className="h-1.5 bg-gradient-to-r from-bronze via-amber-500 to-bronze" />
+            {/* Accent bar - Emerald for receipt */}
+            <div className="h-1.5 bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-500" />
 
             <div className="p-8 md:p-10">
               {/* Header */}
               <div className="flex justify-between items-start mb-10">
                 <div>
-                  <h1 className="text-4xl font-bold text-gray-900 tracking-tight">INVOICE</h1>
-                  <p className="text-gray-400 mt-1 text-lg font-mono">{invoice.invoice_number}</p>
+                  <h1 className="text-4xl font-bold text-gray-900 tracking-tight">RECEIPT</h1>
+                  <p className="text-gray-400 mt-1 text-lg font-mono">{receiptNumber}</p>
                 </div>
                 <div className="text-right">
                   {businessSettings?.logo_url && (
                     <img
                       src={businessSettings.logo_url}
                       alt="Business Logo"
-                      className="w-14 h-14 object-contain ml-auto mb-2 rounded-lg"
+                      className="w-16 h-16 object-contain ml-auto mb-2 rounded-lg"
                     />
                   )}
                   <h2 className="text-xl font-bold text-gray-900">
-                    {businessSettings?.business_name || profile?.display_name || profile?.handle || "Your Name"}
+                    {businessSettings?.business_name || profile?.display_name || profile?.handle || "Your Business"}
                   </h2>
                   <p className="text-gray-500 text-sm mt-1">
                     {businessSettings?.business_email || profile?.email}
@@ -174,28 +146,36 @@ const InvoicePreviewDialog = ({
                   {businessSettings?.business_address && (
                     <p className="text-gray-500 text-sm whitespace-pre-line mt-1">{businessSettings.business_address}</p>
                   )}
+                  {businessSettings?.tax_id && (
+                    <p className="text-gray-400 text-xs mt-1">Tax ID: {businessSettings.tax_id}</p>
+                  )}
                 </div>
               </div>
 
-              {/* Bill To & Status */}
+              {/* PAID Stamp */}
+              <div className="flex justify-center mb-8">
+                <div className="inline-flex items-center gap-2.5 px-8 py-3 rounded-full bg-emerald-50 border-2 border-emerald-200">
+                  <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                  <span className="text-emerald-700 font-bold text-lg tracking-widest">PAID</span>
+                </div>
+              </div>
+
+              {/* Receipt Details */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                <div className="md:col-span-1">
-                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-semibold">Bill To</p>
+                <div>
+                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-semibold">Received From</p>
                   <p className="font-bold text-gray-900 text-lg">{invoice.client_name}</p>
                   {invoice.client_email && (
                     <p className="text-gray-500 text-sm mt-0.5">{invoice.client_email}</p>
                   )}
-                  {invoice.client_address && (
-                    <p className="text-gray-500 text-sm whitespace-pre-line mt-1">{invoice.client_address}</p>
-                  )}
                 </div>
                 <div className="text-center">
-                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-semibold">Issue Date</p>
+                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-semibold">Invoice Date</p>
                   <p className="font-semibold text-gray-900">{format(new Date(invoice.issue_date), "MMMM d, yyyy")}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-semibold">Due Date</p>
-                  <p className="font-semibold text-gray-900">{format(new Date(invoice.due_date), "MMMM d, yyyy")}</p>
+                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-semibold">Payment Date</p>
+                  <p className="font-semibold text-gray-900">{format(new Date(), "MMMM d, yyyy")}</p>
                 </div>
               </div>
 
@@ -203,7 +183,7 @@ const InvoicePreviewDialog = ({
               <div className="mb-8 overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b-2 border-gray-900">
+                    <tr className="border-b-2 border-emerald-800">
                       <th className="text-left py-3 text-xs uppercase tracking-wider text-gray-500 font-bold">Description</th>
                       <th className="text-center py-3 text-xs uppercase tracking-wider text-gray-500 font-bold w-20">Qty</th>
                       <th className="text-right py-3 text-xs uppercase tracking-wider text-gray-500 font-bold w-32">Rate</th>
@@ -242,42 +222,47 @@ const InvoicePreviewDialog = ({
                       <span className="font-medium">-{formatCurrency(Number(invoice.discount_amount))}</span>
                     </div>
                   )}
-                  <div className="flex justify-between pt-3 border-t-2 border-gray-900">
-                    <span className="text-lg font-bold text-gray-900">Total Due</span>
-                    <span className="text-lg font-bold text-gray-900">{formatCurrency(Number(invoice.total))}</span>
+                  <div className="flex justify-between pt-3 border-t-2 border-emerald-800">
+                    <span className="text-lg font-bold text-gray-900">Total Paid</span>
+                    <span className="text-lg font-bold text-emerald-700">{formatCurrency(Number(invoice.total))}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Status Stamp */}
-              <div className="flex justify-center mb-8">
-                <div className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full ${status.bg} ${status.text} font-bold text-sm tracking-widest`}>
-                  {status.icon}
-                  {status.label}
+              {/* Payment Info */}
+              <div className="bg-emerald-50 rounded-xl p-6 mb-8">
+                <p className="text-emerald-800 text-xs uppercase tracking-widest mb-3 font-semibold">Payment Confirmation</p>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-500">Reference Invoice</p>
+                    <p className="font-semibold text-gray-900">{invoice.invoice_number}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Amount Received</p>
+                    <p className="font-semibold text-emerald-700">{formatCurrency(Number(invoice.total))}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Currency</p>
+                    <p className="font-semibold text-gray-900">{invoice.currency || "KES"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Status</p>
+                    <p className="font-semibold text-emerald-700">Payment Complete</p>
+                  </div>
                 </div>
               </div>
 
-              {/* Notes & Terms */}
-              {(invoice.notes || invoice.terms) && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-gray-100">
-                  {invoice.notes && (
-                    <div>
-                      <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-semibold">Notes</p>
-                      <p className="text-gray-600 text-sm whitespace-pre-line">{invoice.notes}</p>
-                    </div>
-                  )}
-                  {invoice.terms && (
-                    <div>
-                      <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-semibold">Payment Terms</p>
-                      <p className="text-gray-600 text-sm whitespace-pre-line">{invoice.terms}</p>
-                    </div>
-                  )}
+              {/* Notes */}
+              {invoice.notes && (
+                <div className="pt-6 border-t border-gray-100 mb-6">
+                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-semibold">Notes</p>
+                  <p className="text-gray-600 text-sm whitespace-pre-line">{invoice.notes}</p>
                 </div>
               )}
 
               {/* Footer */}
               <div className="mt-10 pt-4 border-t border-gray-100 text-center">
-                <p className="text-gray-400 text-sm font-medium">Thank you for your business!</p>
+                <p className="text-gray-400 text-sm font-medium">Thank you for your payment!</p>
                 <p className="text-gray-300 text-xs mt-1">
                   Generated with Crevia Studio • {format(new Date(), "yyyy")}
                 </p>
@@ -290,4 +275,4 @@ const InvoicePreviewDialog = ({
   );
 };
 
-export default InvoicePreviewDialog;
+export default ReceiptPreviewDialog;

@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/select";
 import CreateInvoiceDialog from "./CreateInvoiceDialog";
 import InvoicePreviewDialog from "./InvoicePreviewDialog";
+import ReceiptPreviewDialog from "./ReceiptPreviewDialog";
 
 interface Invoice {
   id: string;
@@ -66,6 +67,7 @@ const SmartInvoicesTab = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
+  const [receiptInvoice, setReceiptInvoice] = useState<Invoice | null>(null);
 
   const fetchInvoices = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -487,6 +489,12 @@ const SmartInvoicesTab = () => {
                             Mark as Paid
                           </DropdownMenuItem>
                         )}
+                        {invoice.status === "paid" && (
+                          <DropdownMenuItem onClick={() => setReceiptInvoice(invoice)}>
+                            <Receipt className="h-4 w-4 mr-2" />
+                            Generate Receipt
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
@@ -519,6 +527,12 @@ const SmartInvoicesTab = () => {
         open={!!previewInvoice}
         onOpenChange={(open) => !open && setPreviewInvoice(null)}
         invoice={previewInvoice}
+      />
+
+      <ReceiptPreviewDialog
+        open={!!receiptInvoice}
+        onOpenChange={(open) => !open && setReceiptInvoice(null)}
+        invoice={receiptInvoice}
       />
     </div>
   );

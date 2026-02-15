@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Link2, Receipt, FileSignature, MessageSquare, Sparkles } from "lucide-react";
+import { Link2, Receipt, FileSignature, MessageSquare, Sparkles, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Import tab content
@@ -9,6 +9,7 @@ import CreviaLink from "./CreviaLink";
 import SmartInvoicesTab from "@/components/studio/SmartInvoicesTab";
 import ContractsTab from "@/components/studio/ContractsTab";
 import CreviaChat from "@/components/crevia-connect/shared/CreviaChat";
+import StudioSettingsTab from "@/components/studio/StudioSettingsTab";
 
 const CreviaStudio = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -41,6 +42,7 @@ const CreviaStudio = () => {
     { id: "chat", label: "Crevia Chat", icon: MessageSquare },
     { id: "contracts", label: "Contracts", icon: FileSignature },
     { id: "invoices", label: "Invoices", icon: Receipt },
+    { id: "settings", label: "Settings", icon: Settings },
   ];
 
   const handleTabChange = (tabId: string) => {
@@ -107,6 +109,7 @@ const CreviaStudio = () => {
         {activeTab === "chat" && <CreviaChat />}
         {activeTab === "invoices" && <SmartInvoicesTab />}
         {activeTab === "contracts" && <ContractsTab />}
+        {activeTab === "settings" && <StudioSettingsTab />}
       </div>
     </div>
   );

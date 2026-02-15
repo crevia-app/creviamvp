@@ -100,6 +100,66 @@ export type Database = {
           },
         ]
       }
+      business_settings: {
+        Row: {
+          bank_account_name: string | null
+          bank_account_number: string | null
+          bank_name: string | null
+          business_address: string | null
+          business_email: string | null
+          business_name: string | null
+          business_phone: string | null
+          created_at: string
+          default_currency: string | null
+          default_payment_terms: string | null
+          default_tax_rate: number | null
+          id: string
+          logo_url: string | null
+          mpesa_till_number: string | null
+          tax_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
+          business_address?: string | null
+          business_email?: string | null
+          business_name?: string | null
+          business_phone?: string | null
+          created_at?: string
+          default_currency?: string | null
+          default_payment_terms?: string | null
+          default_tax_rate?: number | null
+          id?: string
+          logo_url?: string | null
+          mpesa_till_number?: string | null
+          tax_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_name?: string | null
+          business_address?: string | null
+          business_email?: string | null
+          business_name?: string | null
+          business_phone?: string | null
+          created_at?: string
+          default_currency?: string | null
+          default_payment_terms?: string | null
+          default_tax_rate?: number | null
+          id?: string
+          logo_url?: string | null
+          mpesa_till_number?: string | null
+          tax_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       campaign_applications: {
         Row: {
           ai_match_score: number | null
