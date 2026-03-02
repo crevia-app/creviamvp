@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
-import { Settings as SettingsIcon, Camera, Smartphone, Download, Languages } from "lucide-react";
+import { Settings as SettingsIcon, Camera, Languages } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -26,31 +26,11 @@ const Settings = () => {
   const [profile, setProfile] = useState<any>(null);
   const [userType, setUserType] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [isPremium, setIsPremium] = useState(true); // Widget feature is now available for all users
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     checkAuth();
-    
-    // Check if app is already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsInstalled(true);
-    }
-    
-    // Listen for install prompt
-    const handleBeforeInstall = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-    
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-    };
   }, []);
 
   const checkAuth = async () => {
@@ -68,57 +48,8 @@ const Settings = () => {
 
     setProfile(profileData);
     setUserType(profileData?.user_type || null);
-    
-    // Widget feature is now available for all users
-    setIsPremium(true);
   };
 
-  const handleInstallApp = async () => {
-    // Check if running as PWA already
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      toast({
-        title: "Already Installed",
-        description: "Crevia is already installed on your device!",
-      });
-      return;
-    }
-
-    // If we have the deferred prompt (Chrome/Edge/Android)
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        setIsInstalled(true);
-        toast({
-          title: "App Installed!",
-          description: "Crevia has been added to your home screen",
-        });
-      }
-      setDeferredPrompt(null);
-      return;
-    }
-
-    // iOS Safari detection
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    
-    if (isIOS) {
-      toast({
-        title: "Install on iOS",
-        description: "Tap the Share button (box with arrow) at the bottom of Safari, then select 'Add to Home Screen'",
-        duration: 8000,
-      });
-      return;
-    }
-
-    // For other browsers that don't support beforeinstallprompt
-    toast({
-      title: "Install Crevia",
-      description: "Open your browser menu and look for 'Install App' or 'Add to Home Screen' option",
-      duration: 6000,
-    });
-  };
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -205,11 +136,10 @@ const Settings = () => {
       <p className="text-sm md:text-base text-muted-foreground mb-6 md:mb-8">Manage your account preferences</p>
 
       <Tabs defaultValue="account" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 mb-6 md:mb-8 h-auto">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6 md:mb-8 h-auto">
           <TabsTrigger value="account" className="text-xs sm:text-sm py-2">Account</TabsTrigger>
           <TabsTrigger value="appearance" className="text-xs sm:text-sm py-2">Appearance</TabsTrigger>
           <TabsTrigger value="preferences" className="text-xs sm:text-sm py-2">Preferences</TabsTrigger>
-          <TabsTrigger value="widgets" className="text-xs sm:text-sm py-2">Widgets</TabsTrigger>
           <TabsTrigger value="privacy" className="text-xs sm:text-sm py-2">Privacy</TabsTrigger>
         </TabsList>
 
@@ -359,129 +289,6 @@ const Settings = () => {
         </TabsContent>
 
 
-        <TabsContent value="widgets">
-          <Card className="p-4 md:p-8">
-            <div className="flex items-center justify-between mb-4 md:mb-6">
-              <h2 className="font-vollkorn text-xl md:text-2xl font-bold">Mobile Widgets</h2>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-600 rounded-full border border-green-500/20">
-                <Download className="w-4 h-4" />
-                <span className="text-xs font-semibold">Free</span>
-              </div>
-            </div>
-            
-            <div className="space-y-6">
-              {/* Feature Hero */}
-              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-bronze/20 via-bronze/10 to-transparent border border-bronze/30 p-6">
-                <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="p-3 bg-bronze rounded-xl">
-                      <Smartphone className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-vollkorn text-lg font-bold">Install Crevia on Your Phone</h3>
-                      <p className="text-sm text-muted-foreground">Quick access with home screen widgets</p>
-                    </div>
-                  </div>
-                  
-                  {isInstalled ? (
-                    <div className="flex items-center gap-2 text-green-500 bg-green-500/10 rounded-lg px-4 py-3">
-                      <Download className="w-5 h-5" />
-                      <span className="font-medium">App installed on this device</span>
-                    </div>
-                  ) : (
-                    <Button
-                      onClick={handleInstallApp}
-                      className="w-full bg-bronze hover:bg-bronze-dark text-white"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Install App
-                    </Button>
-                  )}
-                </div>
-                <div className="absolute top-0 right-0 w-32 h-32 bg-bronze/20 rounded-full blur-3xl" />
-              </div>
-
-              {/* Widget Features */}
-              <div className="space-y-4">
-                <h4 className="font-vollkorn font-bold text-lg">Widget Features</h4>
-                
-                {userType === "creator" ? (
-                  <div className="grid gap-3">
-                    <div className="p-4 border rounded-lg space-y-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-bronze rounded-full" />
-                        <span className="font-semibold text-sm">Campaign Stats</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground ml-4">
-                        Track active campaigns, earnings, and pending applications at a glance
-                      </p>
-                    </div>
-                    
-                    <div className="p-4 border rounded-lg space-y-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-bronze rounded-full" />
-                        <span className="font-semibold text-sm">Quick Messages</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground ml-4">
-                        View unread messages and respond directly from your home screen
-                      </p>
-                    </div>
-                    
-                    <div className="p-4 border rounded-lg space-y-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-bronze rounded-full" />
-                        <span className="font-semibold text-sm">Analytics Dashboard</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground ml-4">
-                        Monitor profile views, engagement rates, and follower growth
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid gap-3">
-                    <div className="p-4 border rounded-lg space-y-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-bronze rounded-full" />
-                        <span className="font-semibold text-sm">Campaign Overview</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground ml-4">
-                        Monitor active campaigns, applications, and budget usage in real-time
-                      </p>
-                    </div>
-                    
-                    <div className="p-4 border rounded-lg space-y-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-bronze rounded-full" />
-                        <span className="font-semibold text-sm">Creator Discovery</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground ml-4">
-                        Quick access to browse and shortlist creators for your campaigns
-                      </p>
-                    </div>
-                    
-                    <div className="p-4 border rounded-lg space-y-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-bronze rounded-full" />
-                        <span className="font-semibold text-sm">Messages & Alerts</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground ml-4">
-                        Stay on top of creator messages and campaign milestone updates
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {!isPremium && (
-                <div className="p-4 bg-muted/50 border border-bronze/20 rounded-lg">
-                  <p className="text-sm text-center text-muted-foreground">
-                    Upgrade to <span className="text-bronze font-semibold">Premium</span> to unlock mobile widgets and install Crevia on your phone
-                  </p>
-                </div>
-              )}
-            </div>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="privacy">
           <Card className="p-4 md:p-8">
