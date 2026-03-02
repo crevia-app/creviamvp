@@ -36,22 +36,6 @@ interface Integration {
 const Integrations = () => {
   const [integrations, setIntegrations] = useState<Integration[]>([
     {
-      id: "tiktok",
-      name: "TikTok",
-      description: "Connect your TikTok account to sync content and analytics",
-      icon: TikTokIcon,
-      connected: false,
-      color: "text-white",
-    },
-    {
-      id: "instagram",
-      name: "Instagram",
-      description: "Link your Instagram to share content and track performance",
-      icon: InstagramIcon,
-      connected: false,
-      color: "text-pink-500",
-    },
-    {
       id: "google-calendar",
       name: "Google Calendar",
       description: "Sync your schedule and manage campaign deadlines",

@@ -362,12 +362,29 @@ const CreateInvoiceDialog = ({
               </Button>
             </div>
 
+            {/* Column Headers */}
+            <div className="grid grid-cols-12 gap-2 mb-1">
+              <div className="col-span-5">
+                <Label className="text-xs text-muted-foreground font-medium">Description</Label>
+              </div>
+              <div className="col-span-2">
+                <Label className="text-xs text-muted-foreground font-medium">Quantity</Label>
+              </div>
+              <div className="col-span-2">
+                <Label className="text-xs text-muted-foreground font-medium">Unit Price</Label>
+              </div>
+              <div className="col-span-2">
+                <Label className="text-xs text-muted-foreground font-medium">Total</Label>
+              </div>
+              <div className="col-span-1" />
+            </div>
+
             <div className="space-y-3">
               {items.map((item, index) => (
                 <div key={index} className="grid grid-cols-12 gap-2 items-start">
                   <div className="col-span-5">
                     <Input
-                      placeholder="Description *"
+                      placeholder="Service or product name"
                       value={item.description}
                       onChange={(e) => updateItemTotal(index, "description", e.target.value)}
                     />
@@ -375,7 +392,7 @@ const CreateInvoiceDialog = ({
                   <div className="col-span-2">
                     <Input
                       type="number"
-                      placeholder="Qty"
+                      placeholder="1"
                       value={item.quantity}
                       onChange={(e) => updateItemTotal(index, "quantity", Number(e.target.value))}
                       min={1}
@@ -384,7 +401,7 @@ const CreateInvoiceDialog = ({
                   <div className="col-span-2">
                     <Input
                       type="number"
-                      placeholder="Price"
+                      placeholder="0.00"
                       value={item.unit_price}
                       onChange={(e) => updateItemTotal(index, "unit_price", Number(e.target.value))}
                       min={0}
