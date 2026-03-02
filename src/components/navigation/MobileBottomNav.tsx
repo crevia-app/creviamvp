@@ -39,9 +39,6 @@ const MobileBottomNav = () => {
   }, []);
 
   const isActive = (path: string) => {
-    if (path === "/dashboard") {
-      return location.pathname === "/dashboard";
-    }
     return location.pathname === path || location.pathname.startsWith(path + "/");
   };
 
@@ -57,14 +54,13 @@ const MobileBottomNav = () => {
   };
 
   const navItems = [
-    { id: "home", label: "Home", icon: Home, path: "/dashboard" },
     { id: "kira", label: "Kira", icon: Sparkles, path: "/kira" },
     { id: "studio", label: "Studio", icon: Briefcase, path: "/crevia-studio" },
   ];
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-white/10 safe-area-pb">
-      <div className="grid grid-cols-4 h-16">
+      <div className="grid grid-cols-3 h-16">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
