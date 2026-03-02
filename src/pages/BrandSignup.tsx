@@ -109,7 +109,7 @@ const BrandSignup = () => {
       toast({ title: "Oops! 😅", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Welcome aboard! 🚀", description: "Welcome to Crevia!" });
-      navigate("/dashboard");
+      navigate("/kira");
     }
   };
 

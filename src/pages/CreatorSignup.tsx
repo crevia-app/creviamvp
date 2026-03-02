@@ -109,7 +109,7 @@ const CreatorSignup = () => {
       toast({ title: "Oops! 😅", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "You're in! 🎉", description: "Welcome to Crevia!" });
-      navigate("/dashboard");
+      navigate("/kira");
     }
   };
 
