@@ -27,15 +27,11 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
   const location = useLocation();
 
   const navItems = [
-    { id: "home", label: "Home", icon: Home, path: "/dashboard" },
     { id: "kira", label: "Kira", icon: Sparkles, path: "/kira" },
     { id: "studio", label: "Crevia Studio", icon: Briefcase, path: "/crevia-studio" },
   ];
 
   const isActive = (path: string) => {
-    if (path === "/dashboard") {
-      return location.pathname === "/dashboard";
-    }
     return location.pathname === path || location.pathname.startsWith(path + "/");
   };
 
