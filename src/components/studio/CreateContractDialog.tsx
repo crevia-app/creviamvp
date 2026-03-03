@@ -18,9 +18,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, FileSignature, Sparkles } from "lucide-react";
+import { Plus, Trash2, FileSignature, Sparkles, ChevronRight, User, Calendar, Coins, Shield, FileText, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface CreateContractDialogProps {
   open: boolean;
@@ -30,12 +31,12 @@ interface CreateContractDialogProps {
 }
 
 const contractTypes = [
-  { value: "sponsorship", label: "Sponsorship" },
-  { value: "content_creation", label: "Content Creation" },
-  { value: "brand_ambassador", label: "Brand Ambassador" },
-  { value: "ugc", label: "UGC" },
-  { value: "affiliate", label: "Affiliate" },
-  { value: "custom", label: "Custom" },
+  { value: "sponsorship", label: "Sponsorship", icon: "💎", desc: "Paid promotions & brand deals" },
+  { value: "content_creation", label: "Content Creation", icon: "🎬", desc: "Photo, video & creative work" },
+  { value: "brand_ambassador", label: "Brand Ambassador", icon: "🤝", desc: "Long-term brand partnerships" },
+  { value: "ugc", label: "UGC", icon: "📱", desc: "Authentic user-generated content" },
+  { value: "affiliate", label: "Affiliate", icon: "🔗", desc: "Commission-based partnerships" },
+  { value: "custom", label: "Custom", icon: "📄", desc: "Build from scratch" },
 ];
 
 const currencies = [
@@ -46,7 +47,7 @@ const currencies = [
   { code: "NGN", name: "Nigerian Naira" },
 ];
 
-const contractTemplates = {
+const contractTemplates: Record<string, { content: string; deliverables: string[]; paymentTerms: string; usageRights: string; terminationClause: string }> = {
   sponsorship: {
     content: `SPONSORSHIP AGREEMENT
 
@@ -305,6 +306,13 @@ Client`,
   },
 };
 
+const steps = [
+  { id: "type", label: "Type", icon: <FileText className="h-4 w-4" /> },
+  { id: "parties", label: "Parties", icon: <User className="h-4 w-4" /> },
+  { id: "terms", label: "Terms", icon: <Coins className="h-4 w-4" /> },
+  { id: "content", label: "Content", icon: <FileSignature className="h-4 w-4" /> },
+];
+
 const CreateContractDialog = ({
   open,
   onOpenChange,
@@ -312,6 +320,7 @@ const CreateContractDialog = ({
   onSuccess,
 }: CreateContractDialogProps) => {
   const [loading, setLoading] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
   const [title, setTitle] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
@@ -345,6 +354,7 @@ const CreateContractDialog = ({
       setExclusivityDetails(editingContract.exclusivity_details || "");
       setUsageRights(editingContract.usage_rights || "");
       setTerminationClause(editingContract.termination_clause || "");
+      setCurrentStep(1); // skip type selection when editing
     } else {
       resetForm();
     }
@@ -366,50 +376,48 @@ const CreateContractDialog = ({
     setExclusivityDetails("");
     setUsageRights("");
     setTerminationClause("");
+    setCurrentStep(0);
   };
 
   const applyTemplate = (type: string) => {
-    const template = contractTemplates[type as keyof typeof contractTemplates];
+    const template = contractTemplates[type];
     if (template) {
       setContent(template.content);
       setDeliverables(template.deliverables.length > 0 ? template.deliverables : [""]);
       setPaymentTerms(template.paymentTerms);
       setUsageRights(template.usageRights);
       setTerminationClause(template.terminationClause);
-      toast.success("Template applied! Customize the content below.");
     }
   };
 
-  const updateDeliverable = (index: number, value: string) => {
+  const selectType = (type: string) => {
+    setContractType(type);
+    if (!editingContract) applyTemplate(type);
+    setCurrentStep(1);
+  };
+
+  const updateDeliverable = (index: number, val: string) => {
     const newDeliverables = [...deliverables];
-    newDeliverables[index] = value;
+    newDeliverables[index] = val;
     setDeliverables(newDeliverables);
   };
 
-  const addDeliverable = () => {
-    setDeliverables([...deliverables, ""]);
-  };
+  const addDeliverable = () => setDeliverables([...deliverables, ""]);
 
   const removeDeliverable = (index: number) => {
-    if (deliverables.length > 1) {
-      setDeliverables(deliverables.filter((_, i) => i !== index));
-    }
+    if (deliverables.length > 1) setDeliverables(deliverables.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
     if (!title || !clientName) {
-      toast.error("Please fill in required fields");
+      toast.error("Please fill in the contract title and client name");
       return;
     }
 
     setLoading(true);
-
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Please log in to create contracts");
-        return;
-      }
+      if (!session) { toast.error("Please log in"); return; }
 
       const contractData = {
         user_id: session.user.id,
@@ -431,20 +439,13 @@ const CreateContractDialog = ({
       };
 
       if (editingContract) {
-        const { error } = await supabase
-          .from("contracts")
-          .update(contractData)
-          .eq("id", editingContract.id);
-
+        const { error } = await supabase.from("contracts").update(contractData).eq("id", editingContract.id);
         if (error) throw error;
-        toast.success("Contract updated successfully");
+        toast.success("Contract updated");
       } else {
-        const { error } = await supabase
-          .from("contracts")
-          .insert(contractData);
-
+        const { error } = await supabase.from("contracts").insert(contractData);
         if (error) throw error;
-        toast.success("Contract created successfully");
+        toast.success("Contract created");
       }
 
       onSuccess();
@@ -456,259 +457,309 @@ const CreateContractDialog = ({
     }
   };
 
+  const canProceed = () => {
+    if (currentStep === 0) return true;
+    if (currentStep === 1) return title.trim() && clientName.trim();
+    return true;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 font-vollkorn text-xl">
-            <FileSignature className="h-5 w-5 text-bronze" />
-            {editingContract ? "Edit Contract" : "Create New Contract"}
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-6">
-          {/* Contract Type & Template */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>Contract Type</Label>
-              <Select
-                value={contractType}
-                onValueChange={(val) => {
-                  setContractType(val);
-                  if (!editingContract) applyTemplate(val);
-                }}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {contractTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Contract Title *</Label>
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g., Q1 2026 Brand Partnership"
-                className="mt-1"
-              />
-            </div>
-          </div>
-
-          {/* Quick Templates */}
-          {!editingContract && (
-            <div className="p-4 bg-bronze/5 rounded-xl border border-bronze/20">
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="h-4 w-4 text-bronze" />
-                <span className="text-sm font-medium text-foreground">Quick Templates</span>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 rounded-2xl">
+        {/* Header with Steps */}
+        <div className="px-6 pt-6 pb-4 border-b border-border/50">
+          <DialogHeader className="mb-4">
+            <DialogTitle className="font-vollkorn text-xl flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                <FileSignature className="h-4 w-4 text-primary" />
               </div>
-              <div className="flex flex-wrap gap-2">
-                {contractTypes.filter(t => t.value !== "custom").map((type) => (
-                  <Badge
-                    key={type.value}
-                    variant="outline"
-                    className="cursor-pointer hover:bg-bronze/10 transition-colors"
-                    onClick={() => {
-                      setContractType(type.value);
-                      applyTemplate(type.value);
-                    }}
-                  >
-                    {type.label}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
+              {editingContract ? "Edit Contract" : "New Contract"}
+            </DialogTitle>
+          </DialogHeader>
 
-          {/* Client Details */}
-          <div className="space-y-4 p-4 bg-muted/30 rounded-xl">
-            <h3 className="font-semibold text-foreground">Client Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Client Name *</Label>
-                <Input
-                  value={clientName}
-                  onChange={(e) => setClientName(e.target.value)}
-                  placeholder="Company or individual name"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label>Client Email</Label>
-                <Input
-                  type="email"
-                  value={clientEmail}
-                  onChange={(e) => setClientEmail(e.target.value)}
-                  placeholder="client@example.com"
-                  className="mt-1"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Dates & Value */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <Label>Start Date</Label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label>End Date</Label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label>Contract Value</Label>
-              <Input
-                type="number"
-                value={value || ""}
-                onChange={(e) => setValue(e.target.value ? Number(e.target.value) : undefined)}
-                placeholder="0"
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label>Currency</Label>
-              <Select value={currency} onValueChange={setCurrency}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {currencies.map((c) => (
-                    <SelectItem key={c.code} value={c.code}>
-                      {c.code}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Deliverables */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>Deliverables</Label>
-              <Button variant="outline" size="sm" onClick={addDeliverable} className="gap-1">
-                <Plus className="h-4 w-4" />
-                Add
-              </Button>
-            </div>
-            {deliverables.map((item, index) => (
-              <div key={index} className="flex gap-2">
-                <Input
-                  value={item}
-                  onChange={(e) => updateDeliverable(index, e.target.value)}
-                  placeholder="e.g., 1x Instagram Post"
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeDeliverable(index)}
-                  disabled={deliverables.length === 1}
-                  className="text-destructive"
+          {/* Step Indicator */}
+          <div className="flex items-center gap-1">
+            {steps.map((step, i) => (
+              <div key={step.id} className="flex items-center">
+                <button
+                  onClick={() => i <= (editingContract ? 3 : Math.max(currentStep, i)) && setCurrentStep(i)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
+                    i === currentStep
+                      ? "bg-primary/10 text-primary"
+                      : i < currentStep
+                      ? "text-foreground/70 hover:bg-muted"
+                      : "text-muted-foreground"
+                  )}
                 >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                  {i < currentStep ? (
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                  ) : (
+                    step.icon
+                  )}
+                  <span className="hidden sm:inline">{step.label}</span>
+                </button>
+                {i < steps.length - 1 && (
+                  <ChevronRight className="h-3 w-3 text-muted-foreground mx-0.5" />
+                )}
               </div>
             ))}
           </div>
+        </div>
 
-          {/* Payment Terms */}
-          <div>
-            <Label>Payment Terms</Label>
-            <Textarea
-              value={paymentTerms}
-              onChange={(e) => setPaymentTerms(e.target.value)}
-              placeholder="e.g., 50% upfront, 50% upon content approval"
-              className="mt-1"
-              rows={2}
-            />
-          </div>
-
-          {/* Exclusivity */}
-          <div className="space-y-3 p-4 bg-muted/30 rounded-xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>Exclusivity Clause</Label>
-                <p className="text-xs text-muted-foreground">
-                  Does this contract include exclusivity terms?
-                </p>
-              </div>
-              <Switch checked={exclusivity} onCheckedChange={setExclusivity} />
-            </div>
-            {exclusivity && (
-              <Textarea
-                value={exclusivityDetails}
-                onChange={(e) => setExclusivityDetails(e.target.value)}
-                placeholder="Describe the exclusivity terms..."
-                rows={2}
-              />
+        {/* Step Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-5">
+          <AnimatePresence mode="wait">
+            {/* Step 0: Contract Type */}
+            {currentStep === 0 && (
+              <motion.div
+                key="step-0"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-4"
+              >
+                <div>
+                  <h3 className="font-semibold text-foreground mb-1">Choose a template</h3>
+                  <p className="text-xs text-muted-foreground">Select a contract type to get started with a professional template</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {contractTypes.map((type) => (
+                    <button
+                      key={type.value}
+                      onClick={() => selectType(type.value)}
+                      className={cn(
+                        "group flex items-center gap-3 p-4 rounded-xl border text-left transition-all hover:border-primary/30 hover:bg-primary/5",
+                        contractType === type.value
+                          ? "border-primary/40 bg-primary/5"
+                          : "border-border/50"
+                      )}
+                    >
+                      <span className="text-2xl">{type.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm text-foreground">{type.label}</p>
+                        <p className="text-xs text-muted-foreground">{type.desc}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
             )}
-          </div>
 
-          {/* Usage Rights */}
-          <div>
-            <Label>Usage Rights</Label>
-            <Textarea
-              value={usageRights}
-              onChange={(e) => setUsageRights(e.target.value)}
-              placeholder="Define how content can be used..."
-              className="mt-1"
-              rows={2}
-            />
-          </div>
+            {/* Step 1: Parties */}
+            {currentStep === 1 && (
+              <motion.div
+                key="step-1"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-5"
+              >
+                <div>
+                  <h3 className="font-semibold text-foreground mb-1">Contract details</h3>
+                  <p className="text-xs text-muted-foreground">Name your contract and add client information</p>
+                </div>
 
-          {/* Termination */}
-          <div>
-            <Label>Termination Clause</Label>
-            <Textarea
-              value={terminationClause}
-              onChange={(e) => setTerminationClause(e.target.value)}
-              placeholder="Terms for ending the contract..."
-              className="mt-1"
-              rows={2}
-            />
-          </div>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Contract Title *</Label>
+                    <Input
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="e.g., Q1 2026 Brand Partnership"
+                      className="mt-1.5 h-11 rounded-xl"
+                    />
+                  </div>
 
-          {/* Full Contract Content */}
-          <div>
-            <Label>Full Contract Content</Label>
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Full contract text..."
-              className="mt-1 font-mono text-sm"
-              rows={12}
-            />
-          </div>
+                  <div className="p-4 rounded-xl bg-muted/30 border border-border/30 space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      Client Information
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Client Name *</Label>
+                        <Input
+                          value={clientName}
+                          onChange={(e) => setClientName(e.target.value)}
+                          placeholder="Company or individual"
+                          className="mt-1 h-10 rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Client Email</Label>
+                        <Input
+                          type="email"
+                          value={clientEmail}
+                          onChange={(e) => setClientEmail(e.target.value)}
+                          placeholder="client@example.com"
+                          className="mt-1 h-10 rounded-xl"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-border">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="bg-bronze hover:bg-bronze/90"
-            >
-              {loading ? "Saving..." : editingContract ? "Update Contract" : "Create Contract"}
-            </Button>
+            {/* Step 2: Terms */}
+            {currentStep === 2 && (
+              <motion.div
+                key="step-2"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-5"
+              >
+                <div>
+                  <h3 className="font-semibold text-foreground mb-1">Terms & deliverables</h3>
+                  <p className="text-xs text-muted-foreground">Define the financial and operational terms</p>
+                </div>
+
+                {/* Dates & Value */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Start Date</Label>
+                    <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="mt-1 h-10 rounded-xl text-xs" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">End Date</Label>
+                    <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="mt-1 h-10 rounded-xl text-xs" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Value</Label>
+                    <Input type="number" value={value || ""} onChange={(e) => setValue(e.target.value ? Number(e.target.value) : undefined)} placeholder="0" className="mt-1 h-10 rounded-xl" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Currency</Label>
+                    <Select value={currency} onValueChange={setCurrency}>
+                      <SelectTrigger className="mt-1 h-10 rounded-xl"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {currencies.map((c) => (
+                          <SelectItem key={c.code} value={c.code}>{c.code}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Deliverables */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Deliverables</Label>
+                    <Button variant="ghost" size="sm" onClick={addDeliverable} className="gap-1 h-7 text-xs rounded-lg">
+                      <Plus className="h-3 w-3" /> Add
+                    </Button>
+                  </div>
+                  {deliverables.map((item, index) => (
+                    <div key={index} className="flex gap-2">
+                      <div className="w-6 h-10 flex items-center justify-center text-xs text-muted-foreground font-medium">{index + 1}</div>
+                      <Input
+                        value={item}
+                        onChange={(e) => updateDeliverable(index, e.target.value)}
+                        placeholder="e.g., 1x Instagram Post"
+                        className="h-10 rounded-xl flex-1"
+                      />
+                      <Button variant="ghost" size="icon" onClick={() => removeDeliverable(index)} disabled={deliverables.length === 1} className="text-muted-foreground hover:text-destructive h-10 w-10 rounded-xl">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Payment Terms */}
+                <div>
+                  <Label className="text-xs text-muted-foreground">Payment Terms</Label>
+                  <Textarea value={paymentTerms} onChange={(e) => setPaymentTerms(e.target.value)} placeholder="e.g., 50% upfront, 50% upon approval" className="mt-1 rounded-xl resize-none" rows={2} />
+                </div>
+
+                {/* Exclusivity */}
+                <div className="p-4 rounded-xl bg-muted/30 border border-border/30 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Exclusivity</p>
+                        <p className="text-xs text-muted-foreground">Restrict competing partnerships</p>
+                      </div>
+                    </div>
+                    <Switch checked={exclusivity} onCheckedChange={setExclusivity} />
+                  </div>
+                  {exclusivity && (
+                    <Textarea value={exclusivityDetails} onChange={(e) => setExclusivityDetails(e.target.value)} placeholder="Describe exclusivity terms..." className="rounded-xl resize-none" rows={2} />
+                  )}
+                </div>
+
+                {/* Usage Rights & Termination */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Usage Rights</Label>
+                    <Textarea value={usageRights} onChange={(e) => setUsageRights(e.target.value)} placeholder="How content can be used..." className="mt-1 rounded-xl resize-none" rows={3} />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Termination Clause</Label>
+                    <Textarea value={terminationClause} onChange={(e) => setTerminationClause(e.target.value)} placeholder="Terms for ending the contract..." className="mt-1 rounded-xl resize-none" rows={3} />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Step 3: Content */}
+            {currentStep === 3 && (
+              <motion.div
+                key="step-3"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-4"
+              >
+                <div>
+                  <h3 className="font-semibold text-foreground mb-1">Full contract content</h3>
+                  <p className="text-xs text-muted-foreground">Review and edit the complete contract text. Placeholders like [CLIENT_NAME] will be auto-filled.</p>
+                </div>
+                <Textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Full contract text..."
+                  className="rounded-xl font-mono text-sm leading-relaxed min-h-[400px] resize-none bg-muted/20 border-border/50 focus:border-primary/30"
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-border/50 flex items-center justify-between bg-muted/20">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              if (currentStep === 0) onOpenChange(false);
+              else setCurrentStep(currentStep - 1);
+            }}
+            className="rounded-xl"
+          >
+            {currentStep === 0 ? "Cancel" : "Back"}
+          </Button>
+          <div className="flex items-center gap-2">
+            {currentStep < 3 ? (
+              <Button
+                onClick={() => setCurrentStep(currentStep + 1)}
+                disabled={!canProceed()}
+                className="rounded-xl bg-primary hover:bg-primary/90 gap-1.5"
+              >
+                Continue
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSubmit}
+                disabled={loading || !title || !clientName}
+                className="rounded-xl bg-primary hover:bg-primary/90 gap-1.5 shadow-lg shadow-primary/20"
+              >
+                {loading ? "Saving..." : editingContract ? "Update Contract" : "Create Contract"}
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>
