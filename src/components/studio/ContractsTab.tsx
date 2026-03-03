@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { 
   Plus, 
@@ -23,10 +22,13 @@ import {
   Filter,
   ArrowUpDown,
   TrendingUp,
-  Sparkles
+  Sparkles,
+  File,
+  CalendarDays
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,14 +69,23 @@ interface Contract {
   termination_clause: string | null;
 }
 
-const contractTypes: Record<string, { label: string; color: string }> = {
-  sponsorship: { label: "Sponsorship", color: "bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400" },
-  content_creation: { label: "Content Creation", color: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400" },
-  brand_ambassador: { label: "Brand Ambassador", color: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400" },
-  ugc: { label: "UGC", color: "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400" },
-  affiliate: { label: "Affiliate", color: "bg-pink-100 text-pink-700 dark:bg-pink-500/20 dark:text-pink-400" },
-  custom: { label: "Custom", color: "bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400" },
-  uploaded: { label: "Uploaded", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400" },
+const contractTypeConfig: Record<string, { label: string; icon: string; gradient: string }> = {
+  sponsorship: { label: "Sponsorship", icon: "💎", gradient: "from-violet-500/10 to-purple-500/5" },
+  content_creation: { label: "Content", icon: "🎬", gradient: "from-blue-500/10 to-cyan-500/5" },
+  brand_ambassador: { label: "Ambassador", icon: "🤝", gradient: "from-amber-500/10 to-orange-500/5" },
+  ugc: { label: "UGC", icon: "📱", gradient: "from-green-500/10 to-emerald-500/5" },
+  affiliate: { label: "Affiliate", icon: "🔗", gradient: "from-pink-500/10 to-rose-500/5" },
+  custom: { label: "Custom", icon: "📄", gradient: "from-slate-500/10 to-gray-500/5" },
+  uploaded: { label: "Uploaded", icon: "📎", gradient: "from-indigo-500/10 to-blue-500/5" },
+};
+
+const statusConfig: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
+  draft: { label: "Draft", color: "text-muted-foreground", bg: "bg-muted", icon: <FileText className="h-3 w-3" /> },
+  sent: { label: "Sent", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10", icon: <Send className="h-3 w-3" /> },
+  signed: { label: "Signed", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10", icon: <FileSignature className="h-3 w-3" /> },
+  active: { label: "Active", color: "text-green-600 dark:text-green-400", bg: "bg-green-500/10", icon: <CheckCircle2 className="h-3 w-3" /> },
+  completed: { label: "Completed", color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-500/10", icon: <CheckCircle2 className="h-3 w-3" /> },
+  cancelled: { label: "Cancelled", color: "text-destructive", bg: "bg-destructive/10", icon: <XCircle className="h-3 w-3" /> },
 };
 
 const ContractsTab = () => {
@@ -147,7 +158,7 @@ const ContractsTab = () => {
       toast.error("Failed to duplicate contract");
       return;
     }
-    toast.success("Contract duplicated as draft");
+    toast.success("Contract duplicated");
     fetchContracts();
   };
 
@@ -161,7 +172,7 @@ const ContractsTab = () => {
       toast.error("Failed to update status");
       return;
     }
-    toast.success(`Contract marked as ${status}`);
+    toast.success(`Status updated to ${status}`);
     fetchContracts();
   };
 
@@ -172,7 +183,6 @@ const ContractsTab = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    // Read file as text for .txt files or store reference
     const fileName = file.name.replace(/\.[^/.]+$/, "");
     
     let content = "";
@@ -197,29 +207,9 @@ const ContractsTab = () => {
       return;
     }
 
-    toast.success("Contract uploaded! Edit it to fill in the details.");
+    toast.success("Contract uploaded successfully");
     fetchContracts();
     if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const getStatusBadge = (status: string) => {
-    const styles: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
-      draft: { bg: "bg-gray-100 dark:bg-gray-800", text: "text-gray-600 dark:text-gray-400", icon: <FileText className="h-3 w-3" /> },
-      sent: { bg: "bg-blue-50 dark:bg-blue-900/30", text: "text-blue-600 dark:text-blue-400", icon: <Send className="h-3 w-3" /> },
-      signed: { bg: "bg-emerald-50 dark:bg-emerald-900/30", text: "text-emerald-600 dark:text-emerald-400", icon: <FileSignature className="h-3 w-3" /> },
-      active: { bg: "bg-green-50 dark:bg-green-900/30", text: "text-green-600 dark:text-green-400", icon: <CheckCircle2 className="h-3 w-3" /> },
-      completed: { bg: "bg-purple-50 dark:bg-purple-900/30", text: "text-purple-600 dark:text-purple-400", icon: <CheckCircle2 className="h-3 w-3" /> },
-      cancelled: { bg: "bg-red-50 dark:bg-red-900/30", text: "text-red-500 dark:text-red-400", icon: <XCircle className="h-3 w-3" /> },
-    };
-
-    const style = styles[status] || styles.draft;
-
-    return (
-      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${style.bg} ${style.text}`}>
-        {style.icon}
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </span>
-    );
   };
 
   const formatCurrency = (amount: number | null, currency: string) => {
@@ -230,7 +220,6 @@ const ContractsTab = () => {
     }).format(amount);
   };
 
-  // Filter & sort
   const filteredContracts = contracts
     .filter((contract) => {
       const matchesSearch = contract.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -253,16 +242,17 @@ const ContractsTab = () => {
 
   if (loading) {
     return (
-      <div className="p-6 md:p-8 space-y-6">
-        <div className="animate-pulse space-y-6">
-          <div className="h-12 bg-muted rounded-xl w-2/5" />
+      <div className="p-4 md:p-8 space-y-8">
+        <div className="animate-pulse space-y-8">
+          <div className="h-10 bg-muted rounded-2xl w-1/3" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-28 bg-muted rounded-2xl" />
+              <div key={i} className="h-24 bg-muted rounded-2xl" />
             ))}
           </div>
+          <div className="h-12 bg-muted rounded-2xl" />
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-24 bg-muted rounded-2xl" />
+            <div key={i} className="h-20 bg-muted rounded-2xl" />
           ))}
         </div>
       </div>
@@ -270,7 +260,7 @@ const ContractsTab = () => {
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-6">
+    <div className="p-4 md:p-8 space-y-6 max-w-6xl mx-auto">
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -280,101 +270,103 @@ const ContractsTab = () => {
         onChange={handleFileUpload}
       />
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Header — Clean & Minimal */}
+      <motion.div 
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col md:flex-row md:items-end justify-between gap-4"
+      >
         <div>
-          <h2 className="font-vollkorn text-2xl md:text-3xl font-bold text-foreground tracking-tight">
+          <h2 className="font-vollkorn text-3xl md:text-4xl font-bold text-foreground tracking-tight">
             Contracts
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Create, sign, and manage professional agreements
+            Professional agreements, e-signatures & document management
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             onClick={() => fileInputRef.current?.click()}
-            className="gap-2"
+            className="gap-2 h-10 rounded-xl border-dashed hover:border-primary/50 hover:bg-primary/5 transition-all"
           >
             <Upload className="h-4 w-4" />
             <span className="hidden sm:inline">Upload</span>
           </Button>
           <Button
             onClick={() => setCreateDialogOpen(true)}
-            className="gap-2 bg-bronze hover:bg-bronze/90 shadow-lg shadow-bronze/20"
+            className="gap-2 h-10 rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
           >
             <Plus className="h-4 w-4" />
             New Contract
           </Button>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-        <Card className="p-4 md:p-5 border-0 bg-gradient-to-br from-bronze/10 via-bronze/5 to-transparent shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-bronze/15">
-              <FileSignature className="h-5 w-5 text-bronze" />
-            </div>
-            <div>
-              <p className="text-2xl md:text-3xl font-bold text-foreground">{stats.total}</p>
-              <p className="text-xs text-muted-foreground font-medium">Total</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4 md:p-5 border-0 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-emerald-500/15">
-              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-            </div>
-            <div>
-              <p className="text-2xl md:text-3xl font-bold text-foreground">{stats.active}</p>
-              <p className="text-xs text-muted-foreground font-medium">Active</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4 md:p-5 border-0 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-amber-500/15">
-              <Clock className="h-5 w-5 text-amber-500" />
-            </div>
-            <div>
-              <p className="text-2xl md:text-3xl font-bold text-foreground">{stats.pending}</p>
-              <p className="text-xs text-muted-foreground font-medium">Pending</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-4 md:p-5 border-0 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-blue-500/15">
-              <TrendingUp className="h-5 w-5 text-blue-500" />
-            </div>
-            <div>
-              <p className="text-lg md:text-xl font-bold text-foreground">{formatCurrency(stats.totalValue, "KES")}</p>
-              <p className="text-xs text-muted-foreground font-medium">Total Value</p>
+      {/* Stats — Glass Morphism Cards */}
+      <motion.div 
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="grid grid-cols-2 md:grid-cols-4 gap-3"
+      >
+        {[
+          { label: "Total", value: stats.total, icon: <File className="h-4 w-4" />, accent: "primary" },
+          { label: "Active", value: stats.active, icon: <CheckCircle2 className="h-4 w-4" />, accent: "emerald" },
+          { label: "Pending", value: stats.pending, icon: <Clock className="h-4 w-4" />, accent: "amber" },
+          { label: "Value", value: formatCurrency(stats.totalValue, "KES"), icon: <TrendingUp className="h-4 w-4" />, accent: "blue" },
+        ].map((stat, i) => (
+          <div
+            key={stat.label}
+            className="relative group p-4 rounded-2xl border border-border/50 bg-card hover:border-border transition-all overflow-hidden"
+          >
+            <div className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${
+              stat.accent === "primary" ? "from-primary/5 to-transparent" :
+              stat.accent === "emerald" ? "from-emerald-500/5 to-transparent" :
+              stat.accent === "amber" ? "from-amber-500/5 to-transparent" :
+              "from-blue-500/5 to-transparent"
+            }`} />
+            <div className="relative">
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-2 ${
+                stat.accent === "primary" ? "bg-primary/10 text-primary" :
+                stat.accent === "emerald" ? "bg-emerald-500/10 text-emerald-500" :
+                stat.accent === "amber" ? "bg-amber-500/10 text-amber-500" :
+                "bg-blue-500/10 text-blue-500"
+              }`}>
+                {stat.icon}
+              </div>
+              <p className={`font-bold text-foreground ${stat.label === "Value" ? "text-base md:text-lg" : "text-2xl md:text-3xl"}`}>
+                {stat.value}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
             </div>
           </div>
-        </Card>
-      </div>
+        ))}
+      </motion.div>
 
-      {/* Search, Filter & Sort Bar */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      {/* Search & Filters — Unified Bar */}
+      <motion.div 
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="flex flex-col sm:flex-row gap-2"
+      >
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search contracts or clients..."
+            placeholder="Search contracts, clients..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-11"
+            className="pl-10 h-10 rounded-xl bg-muted/50 border-0 focus:bg-background focus:ring-1 focus:ring-primary/20 transition-all"
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[140px] h-11">
-            <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+          <SelectTrigger className="w-full sm:w-[130px] h-10 rounded-xl bg-muted/50 border-0">
+            <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="all">All</SelectItem>
             <SelectItem value="draft">Draft</SelectItem>
             <SelectItem value="sent">Sent</SelectItem>
             <SelectItem value="signed">Signed</SelectItem>
@@ -383,8 +375,8 @@ const ContractsTab = () => {
           </SelectContent>
         </Select>
         <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
-          <SelectTrigger className="w-full sm:w-[140px] h-11">
-            <ArrowUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
+          <SelectTrigger className="w-full sm:w-[130px] h-10 rounded-xl bg-muted/50 border-0">
+            <ArrowUpDown className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -393,159 +385,183 @@ const ContractsTab = () => {
             <SelectItem value="value">Highest Value</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </motion.div>
 
       {/* Contracts List */}
-      {filteredContracts.length === 0 ? (
-        <Card className="p-12 md:p-16 text-center border-dashed border-2">
-          <div className="w-20 h-20 rounded-3xl bg-bronze/10 flex items-center justify-center mx-auto mb-5">
-            <FileSignature className="h-10 w-10 text-bronze" />
-          </div>
-          <h3 className="font-vollkorn text-xl md:text-2xl font-bold text-foreground mb-2">
-            {searchQuery || statusFilter !== "all" ? "No contracts found" : "Create your first contract"}
-          </h3>
-          <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-            {searchQuery || statusFilter !== "all" 
-              ? "Try adjusting your search or filters" 
-              : "Professional contracts with e-signatures, templates, and more"}
-          </p>
-          {!searchQuery && statusFilter === "all" && (
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button
-                onClick={() => setCreateDialogOpen(true)}
-                className="gap-2 bg-bronze hover:bg-bronze/90"
-              >
-                <Sparkles className="h-4 w-4" />
-                Create from Template
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                className="gap-2"
-              >
-                <Upload className="h-4 w-4" />
-                Upload Contract
-              </Button>
-            </div>
-          )}
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {filteredContracts.map((contract) => {
-            const typeInfo = contractTypes[contract.contract_type] || contractTypes.custom;
-            const hasSignatures = contract.creator_signature || contract.client_signature;
-            
-            return (
-              <Card
-                key={contract.id}
-                className="group p-4 md:p-5 hover:shadow-lg transition-all duration-300 border hover:border-bronze/30 cursor-pointer"
-                onClick={() => setPreviewContract(contract)}
-              >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex items-start gap-4 flex-1 min-w-0">
-                    <div className="p-3 rounded-2xl bg-bronze/10 group-hover:bg-bronze/15 transition-colors flex-shrink-0">
-                      <FileSignature className="h-5 w-5 text-bronze" />
+      <AnimatePresence mode="wait">
+        {filteredContracts.length === 0 ? (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <Card className="p-12 md:p-20 text-center border border-dashed border-border/60 bg-muted/20 rounded-3xl">
+              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-6">
+                <FileSignature className="h-9 w-9 text-primary" />
+              </div>
+              <h3 className="font-vollkorn text-2xl font-bold text-foreground mb-2">
+                {searchQuery || statusFilter !== "all" ? "No contracts found" : "Create your first contract"}
+              </h3>
+              <p className="text-muted-foreground mb-8 max-w-md mx-auto text-sm leading-relaxed">
+                {searchQuery || statusFilter !== "all" 
+                  ? "Try adjusting your search or filters" 
+                  : "Build professional contracts with templates, e-signatures, and document management — all in one place."}
+              </p>
+              {!searchQuery && statusFilter === "all" && (
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button
+                    onClick={() => setCreateDialogOpen(true)}
+                    className="gap-2 rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 h-11"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    Create from Template
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="gap-2 rounded-xl h-11 border-dashed"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Upload Document
+                  </Button>
+                </div>
+              )}
+            </Card>
+          </motion.div>
+        ) : (
+          <motion.div key="list" className="space-y-2">
+            {filteredContracts.map((contract, index) => {
+              const typeInfo = contractTypeConfig[contract.contract_type] || contractTypeConfig.custom;
+              const status = statusConfig[contract.status] || statusConfig.draft;
+              const hasSignatures = contract.creator_signature || contract.client_signature;
+              const bothSigned = contract.creator_signature && contract.client_signature;
+              
+              return (
+                <motion.div
+                  key={contract.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.03 }}
+                >
+                  <div
+                    className="group relative flex items-center gap-4 p-4 rounded-2xl border border-border/50 bg-card hover:border-primary/20 hover:shadow-md hover:shadow-primary/5 cursor-pointer transition-all duration-300"
+                    onClick={() => setPreviewContract(contract)}
+                  >
+                    {/* Type Icon */}
+                    <div className={`hidden sm:flex w-12 h-12 rounded-2xl bg-gradient-to-br ${typeInfo.gradient} items-center justify-center text-lg flex-shrink-0 transition-transform group-hover:scale-105`}>
+                      {typeInfo.icon}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <h4 className="font-semibold text-foreground truncate">
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h4 className="font-semibold text-foreground truncate text-sm">
                           {contract.title}
                         </h4>
-                        {getStatusBadge(contract.status)}
-                      </div>
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span className={`px-2 py-0.5 rounded-md text-xs font-medium ${typeInfo.color}`}>
-                          {typeInfo.label}
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${status.bg} ${status.color}`}>
+                          {status.icon}
+                          {status.label}
                         </span>
-                        <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Users className="h-3 w-3" />
-                          {contract.client_name}
-                        </span>
-                        {hasSignatures && (
-                          <span className="flex items-center gap-1 text-xs text-emerald-500">
-                            <FileSignature className="h-3 w-3" />
-                            {contract.creator_signature && contract.client_signature ? "Fully signed" : "Partially signed"}
+                        {bothSigned && (
+                          <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                            <CheckCircle2 className="h-2.5 w-2.5" />
+                            Signed
                           </span>
                         )}
                       </div>
-                      {contract.start_date && (
-                        <p className="text-xs text-muted-foreground mt-1.5">
-                          {format(new Date(contract.start_date), "MMM d, yyyy")}
-                          {contract.end_date && ` — ${format(new Date(contract.end_date), "MMM d, yyyy")}`}
-                        </p>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {contract.client_name}
+                        </span>
+                        <span className="hidden sm:inline">•</span>
+                        <span className="hidden sm:flex items-center gap-1">
+                          {typeInfo.label}
+                        </span>
+                        {contract.start_date && (
+                          <>
+                            <span className="hidden md:inline">•</span>
+                            <span className="hidden md:flex items-center gap-1">
+                              <CalendarDays className="h-3 w-3" />
+                              {format(new Date(contract.start_date), "MMM d, yyyy")}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Value & Actions */}
+                    <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                      {contract.value && (
+                        <div className="text-right hidden sm:block">
+                          <p className="text-sm font-bold text-foreground tabular-nums">
+                            {formatCurrency(Number(contract.value), contract.currency)}
+                          </p>
+                        </div>
                       )}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl opacity-0 group-hover:opacity-100 transition-all">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44 rounded-xl">
+                          <DropdownMenuItem onClick={() => setPreviewContract(contract)} className="rounded-lg">
+                            <Eye className="h-4 w-4 mr-2" />
+                            View & Sign
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setEditingContract(contract)} className="rounded-lg">
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDuplicate(contract)} className="rounded-lg">
+                            <Copy className="h-4 w-4 mr-2" />
+                            Duplicate
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {contract.status === "draft" && (
+                            <DropdownMenuItem onClick={() => handleStatusChange(contract.id, "sent")} className="rounded-lg">
+                              <Send className="h-4 w-4 mr-2" />
+                              Mark as Sent
+                            </DropdownMenuItem>
+                          )}
+                          {contract.status === "sent" && (
+                            <DropdownMenuItem onClick={() => handleStatusChange(contract.id, "signed")} className="rounded-lg">
+                              <FileSignature className="h-4 w-4 mr-2" />
+                              Mark as Signed
+                            </DropdownMenuItem>
+                          )}
+                          {contract.status === "signed" && (
+                            <DropdownMenuItem onClick={() => handleStatusChange(contract.id, "active")} className="rounded-lg">
+                              <CheckCircle2 className="h-4 w-4 mr-2" />
+                              Mark Active
+                            </DropdownMenuItem>
+                          )}
+                          {contract.status === "active" && (
+                            <DropdownMenuItem onClick={() => handleStatusChange(contract.id, "completed")} className="rounded-lg">
+                              <CheckCircle2 className="h-4 w-4 mr-2" />
+                              Complete
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive rounded-lg"
+                            onClick={() => handleDelete(contract.id)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4" onClick={(e) => e.stopPropagation()}>
-                    {contract.value && (
-                      <div className="text-right hidden sm:block">
-                        <p className="text-lg font-bold text-foreground">
-                          {formatCurrency(Number(contract.value), contract.currency)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">Value</p>
-                      </div>
-                    )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem onClick={() => setPreviewContract(contract)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View & Sign
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setEditingContract(contract)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDuplicate(contract)}>
-                          <Copy className="h-4 w-4 mr-2" />
-                          Duplicate
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        {contract.status === "draft" && (
-                          <DropdownMenuItem onClick={() => handleStatusChange(contract.id, "sent")}>
-                            <Send className="h-4 w-4 mr-2" />
-                            Mark as Sent
-                          </DropdownMenuItem>
-                        )}
-                        {contract.status === "sent" && (
-                          <DropdownMenuItem onClick={() => handleStatusChange(contract.id, "signed")}>
-                            <FileSignature className="h-4 w-4 mr-2" />
-                            Mark as Signed
-                          </DropdownMenuItem>
-                        )}
-                        {contract.status === "signed" && (
-                          <DropdownMenuItem onClick={() => handleStatusChange(contract.id, "active")}>
-                            <CheckCircle2 className="h-4 w-4 mr-2" />
-                            Mark as Active
-                          </DropdownMenuItem>
-                        )}
-                        {contract.status === "active" && (
-                          <DropdownMenuItem onClick={() => handleStatusChange(contract.id, "completed")}>
-                            <CheckCircle2 className="h-4 w-4 mr-2" />
-                            Complete
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => handleDelete(contract.id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <CreateContractDialog
         open={createDialogOpen || !!editingContract}
