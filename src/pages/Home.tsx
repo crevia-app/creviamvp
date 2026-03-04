@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Brain, FileText, Link2, MessageCircle, Receipt, Shield } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import heroBackground from "@/assets/home-hero-bg.jpg";
+import HeroPattern from "@/components/HeroPattern";
 
 const Home = () => {
   return (
@@ -12,12 +12,8 @@ const Home = () => {
 
       {/* ═══════════════ HERO ═══════════════ */}
       <section className="relative pt-28 md:pt-40 pb-20 md:pb-32 px-4 md:px-6 min-h-[90vh] flex items-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center animate-scale-in"
-          style={{ backgroundImage: `url(${heroBackground})`, animationDuration: "1.2s" }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/85 to-background/50 dark:from-background/95 dark:via-background/80 dark:to-background/40" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-transparent to-background" />
+        {/* Geometric pattern background */}
+        <HeroPattern />
 
         <div className="container mx-auto max-w-5xl relative z-10">
           <div className="max-w-3xl space-y-6 md:space-y-8">
