@@ -371,6 +371,20 @@ const Auth = () => {
             </div>
           )}
 
+          {isSignup && (
+            <p className="text-xs text-muted-foreground text-center">
+              By signing up, you agree to the{" "}
+              <Link to="/terms" className="text-bronze hover:text-bronze-dark underline">
+                Terms of Use
+              </Link>{" "}
+              and{" "}
+              <Link to="/privacy" className="text-bronze hover:text-bronze-dark underline">
+                Privacy Policy
+              </Link>
+              .
+            </p>
+          )}
+
           <Button 
             type="submit" 
             disabled={isLoading}
