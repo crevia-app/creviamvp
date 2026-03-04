@@ -141,7 +141,7 @@ const TermsOfService = () => {
 
           {/* Section 7 */}
           <section>
-            <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">7. Limitation of Liability (The "Shield")</h2>
+            <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">7. Limitation of Liability</h2>
             <div className="text-muted-foreground leading-relaxed space-y-3">
               <p className="uppercase font-semibold text-foreground text-sm">
                 TO THE FULLEST EXTENT PERMITTED BY LAW, IN NO EVENT SHALL CREVIA VENTURES, ITS AFFILIATES, DIRECTORS, EMPLOYEES, OR AGENTS BE LIABLE FOR ANY INDIRECT, PUNITIVE, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR EXEMPLARY DAMAGES, INCLUDING WITHOUT LIMITATION DAMAGES FOR LOSS OF PROFITS, GOODWILL, USE, DATA, OR OTHER INTANGIBLE LOSSES.
