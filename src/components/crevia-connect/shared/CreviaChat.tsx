@@ -1126,8 +1126,6 @@ const CreviaChat = () => {
                       )}
                     </div>
                   )}
-                    </Button>
-                  </div>
                 </div>
               </div>
             </>
