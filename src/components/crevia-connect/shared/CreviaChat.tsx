@@ -516,6 +516,40 @@ const CreviaChat = () => {
     toast.success("Contract attached!");
   };
 
+  const sendVoiceNote = async (blob: Blob, duration: number) => {
+    if (!selectedRoom || !currentUserId) return;
+    setUploadingVoice(true);
+    try {
+      const fileName = `${currentUserId}/${Date.now()}.webm`;
+      const { error: uploadError } = await supabase.storage
+        .from("voice-notes")
+        .upload(fileName, blob, { contentType: "audio/webm" });
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("voice-notes")
+        .getPublicUrl(fileName);
+
+      await supabase.from("chat_messages").insert({
+        room_id: selectedRoom.id,
+        sender_id: currentUserId,
+        content: `🎤 Voice note (${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, "0")})`,
+        message_type: "voice",
+        file_url: urlData.publicUrl,
+        file_name: `voice-${Date.now()}.webm`,
+        file_type: "audio/webm",
+        file_size: blob.size,
+      });
+
+      await supabase.from("chat_rooms").update({ updated_at: new Date().toISOString() }).eq("id", selectedRoom.id);
+      setIsRecordingVoice(false);
+    } catch (error) {
+      console.error("Voice upload error:", error);
+      toast.error("Failed to send voice note");
+    } finally {
+      setUploadingVoice(false);
+    }
+
   const fetchInvoices = async () => {
     const { data } = await supabase
       .from("invoices")
