@@ -134,6 +134,8 @@ const CreviaChat = () => {
   const [invoices, setInvoices] = useState<AttachableInvoice[]>([]);
   const [contracts, setContracts] = useState<AttachableContract[]>([]);
   const [loadingRooms, setLoadingRooms] = useState(true);
+  const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  const [uploadingVoice, setUploadingVoice] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
