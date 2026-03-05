@@ -4,10 +4,13 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import VoiceRecorder from "./VoiceRecorder";
+import VoiceNotePlayer from "./VoiceNotePlayer";
 import {
   Send,
   Paperclip,
   Image as ImageIcon,
+  Mic,
   File,
   X,
   Check,
@@ -131,6 +134,8 @@ const CreviaChat = () => {
   const [invoices, setInvoices] = useState<AttachableInvoice[]>([]);
   const [contracts, setContracts] = useState<AttachableContract[]>([]);
   const [loadingRooms, setLoadingRooms] = useState(true);
+  const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  const [uploadingVoice, setUploadingVoice] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -511,6 +516,41 @@ const CreviaChat = () => {
     toast.success("Contract attached!");
   };
 
+  const sendVoiceNote = async (blob: Blob, duration: number) => {
+    if (!selectedRoom || !currentUserId) return;
+    setUploadingVoice(true);
+    try {
+      const fileName = `${currentUserId}/${Date.now()}.webm`;
+      const { error: uploadError } = await supabase.storage
+        .from("voice-notes")
+        .upload(fileName, blob, { contentType: "audio/webm" });
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("voice-notes")
+        .getPublicUrl(fileName);
+
+      await supabase.from("chat_messages").insert({
+        room_id: selectedRoom.id,
+        sender_id: currentUserId,
+        content: `🎤 Voice note (${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, "0")})`,
+        message_type: "voice",
+        file_url: urlData.publicUrl,
+        file_name: `voice-${Date.now()}.webm`,
+        file_type: "audio/webm",
+        file_size: blob.size,
+      });
+
+      await supabase.from("chat_rooms").update({ updated_at: new Date().toISOString() }).eq("id", selectedRoom.id);
+      setIsRecordingVoice(false);
+    } catch (error) {
+      console.error("Voice upload error:", error);
+      toast.error("Failed to send voice note");
+    } finally {
+      setUploadingVoice(false);
+    }
+  };
+
   const fetchInvoices = async () => {
     const { data } = await supabase
       .from("invoices")
@@ -592,6 +632,13 @@ const CreviaChat = () => {
     if (bytes < 1024) return bytes + " B";
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
     return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  };
+
+  const parseDurationFromContent = (content: string | null): number => {
+    if (!content) return 0;
+    const match = content.match(/\((\d+):(\d+)\)/);
+    if (match) return parseInt(match[1]) * 60 + parseInt(match[2]);
+    return 0;
   };
 
   const groupMessagesByDate = (msgs: ChatMessage[]) => {
@@ -877,6 +924,7 @@ const CreviaChat = () => {
                         const isInvoice = msg.message_type === "invoice";
                         const isContract = msg.message_type === "contract";
                         const isFile = msg.message_type === "file";
+                        const isVoice = msg.message_type === "voice";
 
                         return (
                           <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"} mb-2`}>
@@ -948,7 +996,16 @@ const CreviaChat = () => {
                                   </div>
                                 )}
 
-                                {msg.content && (
+                                {/* Voice note */}
+                                {isVoice && msg.file_url && (
+                                  <VoiceNotePlayer
+                                    audioUrl={msg.file_url}
+                                    duration={parseDurationFromContent(msg.content)}
+                                    isMine={isMine}
+                                  />
+                                )}
+
+                                {msg.content && !isVoice && (
                                   <p className="text-xs md:text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                                 )}
 
@@ -974,7 +1031,7 @@ const CreviaChat = () => {
               {/* Input Area */}
               <div className="p-3 md:p-4 border-t bg-background/95 backdrop-blur flex-shrink-0">
                 <div className="max-w-3xl mx-auto">
-                  {selectedFile && (
+                  {selectedFile && !isRecordingVoice && (
                     <div className="mb-2 p-2 bg-muted rounded-lg flex items-center gap-2">
                       <File className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       <div className="flex-1 min-w-0">
@@ -986,68 +1043,89 @@ const CreviaChat = () => {
                       </Button>
                     </div>
                   )}
-                  <div className="flex gap-2">
-                    <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} />
 
-                    {/* Attach Menu */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="icon" className="flex-shrink-0 h-10 w-10">
-                          <Plus className="h-5 w-5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="w-52">
-                        <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-                          <Paperclip className="h-4 w-4 mr-2" />
-                          Attach File
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => { fileInputRef.current?.click(); }}>
-                          <ImageIcon className="h-4 w-4 mr-2" />
-                          Send Image
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => {
-                            fetchInvoices();
-                            setShowInvoicePicker(true);
-                          }}
-                        >
-                          <Receipt className="h-4 w-4 mr-2" />
-                          Attach Invoice
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            fetchContracts();
-                            setShowContractPicker(true);
-                          }}
-                        >
-                          <FileSignature className="h-4 w-4 mr-2" />
-                          Attach Contract
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    <Textarea
-                      placeholder="Type a message..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          sendMessage();
-                        }
-                      }}
-                      className="flex-1 min-h-[2.5rem] max-h-[100px] resize-none text-sm py-2.5"
-                      disabled={uploadingFile}
+                  {isRecordingVoice ? (
+                    <VoiceRecorder
+                      onRecordingComplete={sendVoiceNote}
+                      onCancel={() => setIsRecordingVoice(false)}
+                      isUploading={uploadingVoice}
                     />
-                    <Button
-                      onClick={sendMessage}
-                      disabled={uploadingFile || (!newMessage.trim() && !selectedFile)}
-                      className="self-end bg-bronze hover:bg-bronze/90 text-background flex-shrink-0 h-10 w-10 p-0"
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} />
+
+                      {/* Attach Menu */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="icon" className="flex-shrink-0 h-10 w-10">
+                            <Plus className="h-5 w-5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-52">
+                          <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                            <Paperclip className="h-4 w-4 mr-2" />
+                            Attach File
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { fileInputRef.current?.click(); }}>
+                            <ImageIcon className="h-4 w-4 mr-2" />
+                            Send Image
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              fetchInvoices();
+                              setShowInvoicePicker(true);
+                            }}
+                          >
+                            <Receipt className="h-4 w-4 mr-2" />
+                            Attach Invoice
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              fetchContracts();
+                              setShowContractPicker(true);
+                            }}
+                          >
+                            <FileSignature className="h-4 w-4 mr-2" />
+                            Attach Contract
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      <Textarea
+                        placeholder="Type a message..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            sendMessage();
+                          }
+                        }}
+                        className="flex-1 min-h-[2.5rem] max-h-[100px] resize-none text-sm py-2.5"
+                        disabled={uploadingFile}
+                      />
+
+                      {/* Show mic button when no text, send button when text */}
+                      {newMessage.trim() || selectedFile ? (
+                        <Button
+                          onClick={sendMessage}
+                          disabled={uploadingFile || (!newMessage.trim() && !selectedFile)}
+                          className="self-end bg-bronze hover:bg-bronze/90 text-background flex-shrink-0 h-10 w-10 p-0"
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() => setIsRecordingVoice(true)}
+                          variant="outline"
+                          className="self-end flex-shrink-0 h-10 w-10 p-0 border-bronze/30 text-bronze hover:bg-bronze/10 hover:text-bronze"
+                        >
+                          <Mic className="h-5 w-5" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </>
