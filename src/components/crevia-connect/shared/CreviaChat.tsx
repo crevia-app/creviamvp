@@ -1005,7 +1005,7 @@ const CreviaChat = () => {
                                   />
                                 )}
 
-                                {msg.content && (
+                                {msg.content && !isVoice && (
                                   <p className="text-xs md:text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                                 )}
 
