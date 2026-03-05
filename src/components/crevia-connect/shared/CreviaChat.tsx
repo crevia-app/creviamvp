@@ -917,6 +917,7 @@ const CreviaChat = () => {
                         const isInvoice = msg.message_type === "invoice";
                         const isContract = msg.message_type === "contract";
                         const isFile = msg.message_type === "file";
+                        const isVoice = msg.message_type === "voice";
 
                         return (
                           <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"} mb-2`}>
@@ -986,6 +987,15 @@ const CreviaChat = () => {
                                       <Download className="h-3.5 w-3.5" />
                                     </Button>
                                   </div>
+                                )}
+
+                                {/* Voice note */}
+                                {isVoice && msg.file_url && (
+                                  <VoiceNotePlayer
+                                    audioUrl={msg.file_url}
+                                    duration={parseDurationFromContent(msg.content)}
+                                    isMine={isMine}
+                                  />
                                 )}
 
                                 {msg.content && (
