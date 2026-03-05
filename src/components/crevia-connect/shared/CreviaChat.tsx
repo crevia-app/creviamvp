@@ -634,6 +634,13 @@ const CreviaChat = () => {
     return (bytes / (1024 * 1024)).toFixed(1) + " MB";
   };
 
+  const parseDurationFromContent = (content: string | null): number => {
+    if (!content) return 0;
+    const match = content.match(/\((\d+):(\d+)\)/);
+    if (match) return parseInt(match[1]) * 60 + parseInt(match[2]);
+    return 0;
+  };
+
   const groupMessagesByDate = (msgs: ChatMessage[]) => {
     const groups: { date: string; messages: ChatMessage[] }[] = [];
     let currentDate = "";
