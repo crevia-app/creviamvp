@@ -4,10 +4,13 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import VoiceRecorder from "./VoiceRecorder";
+import VoiceNotePlayer from "./VoiceNotePlayer";
 import {
   Send,
   Paperclip,
   Image as ImageIcon,
+  Mic,
   File,
   X,
   Check,
