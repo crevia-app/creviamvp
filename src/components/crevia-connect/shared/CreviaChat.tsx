@@ -1031,7 +1031,7 @@ const CreviaChat = () => {
               {/* Input Area */}
               <div className="p-3 md:p-4 border-t bg-background/95 backdrop-blur flex-shrink-0">
                 <div className="max-w-3xl mx-auto">
-                  {selectedFile && (
+                  {selectedFile && !isRecordingVoice && (
                     <div className="mb-2 p-2 bg-muted rounded-lg flex items-center gap-2">
                       <File className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       <div className="flex-1 min-w-0">
@@ -1043,66 +1043,89 @@ const CreviaChat = () => {
                       </Button>
                     </div>
                   )}
-                  <div className="flex gap-2">
-                    <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} />
 
-                    {/* Attach Menu */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="icon" className="flex-shrink-0 h-10 w-10">
-                          <Plus className="h-5 w-5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="w-52">
-                        <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-                          <Paperclip className="h-4 w-4 mr-2" />
-                          Attach File
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => { fileInputRef.current?.click(); }}>
-                          <ImageIcon className="h-4 w-4 mr-2" />
-                          Send Image
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => {
-                            fetchInvoices();
-                            setShowInvoicePicker(true);
-                          }}
-                        >
-                          <Receipt className="h-4 w-4 mr-2" />
-                          Attach Invoice
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            fetchContracts();
-                            setShowContractPicker(true);
-                          }}
-                        >
-                          <FileSignature className="h-4 w-4 mr-2" />
-                          Attach Contract
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    <Textarea
-                      placeholder="Type a message..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          sendMessage();
-                        }
-                      }}
-                      className="flex-1 min-h-[2.5rem] max-h-[100px] resize-none text-sm py-2.5"
-                      disabled={uploadingFile}
+                  {isRecordingVoice ? (
+                    <VoiceRecorder
+                      onRecordingComplete={sendVoiceNote}
+                      onCancel={() => setIsRecordingVoice(false)}
+                      isUploading={uploadingVoice}
                     />
-                    <Button
-                      onClick={sendMessage}
-                      disabled={uploadingFile || (!newMessage.trim() && !selectedFile)}
-                      className="self-end bg-bronze hover:bg-bronze/90 text-background flex-shrink-0 h-10 w-10 p-0"
-                    >
-                      <Send className="h-4 w-4" />
+                  ) : (
+                    <div className="flex gap-2">
+                      <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} />
+
+                      {/* Attach Menu */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="icon" className="flex-shrink-0 h-10 w-10">
+                            <Plus className="h-5 w-5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-52">
+                          <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                            <Paperclip className="h-4 w-4 mr-2" />
+                            Attach File
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { fileInputRef.current?.click(); }}>
+                            <ImageIcon className="h-4 w-4 mr-2" />
+                            Send Image
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              fetchInvoices();
+                              setShowInvoicePicker(true);
+                            }}
+                          >
+                            <Receipt className="h-4 w-4 mr-2" />
+                            Attach Invoice
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              fetchContracts();
+                              setShowContractPicker(true);
+                            }}
+                          >
+                            <FileSignature className="h-4 w-4 mr-2" />
+                            Attach Contract
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      <Textarea
+                        placeholder="Type a message..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            sendMessage();
+                          }
+                        }}
+                        className="flex-1 min-h-[2.5rem] max-h-[100px] resize-none text-sm py-2.5"
+                        disabled={uploadingFile}
+                      />
+
+                      {/* Show mic button when no text, send button when text */}
+                      {newMessage.trim() || selectedFile ? (
+                        <Button
+                          onClick={sendMessage}
+                          disabled={uploadingFile || (!newMessage.trim() && !selectedFile)}
+                          className="self-end bg-bronze hover:bg-bronze/90 text-background flex-shrink-0 h-10 w-10 p-0"
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() => setIsRecordingVoice(true)}
+                          variant="outline"
+                          className="self-end flex-shrink-0 h-10 w-10 p-0 border-bronze/30 text-bronze hover:bg-bronze/10 hover:text-bronze"
+                        >
+                          <Mic className="h-5 w-5" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
                     </Button>
                   </div>
                 </div>
