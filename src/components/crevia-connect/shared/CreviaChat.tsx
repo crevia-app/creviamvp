@@ -549,6 +549,7 @@ const CreviaChat = () => {
     } finally {
       setUploadingVoice(false);
     }
+  };
 
   const fetchInvoices = async () => {
     const { data } = await supabase
