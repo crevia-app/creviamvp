@@ -234,17 +234,17 @@ const Settings = () => {
 
         <TabsContent value="appearance">
           <Card className="p-4 md:p-8">
-            <h2 className="font-vollkorn text-xl md:text-2xl font-bold mb-4 md:mb-6">Appearance</h2>
+            <h2 className="font-vollkorn text-xl md:text-2xl font-bold mb-4 md:mb-6">{t("settings.appearance")}</h2>
             <div className="space-y-6">
               <div>
-                <Label className="text-sm md:text-base mb-2 block">Theme</Label>
+                <Label className="text-sm md:text-base mb-2 block">{t("settings.theme")}</Label>
                 <ThemeToggle />
               </div>
               
               <div className="pt-4 border-t">
                 <div className="flex items-center gap-2 mb-3">
                   <Languages className="w-5 h-5 text-bronze" />
-                  <Label className="text-sm md:text-base">Language</Label>
+                  <Label className="text-sm md:text-base">{t("settings.language")}</Label>
                 </div>
                 <Select value={language} onValueChange={(val) => {
                   setLanguage(val);
@@ -275,26 +275,26 @@ const Settings = () => {
 
         <TabsContent value="privacy">
           <Card className="p-4 md:p-8">
-            <h2 className="font-vollkorn text-xl md:text-2xl font-bold mb-4 md:mb-6">Privacy Settings</h2>
+            <h2 className="font-vollkorn text-xl md:text-2xl font-bold mb-4 md:mb-6">{t("settings.privacySettings")}</h2>
             <div className="space-y-4 md:space-y-6">
               <div className="flex items-start md:items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <Label className="text-sm md:text-base">Profile Visibility</Label>
-                  <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Make your profile public</p>
+                  <Label className="text-sm md:text-base">{t("settings.profileVisibility")}</Label>
+                  <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{t("settings.profileVisibilityDesc")}</p>
                 </div>
                 <Switch defaultChecked className="flex-shrink-0" />
               </div>
               <div className="flex items-start md:items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <Label className="text-sm md:text-base">Hide Earnings</Label>
-                  <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Keep earnings private</p>
+                  <Label className="text-sm md:text-base">{t("settings.hideEarnings")}</Label>
+                  <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{t("settings.hideEarningsDesc")}</p>
                 </div>
                 <Switch className="flex-shrink-0" />
               </div>
               <div className="flex items-start md:items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <Label className="text-sm md:text-base">Do Not Disturb</Label>
-                  <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Pause all notifications</p>
+                  <Label className="text-sm md:text-base">{t("settings.doNotDisturb")}</Label>
+                  <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{t("settings.doNotDisturbDesc")}</p>
                 </div>
                 <Switch className="flex-shrink-0" />
               </div>
