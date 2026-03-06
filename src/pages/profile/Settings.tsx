@@ -19,14 +19,15 @@ import {
 import { languages } from "@/data/countries";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { language, setLanguage, t } = useLanguage();
   const [profile, setProfile] = useState<any>(null);
   const [userType, setUserType] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
