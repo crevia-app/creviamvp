@@ -19,14 +19,15 @@ import {
 import { languages } from "@/data/countries";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { language, setLanguage, t } = useLanguage();
   const [profile, setProfile] = useState<any>(null);
   const [userType, setUserType] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -131,20 +132,20 @@ const Settings = () => {
     <div className="container mx-auto px-3 md:px-6 py-6 md:py-8 max-w-5xl">
       <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
         <SettingsIcon className="w-6 h-6 md:w-8 md:h-8 text-bronze" />
-        <h1 className="font-vollkorn text-2xl md:text-4xl font-bold">Settings</h1>
+        <h1 className="font-vollkorn text-2xl md:text-4xl font-bold">{t("settings.title")}</h1>
       </div>
-      <p className="text-sm md:text-base text-muted-foreground mb-6 md:mb-8">Manage your account preferences</p>
+      <p className="text-sm md:text-base text-muted-foreground mb-6 md:mb-8">{t("settings.subtitle")}</p>
 
       <Tabs defaultValue="account" className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-6 md:mb-8 h-auto">
-          <TabsTrigger value="account" className="text-xs sm:text-sm py-2">Account</TabsTrigger>
-          <TabsTrigger value="appearance" className="text-xs sm:text-sm py-2">Appearance</TabsTrigger>
-          <TabsTrigger value="privacy" className="text-xs sm:text-sm py-2">Privacy</TabsTrigger>
+          <TabsTrigger value="account" className="text-xs sm:text-sm py-2">{t("settings.account")}</TabsTrigger>
+          <TabsTrigger value="appearance" className="text-xs sm:text-sm py-2">{t("settings.appearance")}</TabsTrigger>
+          <TabsTrigger value="privacy" className="text-xs sm:text-sm py-2">{t("settings.privacy")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="account">
           <Card className="p-4 md:p-8">
-            <h2 className="font-vollkorn text-xl md:text-2xl font-bold mb-4 md:mb-6">Account Information</h2>
+            <h2 className="font-vollkorn text-xl md:text-2xl font-bold mb-4 md:mb-6">{t("settings.accountInfo")}</h2>
             <div className="space-y-4 md:space-y-6">
               {/* Profile Picture */}
               <div className="flex flex-col items-center gap-4 pb-4 border-b">
@@ -173,58 +174,58 @@ const Settings = () => {
                 </div>
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">
-                    {uploading ? "Uploading..." : "Click camera icon to change profile picture"}
+                    {uploading ? t("settings.uploading") : t("settings.profilePicture")}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Max size: 5MB • JPG, PNG, GIF
+                    {t("settings.maxSize")}
                   </p>
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="displayName" className="text-sm md:text-base">Display Name</Label>
+                <Label htmlFor="displayName" className="text-sm md:text-base">{t("settings.displayName")}</Label>
                 <Input
                   id="displayName"
                   value={profile?.display_name || ""}
                   className="mt-2 h-10 md:h-11"
-                  placeholder="Your display name"
+                  placeholder={t("settings.displayNamePlaceholder")}
                 />
               </div>
               <div>
-                <Label htmlFor="email" className="text-sm md:text-base">Email</Label>
+                <Label htmlFor="email" className="text-sm md:text-base">{t("settings.email")}</Label>
                 <Input
                   id="email"
                   type="email"
                   value={profile?.email || ""}
                   className="mt-2 h-10 md:h-11"
-                  placeholder="your@email.com"
+                  placeholder={t("settings.emailPlaceholder")}
                 />
               </div>
               <div>
-                <Label htmlFor="username" className="text-sm md:text-base">Username</Label>
+                <Label htmlFor="username" className="text-sm md:text-base">{t("settings.username")}</Label>
                 <Input
                   id="username"
                   value={profile?.handle || ""}
                   className="mt-2 h-10 md:h-11"
-                  placeholder="@username"
+                  placeholder={t("settings.usernamePlaceholder")}
                 />
               </div>
               <div>
-                <Label htmlFor="bio" className="text-sm md:text-base">Short Bio</Label>
+                <Label htmlFor="bio" className="text-sm md:text-base">{t("settings.bio")}</Label>
                 <textarea
                   id="bio"
                   value={profile?.bio || ""}
                   className="mt-2 w-full min-h-[80px] md:min-h-[100px] p-3 text-sm md:text-base rounded-md border border-input bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 resize-none"
-                  placeholder="Tell us a little about yourself..."
+                  placeholder={t("settings.bioPlaceholder")}
                   maxLength={160}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Max 160 characters
+                  {t("settings.bioMax")}
                 </p>
               </div>
               <div className="pt-2">
                 <Button className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-sm md:text-base px-6 py-5 md:py-6">
-                  Save Changes
+                  {t("common.save")}
                 </Button>
               </div>
             </div>
@@ -233,32 +234,38 @@ const Settings = () => {
 
         <TabsContent value="appearance">
           <Card className="p-4 md:p-8">
-            <h2 className="font-vollkorn text-xl md:text-2xl font-bold mb-4 md:mb-6">Appearance</h2>
+            <h2 className="font-vollkorn text-xl md:text-2xl font-bold mb-4 md:mb-6">{t("settings.appearance")}</h2>
             <div className="space-y-6">
               <div>
-                <Label className="text-sm md:text-base mb-2 block">Theme</Label>
+                <Label className="text-sm md:text-base mb-2 block">{t("settings.theme")}</Label>
                 <ThemeToggle />
               </div>
               
               <div className="pt-4 border-t">
                 <div className="flex items-center gap-2 mb-3">
                   <Languages className="w-5 h-5 text-bronze" />
-                  <Label className="text-sm md:text-base">Language</Label>
+                  <Label className="text-sm md:text-base">{t("settings.language")}</Label>
                 </div>
-                <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                <Select value={language} onValueChange={(val) => {
+                  setLanguage(val);
+                  toast({
+                    title: t("toast.languageChanged"),
+                    description: t("toast.languageChangedDesc"),
+                  });
+                }}>
                   <SelectTrigger className="w-full md:w-80 h-11">
                     <SelectValue placeholder="Select language" />
                   </SelectTrigger>
                   <SelectContent>
-                    {languages.map((language) => (
-                      <SelectItem key={language.code} value={language.code}>
-                        {language.name}
+                    {languages.map((lang) => (
+                      <SelectItem key={lang.code} value={lang.code}>
+                        <span className="mr-2">{lang.flag}</span> {lang.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <p className="text-xs md:text-sm text-muted-foreground mt-2">
-                  Change the language of the interface
+                  {t("settings.languageDesc")}
                 </p>
               </div>
             </div>
@@ -268,26 +275,26 @@ const Settings = () => {
 
         <TabsContent value="privacy">
           <Card className="p-4 md:p-8">
-            <h2 className="font-vollkorn text-xl md:text-2xl font-bold mb-4 md:mb-6">Privacy Settings</h2>
+            <h2 className="font-vollkorn text-xl md:text-2xl font-bold mb-4 md:mb-6">{t("settings.privacySettings")}</h2>
             <div className="space-y-4 md:space-y-6">
               <div className="flex items-start md:items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <Label className="text-sm md:text-base">Profile Visibility</Label>
-                  <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Make your profile public</p>
+                  <Label className="text-sm md:text-base">{t("settings.profileVisibility")}</Label>
+                  <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{t("settings.profileVisibilityDesc")}</p>
                 </div>
                 <Switch defaultChecked className="flex-shrink-0" />
               </div>
               <div className="flex items-start md:items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <Label className="text-sm md:text-base">Hide Earnings</Label>
-                  <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Keep earnings private</p>
+                  <Label className="text-sm md:text-base">{t("settings.hideEarnings")}</Label>
+                  <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{t("settings.hideEarningsDesc")}</p>
                 </div>
                 <Switch className="flex-shrink-0" />
               </div>
               <div className="flex items-start md:items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <Label className="text-sm md:text-base">Do Not Disturb</Label>
-                  <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Pause all notifications</p>
+                  <Label className="text-sm md:text-base">{t("settings.doNotDisturb")}</Label>
+                  <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{t("settings.doNotDisturbDesc")}</p>
                 </div>
                 <Switch className="flex-shrink-0" />
               </div>
