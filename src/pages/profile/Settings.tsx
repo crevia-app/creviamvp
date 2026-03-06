@@ -246,20 +246,26 @@ const Settings = () => {
                   <Languages className="w-5 h-5 text-bronze" />
                   <Label className="text-sm md:text-base">Language</Label>
                 </div>
-                <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                <Select value={language} onValueChange={(val) => {
+                  setLanguage(val);
+                  toast({
+                    title: t("toast.languageChanged"),
+                    description: t("toast.languageChangedDesc"),
+                  });
+                }}>
                   <SelectTrigger className="w-full md:w-80 h-11">
                     <SelectValue placeholder="Select language" />
                   </SelectTrigger>
                   <SelectContent>
-                    {languages.map((language) => (
-                      <SelectItem key={language.code} value={language.code}>
-                        {language.name}
+                    {languages.map((lang) => (
+                      <SelectItem key={lang.code} value={lang.code}>
+                        <span className="mr-2">{lang.flag}</span> {lang.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <p className="text-xs md:text-sm text-muted-foreground mt-2">
-                  Change the language of the interface
+                  {t("settings.languageDesc")}
                 </p>
               </div>
             </div>
