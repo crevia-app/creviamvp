@@ -136,10 +136,9 @@ const Settings = () => {
       <p className="text-sm md:text-base text-muted-foreground mb-6 md:mb-8">Manage your account preferences</p>
 
       <Tabs defaultValue="account" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6 md:mb-8 h-auto">
+        <TabsList className="grid w-full grid-cols-3 mb-6 md:mb-8 h-auto">
           <TabsTrigger value="account" className="text-xs sm:text-sm py-2">Account</TabsTrigger>
           <TabsTrigger value="appearance" className="text-xs sm:text-sm py-2">Appearance</TabsTrigger>
-          <TabsTrigger value="preferences" className="text-xs sm:text-sm py-2">Preferences</TabsTrigger>
           <TabsTrigger value="privacy" className="text-xs sm:text-sm py-2">Privacy</TabsTrigger>
         </TabsList>
 
@@ -265,29 +264,6 @@ const Settings = () => {
             </div>
           </Card>
         </TabsContent>
-
-        <TabsContent value="preferences">
-          <Card className="p-4 md:p-8">
-            <h2 className="font-vollkorn text-xl md:text-2xl font-bold mb-4 md:mb-6">
-              {userType === "creator" ? "Creator" : "Brand"} Preferences
-            </h2>
-            <div className="space-y-4 md:space-y-6">
-              <div>
-                <Label className="text-sm md:text-base">Collaboration Types</Label>
-                <p className="text-xs md:text-sm text-muted-foreground mt-2">
-                  Configure your preferred collaboration types
-                </p>
-              </div>
-              <div>
-                <Label className="text-sm md:text-base">Budget Expectations</Label>
-                <p className="text-xs md:text-sm text-muted-foreground mt-2">
-                  Set your budget range preferences
-                </p>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-
 
 
         <TabsContent value="privacy">
