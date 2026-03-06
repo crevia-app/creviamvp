@@ -136,10 +136,9 @@ const Settings = () => {
       <p className="text-sm md:text-base text-muted-foreground mb-6 md:mb-8">Manage your account preferences</p>
 
       <Tabs defaultValue="account" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 mb-6 md:mb-8 h-auto">
+        <TabsList className="grid w-full grid-cols-3 mb-6 md:mb-8 h-auto">
           <TabsTrigger value="account" className="text-xs sm:text-sm py-2">Account</TabsTrigger>
           <TabsTrigger value="appearance" className="text-xs sm:text-sm py-2">Appearance</TabsTrigger>
-          <TabsTrigger value="preferences" className="text-xs sm:text-sm py-2">Preferences</TabsTrigger>
           <TabsTrigger value="privacy" className="text-xs sm:text-sm py-2">Privacy</TabsTrigger>
         </TabsList>
 
