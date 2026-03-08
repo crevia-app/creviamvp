@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Link2, Instagram, Twitter, Linkedin, Youtube, Mail, Globe, Github } from "lucide-react";
+import { iconOptions, iconCategories } from "./iconOptions";
+import { Search } from "lucide-react";
 
 interface AddButtonDialogProps {
   open: boolean;
@@ -19,40 +21,31 @@ interface AddButtonDialogProps {
   onAdd: (button: any) => void;
 }
 
-const iconOptions = [
-  { value: "link", label: "Link", icon: Link2 },
-  { value: "instagram", label: "Instagram", icon: Instagram },
-  { value: "twitter", label: "Twitter/X", icon: Twitter },
-  { value: "linkedin", label: "LinkedIn", icon: Linkedin },
-  { value: "youtube", label: "YouTube", icon: Youtube },
-  { value: "email", label: "Email", icon: Mail },
-  { value: "website", label: "Website", icon: Globe },
-  { value: "github", label: "GitHub", icon: Github },
-];
-
 export function AddButtonDialog({ open, onOpenChange, onAdd }: AddButtonDialogProps) {
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [icon, setIcon] = useState("link");
   const [style, setStyle] = useState("filled");
+  const [iconSearch, setIconSearch] = useState("");
+
+  const filteredIcons = iconSearch
+    ? iconOptions.filter(
+        (o) =>
+          o.label.toLowerCase().includes(iconSearch.toLowerCase()) ||
+          o.category.toLowerCase().includes(iconSearch.toLowerCase())
+      )
+    : iconOptions;
+
+  const selectedIcon = iconOptions.find((o) => o.value === icon);
 
   const handleSubmit = () => {
     if (!title || !url) return;
-
-    onAdd({
-      title,
-      url,
-      icon,
-      style,
-      subtitle: "",
-      visible: true,
-    });
-
-    // Reset form
+    onAdd({ title, url, icon, style, subtitle: "", visible: true });
     setTitle("");
     setUrl("");
     setIcon("link");
     setStyle("filled");
+    setIconSearch("");
     onOpenChange(false);
   };
 
@@ -61,60 +54,83 @@ export function AddButtonDialog({ open, onOpenChange, onAdd }: AddButtonDialogPr
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="font-vollkorn text-2xl">Add New Button</DialogTitle>
-          <DialogDescription>
-            Create a new link button for your Crevia Link page
-          </DialogDescription>
+          <DialogDescription>Create a new link button for your Crevia Link page</DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4 py-4">
           <div>
             <Label htmlFor="title">Button Title</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="My Portfolio"
-              className="mt-2"
-            />
+            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="My Portfolio" className="mt-2" />
           </div>
 
           <div>
             <Label htmlFor="url">URL</Label>
-            <Input
-              id="url"
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com"
-              className="mt-2"
-            />
+            <Input id="url" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://example.com" className="mt-2" />
           </div>
 
           <div>
-            <Label htmlFor="icon">Icon</Label>
-            <Select value={icon} onValueChange={setIcon}>
-              <SelectTrigger className="mt-2">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {iconOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    <div className="flex items-center gap-2">
-                      <opt.icon className="w-4 h-4" />
-                      {opt.label}
+            <Label>Icon</Label>
+            <div className="mt-2 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={iconSearch}
+                onChange={(e) => setIconSearch(e.target.value)}
+                placeholder="Search icons..."
+                className="pl-9"
+              />
+            </div>
+            <ScrollArea className="h-48 mt-2 border rounded-lg p-2">
+              {(iconSearch ? ["Results"] : iconCategories).map((cat) => {
+                const items = iconSearch
+                  ? filteredIcons
+                  : filteredIcons.filter((o) => o.category === cat);
+                if (items.length === 0) return null;
+                return (
+                  <div key={cat} className="mb-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 px-1">
+                      {cat}
+                    </p>
+                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-1">
+                      {items.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => {
+                            setIcon(opt.value);
+                            setIconSearch("");
+                          }}
+                          className={`flex flex-col items-center gap-1 p-2 rounded-lg text-xs transition-all ${
+                            icon === opt.value
+                              ? "bg-bronze text-white"
+                              : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <opt.icon className="w-5 h-5" />
+                          <span className="truncate w-full text-center text-[10px] leading-tight">
+                            {opt.label}
+                          </span>
+                        </button>
+                      ))}
                     </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  </div>
+                );
+              })}
+              {filteredIcons.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-6">No icons found</p>
+              )}
+            </ScrollArea>
+            {selectedIcon && (
+              <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                <selectedIcon.icon className="w-4 h-4 text-bronze" />
+                Selected: <span className="font-medium text-foreground">{selectedIcon.label}</span>
+              </div>
+            )}
           </div>
 
           <div>
             <Label htmlFor="style">Button Style</Label>
             <Select value={style} onValueChange={setStyle}>
-              <SelectTrigger className="mt-2">
-                <SelectValue />
-              </SelectTrigger>
+              <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="filled">Filled</SelectItem>
                 <SelectItem value="outline">Outline</SelectItem>
@@ -125,16 +141,8 @@ export function AddButtonDialog({ open, onOpenChange, onAdd }: AddButtonDialogPr
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSubmit}
-            disabled={!title || !url}
-            className="bg-bronze hover:bg-bronze-dark"
-          >
-            Add Button
-          </Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSubmit} disabled={!title || !url} className="bg-bronze hover:bg-bronze-dark">Add Button</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

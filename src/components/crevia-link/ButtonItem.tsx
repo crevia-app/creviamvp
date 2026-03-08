@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { GripVertical, Pencil, Trash2, Link2, Instagram, Twitter, Linkedin, Youtube, Mail, Globe, Github, ChevronUp, ChevronDown } from "lucide-react";
+import { Pencil, Trash2, Link2, ChevronUp, ChevronDown } from "lucide-react";
+import { iconMap } from "./iconOptions";
 
 interface ButtonItemProps {
   button: any;
@@ -13,17 +14,6 @@ interface ButtonItemProps {
   isFirst?: boolean;
   isLast?: boolean;
 }
-
-const iconMap: Record<string, any> = {
-  link: Link2,
-  instagram: Instagram,
-  twitter: Twitter,
-  linkedin: Linkedin,
-  youtube: Youtube,
-  email: Mail,
-  website: Globe,
-  github: Github,
-};
 
 export function ButtonItem({ button, onEdit, onDelete, onToggleVisibility, onMoveUp, onMoveDown, isFirst, isLast }: ButtonItemProps) {
   const Icon = iconMap[button.icon] || Link2;
