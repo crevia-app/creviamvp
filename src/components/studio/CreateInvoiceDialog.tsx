@@ -130,12 +130,14 @@ const CreateInvoiceDialog = ({
     setItems([{ description: "", quantity: "", unit_price: "", total: 0 }]);
   };
 
-  const updateItemTotal = (index: number, field: string, value: any) => {
+  const updateItemTotal = (index: number, field: string, value: string) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
     
     if (field === "quantity" || field === "unit_price") {
-      newItems[index].total = newItems[index].quantity * newItems[index].unit_price;
+      const qty = parseFloat(newItems[index].quantity) || 0;
+      const price = parseFloat(newItems[index].unit_price) || 0;
+      newItems[index].total = qty * price;
     }
     
     setItems(newItems);
