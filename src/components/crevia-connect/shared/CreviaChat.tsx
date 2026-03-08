@@ -203,6 +203,13 @@ const CreviaChat = () => {
     await fetchRooms();
   };
 
+  // Initialize E2EE after user ID is set
+  useEffect(() => {
+    if (currentUserId) {
+      initEncryption();
+    }
+  }, [currentUserId, initEncryption]);
+
   const fetchRooms = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
