@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useE2EEncryption } from "@/hooks/use-e2e-encryption";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
@@ -140,6 +141,8 @@ const CreviaChat = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const { e2eReady, initEncryption, setupRoomEncryption, encrypt, decrypt, decryptMessages } = useE2EEncryption(currentUserId);
+
   // Initialize
   useEffect(() => {
     initChat();
@@ -156,11 +159,16 @@ const CreviaChat = () => {
         { event: "INSERT", schema: "public", table: "chat_messages" },
         (payload) => {
           const newMsg = payload.new as ChatMessage;
-          // If in current room, add message
+          // If in current room, add message and decrypt
           if (selectedRoom && newMsg.room_id === selectedRoom.id) {
-            loadSenderProfile(newMsg).then((msgWithProfile) => {
+            (async () => {
+              const msgWithProfile = await loadSenderProfile(newMsg);
+              // Decrypt content if encrypted
+              if (msgWithProfile.is_encrypted && msgWithProfile.content) {
+                msgWithProfile.content = await decrypt(msgWithProfile.content, msgWithProfile.room_id);
+              }
               setMessages((prev) => [...prev, msgWithProfile]);
-            });
+            })();
             updateReadReceipt(newMsg.room_id);
           }
           // Update room list
@@ -172,7 +180,7 @@ const CreviaChat = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUserId, selectedRoom]);
+  }, [currentUserId, selectedRoom, decrypt]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -194,6 +202,13 @@ const CreviaChat = () => {
     setCurrentUserId(user.id);
     await fetchRooms();
   };
+
+  // Initialize E2EE after user ID is set
+  useEffect(() => {
+    if (currentUserId) {
+      initEncryption();
+    }
+  }, [currentUserId, initEncryption]);
 
   const fetchRooms = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -303,7 +318,10 @@ const CreviaChat = () => {
 
     // Enrich with sender profiles
     const enriched = await Promise.all(data.map(loadSenderProfile));
-    setMessages(enriched);
+    
+    // Decrypt messages
+    const decrypted = await decryptMessages(enriched);
+    setMessages(decrypted as ChatMessage[]);
     updateReadReceipt(roomId);
   };
 
@@ -317,8 +335,24 @@ const CreviaChat = () => {
       );
   };
 
-  const selectRoom = (room: ChatRoom) => {
+  const selectRoom = async (room: ChatRoom) => {
     setSelectedRoom(room);
+    
+    // Ensure room has encryption keys, setup if missing
+    if (currentUserId && room.members && room.members.length > 0) {
+      const { data: existingKey } = await supabase
+        .from("room_encrypted_keys" as any)
+        .select("id")
+        .eq("room_id", room.id)
+        .eq("user_id", currentUserId)
+        .single() as any;
+      
+      if (!existingKey) {
+        const memberIds = room.members.map(m => m.user_id);
+        await setupRoomEncryption(room.id, memberIds);
+      }
+    }
+    
     fetchMessages(room.id);
   };
 
@@ -388,6 +422,9 @@ const CreviaChat = () => {
       { room_id: newRoom.id, user_id: otherUserId, role: "member" },
     ]);
 
+    // Setup E2EE for this room
+    await setupRoomEncryption(newRoom.id, [currentUserId, otherUserId]);
+
     setShowNewChat(false);
     await fetchRooms();
     selectRoom({ ...newRoom, members: [], lastMessage: null, unreadCount: 0 });
@@ -421,6 +458,10 @@ const CreviaChat = () => {
     ];
 
     await supabase.from("chat_room_members").insert(memberInserts);
+
+    // Setup E2EE for group
+    const allMemberIds = [currentUserId, ...selectedGroupMembers];
+    await setupRoomEncryption(newRoom.id, allMemberIds);
 
     setShowGroupCreate(false);
     setGroupName("");
@@ -457,15 +498,20 @@ const CreviaChat = () => {
         fileData = { url: fileName, name: selectedFile.name, type: selectedFile.type, size: selectedFile.size };
       }
 
+      // Encrypt the message content
+      const plainContent = newMessage || (fileData ? `Sent a file: ${fileData.name}` : "");
+      const encryptedContent = await encrypt(plainContent, selectedRoom.id);
+
       await supabase.from("chat_messages").insert({
         room_id: selectedRoom.id,
         sender_id: currentUserId,
-        content: newMessage || (fileData ? `Sent a file: ${fileData.name}` : ""),
+        content: encryptedContent || plainContent,
         message_type: fileData ? "file" : "text",
         file_url: fileData?.url,
         file_name: fileData?.name,
         file_type: fileData?.type,
         file_size: fileData?.size,
+        is_encrypted: !!encryptedContent,
       });
 
       // Update room timestamp
@@ -487,12 +533,16 @@ const CreviaChat = () => {
   const sendInvoiceAttachment = async (invoice: AttachableInvoice) => {
     if (!selectedRoom || !currentUserId) return;
 
+    const plainContent = `📄 Invoice ${invoice.invoice_number} — ${new Intl.NumberFormat("en-KE", { style: "currency", currency: invoice.currency }).format(Number(invoice.total))} (${invoice.status})`;
+    const encryptedContent = await encrypt(plainContent, selectedRoom.id);
+
     await supabase.from("chat_messages").insert({
       room_id: selectedRoom.id,
       sender_id: currentUserId,
-      content: `📄 Invoice ${invoice.invoice_number} — ${new Intl.NumberFormat("en-KE", { style: "currency", currency: invoice.currency }).format(Number(invoice.total))} (${invoice.status})`,
+      content: encryptedContent || plainContent,
       message_type: "invoice",
       invoice_id: invoice.id,
+      is_encrypted: !!encryptedContent,
     });
 
     await supabase.from("chat_rooms").update({ updated_at: new Date().toISOString() }).eq("id", selectedRoom.id);
@@ -503,12 +553,16 @@ const CreviaChat = () => {
   const sendContractAttachment = async (contract: AttachableContract) => {
     if (!selectedRoom || !currentUserId) return;
 
+    const plainContent = `📋 Contract: ${contract.title} — ${contract.client_name} (${contract.status})`;
+    const encryptedContent = await encrypt(plainContent, selectedRoom.id);
+
     await supabase.from("chat_messages").insert({
       room_id: selectedRoom.id,
       sender_id: currentUserId,
-      content: `📋 Contract: ${contract.title} — ${contract.client_name} (${contract.status})`,
+      content: encryptedContent || plainContent,
       message_type: "contract",
       contract_id: contract.id,
+      is_encrypted: !!encryptedContent,
     });
 
     await supabase.from("chat_rooms").update({ updated_at: new Date().toISOString() }).eq("id", selectedRoom.id);
@@ -531,15 +585,19 @@ const CreviaChat = () => {
         .from("voice-notes")
         .getPublicUrl(fileName);
 
+      const plainContent = `🎤 Voice note (${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, "0")})`;
+      const encryptedContent = await encrypt(plainContent, selectedRoom.id);
+
       await supabase.from("chat_messages").insert({
         room_id: selectedRoom.id,
         sender_id: currentUserId,
-        content: `🎤 Voice note (${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, "0")})`,
+        content: encryptedContent || plainContent,
         message_type: "voice",
         file_url: urlData.publicUrl,
         file_name: `voice-${Date.now()}.${ext}`,
         file_type: blob.type || "audio/webm",
         file_size: blob.size,
+        is_encrypted: !!encryptedContent,
       });
 
       await supabase.from("chat_rooms").update({ updated_at: new Date().toISOString() }).eq("id", selectedRoom.id);
