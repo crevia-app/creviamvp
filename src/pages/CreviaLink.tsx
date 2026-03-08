@@ -1237,7 +1237,11 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                     <Label className="text-sm sm:text-base md:text-lg font-medium mb-3 md:mb-6 block">Color Scheme</Label>
                     <RadioGroup
                       value={linkProfile?.theme || "dark"}
-                      onValueChange={(value) => setLinkProfile({ ...linkProfile, theme: value })}
+                      onValueChange={(value) => {
+                        if (value !== "custom_image") {
+                          setLinkProfile({ ...linkProfile, theme: value, background: { ...linkProfile?.background, style: "solid" } });
+                        }
+                      }}
                       className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6"
                     >
                       {[
@@ -1257,13 +1261,12 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         { value: "emerald", label: "Emerald", gradient: "from-emerald-700 to-green-900" },
                         { value: "lavender", label: "Lavender", gradient: "from-violet-400 to-purple-500" },
                         { value: "champagne", label: "Champagne", gradient: "from-amber-100 to-yellow-50" },
-                      ].map((theme) => {
-                        return (
+                      ].map((theme) => (
                         <div key={theme.value} className="relative">
                           <RadioGroupItem value={theme.value} id={theme.value} className="peer sr-only" />
                           <Label
                             htmlFor={theme.value}
-                            className="flex flex-col items-center justify-between rounded-lg md:rounded-xl border-2 border-muted bg-white p-3 sm:p-4 md:p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
+                            className="flex flex-col items-center justify-between rounded-lg md:rounded-xl border-2 border-muted bg-card p-3 sm:p-4 md:p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
                           >
                             <div 
                               className={cn("w-full h-16 sm:h-20 md:h-28 rounded-md md:rounded-lg mb-2 sm:mb-3 md:mb-4 shadow-sm", 
@@ -1273,19 +1276,22 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                             <span className="font-semibold text-xs sm:text-sm md:text-base">{theme.label}</span>
                           </Label>
                         </div>
-                        );
-                      })}
+                      ))}
                     </RadioGroup>
                   </div>
 
-                  <div>
+                  {/* Background Style - embedded in Theme & Colors */}
+                  <div className="pt-4 border-t border-border/40">
                     <Label className="text-sm sm:text-base font-medium mb-2 block">Background Style</Label>
                     <Select
                       value={linkProfile?.background?.style || "solid"}
-                      onValueChange={(value) => setLinkProfile({ 
-                        ...linkProfile, 
-                        background: { ...linkProfile?.background, style: value }
-                      })}
+                      onValueChange={(value) => {
+                        if (value === "custom_image") {
+                          setLinkProfile({ ...linkProfile, theme: "custom_image", background: { ...linkProfile?.background, style: value } });
+                        } else {
+                          setLinkProfile({ ...linkProfile, background: { ...linkProfile?.background, style: value } });
+                        }
+                      }}
                     >
                       <SelectTrigger className="mt-2 h-10 sm:h-11 md:h-12 text-sm sm:text-base">
                         <SelectValue />
@@ -1301,7 +1307,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
                     {linkProfile?.background?.style === "custom_image" && (
                       <div className="mt-4 space-y-3">
-                        <Label className="text-sm font-medium block">Upload Background Image</Label>
+                        <Label className="text-xs text-muted-foreground block">Upload your own background image</Label>
                         {linkProfile?.background?.custom_bg_url && (
                           <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
                             <img src={linkProfile.background.custom_bg_url} alt="Background" className="w-full h-full object-cover" />
