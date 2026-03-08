@@ -249,6 +249,50 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     }
   };
 
+  const handleEditButton = (button: any) => {
+    setEditingButton(button);
+    setShowEditButton(true);
+  };
+
+  const handleSaveEditButton = async (updatedButton: any) => {
+    const { error } = await supabase
+      .from("link_buttons")
+      .update({
+        title: updatedButton.title,
+        url: updatedButton.url,
+        icon: updatedButton.icon,
+        style: updatedButton.style,
+      })
+      .eq("id", updatedButton.id);
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setButtons(buttons.map(b => b.id === updatedButton.id ? { ...b, ...updatedButton } : b));
+      toast({ title: "Button updated!" });
+    }
+  };
+
+  const handleMoveButton = async (id: string, direction: "up" | "down") => {
+    const idx = buttons.findIndex(b => b.id === id);
+    if (direction === "up" && idx <= 0) return;
+    if (direction === "down" && idx >= buttons.length - 1) return;
+
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    const newButtons = [...buttons];
+    [newButtons[idx], newButtons[swapIdx]] = [newButtons[swapIdx], newButtons[idx]];
+    
+    // Update order_index for both
+    const updates = newButtons.map((b, i) => ({ ...b, order_index: i }));
+    setButtons(updates);
+
+    // Persist both
+    await Promise.all([
+      supabase.from("link_buttons").update({ order_index: updates[idx].order_index }).eq("id", updates[idx].id),
+      supabase.from("link_buttons").update({ order_index: updates[swapIdx].order_index }).eq("id", updates[swapIdx].id),
+    ]);
+  };
+
   const handleSave = async () => {
     // Validate username before saving
     const error = validateUsername(linkProfile?.username || "");
