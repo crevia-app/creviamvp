@@ -296,8 +296,8 @@ const ContractsTab = () => {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            onClick={() => fileInputRef.current?.click()}
-            className="gap-2 h-10 rounded-xl border-dashed hover:border-primary/50 hover:bg-primary/5 transition-all"
+            onClick={() => setUploadDialogOpen(true)}
+            className="gap-2 h-10 rounded-xl border-dashed hover:border-bronze/50 hover:bg-bronze/5 transition-all"
           >
             <Upload className="h-4 w-4" />
             <span className="hidden sm:inline">Upload</span>
