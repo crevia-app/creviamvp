@@ -1050,13 +1050,17 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {buttons.map((button) => (
+                  {buttons.map((button, idx) => (
                     <ButtonItem
                       key={button.id}
                       button={button}
-                      onEdit={() => {}}
+                      onEdit={handleEditButton}
                       onDelete={handleDeleteButton}
                       onToggleVisibility={handleToggleVisibility}
+                      onMoveUp={(id) => handleMoveButton(id, "up")}
+                      onMoveDown={(id) => handleMoveButton(id, "down")}
+                      isFirst={idx === 0}
+                      isLast={idx === buttons.length - 1}
                     />
                   ))}
                 </div>
