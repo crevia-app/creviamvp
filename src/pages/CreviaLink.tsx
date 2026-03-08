@@ -1161,14 +1161,14 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         { value: "ocean", label: "Ocean", gradient: "from-blue-500 to-teal-400" },
                         { value: "forest", label: "Forest", gradient: "from-green-600 to-emerald-800" },
                         { value: "royal", label: "Royal", gradient: "from-purple-600 to-indigo-800" },
-                        { value: "midnight", label: "Midnight", gradient: "from-slate-900 to-blue-950", premium: true },
-                        { value: "rose", label: "Rosé", gradient: "from-rose-400 to-pink-300", premium: true },
-                        { value: "noir", label: "Noir", gradient: "from-zinc-900 to-neutral-950", premium: true },
-                        { value: "sapphire", label: "Sapphire", gradient: "from-blue-700 to-indigo-900", premium: true },
-                        { value: "burgundy", label: "Burgundy", gradient: "from-rose-900 to-red-950", premium: true },
-                        { value: "emerald", label: "Emerald", gradient: "from-emerald-700 to-green-900", premium: true },
-                        { value: "lavender", label: "Lavender", gradient: "from-violet-400 to-purple-500", premium: true },
-                        { value: "champagne", label: "Champagne", gradient: "from-amber-100 to-yellow-50", premium: true },
+                        { value: "midnight", label: "Midnight", gradient: "from-slate-900 to-blue-950" },
+                        { value: "rose", label: "Rosé", gradient: "from-rose-400 to-pink-300" },
+                        { value: "noir", label: "Noir", gradient: "from-zinc-900 to-neutral-950" },
+                        { value: "sapphire", label: "Sapphire", gradient: "from-blue-700 to-indigo-900" },
+                        { value: "burgundy", label: "Burgundy", gradient: "from-rose-900 to-red-950" },
+                        { value: "emerald", label: "Emerald", gradient: "from-emerald-700 to-green-900" },
+                        { value: "lavender", label: "Lavender", gradient: "from-violet-400 to-purple-500" },
+                        { value: "champagne", label: "Champagne", gradient: "from-amber-100 to-yellow-50" },
                       ].map((theme) => {
                         return (
                         <div key={theme.value} className="relative">
