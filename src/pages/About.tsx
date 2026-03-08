@@ -141,26 +141,19 @@ const About = () => {
 
       {/* ═══════════════ FOUNDER ═══════════════ */}
       <section className="py-20 md:py-28 px-4 md:px-6">
-        <div className="container mx-auto max-w-5xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
-            <div className="order-2 md:order-1">
-              <div className="aspect-square max-w-sm mx-auto rounded-3xl overflow-hidden border-2 border-bronze/20 shadow-2xl">
-                <img src={founderPhoto} alt="Crevia Founder" className="w-full h-full object-cover" />
-              </div>
-            </div>
-            <div className="order-1 md:order-2 space-y-6">
-              <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase">
-                Founder's Note
-              </p>
-              <blockquote className="font-vollkorn text-xl md:text-2xl font-bold leading-relaxed text-foreground italic">
-                "We see a future where your story doesn't need permission to thrive. 
-                Where creatives and brands are measured by impact, not metrics. Crevia exists to make this real."
-              </blockquote>
-              <p className="text-muted-foreground leading-relaxed">
-                Create. Via. Us. Because every story deserves to be heard.
-              </p>
-            </div>
-          </div>
+      <div className="container mx-auto max-w-3xl text-center">
+          <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase mb-6">
+            Founder's Note
+          </p>
+          <blockquote className="font-vollkorn text-xl md:text-2xl font-bold leading-relaxed text-foreground italic mb-6">
+            "We see a future where your story doesn't need permission to thrive. 
+            Where creatives and brands are measured by impact, not metrics. Crevia exists to make this real."
+          </blockquote>
+          <p className="text-muted-foreground leading-relaxed mb-4">
+            Create. Via. Us. Because every story deserves to be heard.
+          </p>
+          <p className="font-poppins font-semibold text-foreground">Amin Hussein</p>
+          <p className="text-sm text-muted-foreground">Founder & CEO</p>
         </div>
       </section>
 
