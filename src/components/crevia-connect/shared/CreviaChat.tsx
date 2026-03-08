@@ -318,7 +318,10 @@ const CreviaChat = () => {
 
     // Enrich with sender profiles
     const enriched = await Promise.all(data.map(loadSenderProfile));
-    setMessages(enriched);
+    
+    // Decrypt messages
+    const decrypted = await decryptMessages(enriched);
+    setMessages(decrypted as ChatMessage[]);
     updateReadReceipt(roomId);
   };
 
