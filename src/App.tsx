@@ -45,13 +45,13 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
-            <Route path="/" element={<Home />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/" element={<PublicPageWrapper><Home /></PublicPageWrapper>} />
+            <Route path="/auth" element={<PublicPageWrapper><Auth /></PublicPageWrapper>} />
+            <Route path="/reset-password" element={<PublicPageWrapper><ResetPassword /></PublicPageWrapper>} />
+            <Route path="/pricing" element={<PublicPageWrapper><Pricing /></PublicPageWrapper>} />
+            <Route path="/about" element={<PublicPageWrapper><About /></PublicPageWrapper>} />
+            <Route path="/privacy-policy" element={<PublicPageWrapper><PrivacyPolicy /></PublicPageWrapper>} />
+            <Route path="/terms-of-service" element={<PublicPageWrapper><TermsOfService /></PublicPageWrapper>} />
             <Route path="/user-type-selection" element={<Navigate to="/auth" replace />} />
             <Route path="/signup/creator" element={<CreatorSignup />} />
             <Route path="/signup/brand" element={<BrandSignup />} />
