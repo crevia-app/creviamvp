@@ -1751,6 +1751,49 @@ const CreviaChat = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Forward Message Dialog */}
+      <Dialog open={showForwardDialog} onOpenChange={setShowForwardDialog}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle>Forward Message</DialogTitle>
+            <DialogDescription>Select a conversation to forward this message to</DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="h-[350px]">
+            {rooms.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">No conversations available</div>
+            ) : (
+              <div className="space-y-1">
+                {rooms
+                  .filter((r) => selectedRoom && r.id !== selectedRoom.id)
+                  .map((room) => (
+                    <button
+                      key={room.id}
+                      onClick={() => forwardMessageToRoom(room.id)}
+                      className="w-full p-3 rounded-xl hover:bg-accent transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-bronze/10 flex items-center justify-center text-sm font-semibold overflow-hidden">
+                          {getRoomAvatar(room) ? (
+                            <img src={getRoomAvatar(room)!} alt="" className="h-10 w-10 rounded-full object-cover" />
+                          ) : (
+                            getRoomInitial(room)
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate text-sm">{getRoomDisplayName(room)}</p>
+                          {room.is_group && (
+                            <p className="text-xs text-muted-foreground">{room.members?.length} members</p>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
