@@ -155,8 +155,10 @@ const CreateInvoiceDialog = ({
 
   const calculateTotals = () => {
     const subtotal = items.reduce((acc, item) => acc + item.total, 0);
-    const taxAmount = subtotal * (taxRate / 100);
-    const total = subtotal + taxAmount - discountAmount;
+    const numTaxRate = parseFloat(taxRate) || 0;
+    const numDiscount = parseFloat(discountAmount) || 0;
+    const taxAmount = subtotal * (numTaxRate / 100);
+    const total = subtotal + taxAmount - numDiscount;
     return { subtotal, taxAmount, total };
   };
 
