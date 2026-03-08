@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import HeroPattern from "@/components/HeroPattern";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import gallery1 from "@/assets/about-gallery-1.jpg";
@@ -37,8 +38,9 @@ const About = () => {
       )}
 
       {/* ═══════════════ HERO ═══════════════ */}
-      <section className="pt-16 md:pt-24 pb-16 md:pb-20 px-4 md:px-6">
-        <div className="container mx-auto max-w-4xl text-center">
+      <section className="relative pt-16 md:pt-24 pb-16 md:pb-20 px-4 md:px-6 overflow-hidden">
+        <HeroPattern />
+        <div className="container mx-auto max-w-4xl text-center relative z-10">
           <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase mb-4 animate-fade-in">
             About Crevia
           </p>
@@ -177,8 +179,9 @@ const About = () => {
       </section>
 
       {/* ═══════════════ CTA ═══════════════ */}
-      <section className="py-20 md:py-28 px-4 md:px-6">
-        <div className="container mx-auto max-w-3xl text-center">
+      <section className="relative py-20 md:py-28 px-4 md:px-6 overflow-hidden">
+        <HeroPattern />
+        <div className="container mx-auto max-w-3xl text-center relative z-10">
           <h2 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
             Own your <span className="text-gradient-bronze">story.</span>
           </h2>
