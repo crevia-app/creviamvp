@@ -1138,9 +1138,17 @@ const CreviaChat = () => {
                         const isContract = msg.message_type === "contract";
                         const isFile = msg.message_type === "file";
                         const isVoice = msg.message_type === "voice";
+                        const isDeletedForEveryone = (msg as any).deleted_for_everyone;
+                        const isDeletedForMe = deletedForMeIds.has(msg.id);
+                        const isPinned = pinnedMessageIds.has(msg.id);
+                        const isFavorited = favoritedMessageIds.has(msg.id);
+                        const msgReactions = reactions[msg.id] || [];
+
+                        // Skip deleted messages
+                        if (isDeletedForMe) return null;
 
                         return (
-                          <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"} mb-2`}>
+                          <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"} mb-2 group`}>
                             {/* Show avatar for group chats */}
                             {!isMine && selectedRoom.is_group && (
                               <div className="w-7 h-7 rounded-full bg-bronze/20 flex items-center justify-center text-[10px] font-semibold text-bronze mr-2 mt-1 flex-shrink-0 overflow-hidden">
@@ -1151,6 +1159,28 @@ const CreviaChat = () => {
                                 )}
                               </div>
                             )}
+
+                            {/* Action buttons - before message for own messages */}
+                            {isMine && !isDeletedForEveryone && (
+                              <div className="flex items-center gap-0.5 mr-1 self-center">
+                                <EmojiReactionPicker onReact={(emoji) => handleReaction(msg.id, emoji)} />
+                                <MessageContextMenu
+                                  messageId={msg.id}
+                                  roomId={msg.room_id}
+                                  content={msg.content}
+                                  isMine={isMine}
+                                  currentUserId={currentUserId}
+                                  isPinned={isPinned}
+                                  isFavorited={isFavorited}
+                                  onDeleteForMe={handleDeleteForMe}
+                                  onDeleteForEveryone={handleDeleteForEveryone}
+                                  onForward={handleForward}
+                                  onPinToggle={handlePinToggle}
+                                  onFavoriteToggle={handleFavoriteToggle}
+                                />
+                              </div>
+                            )}
+
                             <div className={`max-w-[85%] md:max-w-[70%]`}>
                               {/* Sender name in groups */}
                               {!isMine && selectedRoom.is_group && (
@@ -1159,79 +1189,131 @@ const CreviaChat = () => {
                                 </p>
                               )}
 
-                              <div
-                                className={`rounded-2xl px-3 md:px-4 py-2.5 ${
-                                  isMine
-                                    ? "bg-bronze text-background rounded-br-md"
-                                    : "bg-muted rounded-bl-md"
-                                } ${(isInvoice || isContract) ? "border-2 " + (isMine ? "border-background/20" : "border-bronze/20") : ""}`}
-                              >
-                                {/* Invoice attachment */}
-                                {isInvoice && (
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <Receipt className={`h-4 w-4 ${isMine ? "text-background/70" : "text-bronze"}`} />
-                                    <span className={`text-xs font-semibold ${isMine ? "text-background/80" : "text-bronze"}`}>
-                                      Invoice Attached
-                                    </span>
-                                  </div>
-                                )}
-
-                                {/* Contract attachment */}
-                                {isContract && (
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <FileSignature className={`h-4 w-4 ${isMine ? "text-background/70" : "text-bronze"}`} />
-                                    <span className={`text-xs font-semibold ${isMine ? "text-background/80" : "text-bronze"}`}>
-                                      Contract Attached
-                                    </span>
-                                  </div>
-                                )}
-
-                                {/* File attachment */}
-                                {isFile && msg.file_url && (
-                                  <div className="mb-2 p-2 rounded-lg bg-background/10 flex items-center gap-2">
-                                    {msg.file_type?.startsWith("image/") ? (
-                                      <ImageIcon className="h-4 w-4 flex-shrink-0" />
-                                    ) : (
-                                      <File className="h-4 w-4 flex-shrink-0" />
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-xs font-medium truncate">{msg.file_name}</p>
-                                      <p className="text-[10px] opacity-70">{formatFileSize(msg.file_size)}</p>
-                                    </div>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() => downloadFile(msg.file_url!, msg.file_name || "file")}
-                                      className="h-7 w-7 p-0 hover:bg-background/20"
-                                    >
-                                      <Download className="h-3.5 w-3.5" />
-                                    </Button>
-                                  </div>
-                                )}
-
-                                {/* Voice note */}
-                                {isVoice && msg.file_url && (
-                                  <VoiceNotePlayer
-                                    audioUrl={msg.file_url}
-                                    duration={parseDurationFromContent(msg.content)}
-                                    isMine={isMine}
-                                  />
-                                )}
-
-                                {msg.content && !isVoice && (
-                                  <p className="text-xs md:text-sm whitespace-pre-wrap break-words">{msg.content}</p>
-                                )}
-
-                                <div className="flex items-center gap-1 mt-1">
-                                  <p className="text-[10px] opacity-60">
-                                    {format(new Date(msg.created_at), "h:mm a")}
-                                  </p>
-                                  {isMine && (
-                                    <CheckCheck className="h-3 w-3 opacity-60 ml-0.5" />
-                                  )}
+                              {/* Pinned indicator */}
+                              {isPinned && (
+                                <div className="flex items-center gap-1 mb-0.5 ml-1">
+                                  <Pin className="h-2.5 w-2.5 text-bronze" />
+                                  <span className="text-[9px] text-bronze font-medium">Pinned</span>
                                 </div>
-                              </div>
+                              )}
+
+                              {isDeletedForEveryone ? (
+                                <div className={`rounded-2xl px-3 md:px-4 py-2.5 ${
+                                  isMine ? "bg-bronze/30 rounded-br-md" : "bg-muted/50 rounded-bl-md"
+                                } border border-dashed border-muted-foreground/20`}>
+                                  <p className="text-xs italic text-muted-foreground">🚫 This message was deleted</p>
+                                  <div className="flex items-center gap-1 mt-1">
+                                    <p className="text-[10px] opacity-60">
+                                      {format(new Date(msg.created_at), "h:mm a")}
+                                    </p>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <div
+                                    className={`rounded-2xl px-3 md:px-4 py-2.5 ${
+                                      isMine
+                                        ? "bg-bronze text-background rounded-br-md"
+                                        : "bg-muted rounded-bl-md"
+                                    } ${(isInvoice || isContract) ? "border-2 " + (isMine ? "border-background/20" : "border-bronze/20") : ""}`}
+                                  >
+                                    {/* Invoice attachment */}
+                                    {isInvoice && (
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <Receipt className={`h-4 w-4 ${isMine ? "text-background/70" : "text-bronze"}`} />
+                                        <span className={`text-xs font-semibold ${isMine ? "text-background/80" : "text-bronze"}`}>
+                                          Invoice Attached
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {/* Contract attachment */}
+                                    {isContract && (
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <FileSignature className={`h-4 w-4 ${isMine ? "text-background/70" : "text-bronze"}`} />
+                                        <span className={`text-xs font-semibold ${isMine ? "text-background/80" : "text-bronze"}`}>
+                                          Contract Attached
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {/* File attachment */}
+                                    {isFile && msg.file_url && (
+                                      <div className="mb-2 p-2 rounded-lg bg-background/10 flex items-center gap-2">
+                                        {msg.file_type?.startsWith("image/") ? (
+                                          <ImageIcon className="h-4 w-4 flex-shrink-0" />
+                                        ) : (
+                                          <File className="h-4 w-4 flex-shrink-0" />
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-xs font-medium truncate">{msg.file_name}</p>
+                                          <p className="text-[10px] opacity-70">{formatFileSize(msg.file_size)}</p>
+                                        </div>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() => downloadFile(msg.file_url!, msg.file_name || "file")}
+                                          className="h-7 w-7 p-0 hover:bg-background/20"
+                                        >
+                                          <Download className="h-3.5 w-3.5" />
+                                        </Button>
+                                      </div>
+                                    )}
+
+                                    {/* Voice note */}
+                                    {isVoice && msg.file_url && (
+                                      <VoiceNotePlayer
+                                        audioUrl={msg.file_url}
+                                        duration={parseDurationFromContent(msg.content)}
+                                        isMine={isMine}
+                                      />
+                                    )}
+
+                                    {msg.content && !isVoice && (
+                                      <p className="text-xs md:text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                                    )}
+
+                                    <div className="flex items-center gap-1 mt-1">
+                                      <p className="text-[10px] opacity-60">
+                                        {format(new Date(msg.created_at), "h:mm a")}
+                                      </p>
+                                      {isMine && (
+                                        <CheckCheck className="h-3 w-3 opacity-60 ml-0.5" />
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Reactions display */}
+                                  <MessageReactions
+                                    reactions={msgReactions}
+                                    messageId={msg.id}
+                                    currentUserId={currentUserId}
+                                    onUpdate={fetchMessageMeta}
+                                  />
+                                </>
+                              )}
                             </div>
+
+                            {/* Action buttons - after message for other's messages */}
+                            {!isMine && !isDeletedForEveryone && (
+                              <div className="flex items-center gap-0.5 ml-1 self-center">
+                                <EmojiReactionPicker onReact={(emoji) => handleReaction(msg.id, emoji)} />
+                                <MessageContextMenu
+                                  messageId={msg.id}
+                                  roomId={msg.room_id}
+                                  content={msg.content}
+                                  isMine={isMine}
+                                  currentUserId={currentUserId}
+                                  isPinned={isPinned}
+                                  isFavorited={isFavorited}
+                                  onDeleteForMe={handleDeleteForMe}
+                                  onDeleteForEveryone={handleDeleteForEveryone}
+                                  onForward={handleForward}
+                                  onPinToggle={handlePinToggle}
+                                  onFavoriteToggle={handleFavoriteToggle}
+                                />
+                              </div>
+                            )}
                           </div>
                         );
                       })}
