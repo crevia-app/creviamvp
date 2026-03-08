@@ -88,13 +88,14 @@ const About = () => {
               <div className="h-1 w-16 bg-gradient-to-r from-bronze to-bronze-light rounded-full" />
               <p className="text-lg text-muted-foreground leading-relaxed">
                 <span className="text-bronze font-semibold">Crevia</span> isn't just a name — it's a declaration. 
-                We believe every creative deserves professional-grade tools, not just the ones 
-                with millions of followers.
+                We believe every creative and every brand deserves professional-grade tools, 
+                not just the ones with the biggest budgets or the loudest reach.
               </p>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Look at our logo. Those dots? Each one represents you. Some small, some large — 
-                all equal. We don't measure creatives by followers. We measure them by the 
-                businesses they build.
+                Look at our logo. Those dots? Each one represents you — whether you're a creator 
+                turning passion into a profession, or a brand searching for authentic partnerships. 
+                Some small, some large — all equal. We don't measure value by numbers. 
+                We measure it by the stories told and the businesses built.
               </p>
             </div>
           </div>
