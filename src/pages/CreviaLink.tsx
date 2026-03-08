@@ -707,30 +707,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                     {/* Background Style */}
                     <div className="pt-4 border-t border-border/40">
                       <Label className="text-sm font-medium mb-2 block">Background Style</Label>
-                      <Select
-                        value={linkProfile?.background?.style || "solid"}
-                        onValueChange={(value) => {
-                          if (value === "custom_image") {
-                            setLinkProfile({ ...linkProfile, theme: "custom_image", background: { ...linkProfile?.background, style: value } });
-                          } else {
-                            setLinkProfile({ ...linkProfile, background: { ...linkProfile?.background, style: value } });
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="h-11">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="solid">Solid Color</SelectItem>
-                          <SelectItem value="gradient">Gradient</SelectItem>
-                          <SelectItem value="pattern">Pattern</SelectItem>
-                          <SelectItem value="blur">Blur Effect</SelectItem>
-                          <SelectItem value="custom_image">Custom Image</SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      {linkProfile?.background?.style === "custom_image" && (
-                        <div className="mt-4 space-y-3">
+                      <div className="space-y-3">
                           <Label className="text-xs text-muted-foreground block">Upload your own background image</Label>
                           {linkProfile?.background?.custom_bg_url && (
                             <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
