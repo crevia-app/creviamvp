@@ -31,12 +31,13 @@ import About from "./pages/About";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import AppLayout from "./components/navigation/AppLayout";
+import PublicPageWrapper from "./components/PublicPageWrapper";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <LanguageProvider>
       <TooltipProvider>
         <Toaster />
@@ -44,18 +45,18 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
-            <Route path="/" element={<Home />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/" element={<PublicPageWrapper><Home /></PublicPageWrapper>} />
+            <Route path="/auth" element={<PublicPageWrapper><Auth /></PublicPageWrapper>} />
+            <Route path="/reset-password" element={<PublicPageWrapper><ResetPassword /></PublicPageWrapper>} />
+            <Route path="/pricing" element={<PublicPageWrapper><Pricing /></PublicPageWrapper>} />
+            <Route path="/about" element={<PublicPageWrapper><About /></PublicPageWrapper>} />
+            <Route path="/privacy-policy" element={<PublicPageWrapper><PrivacyPolicy /></PublicPageWrapper>} />
+            <Route path="/terms-of-service" element={<PublicPageWrapper><TermsOfService /></PublicPageWrapper>} />
             <Route path="/user-type-selection" element={<Navigate to="/auth" replace />} />
-            <Route path="/signup/creator" element={<CreatorSignup />} />
-            <Route path="/signup/brand" element={<BrandSignup />} />
+            <Route path="/signup/creator" element={<PublicPageWrapper><CreatorSignup /></PublicPageWrapper>} />
+            <Route path="/signup/brand" element={<PublicPageWrapper><BrandSignup /></PublicPageWrapper>} />
             {/* Kira onboarding removed for smoother signup flow */}
-            <Route path="/:username" element={<PublicProfile />} />
+            <Route path="/:username" element={<PublicPageWrapper><PublicProfile /></PublicPageWrapper>} />
             
             {/* Protected routes with AppLayout */}
             <Route path="/dashboard" element={<Navigate to="/kira" replace />} />

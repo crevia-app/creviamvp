@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTheme } from "next-themes";
 import { supabase } from "@/integrations/supabase/client";
 import MainSidebar from "./MainSidebar";
 import MobileBottomNav from "./MobileBottomNav";
@@ -13,12 +14,16 @@ interface AppLayoutProps {
 const AppLayout = ({ children }: AppLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { setTheme } = useTheme();
   const [userType, setUserType] = useState<"creator" | "brand" | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
 
   useEffect(() => {
+    // Apply app theme preference (default dark for post-login)
+    const appTheme = localStorage.getItem("app-theme") || "dark";
+    setTheme(appTheme);
     checkAuth();
   }, []);
 

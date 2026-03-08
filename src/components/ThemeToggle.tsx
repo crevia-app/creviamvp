@@ -13,6 +13,12 @@ export function ThemeToggle() {
     setMounted(true);
   }, []);
 
+  const handleSetTheme = (value: string) => {
+    // Store as app-level preference (only affects post-login)
+    localStorage.setItem("app-theme", value);
+    setTheme(value);
+  };
+
   if (!mounted) {
     return null;
   }
@@ -39,7 +45,7 @@ export function ThemeToggle() {
                 ? "bg-bronze hover:bg-bronze-dark text-white border-bronze" 
                 : "hover:border-bronze hover:bg-bronze/5"
             }`}
-            onClick={() => setTheme(value)}
+            onClick={() => handleSetTheme(value)}
           >
             <Icon className="w-6 h-6" />
             <span className="text-sm font-medium">{label}</span>
