@@ -125,17 +125,17 @@ export function useE2EEncryption(currentUserId: string) {
       .select("encrypted_key, encrypted_by")
       .eq("room_id", roomId)
       .eq("user_id", currentUserId)
-      .single();
+      .single() as any;
 
     if (!keyRecord?.encrypted_key) return null;
 
     // Get the public key of the person who encrypted it for us
-    const encryptorPublicKey = await getPublicKey(keyRecord.encrypted_by as string);
+    const encryptorPublicKey = await getPublicKey(keyRecord.encrypted_by);
     if (!encryptorPublicKey) return null;
 
     try {
       const roomKey = await unwrapRoomKey(
-        keyRecord.encrypted_key as string,
+        keyRecord.encrypted_key,
         privateKey,
         encryptorPublicKey
       );
