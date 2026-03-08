@@ -1346,9 +1346,26 @@ const CreviaChat = () => {
                                     )}
 
                                     {msg.content && !isVoice && (
-                                      <p className="text-xs md:text-sm whitespace-pre-wrap break-words">
-                                        {renderMessageContent(msg.content)}
-                                      </p>
+                                      msg.content === "[Unable to decrypt message]" || msg.content === "[Encryption key unavailable]" ? (
+                                        <div className="flex items-center gap-2">
+                                          <Lock className="h-3.5 w-3.5 opacity-60" />
+                                          <span className="text-xs italic opacity-70">{msg.content}</span>
+                                          {selectedRoom?.members && selectedRoom.members.length > 0 && (
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              className="h-5 px-1.5 text-[10px] opacity-70 hover:opacity-100"
+                                              onClick={() => retryDecryption(msg.room_id, selectedRoom.members!)}
+                                            >
+                                              Retry
+                                            </Button>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <p className="text-xs md:text-sm whitespace-pre-wrap break-words">
+                                          {renderMessageContent(msg.content)}
+                                        </p>
+                                      )
                                     )}
 
                                     <div className="flex items-center gap-1 mt-1">
