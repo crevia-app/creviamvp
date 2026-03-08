@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import CreatorSignup from "./pages/CreatorSignup";
 import BrandSignup from "./pages/BrandSignup";
 // KiraOnboarding removed for smoother signup flow
@@ -45,6 +46,7 @@ const App = () => (
             {/* Public routes */}
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/about" element={<About />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
