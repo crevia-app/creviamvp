@@ -191,10 +191,9 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
             {/* Crevia Branding */}
             {showBranding && (
               <div className="mt-6 text-center">
-                <div className={cn("inline-flex items-center gap-1 text-[9px] opacity-50", currentTheme.text)}>
-                  <Sparkles className="w-2.5 h-2.5" />
-                  <span>Made with Crevia</span>
-                </div>
+                <span className={cn("text-[10px] font-semibold opacity-40 tracking-wide", currentTheme.text)}>
+                  Crevia
+                </span>
               </div>
             )}
           </div>
