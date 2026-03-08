@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/select";
 import CreateContractDialog from "./CreateContractDialog";
 import ContractPreviewDialog from "./ContractPreviewDialog";
+import UploadContractDialog from "./UploadContractDialog";
 
 interface Contract {
   id: string;
@@ -97,7 +98,7 @@ const ContractsTab = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [previewContract, setPreviewContract] = useState<Contract | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   const fetchContracts = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -176,18 +177,13 @@ const ContractsTab = () => {
     fetchContracts();
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const handleFileUpload = async (file: File, contractType: string, title: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const fileName = file.name.replace(/\.[^/.]+$/, "");
     const fileExt = file.name.split(".").pop()?.toLowerCase();
     
     let content = "";
-    let fileUrl: string | null = null;
 
     // For text-based files, read the content directly for editing
     if (fileExt === "txt" || fileExt === "md") {
@@ -202,24 +198,17 @@ const ContractsTab = () => {
 
       if (uploadError) {
         toast.error("Failed to upload file: " + uploadError.message);
-        if (fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
-
-      const { data: urlData } = supabase.storage
-        .from("contract-uploads")
-        .getPublicUrl(storagePath);
-
-      fileUrl = urlData?.publicUrl || null;
 
       content = `[Original file: ${file.name}]\n[File type: ${file.type || fileExt}]\n[Uploaded: ${new Date().toLocaleString()}]\n\n---\n\nYou can edit this contract content below. The original document has been securely stored.\n\n---\n\n[Add or paste your contract terms here]`;
     }
 
     const { data, error } = await supabase.from("contracts").insert({
       user_id: session.user.id,
-      title: fileName,
+      title,
       client_name: "To be specified",
-      contract_type: "uploaded",
+      contract_type: contractType,
       content,
       status: "draft",
       currency: "KES",
@@ -227,13 +216,11 @@ const ContractsTab = () => {
 
     if (error) {
       toast.error("Failed to create contract record");
-      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
     toast.success("Contract uploaded! You can now edit all details.");
     fetchContracts();
-    if (fileInputRef.current) fileInputRef.current.value = "";
     
     // Open the edit dialog immediately so user can fill in details
     if (data) {
@@ -290,14 +277,6 @@ const ContractsTab = () => {
 
   return (
     <div className="p-4 md:p-8 space-y-6 max-w-6xl mx-auto">
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".txt,.md,.doc,.docx,.pdf,.rtf,.odt"
-        className="hidden"
-        onChange={handleFileUpload}
-      />
 
       {/* Header — Clean & Minimal */}
       <motion.div 
@@ -316,8 +295,8 @@ const ContractsTab = () => {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            onClick={() => fileInputRef.current?.click()}
-            className="gap-2 h-10 rounded-xl border-dashed hover:border-primary/50 hover:bg-primary/5 transition-all"
+            onClick={() => setUploadDialogOpen(true)}
+            className="gap-2 h-10 rounded-xl border-dashed hover:border-bronze/50 hover:bg-bronze/5 transition-all"
           >
             <Upload className="h-4 w-4" />
             <span className="hidden sm:inline">Upload</span>
@@ -448,7 +427,7 @@ const ContractsTab = () => {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => setUploadDialogOpen(true)}
                     className="gap-2 rounded-xl h-11 border-dashed"
                   >
                     <Upload className="h-4 w-4" />
@@ -600,6 +579,12 @@ const ContractsTab = () => {
         }}
         editingContract={editingContract}
         onSuccess={fetchContracts}
+      />
+
+      <UploadContractDialog
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        onUpload={handleFileUpload}
       />
 
       <ContractPreviewDialog
