@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import HeroPattern from "@/components/HeroPattern";
 import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
 import gallery1 from "@/assets/about-gallery-1.jpg";
 import gallery2 from "@/assets/about-gallery-2.jpg";
@@ -26,8 +27,8 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Back button for logged-in users */}
-      {isLoggedIn && (
+      {/* Show Header for non-logged-in users, back button for logged-in */}
+      {isLoggedIn ? (
         <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/50">
           <div className="container mx-auto px-6 py-4">
             <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2 hover:text-bronze">
@@ -35,10 +36,12 @@ const About = () => {
             </Button>
           </div>
         </div>
+      ) : (
+        <Header />
       )}
 
       {/* ═══════════════ HERO ═══════════════ */}
-      <section className="relative pt-16 md:pt-24 pb-16 md:pb-20 px-4 md:px-6 overflow-hidden">
+      <section className="relative pt-28 md:pt-36 pb-16 md:pb-20 px-4 md:px-6 overflow-hidden">
         <HeroPattern />
         <div className="container mx-auto max-w-4xl text-center relative z-10">
           <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase mb-4 animate-fade-in">
