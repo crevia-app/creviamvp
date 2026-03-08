@@ -159,11 +159,16 @@ const CreviaChat = () => {
         { event: "INSERT", schema: "public", table: "chat_messages" },
         (payload) => {
           const newMsg = payload.new as ChatMessage;
-          // If in current room, add message
+          // If in current room, add message and decrypt
           if (selectedRoom && newMsg.room_id === selectedRoom.id) {
-            loadSenderProfile(newMsg).then((msgWithProfile) => {
+            (async () => {
+              const msgWithProfile = await loadSenderProfile(newMsg);
+              // Decrypt content if encrypted
+              if (msgWithProfile.is_encrypted && msgWithProfile.content) {
+                msgWithProfile.content = await decrypt(msgWithProfile.content, msgWithProfile.room_id);
+              }
               setMessages((prev) => [...prev, msgWithProfile]);
-            });
+            })();
             updateReadReceipt(newMsg.room_id);
           }
           // Update room list
@@ -175,7 +180,7 @@ const CreviaChat = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUserId, selectedRoom]);
+  }, [currentUserId, selectedRoom, decrypt]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
