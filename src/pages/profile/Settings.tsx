@@ -8,7 +8,8 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
-import { Settings as SettingsIcon, Camera, Languages } from "lucide-react";
+import { Settings as SettingsIcon, Camera, Languages, Shield } from "lucide-react";
+import SecurityTab from "@/components/settings/SecurityTab";
 import {
   Select,
   SelectContent,
@@ -153,11 +154,19 @@ const Settings = () => {
       <p className="text-sm md:text-base text-muted-foreground mb-6 md:mb-8">{t("settings.subtitle")}</p>
 
       <Tabs defaultValue="account" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6 md:mb-8 h-auto">
+        <TabsList className="grid w-full grid-cols-4 mb-6 md:mb-8 h-auto">
           <TabsTrigger value="account" className="text-xs sm:text-sm py-2">{t("settings.account")}</TabsTrigger>
+          <TabsTrigger value="security" className="text-xs sm:text-sm py-2 gap-1">
+            <Shield className="w-3.5 h-3.5 hidden sm:inline" />
+            Security
+          </TabsTrigger>
           <TabsTrigger value="appearance" className="text-xs sm:text-sm py-2">{t("settings.appearance")}</TabsTrigger>
           <TabsTrigger value="privacy" className="text-xs sm:text-sm py-2">{t("settings.privacy")}</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="security">
+          <SecurityTab />
+        </TabsContent>
 
         <TabsContent value="account">
           <Card className="p-4 md:p-8">
