@@ -1282,7 +1282,9 @@ const CreviaChat = () => {
                                     )}
 
                                     {msg.content && !isVoice && (
-                                      <p className="text-xs md:text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                                      <p className="text-xs md:text-sm whitespace-pre-wrap break-words">
+                                        {renderMessageContent(msg.content)}
+                                      </p>
                                     )}
 
                                     <div className="flex items-center gap-1 mt-1">
