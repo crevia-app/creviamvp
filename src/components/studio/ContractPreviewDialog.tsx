@@ -129,7 +129,7 @@ const ContractPreviewDialog = ({
       .replace(/\[TERMINATION_CLAUSE\]/g, contract.termination_clause || "[Termination Clause]");
   };
 
-  if (!contract) return null;
+  if (!contract || !localContract) return null;
 
   const contractTypeLabels: Record<string, string> = {
     sponsorship: "Sponsorship Agreement",
