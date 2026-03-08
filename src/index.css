@@ -58,10 +58,10 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 240 10% 6%; /* Premium deep charcoal with subtle blue undertone */
+    --background: 240 8% 10%; /* Softened charcoal - not too dark */
     --foreground: 0 0% 98%;
 
-    --card: 240 10% 8%; /* Slightly elevated surface */
+    --card: 240 8% 13%; /* Slightly elevated surface */
     --card-foreground: 0 0% 98%;
 
     --popover: 240 10% 9%;
