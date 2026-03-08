@@ -41,11 +41,11 @@ const VoiceRecorder = ({ onRecordingComplete, onCancel, isUploading }: VoiceReco
       source.connect(analyser);
       analyserRef.current = analyser;
 
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-          ? "audio/webm;codecs=opus"
-          : "audio/webm",
-      });
+      // Pick a supported mime type
+      const mimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4", ""]
+        .find((t) => t === "" || MediaRecorder.isTypeSupported(t))!;
+
+      const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
