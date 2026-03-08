@@ -86,8 +86,9 @@ const Pricing = () => {
       <Header />
 
       {/* Hero */}
-      <section className="pt-28 md:pt-36 pb-8 md:pb-12 px-4 md:px-6">
-        <div className="container mx-auto max-w-4xl text-center">
+      <section className="relative pt-28 md:pt-36 pb-8 md:pb-12 px-4 md:px-6 overflow-hidden">
+        <HeroPattern />
+        <div className="container mx-auto max-w-4xl text-center relative z-10">
           <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase mb-4 animate-fade-in">
             Pricing
           </p>
