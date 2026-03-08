@@ -46,16 +46,7 @@ const PaymentsBilling = () => {
           </div>
         </Card>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <Card className="p-6">
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="w-4 h-4 text-bronze" />
-              <p className="text-sm text-muted-foreground">
-                {userType === "creator" ? t("payments.totalEarnings") : t("payments.totalSpend")}
-              </p>
-            </div>
-            <p className="text-3xl font-bold">$0</p>
-          </Card>
+        <div className="mb-6">
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-2">
               <CreditCard className="w-4 h-4 text-bronze" />
@@ -63,7 +54,7 @@ const PaymentsBilling = () => {
             </div>
             <p className="text-xl font-bold mb-3">{t("payments.freePlan")}</p>
             <Link to="/pricing">
-              <Button variant="outline" size="sm" className="w-full">
+              <Button variant="outline" size="sm">
                 {t("payments.upgradePlan")} <ArrowRight className="w-3 h-3 ml-1" />
               </Button>
             </Link>
