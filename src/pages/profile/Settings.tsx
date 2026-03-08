@@ -28,7 +28,14 @@ const Settings = () => {
   const [profile, setProfile] = useState<any>(null);
   const [userType, setUserType] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Editable form fields
+  const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
+  const [handle, setHandle] = useState("");
+  const [bio, setBio] = useState("");
 
   useEffect(() => {
     checkAuth();
@@ -49,8 +56,11 @@ const Settings = () => {
 
     setProfile(profileData);
     setUserType(profileData?.user_type || null);
+    setDisplayName(profileData?.display_name || "");
+    setEmail(profileData?.email || "");
+    setHandle(profileData?.handle || "");
+    setBio(profileData?.bio || "");
   };
-
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -61,23 +71,13 @@ const Settings = () => {
       const file = event.target.files?.[0];
       if (!file) return;
 
-      // Validate file type
       if (!file.type.startsWith('image/')) {
-        toast({
-          title: "Invalid file type",
-          description: "Please upload an image file",
-          variant: "destructive",
-        });
+        toast({ title: "Invalid file type", description: "Please upload an image file", variant: "destructive" });
         return;
       }
 
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Please upload an image smaller than 5MB",
-          variant: "destructive",
-        });
+        toast({ title: "File too large", description: "Please upload an image smaller than 5MB", variant: "destructive" });
         return;
       }
 
@@ -86,23 +86,20 @@ const Settings = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      // Upload to Supabase storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${session.user.id}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('chat-files')
-        .upload(filePath, file);
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('chat-files')
+        .from('avatars')
         .getPublicUrl(filePath);
 
-      // Update profile
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
@@ -111,20 +108,39 @@ const Settings = () => {
       if (updateError) throw updateError;
 
       setProfile({ ...profile, avatar_url: publicUrl });
-
-      toast({
-        title: "Profile picture updated",
-        description: "Your profile picture has been updated successfully",
-      });
+      toast({ title: "Profile picture updated", description: "Your profile picture has been updated successfully" });
     } catch (error) {
       console.error('Error uploading avatar:', error);
-      toast({
-        title: "Upload failed",
-        description: "Failed to upload profile picture. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Upload failed", description: "Failed to upload profile picture. Please try again.", variant: "destructive" });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          display_name: displayName || null,
+          handle: handle,
+          bio: bio || null,
+        })
+        .eq('id', session.user.id);
+
+      if (error) throw error;
+
+      setProfile({ ...profile, display_name: displayName, handle, bio });
+      toast({ title: "Settings saved", description: "Your account settings have been updated." });
+    } catch (error: any) {
+      console.error('Error saving settings:', error);
+      toast({ title: "Save failed", description: error.message || "Failed to save settings.", variant: "destructive" });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -153,7 +169,7 @@ const Settings = () => {
                   <Avatar className="h-24 w-24 md:h-32 md:w-32">
                     <AvatarImage src={profile?.avatar_url} />
                     <AvatarFallback className="bg-bronze text-white text-2xl md:text-3xl">
-                      {profile?.display_name?.charAt(0) || profile?.email?.charAt(0) || "U"}
+                      {displayName?.charAt(0) || email?.charAt(0) || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <button
@@ -186,7 +202,8 @@ const Settings = () => {
                 <Label htmlFor="displayName" className="text-sm md:text-base">{t("settings.displayName")}</Label>
                 <Input
                   id="displayName"
-                  value={profile?.display_name || ""}
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
                   className="mt-2 h-10 md:h-11"
                   placeholder={t("settings.displayNamePlaceholder")}
                 />
@@ -196,16 +213,19 @@ const Settings = () => {
                 <Input
                   id="email"
                   type="email"
-                  value={profile?.email || ""}
-                  className="mt-2 h-10 md:h-11"
+                  value={email}
+                  readOnly
+                  className="mt-2 h-10 md:h-11 opacity-60 cursor-not-allowed"
                   placeholder={t("settings.emailPlaceholder")}
                 />
+                <p className="text-xs text-muted-foreground mt-1">Email cannot be changed here.</p>
               </div>
               <div>
                 <Label htmlFor="username" className="text-sm md:text-base">{t("settings.username")}</Label>
                 <Input
                   id="username"
-                  value={profile?.handle || ""}
+                  value={handle}
+                  onChange={(e) => setHandle(e.target.value)}
                   className="mt-2 h-10 md:h-11"
                   placeholder={t("settings.usernamePlaceholder")}
                 />
@@ -214,18 +234,23 @@ const Settings = () => {
                 <Label htmlFor="bio" className="text-sm md:text-base">{t("settings.bio")}</Label>
                 <textarea
                   id="bio"
-                  value={profile?.bio || ""}
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
                   className="mt-2 w-full min-h-[80px] md:min-h-[100px] p-3 text-sm md:text-base rounded-md border border-input bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 resize-none"
                   placeholder={t("settings.bioPlaceholder")}
                   maxLength={160}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  {t("settings.bioMax")}
+                  {bio.length}/160 — {t("settings.bioMax")}
                 </p>
               </div>
               <div className="pt-2">
-                <Button className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-sm md:text-base px-6 py-5 md:py-6">
-                  {t("common.save")}
+                <Button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-sm md:text-base px-6 py-5 md:py-6"
+                >
+                  {saving ? "Saving..." : t("common.save")}
                 </Button>
               </div>
             </div>
@@ -271,7 +296,6 @@ const Settings = () => {
             </div>
           </Card>
         </TabsContent>
-
 
         <TabsContent value="privacy">
           <Card className="p-4 md:p-8">
