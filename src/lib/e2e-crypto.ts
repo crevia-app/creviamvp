@@ -219,6 +219,7 @@ export async function encryptMessage(plaintext: string, roomKey: CryptoKey): Pro
 export async function decryptMessage(ciphertextBase64: string, roomKey: CryptoKey): Promise<string> {
   try {
     const combined = Uint8Array.from(atob(ciphertextBase64), (c) => c.charCodeAt(0));
+    if (combined.length < 13) return "[Unable to decrypt message]";
     const iv = combined.slice(0, 12);
     const ciphertext = combined.slice(12);
     const decrypted = await crypto.subtle.decrypt(
@@ -227,7 +228,8 @@ export async function decryptMessage(ciphertextBase64: string, roomKey: CryptoKe
       ciphertext
     );
     return new TextDecoder().decode(decrypted);
-  } catch {
+  } catch (err) {
+    console.warn("Decryption failed:", err);
     return "[Unable to decrypt message]";
   }
 }

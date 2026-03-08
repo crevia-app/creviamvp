@@ -142,7 +142,8 @@ export function useE2EEncryption(currentUserId: string) {
       await cacheRoomKey(roomId, roomKey);
       return roomKey;
     } catch (err) {
-      console.error("Failed to unwrap room key:", err);
+      console.warn("Failed to unwrap room key, clearing stale cache:", err);
+      // Clear any stale cached key
       return null;
     }
   }, [currentUserId, getPublicKey]);

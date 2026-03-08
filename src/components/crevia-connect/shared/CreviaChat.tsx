@@ -151,7 +151,7 @@ const CreviaChat = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { e2eReady, initEncryption, setupRoomEncryption, encrypt, decrypt, decryptMessages } = useE2EEncryption(currentUserId);
+  const { e2eReady, initEncryption, setupRoomEncryption, encrypt, decrypt, decryptMessages, getRoomKey } = useE2EEncryption(currentUserId);
 
   // Initialize
   useEffect(() => {
@@ -360,22 +360,29 @@ const CreviaChat = () => {
   const selectRoom = async (room: ChatRoom) => {
     setSelectedRoom(room);
     
-    // Ensure room has encryption keys, setup if missing
+    // Ensure room has encryption keys, setup if missing or broken
     if (currentUserId && room.members && room.members.length > 0) {
-      const { data: existingKey } = await supabase
-        .from("room_encrypted_keys" as any)
-        .select("id")
-        .eq("room_id", room.id)
-        .eq("user_id", currentUserId)
-        .single() as any;
+      const memberIds = room.members.map(m => m.user_id);
       
-      if (!existingKey) {
-        const memberIds = room.members.map(m => m.user_id);
+      // Check if we have a working room key
+      const roomKey = await getRoomKey(room.id);
+      if (!roomKey) {
+        // Try to setup encryption - this will create new keys if we're the first
+        // or re-distribute if we have access
         await setupRoomEncryption(room.id, memberIds);
       }
     }
     
-    fetchMessages(room.id);
+    await fetchMessages(room.id);
+  };
+
+  // Re-setup encryption and retry fetching messages if decryption fails
+  const retryDecryption = async (roomId: string, members: RoomMember[]) => {
+    if (!currentUserId || members.length === 0) return;
+    toast.info("Retrying decryption...");
+    const memberIds = members.map(m => m.user_id);
+    await setupRoomEncryption(roomId, memberIds);
+    await fetchMessages(roomId);
   };
 
   // Get or create 1:1 room
@@ -676,6 +683,50 @@ const CreviaChat = () => {
       setSelectedFile(file);
     }
   };
+
+  // URL linkification helper
+  const URL_REGEX = /(https?:\/\/[^\s<]+[^\s<.,;:!?"')\]])/g;
+
+  const renderMessageContent = (content: string) => {
+    const parts = content.split(URL_REGEX);
+    return parts.map((part, i) => {
+      if (URL_REGEX.test(part)) {
+        // Reset lastIndex since we reuse the regex
+        URL_REGEX.lastIndex = 0;
+        return (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline font-medium hover:opacity-80 break-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      }
+      URL_REGEX.lastIndex = 0;
+      return part;
+    });
+  };
+
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+
+  const getFilePublicUrl = useCallback((filePath: string) => {
+    // If already a full URL, return as-is
+    if (filePath.startsWith("http")) return filePath;
+    // Return cached signed URL if available
+    if (signedUrls[filePath]) return signedUrls[filePath];
+    // Trigger async signed URL fetch
+    supabase.storage.from("chat-files").createSignedUrl(filePath, 3600).then(({ data }) => {
+      if (data?.signedUrl) {
+        setSignedUrls(prev => ({ ...prev, [filePath]: data.signedUrl }));
+      }
+    });
+    // Return placeholder while loading
+    return "";
+  }, [signedUrls]);
 
   // Helpers
   const getRoomDisplayName = (room: ChatRoom) => {
@@ -1251,24 +1302,46 @@ const CreviaChat = () => {
 
                                     {/* File attachment */}
                                     {isFile && msg.file_url && (
-                                      <div className="mb-2 p-2 rounded-lg bg-background/10 flex items-center gap-2">
+                                      <div className="mb-2">
+                                        {/* Image preview */}
                                         {msg.file_type?.startsWith("image/") ? (
-                                          <ImageIcon className="h-4 w-4 flex-shrink-0" />
+                                          <div className="mb-1">
+                                            <img
+                                              src={getFilePublicUrl(msg.file_url)}
+                                              alt={msg.file_name || "Image"}
+                                              className="max-w-full rounded-lg cursor-pointer max-h-[280px] object-cover"
+                                              onClick={() => window.open(getFilePublicUrl(msg.file_url!), "_blank")}
+                                              loading="lazy"
+                                            />
+                                            <div className="flex items-center justify-between mt-1">
+                                              <p className="text-[10px] opacity-60 truncate">{msg.file_name}</p>
+                                              <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => downloadFile(msg.file_url!, msg.file_name || "file")}
+                                                className="h-6 w-6 p-0 hover:bg-background/20"
+                                              >
+                                                <Download className="h-3 w-3" />
+                                              </Button>
+                                            </div>
+                                          </div>
                                         ) : (
-                                          <File className="h-4 w-4 flex-shrink-0" />
+                                          <div className="p-2 rounded-lg bg-background/10 flex items-center gap-2">
+                                            <File className="h-4 w-4 flex-shrink-0" />
+                                            <div className="flex-1 min-w-0">
+                                              <p className="text-xs font-medium truncate">{msg.file_name}</p>
+                                              <p className="text-[10px] opacity-70">{formatFileSize(msg.file_size)}</p>
+                                            </div>
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              onClick={() => downloadFile(msg.file_url!, msg.file_name || "file")}
+                                              className="h-7 w-7 p-0 hover:bg-background/20"
+                                            >
+                                              <Download className="h-3.5 w-3.5" />
+                                            </Button>
+                                          </div>
                                         )}
-                                        <div className="flex-1 min-w-0">
-                                          <p className="text-xs font-medium truncate">{msg.file_name}</p>
-                                          <p className="text-[10px] opacity-70">{formatFileSize(msg.file_size)}</p>
-                                        </div>
-                                        <Button
-                                          size="sm"
-                                          variant="ghost"
-                                          onClick={() => downloadFile(msg.file_url!, msg.file_name || "file")}
-                                          className="h-7 w-7 p-0 hover:bg-background/20"
-                                        >
-                                          <Download className="h-3.5 w-3.5" />
-                                        </Button>
                                       </div>
                                     )}
 
@@ -1282,7 +1355,26 @@ const CreviaChat = () => {
                                     )}
 
                                     {msg.content && !isVoice && (
-                                      <p className="text-xs md:text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                                      msg.content === "[Unable to decrypt message]" || msg.content === "[Encryption key unavailable]" ? (
+                                        <div className="flex items-center gap-2">
+                                          <Lock className="h-3.5 w-3.5 opacity-60" />
+                                          <span className="text-xs italic opacity-70">{msg.content}</span>
+                                          {selectedRoom?.members && selectedRoom.members.length > 0 && (
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              className="h-5 px-1.5 text-[10px] opacity-70 hover:opacity-100"
+                                              onClick={() => retryDecryption(msg.room_id, selectedRoom.members!)}
+                                            >
+                                              Retry
+                                            </Button>
+                                          )}
+                                        </div>
+                                      ) : (
+                                        <p className="text-xs md:text-sm whitespace-pre-wrap break-words">
+                                          {renderMessageContent(msg.content)}
+                                        </p>
+                                      )
                                     )}
 
                                     <div className="flex items-center gap-1 mt-1">
