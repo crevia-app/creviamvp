@@ -375,7 +375,15 @@ const CreviaChat = () => {
       }
     }
     
-    fetchMessages(room.id);
+    await fetchMessages(room.id);
+  };
+
+  // Re-setup encryption and retry fetching messages if decryption fails
+  const retryDecryption = async (roomId: string, members: RoomMember[]) => {
+    if (!currentUserId || members.length === 0) return;
+    const memberIds = members.map(m => m.user_id);
+    await setupRoomEncryption(roomId, memberIds);
+    await fetchMessages(roomId);
   };
 
   // Get or create 1:1 room
