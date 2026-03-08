@@ -1464,12 +1464,6 @@ const CreviaChat = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10">
-                <Shield className="h-4 w-4 text-emerald-500" />
-                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                  End-to-end encrypted
-                </span>
-              </div>
 
               {selectedRoom.members && selectedRoom.members.length > 0 && (
                 <div>
