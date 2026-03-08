@@ -123,11 +123,11 @@ const CreateInvoiceDialog = ({
     setIssueDate(new Date().toISOString().split("T")[0]);
     setDueDate("");
     setCurrency("KES");
-    setTaxRate(0);
-    setDiscountAmount(0);
+    setTaxRate("");
+    setDiscountAmount("");
     setNotes("");
     setTerms("Payment is due within 30 days of invoice date.");
-    setItems([{ description: "", quantity: 1, unit_price: 0, total: 0 }]);
+    setItems([{ description: "", quantity: "", unit_price: "", total: 0 }]);
   };
 
   const updateItemTotal = (index: number, field: string, value: any) => {
