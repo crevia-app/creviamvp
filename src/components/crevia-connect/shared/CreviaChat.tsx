@@ -959,13 +959,6 @@ const CreviaChat = () => {
               {/* Messages */}
               <ScrollArea className="flex-1 p-3 md:p-4">
                 <div className="space-y-4 max-w-3xl mx-auto pb-4">
-                  {/* Encryption banner */}
-                  <div className="flex justify-center py-2">
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-medium">
-                      <Lock className="h-3 w-3" />
-                      Messages are end-to-end encrypted. Only you and {selectedRoom.is_group ? "group members" : getRoomDisplayName(selectedRoom)} can read them.
-                    </div>
-                  </div>
 
                   {messageGroups.map((group) => (
                     <div key={group.date}>
