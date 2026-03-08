@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowRight } from "lucide-react";
+import HeroPattern from "@/components/HeroPattern";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
