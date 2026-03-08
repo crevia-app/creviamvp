@@ -278,14 +278,6 @@ const ContractsTab = () => {
 
   return (
     <div className="p-4 md:p-8 space-y-6 max-w-6xl mx-auto">
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".txt,.md,.doc,.docx,.pdf,.rtf,.odt"
-        className="hidden"
-        onChange={handleFileUpload}
-      />
 
       {/* Header — Clean & Minimal */}
       <motion.div 
