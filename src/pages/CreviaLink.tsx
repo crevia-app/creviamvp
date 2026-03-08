@@ -312,9 +312,13 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
         theme: linkProfile.theme,
         layout: linkProfile.layout,
         show_verified_badge: linkProfile.show_verified_badge,
+        show_crevia_branding: linkProfile.show_crevia_branding,
         contact_enabled: linkProfile.contact_enabled,
+        contact_email: linkProfile.contact_email,
         background: linkProfile.background,
         profile_picture: linkProfile.profile_picture,
+        seo_title: linkProfile.seo_title,
+        seo_description: linkProfile.seo_description,
       })
       .eq("id", linkProfile.id);
 
