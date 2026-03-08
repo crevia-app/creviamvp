@@ -53,8 +53,8 @@ const App = () => (
             <Route path="/privacy-policy" element={<PublicPageWrapper><PrivacyPolicy /></PublicPageWrapper>} />
             <Route path="/terms-of-service" element={<PublicPageWrapper><TermsOfService /></PublicPageWrapper>} />
             <Route path="/user-type-selection" element={<Navigate to="/auth" replace />} />
-            <Route path="/signup/creator" element={<CreatorSignup />} />
-            <Route path="/signup/brand" element={<BrandSignup />} />
+            <Route path="/signup/creator" element={<PublicPageWrapper><CreatorSignup /></PublicPageWrapper>} />
+            <Route path="/signup/brand" element={<PublicPageWrapper><BrandSignup /></PublicPageWrapper>} />
             {/* Kira onboarding removed for smoother signup flow */}
             <Route path="/:username" element={<PublicProfile />} />
             
