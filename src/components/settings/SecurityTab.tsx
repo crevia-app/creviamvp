@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,105 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
+// --- WebAuthn Helpers ---
+const BIOMETRIC_CRED_KEY = "crevia_webauthn_cred_id";
+const BIOMETRIC_ENABLED_KEY = "crevia_biometric_enabled";
+
+function bufferToBase64url(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let str = "";
+  for (const b of bytes) str += String.fromCharCode(b);
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function base64urlToBuffer(base64url: string): ArrayBuffer {
+  const base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
+  const pad = base64.length % 4 === 0 ? "" : "=".repeat(4 - (base64.length % 4));
+  const binary = atob(base64 + pad);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
+
+function isWebAuthnSupported(): boolean {
+  return !!(window.PublicKeyCredential && navigator.credentials);
+}
+
+async function isPlatformAuthAvailable(): Promise<boolean> {
+  if (!isWebAuthnSupported()) return false;
+  try {
+    return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+  } catch {
+    return false;
+  }
+}
+
+async function registerBiometric(userId: string): Promise<string | null> {
+  const challenge = crypto.getRandomValues(new Uint8Array(32));
+  const userIdBytes = new TextEncoder().encode(userId);
+
+  const credential = (await navigator.credentials.create({
+    publicKey: {
+      challenge,
+      rp: { name: "Crevia", id: window.location.hostname },
+      user: {
+        id: userIdBytes,
+        name: userId,
+        displayName: "Crevia User",
+      },
+      pubKeyCredParams: [
+        { alg: -7, type: "public-key" },   // ES256
+        { alg: -257, type: "public-key" },  // RS256
+      ],
+      authenticatorSelection: {
+        authenticatorAttachment: "platform",
+        userVerification: "required",
+        residentKey: "preferred",
+      },
+      timeout: 60000,
+      attestation: "none",
+    },
+  })) as PublicKeyCredential | null;
+
+  if (!credential) return null;
+  const credId = bufferToBase64url(credential.rawId);
+  localStorage.setItem(BIOMETRIC_CRED_KEY, credId);
+  localStorage.setItem(BIOMETRIC_ENABLED_KEY, "true");
+  return credId;
+}
+
+async function verifyBiometric(): Promise<boolean> {
+  const storedCredId = localStorage.getItem(BIOMETRIC_CRED_KEY);
+  if (!storedCredId) return false;
+
+  const challenge = crypto.getRandomValues(new Uint8Array(32));
+  try {
+    const assertion = (await navigator.credentials.get({
+      publicKey: {
+        challenge,
+        allowCredentials: [
+          {
+            id: base64urlToBuffer(storedCredId),
+            type: "public-key",
+            transports: ["internal"],
+          },
+        ],
+        userVerification: "required",
+        timeout: 60000,
+      },
+    })) as PublicKeyCredential | null;
+    return !!assertion;
+  } catch {
+    return false;
+  }
+}
+
+function removeBiometric() {
+  localStorage.removeItem(BIOMETRIC_CRED_KEY);
+  localStorage.removeItem(BIOMETRIC_ENABLED_KEY);
+}
+// --- End WebAuthn Helpers ---
+
 const SecurityTab = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -43,14 +142,87 @@ const SecurityTab = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
 
-  // 2FA / biometric toggles (UI-only for now)
+  // 2FA / biometric toggles
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(
+    () => localStorage.getItem(BIOMETRIC_ENABLED_KEY) === "true"
+  );
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricBusy, setBiometricBusy] = useState(false);
   const [loginAlertsEnabled, setLoginAlertsEnabled] = useState(true);
 
   // Sign out all devices dialog
   const [showSignOutAll, setShowSignOutAll] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+
+  // Check biometric availability on mount
+  useEffect(() => {
+    isPlatformAuthAvailable().then(setBiometricAvailable);
+  }, []);
+
+  const handleBiometricToggle = useCallback(async (checked: boolean) => {
+    setBiometricBusy(true);
+    try {
+      if (checked) {
+        if (!biometricAvailable) {
+          toast({
+            title: "Not supported",
+            description: "Your device or browser doesn't support biometric authentication.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          toast({ title: "Not logged in", variant: "destructive" });
+          return;
+        }
+
+        const credId = await registerBiometric(session.user.id);
+        if (!credId) {
+          toast({
+            title: "Registration cancelled",
+            description: "Biometric registration was cancelled or failed.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setBiometricEnabled(true);
+        toast({
+          title: "Biometric login enabled",
+          description: "You can now use fingerprint or Face ID to unlock Crevia.",
+        });
+      } else {
+        // Verify identity before disabling
+        const verified = await verifyBiometric();
+        if (!verified) {
+          toast({
+            title: "Verification failed",
+            description: "Biometric verification is required to disable this feature.",
+            variant: "destructive",
+          });
+          return;
+        }
+        removeBiometric();
+        setBiometricEnabled(false);
+        toast({
+          title: "Biometric login disabled",
+          description: "Biometric credentials have been removed from this device.",
+        });
+      }
+    } catch (err: any) {
+      console.error("Biometric error:", err);
+      toast({
+        title: "Biometric error",
+        description: err?.message || "Something went wrong with biometric authentication.",
+        variant: "destructive",
+      });
+    } finally {
+      setBiometricBusy(false);
+    }
+  }, [biometricAvailable, toast]);
 
   // Password strength checker
   const getPasswordStrength = (pw: string) => {
