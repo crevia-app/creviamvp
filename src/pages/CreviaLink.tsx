@@ -686,10 +686,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                             <RadioGroupItem value={theme.value} id={`embedded-${theme.value}`} className="peer sr-only" />
                             <Label
                               htmlFor={`embedded-${theme.value}`}
-                              className={cn(
-                                "flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-card p-4 hover:bg-accent peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all",
-                                theme.premium && "ring-1 ring-amber-400/30"
-                              )}
+                               className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-card p-4 hover:bg-accent peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
                             >
                               <div 
                                 className={cn("w-full h-16 rounded-lg mb-3 shadow-sm", 
@@ -697,9 +694,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                                 )}
                               />
                               <span className="text-sm font-medium">{theme.label}</span>
-                              {theme.premium && (
-                                <span className="mt-1 text-[10px] font-medium text-amber-500">PREMIUM</span>
-                              )}
                             </Label>
                           </div>
                         ))}
