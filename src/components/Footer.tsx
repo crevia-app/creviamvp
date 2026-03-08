@@ -40,9 +40,6 @@ const Footer = () => {
               <li><Link to="/" className="text-sm text-muted-foreground hover:text-bronze transition-colors">Home</Link></li>
               <li><Link to="/about" className="text-sm text-muted-foreground hover:text-bronze transition-colors">About</Link></li>
               <li><Link to="/pricing" className="text-sm text-muted-foreground hover:text-bronze transition-colors">Pricing</Link></li>
-              <li><Link to="/crevia-connect" className="text-sm text-muted-foreground hover:text-bronze transition-colors">Crevia Connect</Link></li>
-              <li><Link to="/crevia-link" className="text-sm text-muted-foreground hover:text-bronze transition-colors">Crevia Link</Link></li>
-              <li><Link to="/crevia-ai" className="text-sm text-muted-foreground hover:text-bronze transition-colors">Crevia AI</Link></li>
             </ul>
           </div>
 
@@ -50,8 +47,8 @@ const Footer = () => {
           <div>
             <h4 className="font-poppins font-semibold text-sm md:text-base mb-3 md:mb-4">Legal</h4>
             <ul className="space-y-1.5 md:space-y-2">
-              <li><Link to="/terms" className="text-sm text-muted-foreground hover:text-bronze transition-colors">Terms</Link></li>
-              <li><Link to="/privacy" className="text-sm text-muted-foreground hover:text-bronze transition-colors">Privacy</Link></li>
+              <li><Link to="/terms-of-service" className="text-sm text-muted-foreground hover:text-bronze transition-colors">Terms</Link></li>
+              <li><Link to="/privacy-policy" className="text-sm text-muted-foreground hover:text-bronze transition-colors">Privacy</Link></li>
             </ul>
           </div>
 
@@ -59,7 +56,8 @@ const Footer = () => {
           <div className="col-span-2 md:col-span-1">
             <h4 className="font-poppins font-semibold text-sm md:text-base mb-3 md:mb-4">Contact</h4>
             <ul className="space-y-1.5 md:space-y-2">
-              <li><a href="mailto:hello@crevia.app" className="text-sm text-muted-foreground hover:text-bronze transition-colors">hello@crevia.app</a></li>
+              <li><a href="mailto:hi@crevia.app" className="text-sm text-muted-foreground hover:text-bronze transition-colors">hi@crevia.app</a></li>
+              <li><a href="tel:+254795284028" className="text-sm text-muted-foreground hover:text-bronze transition-colors">+2547-95-28-40-28</a></li>
             </ul>
           </div>
         </div>
