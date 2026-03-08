@@ -31,6 +31,7 @@ import About from "./pages/About";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import AppLayout from "./components/navigation/AppLayout";
+import PublicPageWrapper from "./components/PublicPageWrapper";
 
 const queryClient = new QueryClient();
 
