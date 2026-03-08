@@ -7,9 +7,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Printer, Send, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { Printer, Send, CheckCircle2, Clock, AlertCircle, Maximize2, Minimize2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface InvoiceItem {
   id: string;
