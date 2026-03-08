@@ -677,6 +677,40 @@ const CreviaChat = () => {
     }
   };
 
+  // URL linkification helper
+  const URL_REGEX = /(https?:\/\/[^\s<]+[^\s<.,;:!?"')\]])/g;
+
+  const renderMessageContent = (content: string) => {
+    const parts = content.split(URL_REGEX);
+    return parts.map((part, i) => {
+      if (URL_REGEX.test(part)) {
+        // Reset lastIndex since we reuse the regex
+        URL_REGEX.lastIndex = 0;
+        return (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline font-medium hover:opacity-80 break-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      }
+      URL_REGEX.lastIndex = 0;
+      return part;
+    });
+  };
+
+  const getFilePublicUrl = (filePath: string) => {
+    // If already a full URL, return as-is
+    if (filePath.startsWith("http")) return filePath;
+    const { data } = supabase.storage.from("chat-files").getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
   // Helpers
   const getRoomDisplayName = (room: ChatRoom) => {
     if (room.is_group) return room.name || "Group Chat";
