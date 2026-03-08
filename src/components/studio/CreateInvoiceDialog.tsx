@@ -482,16 +482,16 @@ const CreateInvoiceDialog = ({
               <span className="text-muted-foreground">Subtotal</span>
               <span className="font-medium">{formatCurrency(subtotal)}</span>
             </div>
-            {taxRate > 0 && (
+            {(parseFloat(taxRate) || 0) > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Tax ({taxRate}%)</span>
                 <span className="font-medium">{formatCurrency(taxAmount)}</span>
               </div>
             )}
-            {discountAmount > 0 && (
+            {(parseFloat(discountAmount) || 0) > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Discount</span>
-                <span className="font-medium text-green-500">-{formatCurrency(discountAmount)}</span>
+                <span className="font-medium text-emerald-500">-{formatCurrency(parseFloat(discountAmount) || 0)}</span>
               </div>
             )}
             <div className="flex justify-between text-lg font-semibold pt-2 border-t border-border">
