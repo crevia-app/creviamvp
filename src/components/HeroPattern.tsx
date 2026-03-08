@@ -17,30 +17,30 @@ const HeroPattern = () => {
           {/* Geometric tile — 120×120 unit cell */}
           <pattern id="hero-geo" x="0" y="0" width="120" height="120" patternUnits="userSpaceOnUse">
             {/* Circle — top-left quadrant */}
-            <circle cx="30" cy="30" r="22" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.07" />
+            <circle cx="30" cy="30" r="22" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.13" />
             {/* Petal arcs — top-right */}
-            <path d="M90 8 Q112 30 90 52 Q68 30 90 8Z" fill="currentColor" opacity="0.04" />
+            <path d="M90 8 Q112 30 90 52 Q68 30 90 8Z" fill="currentColor" opacity="0.08" />
             {/* Cross / X — bottom-left */}
-            <line x1="10" y1="70" x2="50" y2="110" stroke="currentColor" strokeWidth="1" opacity="0.06" />
-            <line x1="50" y1="70" x2="10" y2="110" stroke="currentColor" strokeWidth="1" opacity="0.06" />
+            <line x1="10" y1="70" x2="50" y2="110" stroke="currentColor" strokeWidth="1.2" opacity="0.11" />
+            <line x1="50" y1="70" x2="10" y2="110" stroke="currentColor" strokeWidth="1.2" opacity="0.11" />
             {/* Quarter circle — bottom-right */}
-            <path d="M120 120 Q120 70 70 70" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.07" />
-            <path d="M120 120 Q120 85 85 85" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.05" />
+            <path d="M120 120 Q120 70 70 70" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.13" />
+            <path d="M120 120 Q120 85 85 85" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.09" />
             {/* Dot grid accent */}
-            <circle cx="60" cy="60" r="2" fill="currentColor" opacity="0.08" />
-            <circle cx="0" cy="0" r="2" fill="currentColor" opacity="0.06" />
-            <circle cx="120" cy="0" r="2" fill="currentColor" opacity="0.06" />
-            <circle cx="0" cy="120" r="2" fill="currentColor" opacity="0.06" />
-            <circle cx="120" cy="120" r="2" fill="currentColor" opacity="0.06" />
+            <circle cx="60" cy="60" r="2.5" fill="currentColor" opacity="0.14" />
+            <circle cx="0" cy="0" r="2" fill="currentColor" opacity="0.1" />
+            <circle cx="120" cy="0" r="2" fill="currentColor" opacity="0.1" />
+            <circle cx="0" cy="120" r="2" fill="currentColor" opacity="0.1" />
+            <circle cx="120" cy="120" r="2" fill="currentColor" opacity="0.1" />
             {/* Diamond — center */}
-            <rect x="52" y="52" width="16" height="16" rx="1" transform="rotate(45 60 60)" fill="none" stroke="currentColor" strokeWidth="0.8" opacity="0.05" />
+            <rect x="52" y="52" width="16" height="16" rx="1" transform="rotate(45 60 60)" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.1" />
           </pattern>
 
           {/* Second pattern layer — offset for depth */}
           <pattern id="hero-geo-2" x="60" y="60" width="120" height="120" patternUnits="userSpaceOnUse">
-            <circle cx="60" cy="60" r="28" fill="none" stroke="currentColor" strokeWidth="0.7" opacity="0.04" />
-            <path d="M30 0 Q52 22 30 44 Q8 22 30 0Z" fill="currentColor" opacity="0.03" />
-            <path d="M0 60 Q0 30 30 30" fill="none" stroke="currentColor" strokeWidth="0.8" opacity="0.05" />
+            <circle cx="60" cy="60" r="28" fill="none" stroke="currentColor" strokeWidth="0.9" opacity="0.08" />
+            <path d="M30 0 Q52 22 30 44 Q8 22 30 0Z" fill="currentColor" opacity="0.06" />
+            <path d="M0 60 Q0 30 30 30" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.09" />
           </pattern>
         </defs>
 
