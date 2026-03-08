@@ -1257,63 +1257,63 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                     </RadioGroup>
                   </div>
 
-                  {/* Background Style - embedded in Theme & Colors */}
+                  {/* Custom Background Image */}
                   <div className="pt-4 border-t border-border/40">
-                    <Label className="text-sm sm:text-base font-medium mb-2 block">Background Style</Label>
+                    <Label className="text-sm sm:text-base font-medium mb-2 block">Custom Background Image</Label>
                     <div className="space-y-3">
-                        <Label className="text-xs text-muted-foreground block">Upload your own background image</Label>
-                        {linkProfile?.background?.custom_bg_url && (
-                          <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
-                            <img src={linkProfile.background.custom_bg_url} alt="Background" className="w-full h-full object-cover" />
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              className="absolute top-2 right-2 h-7 text-xs"
-                              onClick={() => setLinkProfile({
-                                ...linkProfile,
-                                background: { ...linkProfile?.background, custom_bg_url: null }
-                              })}
-                            >
-                              Remove
-                            </Button>
-                          </div>
-                        )}
-                        <div>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            id="bg-image-upload"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              const { data: { session } } = await supabase.auth.getSession();
-                              if (!session) return;
-                              const ext = file.name.split(".").pop();
-                              const path = `${session.user.id}/bg-${Date.now()}.${ext}`;
-                              const { error } = await supabase.storage.from("avatars").upload(path, file);
-                              if (error) {
-                                toast({ title: "Upload failed", description: error.message, variant: "destructive" });
-                                return;
-                              }
-                              const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
-                              setLinkProfile({
-                                ...linkProfile,
-                                theme: "custom_image",
-                                background: { ...linkProfile?.background, style: "custom_image", custom_bg_url: urlData.publicUrl }
-                              });
-                              toast({ title: "Background uploaded!" });
-                            }}
-                          />
+                      <Label className="text-xs text-muted-foreground block">Upload your own background image</Label>
+                      {linkProfile?.background?.custom_bg_url && (
+                        <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
+                          <img src={linkProfile.background.custom_bg_url} alt="Background" className="w-full h-full object-cover" />
                           <Button
-                            variant="outline"
-                            className="w-full border-dashed border-2 border-bronze/40 hover:border-bronze"
-                            onClick={() => document.getElementById("bg-image-upload")?.click()}
+                            variant="destructive"
+                            size="sm"
+                            className="absolute top-2 right-2 h-7 text-xs"
+                            onClick={() => setLinkProfile({
+                              ...linkProfile,
+                              theme: linkProfile?.theme === "custom_image" ? "dark" : linkProfile?.theme,
+                              background: { ...linkProfile?.background, custom_bg_url: null, style: "solid" }
+                            })}
                           >
-                            <ImageIcon className="w-4 h-4 mr-2" />
-                            Choose Image
+                            Remove
                           </Button>
                         </div>
+                      )}
+                      <div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          id="bg-image-upload"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            const { data: { session } } = await supabase.auth.getSession();
+                            if (!session) return;
+                            const ext = file.name.split(".").pop();
+                            const path = `${session.user.id}/bg-${Date.now()}.${ext}`;
+                            const { error } = await supabase.storage.from("avatars").upload(path, file);
+                            if (error) {
+                              toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+                              return;
+                            }
+                            const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+                            setLinkProfile({
+                              ...linkProfile,
+                              theme: "custom_image",
+                              background: { ...linkProfile?.background, style: "custom_image", custom_bg_url: urlData.publicUrl }
+                            });
+                            toast({ title: "Background uploaded!" });
+                          }}
+                        />
+                        <Button
+                          variant="outline"
+                          className="w-full border-dashed border-2 border-bronze/40 hover:border-bronze"
+                          onClick={() => document.getElementById("bg-image-upload")?.click()}
+                        >
+                          <ImageIcon className="w-4 h-4 mr-2" />
+                          Choose Image
+                        </Button>
                       </div>
                     </div>
                   </div>
