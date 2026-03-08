@@ -220,6 +220,8 @@ const PublicProfile = () => {
   const customBgUrl = profile?.background?.custom_bg_url;
   const isCustomImage = profile?.theme === "custom_image" && customBgUrl;
   
+  const bgExtras = getBackgroundExtras();
+  
   return (
     <div 
       className={`min-h-screen ${themeStyles.className} ${getFontFamily()} ${getFontSize()} py-12 px-6 relative`}
@@ -229,6 +231,8 @@ const PublicProfile = () => {
       }}
     >
       {isCustomImage && <div className="absolute inset-0 bg-black/50" />}
+      {bgExtras.overlayStyle && <div className="absolute inset-0" style={bgExtras.overlayStyle} />}
+      {bgExtras.className && <div className={`absolute inset-0 ${bgExtras.className}`} />}
       <div className={`${getPageWidth()} ${layoutClass} ${fadeAnimation ? 'animate-fade-in' : ''} relative z-10`}>
         {/* Profile Header */}
         <div className="text-center mb-8">
