@@ -1,13 +1,17 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { GripVertical, Pencil, Trash2, Link2, Instagram, Twitter, Linkedin, Youtube, Mail, Globe, Github } from "lucide-react";
+import { GripVertical, Pencil, Trash2, Link2, Instagram, Twitter, Linkedin, Youtube, Mail, Globe, Github, ChevronUp, ChevronDown } from "lucide-react";
 
 interface ButtonItemProps {
   button: any;
   onEdit: (button: any) => void;
   onDelete: (id: string) => void;
   onToggleVisibility: (id: string, visible: boolean) => void;
+  onMoveUp?: (id: string) => void;
+  onMoveDown?: (id: string) => void;
+  isFirst?: boolean;
+  isLast?: boolean;
 }
 
 const iconMap: Record<string, any> = {
@@ -21,13 +25,33 @@ const iconMap: Record<string, any> = {
   github: Github,
 };
 
-export function ButtonItem({ button, onEdit, onDelete, onToggleVisibility }: ButtonItemProps) {
+export function ButtonItem({ button, onEdit, onDelete, onToggleVisibility, onMoveUp, onMoveDown, isFirst, isLast }: ButtonItemProps) {
   const Icon = iconMap[button.icon] || Link2;
 
   return (
     <Card className="p-3 sm:p-4 hover-lift group">
       <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-        <GripVertical className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground cursor-grab transition-colors group-hover:text-bronze flex-shrink-0" />
+        {/* Move up/down buttons */}
+        <div className="flex flex-col gap-0.5 flex-shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onMoveUp?.(button.id)}
+            disabled={isFirst}
+            className="h-6 w-6 p-0 disabled:opacity-20"
+          >
+            <ChevronUp className="w-4 h-4 text-muted-foreground" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onMoveDown?.(button.id)}
+            disabled={isLast}
+            className="h-6 w-6 p-0 disabled:opacity-20"
+          >
+            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+          </Button>
+        </div>
         
         <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
           <div className={`w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0 ${
