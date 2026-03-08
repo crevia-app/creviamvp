@@ -465,24 +465,66 @@ const SecurityTab = () => {
           Use your device's biometric sensor to unlock Crevia quickly and securely.
         </p>
 
-        <div className="flex items-start md:items-center justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <Label className="text-sm md:text-base">Fingerprint / Face ID</Label>
-            <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-              Requires a device with biometric hardware. Available on supported browsers and mobile devices.
-            </p>
+        <div className="space-y-4">
+          <div className="flex items-start md:items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <Label className="text-sm md:text-base">Fingerprint / Face ID</Label>
+                {biometricEnabled && (
+                  <Badge variant="outline" className="text-primary border-primary/30 text-[10px]">Active</Badge>
+                )}
+              </div>
+              <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                {biometricAvailable
+                  ? "Requires a device with biometric hardware. Available on supported browsers and mobile devices."
+                  : "Your current browser or device does not support biometric authentication."}
+              </p>
+            </div>
+            <Switch
+              checked={biometricEnabled}
+              onCheckedChange={handleBiometricToggle}
+              disabled={biometricBusy || !biometricAvailable}
+              className="flex-shrink-0"
+            />
           </div>
-          <Switch
-            checked={biometricEnabled}
-            onCheckedChange={(checked) => {
-              setBiometricEnabled(checked);
-              toast({
-                title: checked ? "Biometric login enabled (demo)" : "Biometric login disabled",
-                description: "Full biometric support coming soon.",
-              });
-            }}
-            className="flex-shrink-0"
-          />
+
+          {biometricEnabled && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
+              <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
+              <p className="text-xs text-muted-foreground">
+                Biometric credential is registered on this device. You can use it to quickly verify your identity.
+              </p>
+            </div>
+          )}
+
+          {biometricEnabled && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={biometricBusy}
+              onClick={async () => {
+                setBiometricBusy(true);
+                try {
+                  const ok = await verifyBiometric();
+                  toast({
+                    title: ok ? "Verification successful" : "Verification failed",
+                    description: ok
+                      ? "Biometric identity confirmed!"
+                      : "Could not verify your biometric. Please try again.",
+                    variant: ok ? "default" : "destructive",
+                  });
+                } catch {
+                  toast({ title: "Error", description: "Biometric check failed.", variant: "destructive" });
+                } finally {
+                  setBiometricBusy(false);
+                }
+              }}
+              className="gap-2"
+            >
+              <Fingerprint className="w-4 h-4" />
+              {biometricBusy ? "Verifying..." : "Test Biometric"}
+            </Button>
+          )}
         </div>
       </Card>
 
