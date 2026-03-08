@@ -427,7 +427,7 @@ const ContractsTab = () => {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => setUploadDialogOpen(true)}
                     className="gap-2 rounded-xl h-11 border-dashed"
                   >
                     <Upload className="h-4 w-4" />
