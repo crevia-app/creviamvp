@@ -69,10 +69,10 @@ export function useE2EEncryption(currentUserId: string) {
       .from("user_encryption_keys" as any)
       .select("public_key")
       .eq("user_id", userId)
-      .single();
+      .single() as any;
 
     if (data?.public_key) {
-      return JSON.parse(data.public_key as string);
+      return JSON.parse(data.public_key);
     }
     return null;
   }, []);
