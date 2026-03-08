@@ -318,8 +318,8 @@ const PublicProfile = () => {
               <Sparkles className="w-5 h-5 mr-2" />
               Create your link-in-bio
             </Button>
-            <p className="text-sm font-poppins text-muted-foreground">
-              Made with ♥ on <span className="text-[#CF8150] font-semibold">Crevia</span>
+            <p className="text-sm font-poppins font-semibold opacity-40 tracking-wide">
+              Crevia
             </p>
           </div>
         )}

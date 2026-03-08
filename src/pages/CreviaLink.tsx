@@ -669,22 +669,22 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         className="grid grid-cols-2 md:grid-cols-3 gap-3"
                       >
                         {[
-                          { value: "light", label: "Light", gradient: "from-gray-50 to-gray-100" },
-                          { value: "dark", label: "Dark", gradient: "from-gray-800 to-gray-900" },
-                          { value: "bronze", label: "Bronze", gradient: "from-bronze to-bronze-dark" },
-                          { value: "minimal", label: "Minimal", gradient: "bg-white border-2 border-gray-200" },
-                          { value: "sunset", label: "Sunset", gradient: "from-orange-400 to-pink-600" },
-                          { value: "ocean", label: "Ocean", gradient: "from-blue-500 to-teal-400" },
-                          { value: "forest", label: "Forest", gradient: "from-green-600 to-emerald-800" },
-                          { value: "royal", label: "Royal", gradient: "from-purple-600 to-indigo-800" },
-                          { value: "midnight", label: "Midnight", gradient: "from-slate-900 to-blue-950" },
-                          { value: "rose", label: "Rosé", gradient: "from-rose-400 to-pink-300" },
-                          { value: "noir", label: "Noir", gradient: "from-zinc-900 to-neutral-950" },
-                          { value: "sapphire", label: "Sapphire", gradient: "from-blue-700 to-indigo-900" },
-                          { value: "burgundy", label: "Burgundy", gradient: "from-rose-900 to-red-950" },
-                          { value: "emerald", label: "Emerald", gradient: "from-emerald-700 to-green-900" },
-                          { value: "lavender", label: "Lavender", gradient: "from-violet-400 to-purple-500" },
-                          { value: "champagne", label: "Champagne", gradient: "from-amber-100 to-yellow-50" },
+                          { value: "light", label: "Light", gradient: "from-gray-50 to-gray-100", darkBg: false },
+                          { value: "dark", label: "Dark", gradient: "from-gray-800 to-gray-900", darkBg: true },
+                          { value: "bronze", label: "Bronze", gradient: "from-bronze to-bronze-dark", darkBg: true },
+                          { value: "minimal", label: "Minimal", gradient: "bg-white border-2 border-gray-200", darkBg: false },
+                          { value: "sunset", label: "Sunset", gradient: "from-orange-400 to-pink-600", darkBg: true },
+                          { value: "ocean", label: "Ocean", gradient: "from-blue-500 to-teal-400", darkBg: true },
+                          { value: "forest", label: "Forest", gradient: "from-green-600 to-emerald-800", darkBg: true },
+                          { value: "royal", label: "Royal", gradient: "from-purple-600 to-indigo-800", darkBg: true },
+                          { value: "midnight", label: "Midnight", gradient: "from-slate-900 to-blue-950", darkBg: true },
+                          { value: "rose", label: "Rosé", gradient: "from-rose-400 to-pink-300", darkBg: true },
+                          { value: "noir", label: "Noir", gradient: "from-zinc-900 to-neutral-950", darkBg: true },
+                          { value: "sapphire", label: "Sapphire", gradient: "from-blue-700 to-indigo-900", darkBg: true },
+                          { value: "burgundy", label: "Burgundy", gradient: "from-rose-900 to-red-950", darkBg: true },
+                          { value: "emerald", label: "Emerald", gradient: "from-emerald-700 to-green-900", darkBg: true },
+                          { value: "lavender", label: "Lavender", gradient: "from-violet-400 to-purple-500", darkBg: true },
+                          { value: "champagne", label: "Champagne", gradient: "from-amber-100 to-yellow-50", darkBg: false },
                         ].map((theme) => (
                           <div key={theme.value} className="relative">
                             <RadioGroupItem value={theme.value} id={`embedded-${theme.value}`} className="peer sr-only" />
@@ -693,10 +693,12 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                                className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-card p-4 hover:bg-accent peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
                             >
                               <div 
-                                className={cn("w-full h-16 rounded-lg mb-3 shadow-sm", 
+                                className={cn("w-full h-16 rounded-lg mb-3 shadow-sm flex items-end justify-center pb-1.5", 
                                   theme.gradient && (theme.value === "minimal" || theme.value === "champagne" ? theme.gradient : `bg-gradient-to-br ${theme.gradient}`)
                                 )}
-                              />
+                              >
+                                <span className={cn("text-[10px] font-medium opacity-70", theme.darkBg ? "text-white" : "text-gray-900")}>{theme.label}</span>
+                              </div>
                               <span className="text-sm font-medium">{theme.label}</span>
                             </Label>
                           </div>
@@ -1222,22 +1224,22 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                       className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6"
                     >
                       {[
-                        { value: "light", label: "Light", gradient: "from-gray-50 to-gray-100" },
-                        { value: "dark", label: "Dark", gradient: "from-gray-800 to-gray-900" },
-                        { value: "bronze", label: "Bronze", gradient: "from-bronze to-bronze-dark" },
-                        { value: "minimal", label: "Minimal", gradient: "bg-white border-2 border-gray-200" },
-                        { value: "sunset", label: "Sunset", gradient: "from-orange-400 to-pink-600" },
-                        { value: "ocean", label: "Ocean", gradient: "from-blue-500 to-teal-400" },
-                        { value: "forest", label: "Forest", gradient: "from-green-600 to-emerald-800" },
-                        { value: "royal", label: "Royal", gradient: "from-purple-600 to-indigo-800" },
-                        { value: "midnight", label: "Midnight", gradient: "from-slate-900 to-blue-950" },
-                        { value: "rose", label: "Rosé", gradient: "from-rose-400 to-pink-300" },
-                        { value: "noir", label: "Noir", gradient: "from-zinc-900 to-neutral-950" },
-                        { value: "sapphire", label: "Sapphire", gradient: "from-blue-700 to-indigo-900" },
-                        { value: "burgundy", label: "Burgundy", gradient: "from-rose-900 to-red-950" },
-                        { value: "emerald", label: "Emerald", gradient: "from-emerald-700 to-green-900" },
-                        { value: "lavender", label: "Lavender", gradient: "from-violet-400 to-purple-500" },
-                        { value: "champagne", label: "Champagne", gradient: "from-amber-100 to-yellow-50" },
+                        { value: "light", label: "Light", gradient: "from-gray-50 to-gray-100", darkBg: false },
+                        { value: "dark", label: "Dark", gradient: "from-gray-800 to-gray-900", darkBg: true },
+                        { value: "bronze", label: "Bronze", gradient: "from-bronze to-bronze-dark", darkBg: true },
+                        { value: "minimal", label: "Minimal", gradient: "bg-white border-2 border-gray-200", darkBg: false },
+                        { value: "sunset", label: "Sunset", gradient: "from-orange-400 to-pink-600", darkBg: true },
+                        { value: "ocean", label: "Ocean", gradient: "from-blue-500 to-teal-400", darkBg: true },
+                        { value: "forest", label: "Forest", gradient: "from-green-600 to-emerald-800", darkBg: true },
+                        { value: "royal", label: "Royal", gradient: "from-purple-600 to-indigo-800", darkBg: true },
+                        { value: "midnight", label: "Midnight", gradient: "from-slate-900 to-blue-950", darkBg: true },
+                        { value: "rose", label: "Rosé", gradient: "from-rose-400 to-pink-300", darkBg: true },
+                        { value: "noir", label: "Noir", gradient: "from-zinc-900 to-neutral-950", darkBg: true },
+                        { value: "sapphire", label: "Sapphire", gradient: "from-blue-700 to-indigo-900", darkBg: true },
+                        { value: "burgundy", label: "Burgundy", gradient: "from-rose-900 to-red-950", darkBg: true },
+                        { value: "emerald", label: "Emerald", gradient: "from-emerald-700 to-green-900", darkBg: true },
+                        { value: "lavender", label: "Lavender", gradient: "from-violet-400 to-purple-500", darkBg: true },
+                        { value: "champagne", label: "Champagne", gradient: "from-amber-100 to-yellow-50", darkBg: false },
                       ].map((theme) => (
                         <div key={theme.value} className="relative">
                           <RadioGroupItem value={theme.value} id={theme.value} className="peer sr-only" />
@@ -1246,10 +1248,12 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                             className="flex flex-col items-center justify-between rounded-lg md:rounded-xl border-2 border-muted bg-card p-3 sm:p-4 md:p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
                           >
                             <div 
-                              className={cn("w-full h-16 sm:h-20 md:h-28 rounded-md md:rounded-lg mb-2 sm:mb-3 md:mb-4 shadow-sm", 
+                              className={cn("w-full h-16 sm:h-20 md:h-28 rounded-md md:rounded-lg mb-2 sm:mb-3 md:mb-4 shadow-sm flex items-end justify-center pb-2", 
                                 theme.gradient && (theme.value === "minimal" || theme.value === "champagne" ? theme.gradient : `bg-gradient-to-br ${theme.gradient}`)
                               )}
-                            />
+                            >
+                              <span className={cn("text-[10px] sm:text-xs font-medium opacity-70", theme.darkBg ? "text-white" : "text-gray-900")}>{theme.label}</span>
+                            </div>
                             <span className="font-semibold text-xs sm:text-sm md:text-base">{theme.label}</span>
                           </Label>
                         </div>
