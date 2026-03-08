@@ -1492,6 +1492,12 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
         onOpenChange={setShowAddButton}
         onAdd={handleAddButton}
       />
+      <EditButtonDialog
+        open={showEditButton}
+        onOpenChange={setShowEditButton}
+        onSave={handleSaveEditButton}
+        button={editingButton}
+      />
     </div>
   );
 };
