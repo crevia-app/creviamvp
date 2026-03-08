@@ -456,7 +456,8 @@ const CreateInvoiceDialog = ({
               <Input
                 type="number"
                 value={taxRate}
-                onChange={(e) => setTaxRate(Number(e.target.value))}
+                onChange={(e) => setTaxRate(e.target.value)}
+                placeholder="0"
                 className="mt-1"
                 min={0}
                 max={100}
