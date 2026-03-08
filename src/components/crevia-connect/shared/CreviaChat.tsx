@@ -710,7 +710,158 @@ const CreviaChat = () => {
     return 0;
   };
 
-  const groupMessagesByDate = (msgs: ChatMessage[]) => {
+  // Fetch reactions, pins, favorites, deletions when messages change
+  const fetchMessageMeta = useCallback(async () => {
+    if (!currentUserId || messages.length === 0) return;
+    const msgIds = messages.map((m) => m.id);
+
+    // Fetch reactions
+    const { data: reactionData } = await supabase
+      .from("message_reactions")
+      .select("message_id, emoji, user_id")
+      .in("message_id", msgIds);
+
+    if (reactionData) {
+      const grouped: Record<string, { emoji: string; count: number; reacted: boolean }[]> = {};
+      for (const r of reactionData) {
+        if (!grouped[r.message_id]) grouped[r.message_id] = [];
+        const existing = grouped[r.message_id].find((e) => e.emoji === r.emoji);
+        if (existing) {
+          existing.count++;
+          if (r.user_id === currentUserId) existing.reacted = true;
+        } else {
+          grouped[r.message_id].push({ emoji: r.emoji, count: 1, reacted: r.user_id === currentUserId });
+        }
+      }
+      setReactions(grouped);
+    }
+
+    // Fetch pins for this room
+    if (selectedRoom) {
+      const { data: pinData } = await supabase
+        .from("pinned_messages")
+        .select("message_id")
+        .eq("room_id", selectedRoom.id);
+      setPinnedMessageIds(new Set(pinData?.map((p) => p.message_id) || []));
+    }
+
+    // Fetch favorites
+    const { data: favData } = await supabase
+      .from("favorite_messages")
+      .select("message_id")
+      .eq("user_id", currentUserId)
+      .in("message_id", msgIds);
+    setFavoritedMessageIds(new Set(favData?.map((f) => f.message_id) || []));
+
+    // Fetch deleted for me
+    const { data: delData } = await supabase
+      .from("deleted_messages")
+      .select("message_id")
+      .eq("user_id", currentUserId)
+      .in("message_id", msgIds);
+    setDeletedForMeIds(new Set(delData?.map((d) => d.message_id) || []));
+  }, [currentUserId, messages, selectedRoom]);
+
+  useEffect(() => {
+    fetchMessageMeta();
+  }, [fetchMessageMeta]);
+
+  // Subscribe to reaction changes
+  useEffect(() => {
+    if (!selectedRoom) return;
+    const channel = supabase
+      .channel("reactions-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "message_reactions" }, () => {
+        fetchMessageMeta();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [selectedRoom, fetchMessageMeta]);
+
+  const handleDeleteForMe = async (messageId: string) => {
+    await supabase.from("deleted_messages").insert({ message_id: messageId, user_id: currentUserId });
+    setDeletedForMeIds((prev) => new Set([...prev, messageId]));
+    toast.success("Message deleted for you");
+  };
+
+  const handleDeleteForEveryone = async (messageId: string) => {
+    await supabase
+      .from("chat_messages")
+      .update({ deleted_for_everyone: true, content: null, file_url: null, file_name: null })
+      .eq("id", messageId);
+    setMessages((prev) =>
+      prev.map((m) => (m.id === messageId ? { ...m, deleted_for_everyone: true, content: null, file_url: null, file_name: null } : m))
+    );
+    toast.success("Message deleted for everyone");
+  };
+
+  const handleForward = (messageId: string) => {
+    setForwardingMessageId(messageId);
+    setShowForwardDialog(true);
+    fetchRooms();
+  };
+
+  const forwardMessageToRoom = async (targetRoomId: string) => {
+    const msg = messages.find((m) => m.id === forwardingMessageId);
+    if (!msg || !currentUserId) return;
+
+    const forwardContent = msg.content ? `↪ Forwarded: ${msg.content}` : "↪ Forwarded message";
+    const encryptedContent = await encrypt(forwardContent, targetRoomId);
+
+    await supabase.from("chat_messages").insert({
+      room_id: targetRoomId,
+      sender_id: currentUserId,
+      content: encryptedContent || forwardContent,
+      message_type: msg.message_type,
+      file_url: msg.file_url,
+      file_name: msg.file_name,
+      file_type: msg.file_type,
+      file_size: msg.file_size,
+      is_encrypted: !!encryptedContent,
+    });
+
+    await supabase.from("chat_rooms").update({ updated_at: new Date().toISOString() }).eq("id", targetRoomId);
+    setShowForwardDialog(false);
+    setForwardingMessageId(null);
+    toast.success("Message forwarded");
+  };
+
+  const handlePinToggle = async (messageId: string, isPinned: boolean) => {
+    if (!selectedRoom) return;
+    if (isPinned) {
+      await supabase.from("pinned_messages").delete().eq("message_id", messageId);
+      setPinnedMessageIds((prev) => { const n = new Set(prev); n.delete(messageId); return n; });
+      toast.success("Message unpinned");
+    } else {
+      await supabase.from("pinned_messages").insert({ message_id: messageId, room_id: selectedRoom.id, pinned_by: currentUserId });
+      setPinnedMessageIds((prev) => new Set([...prev, messageId]));
+      toast.success("Message pinned");
+    }
+  };
+
+  const handleFavoriteToggle = async (messageId: string, isFavorited: boolean) => {
+    if (isFavorited) {
+      await supabase.from("favorite_messages").delete().eq("message_id", messageId).eq("user_id", currentUserId);
+      setFavoritedMessageIds((prev) => { const n = new Set(prev); n.delete(messageId); return n; });
+      toast.success("Removed from favorites");
+    } else {
+      await supabase.from("favorite_messages").insert({ message_id: messageId, user_id: currentUserId });
+      setFavoritedMessageIds((prev) => new Set([...prev, messageId]));
+      toast.success("Added to favorites");
+    }
+  };
+
+  const handleReaction = async (messageId: string, emoji: string) => {
+    const existing = reactions[messageId]?.find((r) => r.emoji === emoji && r.reacted);
+    if (existing) {
+      await supabase.from("message_reactions").delete().eq("message_id", messageId).eq("user_id", currentUserId).eq("emoji", emoji);
+    } else {
+      await supabase.from("message_reactions").insert({ message_id: messageId, user_id: currentUserId, emoji });
+    }
+    fetchMessageMeta();
+  };
+
+
     const groups: { date: string; messages: ChatMessage[] }[] = [];
     let currentDate = "";
 
