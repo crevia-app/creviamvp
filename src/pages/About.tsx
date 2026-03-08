@@ -41,7 +41,7 @@ const About = () => {
       )}
 
       {/* ═══════════════ HERO ═══════════════ */}
-      <section className="relative pt-16 md:pt-24 pb-16 md:pb-20 px-4 md:px-6 overflow-hidden">
+      <section className="relative pt-28 md:pt-36 pb-16 md:pb-20 px-4 md:px-6 overflow-hidden">
         <HeroPattern />
         <div className="container mx-auto max-w-4xl text-center relative z-10">
           <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase mb-4 animate-fade-in">
