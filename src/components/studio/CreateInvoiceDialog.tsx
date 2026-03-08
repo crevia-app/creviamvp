@@ -468,7 +468,8 @@ const CreateInvoiceDialog = ({
               <Input
                 type="number"
                 value={discountAmount}
-                onChange={(e) => setDiscountAmount(Number(e.target.value))}
+                onChange={(e) => setDiscountAmount(e.target.value)}
+                placeholder="0"
                 className="mt-1"
                 min={0}
               />
