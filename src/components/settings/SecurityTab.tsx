@@ -54,8 +54,13 @@ function isWebAuthnSupported(): boolean {
   return !!(window.PublicKeyCredential && navigator.credentials);
 }
 
+function isInIframe(): boolean {
+  try { return window.self !== window.top; } catch { return true; }
+}
+
 async function isPlatformAuthAvailable(): Promise<boolean> {
   if (!isWebAuthnSupported()) return false;
+  if (isInIframe()) return false;
   try {
     return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
   } catch {
@@ -475,9 +480,11 @@ const SecurityTab = () => {
                 )}
               </div>
               <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-                {biometricAvailable
-                  ? "Requires a device with biometric hardware. Available on supported browsers and mobile devices."
-                  : "Your current browser or device does not support biometric authentication."}
+                {isInIframe()
+                  ? "Biometric login requires opening the app directly (not in a preview iframe). Please publish and open the app in a new tab."
+                  : biometricAvailable
+                    ? "Requires a device with biometric hardware. Available on supported browsers and mobile devices."
+                    : "Your current browser or device does not support biometric authentication."}
               </p>
             </div>
             <Switch
