@@ -52,8 +52,8 @@ const App = () => (
             <Route path="/reset-password" element={<PublicPageWrapper><ResetPassword /></PublicPageWrapper>} />
             <Route path="/pricing" element={<PublicPageWrapper><Pricing /></PublicPageWrapper>} />
             <Route path="/about" element={<PublicPageWrapper><About /></PublicPageWrapper>} />
-            <Route path="/privacy-policy" element={<PublicPageWrapper><PrivacyPolicy /></PublicPageWrapper>} />
-            <Route path="/terms-of-service" element={<PublicPageWrapper><TermsOfService /></PublicPageWrapper>} />
+            <Route path="/privacy-policy" element={<AppLayout><PrivacyPolicy /></AppLayout>} />
+            <Route path="/terms-of-service" element={<AppLayout><TermsOfService /></AppLayout>} />
             <Route path="/user-type-selection" element={<Navigate to="/auth" replace />} />
             <Route path="/signup/creator" element={<PublicPageWrapper><CreatorSignup /></PublicPageWrapper>} />
             <Route path="/signup/brand" element={<PublicPageWrapper><BrandSignup /></PublicPageWrapper>} />
