@@ -63,7 +63,10 @@ const VoiceNotePlayer = ({ audioUrl, duration, isMine }: VoiceNotePlayerProps) =
       setIsPlaying(false);
       if (animRef.current) cancelAnimationFrame(animRef.current);
     } else {
-      audioRef.current.play();
+      audioRef.current.play().catch((err) => {
+        console.error("Play failed:", err);
+        setIsPlaying(false);
+      });
       setIsPlaying(true);
 
       const update = () => {
