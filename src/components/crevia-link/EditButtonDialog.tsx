@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Link2, Instagram, Twitter, Linkedin, Youtube, Mail, Globe, Github } from "lucide-react";
+import { iconOptions, iconCategories } from "./iconOptions";
+import { Search } from "lucide-react";
 
 interface EditButtonDialogProps {
   open: boolean;
@@ -20,22 +22,12 @@ interface EditButtonDialogProps {
   button: any;
 }
 
-const iconOptions = [
-  { value: "link", label: "Link", icon: Link2 },
-  { value: "instagram", label: "Instagram", icon: Instagram },
-  { value: "twitter", label: "Twitter/X", icon: Twitter },
-  { value: "linkedin", label: "LinkedIn", icon: Linkedin },
-  { value: "youtube", label: "YouTube", icon: Youtube },
-  { value: "email", label: "Email", icon: Mail },
-  { value: "website", label: "Website", icon: Globe },
-  { value: "github", label: "GitHub", icon: Github },
-];
-
 export function EditButtonDialog({ open, onOpenChange, onSave, button }: EditButtonDialogProps) {
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [icon, setIcon] = useState("link");
   const [style, setStyle] = useState("filled");
+  const [iconSearch, setIconSearch] = useState("");
 
   useEffect(() => {
     if (button) {
@@ -43,8 +35,19 @@ export function EditButtonDialog({ open, onOpenChange, onSave, button }: EditBut
       setUrl(button.url || "");
       setIcon(button.icon || "link");
       setStyle(button.style || "filled");
+      setIconSearch("");
     }
   }, [button]);
+
+  const filteredIcons = iconSearch
+    ? iconOptions.filter(
+        (o) =>
+          o.label.toLowerCase().includes(iconSearch.toLowerCase()) ||
+          o.category.toLowerCase().includes(iconSearch.toLowerCase())
+      )
+    : iconOptions;
+
+  const selectedIcon = iconOptions.find((o) => o.value === icon);
 
   const handleSubmit = () => {
     if (!title || !url) return;
@@ -59,7 +62,7 @@ export function EditButtonDialog({ open, onOpenChange, onSave, button }: EditBut
           <DialogTitle className="font-vollkorn text-2xl">Edit Button</DialogTitle>
           <DialogDescription>Update your link button details</DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4 py-4">
           <div>
             <Label htmlFor="edit-title">Button Title</Label>
@@ -69,19 +72,66 @@ export function EditButtonDialog({ open, onOpenChange, onSave, button }: EditBut
             <Label htmlFor="edit-url">URL</Label>
             <Input id="edit-url" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://example.com" className="mt-2" />
           </div>
+
           <div>
-            <Label htmlFor="edit-icon">Icon</Label>
-            <Select value={icon} onValueChange={setIcon}>
-              <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {iconOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    <div className="flex items-center gap-2"><opt.icon className="w-4 h-4" />{opt.label}</div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Icon</Label>
+            <div className="mt-2 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={iconSearch}
+                onChange={(e) => setIconSearch(e.target.value)}
+                placeholder="Search icons..."
+                className="pl-9"
+              />
+            </div>
+            <ScrollArea className="h-48 mt-2 border rounded-lg p-2">
+              {(iconSearch ? ["Results"] : iconCategories).map((cat) => {
+                const items = iconSearch
+                  ? filteredIcons
+                  : filteredIcons.filter((o) => o.category === cat);
+                if (items.length === 0) return null;
+                return (
+                  <div key={cat} className="mb-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 px-1">
+                      {cat}
+                    </p>
+                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-1">
+                      {items.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => {
+                            setIcon(opt.value);
+                            setIconSearch("");
+                          }}
+                          className={`flex flex-col items-center gap-1 p-2 rounded-lg text-xs transition-all ${
+                            icon === opt.value
+                              ? "bg-bronze text-white"
+                              : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <opt.icon className="w-5 h-5" />
+                          <span className="truncate w-full text-center text-[10px] leading-tight">
+                            {opt.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+              {filteredIcons.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-6">No icons found</p>
+              )}
+            </ScrollArea>
+            {selectedIcon && (
+              <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                <selectedIcon.icon className="w-4 h-4 text-bronze" />
+                Selected: <span className="font-medium text-foreground">{selectedIcon.label}</span>
+              </div>
+            )}
           </div>
+
           <div>
             <Label htmlFor="edit-style">Button Style</Label>
             <Select value={style} onValueChange={setStyle}>
