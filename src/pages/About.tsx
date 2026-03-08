@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import HeroPattern from "@/components/HeroPattern";
 import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
 import gallery1 from "@/assets/about-gallery-1.jpg";
 import gallery2 from "@/assets/about-gallery-2.jpg";
