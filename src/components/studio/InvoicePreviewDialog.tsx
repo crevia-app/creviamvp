@@ -34,6 +34,7 @@ const InvoicePreviewDialog = ({
   const [items, setItems] = useState<InvoiceItem[]>([]);
   const [profile, setProfile] = useState<any>(null);
   const [businessSettings, setBusinessSettings] = useState<any>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     if (invoice) {
