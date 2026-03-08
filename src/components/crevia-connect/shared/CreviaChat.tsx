@@ -7,6 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import VoiceRecorder from "./VoiceRecorder";
 import VoiceNotePlayer from "./VoiceNotePlayer";
+import MessageContextMenu from "./MessageContextMenu";
+import EmojiReactionPicker from "./EmojiReactionPicker";
+import MessageReactions from "./MessageReactions";
 import {
   Send,
   Paperclip,
@@ -30,6 +33,7 @@ import {
   UserPlus,
   Info,
   Hash,
+  Pin,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
