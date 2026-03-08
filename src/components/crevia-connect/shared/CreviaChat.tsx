@@ -304,10 +304,22 @@ const CreviaChat = () => {
           unreadCount = count || 0;
         }
 
+        // Decrypt last message for preview
+        let lastMessage = lastMsgs?.[0] || null;
+        if (lastMessage && lastMessage.is_encrypted && lastMessage.content) {
+          try {
+            const decryptedContent = await decrypt(lastMessage.content, room.id);
+            lastMessage = { ...lastMessage, content: decryptedContent || lastMessage.content };
+          } catch {
+            // If decryption fails, show fallback
+            lastMessage = { ...lastMessage, content: "🔒 Encrypted message" };
+          }
+        }
+
         return {
           ...room,
           members: memberProfiles,
-          lastMessage: lastMsgs?.[0] || null,
+          lastMessage,
           unreadCount,
         };
       })
