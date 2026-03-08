@@ -248,7 +248,7 @@ const Home = () => {
       {/* ═══════════════ FINAL CTA ═══════════════ */}
       <section className="relative py-20 md:py-32 px-4 md:px-6 overflow-hidden">
         <HeroPattern />
-        <div className="container mx-auto max-w-3xl text-center">
+        <div className="container mx-auto max-w-3xl text-center relative z-10">
           <h2 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
             Your story deserves{" "}
             <span className="text-gradient-bronze">better infrastructure.</span>
