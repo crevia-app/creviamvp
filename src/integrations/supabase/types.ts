@@ -379,6 +379,7 @@ export type Database = {
           content: string | null
           contract_id: string | null
           created_at: string
+          deleted_for_everyone: boolean
           file_name: string | null
           file_size: number | null
           file_type: string | null
@@ -394,6 +395,7 @@ export type Database = {
           content?: string | null
           contract_id?: string | null
           created_at?: string
+          deleted_for_everyone?: boolean
           file_name?: string | null
           file_size?: number | null
           file_type?: string | null
@@ -409,6 +411,7 @@ export type Database = {
           content?: string | null
           contract_id?: string | null
           created_at?: string
+          deleted_for_everyone?: boolean
           file_name?: string | null
           file_size?: number | null
           file_type?: string | null
@@ -742,6 +745,35 @@ export type Database = {
           },
         ]
       }
+      deleted_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deleted_messages_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deliverable_submissions: {
         Row: {
           created_at: string | null
@@ -871,6 +903,35 @@ export type Database = {
             columns: ["creator_id"]
             isOneToOne: false
             referencedRelation: "profiles_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      favorite_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorite_messages_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -1286,6 +1347,38 @@ export type Database = {
           },
         ]
       }
+      message_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           campaign_id: string | null
@@ -1407,6 +1500,45 @@ export type Database = {
             columns: ["escrow_id"]
             isOneToOne: false
             referencedRelation: "escrow_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pinned_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string
+          pinned_by: string
+          room_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id: string
+          pinned_by: string
+          room_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string
+          pinned_by?: string
+          room_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pinned_messages_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: true
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pinned_messages_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
             referencedColumns: ["id"]
           },
         ]

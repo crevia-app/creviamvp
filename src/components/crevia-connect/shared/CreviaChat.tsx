@@ -7,6 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import VoiceRecorder from "./VoiceRecorder";
 import VoiceNotePlayer from "./VoiceNotePlayer";
+import MessageContextMenu from "./MessageContextMenu";
+import EmojiReactionPicker from "./EmojiReactionPicker";
+import MessageReactions from "./MessageReactions";
 import {
   Send,
   Paperclip,
@@ -30,6 +33,7 @@ import {
   UserPlus,
   Info,
   Hash,
+  Pin,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
@@ -137,6 +141,12 @@ const CreviaChat = () => {
   const [loadingRooms, setLoadingRooms] = useState(true);
   const [isRecordingVoice, setIsRecordingVoice] = useState(false);
   const [uploadingVoice, setUploadingVoice] = useState(false);
+  const [reactions, setReactions] = useState<Record<string, { emoji: string; count: number; reacted: boolean }[]>>({});
+  const [pinnedMessageIds, setPinnedMessageIds] = useState<Set<string>>(new Set());
+  const [favoritedMessageIds, setFavoritedMessageIds] = useState<Set<string>>(new Set());
+  const [deletedForMeIds, setDeletedForMeIds] = useState<Set<string>>(new Set());
+  const [showForwardDialog, setShowForwardDialog] = useState(false);
+  const [forwardingMessageId, setForwardingMessageId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -700,6 +710,157 @@ const CreviaChat = () => {
     return 0;
   };
 
+  // Fetch reactions, pins, favorites, deletions when messages change
+  const fetchMessageMeta = useCallback(async () => {
+    if (!currentUserId || messages.length === 0) return;
+    const msgIds = messages.map((m) => m.id);
+
+    // Fetch reactions
+    const { data: reactionData } = await supabase
+      .from("message_reactions")
+      .select("message_id, emoji, user_id")
+      .in("message_id", msgIds);
+
+    if (reactionData) {
+      const grouped: Record<string, { emoji: string; count: number; reacted: boolean }[]> = {};
+      for (const r of reactionData) {
+        if (!grouped[r.message_id]) grouped[r.message_id] = [];
+        const existing = grouped[r.message_id].find((e) => e.emoji === r.emoji);
+        if (existing) {
+          existing.count++;
+          if (r.user_id === currentUserId) existing.reacted = true;
+        } else {
+          grouped[r.message_id].push({ emoji: r.emoji, count: 1, reacted: r.user_id === currentUserId });
+        }
+      }
+      setReactions(grouped);
+    }
+
+    // Fetch pins for this room
+    if (selectedRoom) {
+      const { data: pinData } = await supabase
+        .from("pinned_messages")
+        .select("message_id")
+        .eq("room_id", selectedRoom.id);
+      setPinnedMessageIds(new Set(pinData?.map((p) => p.message_id) || []));
+    }
+
+    // Fetch favorites
+    const { data: favData } = await supabase
+      .from("favorite_messages")
+      .select("message_id")
+      .eq("user_id", currentUserId)
+      .in("message_id", msgIds);
+    setFavoritedMessageIds(new Set(favData?.map((f) => f.message_id) || []));
+
+    // Fetch deleted for me
+    const { data: delData } = await supabase
+      .from("deleted_messages")
+      .select("message_id")
+      .eq("user_id", currentUserId)
+      .in("message_id", msgIds);
+    setDeletedForMeIds(new Set(delData?.map((d) => d.message_id) || []));
+  }, [currentUserId, messages, selectedRoom]);
+
+  useEffect(() => {
+    fetchMessageMeta();
+  }, [fetchMessageMeta]);
+
+  // Subscribe to reaction changes
+  useEffect(() => {
+    if (!selectedRoom) return;
+    const channel = supabase
+      .channel("reactions-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "message_reactions" }, () => {
+        fetchMessageMeta();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [selectedRoom, fetchMessageMeta]);
+
+  const handleDeleteForMe = async (messageId: string) => {
+    await supabase.from("deleted_messages").insert({ message_id: messageId, user_id: currentUserId });
+    setDeletedForMeIds((prev) => new Set([...prev, messageId]));
+    toast.success("Message deleted for you");
+  };
+
+  const handleDeleteForEveryone = async (messageId: string) => {
+    await supabase
+      .from("chat_messages")
+      .update({ deleted_for_everyone: true, content: null, file_url: null, file_name: null })
+      .eq("id", messageId);
+    setMessages((prev) =>
+      prev.map((m) => (m.id === messageId ? { ...m, deleted_for_everyone: true, content: null, file_url: null, file_name: null } : m))
+    );
+    toast.success("Message deleted for everyone");
+  };
+
+  const handleForward = (messageId: string) => {
+    setForwardingMessageId(messageId);
+    setShowForwardDialog(true);
+    fetchRooms();
+  };
+
+  const forwardMessageToRoom = async (targetRoomId: string) => {
+    const msg = messages.find((m) => m.id === forwardingMessageId);
+    if (!msg || !currentUserId) return;
+
+    const forwardContent = msg.content ? `↪ Forwarded: ${msg.content}` : "↪ Forwarded message";
+    const encryptedContent = await encrypt(forwardContent, targetRoomId);
+
+    await supabase.from("chat_messages").insert({
+      room_id: targetRoomId,
+      sender_id: currentUserId,
+      content: encryptedContent || forwardContent,
+      message_type: msg.message_type,
+      file_url: msg.file_url,
+      file_name: msg.file_name,
+      file_type: msg.file_type,
+      file_size: msg.file_size,
+      is_encrypted: !!encryptedContent,
+    });
+
+    await supabase.from("chat_rooms").update({ updated_at: new Date().toISOString() }).eq("id", targetRoomId);
+    setShowForwardDialog(false);
+    setForwardingMessageId(null);
+    toast.success("Message forwarded");
+  };
+
+  const handlePinToggle = async (messageId: string, isPinned: boolean) => {
+    if (!selectedRoom) return;
+    if (isPinned) {
+      await supabase.from("pinned_messages").delete().eq("message_id", messageId);
+      setPinnedMessageIds((prev) => { const n = new Set(prev); n.delete(messageId); return n; });
+      toast.success("Message unpinned");
+    } else {
+      await supabase.from("pinned_messages").insert({ message_id: messageId, room_id: selectedRoom.id, pinned_by: currentUserId });
+      setPinnedMessageIds((prev) => new Set([...prev, messageId]));
+      toast.success("Message pinned");
+    }
+  };
+
+  const handleFavoriteToggle = async (messageId: string, isFavorited: boolean) => {
+    if (isFavorited) {
+      await supabase.from("favorite_messages").delete().eq("message_id", messageId).eq("user_id", currentUserId);
+      setFavoritedMessageIds((prev) => { const n = new Set(prev); n.delete(messageId); return n; });
+      toast.success("Removed from favorites");
+    } else {
+      await supabase.from("favorite_messages").insert({ message_id: messageId, user_id: currentUserId });
+      setFavoritedMessageIds((prev) => new Set([...prev, messageId]));
+      toast.success("Added to favorites");
+    }
+  };
+
+  const handleReaction = async (messageId: string, emoji: string) => {
+    const existing = reactions[messageId]?.find((r) => r.emoji === emoji && r.reacted);
+    if (existing) {
+      await supabase.from("message_reactions").delete().eq("message_id", messageId).eq("user_id", currentUserId).eq("emoji", emoji);
+    } else {
+      await supabase.from("message_reactions").insert({ message_id: messageId, user_id: currentUserId, emoji });
+    }
+    fetchMessageMeta();
+  };
+
   const groupMessagesByDate = (msgs: ChatMessage[]) => {
     const groups: { date: string; messages: ChatMessage[] }[] = [];
     let currentDate = "";
@@ -977,9 +1138,17 @@ const CreviaChat = () => {
                         const isContract = msg.message_type === "contract";
                         const isFile = msg.message_type === "file";
                         const isVoice = msg.message_type === "voice";
+                        const isDeletedForEveryone = (msg as any).deleted_for_everyone;
+                        const isDeletedForMe = deletedForMeIds.has(msg.id);
+                        const isPinned = pinnedMessageIds.has(msg.id);
+                        const isFavorited = favoritedMessageIds.has(msg.id);
+                        const msgReactions = reactions[msg.id] || [];
+
+                        // Skip deleted messages
+                        if (isDeletedForMe) return null;
 
                         return (
-                          <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"} mb-2`}>
+                          <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"} mb-2 group`}>
                             {/* Show avatar for group chats */}
                             {!isMine && selectedRoom.is_group && (
                               <div className="w-7 h-7 rounded-full bg-bronze/20 flex items-center justify-center text-[10px] font-semibold text-bronze mr-2 mt-1 flex-shrink-0 overflow-hidden">
@@ -990,6 +1159,28 @@ const CreviaChat = () => {
                                 )}
                               </div>
                             )}
+
+                            {/* Action buttons - before message for own messages */}
+                            {isMine && !isDeletedForEveryone && (
+                              <div className="flex items-center gap-0.5 mr-1 self-center">
+                                <EmojiReactionPicker onReact={(emoji) => handleReaction(msg.id, emoji)} />
+                                <MessageContextMenu
+                                  messageId={msg.id}
+                                  roomId={msg.room_id}
+                                  content={msg.content}
+                                  isMine={isMine}
+                                  currentUserId={currentUserId}
+                                  isPinned={isPinned}
+                                  isFavorited={isFavorited}
+                                  onDeleteForMe={handleDeleteForMe}
+                                  onDeleteForEveryone={handleDeleteForEveryone}
+                                  onForward={handleForward}
+                                  onPinToggle={handlePinToggle}
+                                  onFavoriteToggle={handleFavoriteToggle}
+                                />
+                              </div>
+                            )}
+
                             <div className={`max-w-[85%] md:max-w-[70%]`}>
                               {/* Sender name in groups */}
                               {!isMine && selectedRoom.is_group && (
@@ -998,79 +1189,131 @@ const CreviaChat = () => {
                                 </p>
                               )}
 
-                              <div
-                                className={`rounded-2xl px-3 md:px-4 py-2.5 ${
-                                  isMine
-                                    ? "bg-bronze text-background rounded-br-md"
-                                    : "bg-muted rounded-bl-md"
-                                } ${(isInvoice || isContract) ? "border-2 " + (isMine ? "border-background/20" : "border-bronze/20") : ""}`}
-                              >
-                                {/* Invoice attachment */}
-                                {isInvoice && (
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <Receipt className={`h-4 w-4 ${isMine ? "text-background/70" : "text-bronze"}`} />
-                                    <span className={`text-xs font-semibold ${isMine ? "text-background/80" : "text-bronze"}`}>
-                                      Invoice Attached
-                                    </span>
-                                  </div>
-                                )}
-
-                                {/* Contract attachment */}
-                                {isContract && (
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <FileSignature className={`h-4 w-4 ${isMine ? "text-background/70" : "text-bronze"}`} />
-                                    <span className={`text-xs font-semibold ${isMine ? "text-background/80" : "text-bronze"}`}>
-                                      Contract Attached
-                                    </span>
-                                  </div>
-                                )}
-
-                                {/* File attachment */}
-                                {isFile && msg.file_url && (
-                                  <div className="mb-2 p-2 rounded-lg bg-background/10 flex items-center gap-2">
-                                    {msg.file_type?.startsWith("image/") ? (
-                                      <ImageIcon className="h-4 w-4 flex-shrink-0" />
-                                    ) : (
-                                      <File className="h-4 w-4 flex-shrink-0" />
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-xs font-medium truncate">{msg.file_name}</p>
-                                      <p className="text-[10px] opacity-70">{formatFileSize(msg.file_size)}</p>
-                                    </div>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() => downloadFile(msg.file_url!, msg.file_name || "file")}
-                                      className="h-7 w-7 p-0 hover:bg-background/20"
-                                    >
-                                      <Download className="h-3.5 w-3.5" />
-                                    </Button>
-                                  </div>
-                                )}
-
-                                {/* Voice note */}
-                                {isVoice && msg.file_url && (
-                                  <VoiceNotePlayer
-                                    audioUrl={msg.file_url}
-                                    duration={parseDurationFromContent(msg.content)}
-                                    isMine={isMine}
-                                  />
-                                )}
-
-                                {msg.content && !isVoice && (
-                                  <p className="text-xs md:text-sm whitespace-pre-wrap break-words">{msg.content}</p>
-                                )}
-
-                                <div className="flex items-center gap-1 mt-1">
-                                  <p className="text-[10px] opacity-60">
-                                    {format(new Date(msg.created_at), "h:mm a")}
-                                  </p>
-                                  {isMine && (
-                                    <CheckCheck className="h-3 w-3 opacity-60 ml-0.5" />
-                                  )}
+                              {/* Pinned indicator */}
+                              {isPinned && (
+                                <div className="flex items-center gap-1 mb-0.5 ml-1">
+                                  <Pin className="h-2.5 w-2.5 text-bronze" />
+                                  <span className="text-[9px] text-bronze font-medium">Pinned</span>
                                 </div>
-                              </div>
+                              )}
+
+                              {isDeletedForEveryone ? (
+                                <div className={`rounded-2xl px-3 md:px-4 py-2.5 ${
+                                  isMine ? "bg-bronze/30 rounded-br-md" : "bg-muted/50 rounded-bl-md"
+                                } border border-dashed border-muted-foreground/20`}>
+                                  <p className="text-xs italic text-muted-foreground">🚫 This message was deleted</p>
+                                  <div className="flex items-center gap-1 mt-1">
+                                    <p className="text-[10px] opacity-60">
+                                      {format(new Date(msg.created_at), "h:mm a")}
+                                    </p>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <div
+                                    className={`rounded-2xl px-3 md:px-4 py-2.5 ${
+                                      isMine
+                                        ? "bg-bronze text-background rounded-br-md"
+                                        : "bg-muted rounded-bl-md"
+                                    } ${(isInvoice || isContract) ? "border-2 " + (isMine ? "border-background/20" : "border-bronze/20") : ""}`}
+                                  >
+                                    {/* Invoice attachment */}
+                                    {isInvoice && (
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <Receipt className={`h-4 w-4 ${isMine ? "text-background/70" : "text-bronze"}`} />
+                                        <span className={`text-xs font-semibold ${isMine ? "text-background/80" : "text-bronze"}`}>
+                                          Invoice Attached
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {/* Contract attachment */}
+                                    {isContract && (
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <FileSignature className={`h-4 w-4 ${isMine ? "text-background/70" : "text-bronze"}`} />
+                                        <span className={`text-xs font-semibold ${isMine ? "text-background/80" : "text-bronze"}`}>
+                                          Contract Attached
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {/* File attachment */}
+                                    {isFile && msg.file_url && (
+                                      <div className="mb-2 p-2 rounded-lg bg-background/10 flex items-center gap-2">
+                                        {msg.file_type?.startsWith("image/") ? (
+                                          <ImageIcon className="h-4 w-4 flex-shrink-0" />
+                                        ) : (
+                                          <File className="h-4 w-4 flex-shrink-0" />
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-xs font-medium truncate">{msg.file_name}</p>
+                                          <p className="text-[10px] opacity-70">{formatFileSize(msg.file_size)}</p>
+                                        </div>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() => downloadFile(msg.file_url!, msg.file_name || "file")}
+                                          className="h-7 w-7 p-0 hover:bg-background/20"
+                                        >
+                                          <Download className="h-3.5 w-3.5" />
+                                        </Button>
+                                      </div>
+                                    )}
+
+                                    {/* Voice note */}
+                                    {isVoice && msg.file_url && (
+                                      <VoiceNotePlayer
+                                        audioUrl={msg.file_url}
+                                        duration={parseDurationFromContent(msg.content)}
+                                        isMine={isMine}
+                                      />
+                                    )}
+
+                                    {msg.content && !isVoice && (
+                                      <p className="text-xs md:text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                                    )}
+
+                                    <div className="flex items-center gap-1 mt-1">
+                                      <p className="text-[10px] opacity-60">
+                                        {format(new Date(msg.created_at), "h:mm a")}
+                                      </p>
+                                      {isMine && (
+                                        <CheckCheck className="h-3 w-3 opacity-60 ml-0.5" />
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Reactions display */}
+                                  <MessageReactions
+                                    reactions={msgReactions}
+                                    messageId={msg.id}
+                                    currentUserId={currentUserId}
+                                    onUpdate={fetchMessageMeta}
+                                  />
+                                </>
+                              )}
                             </div>
+
+                            {/* Action buttons - after message for other's messages */}
+                            {!isMine && !isDeletedForEveryone && (
+                              <div className="flex items-center gap-0.5 ml-1 self-center">
+                                <EmojiReactionPicker onReact={(emoji) => handleReaction(msg.id, emoji)} />
+                                <MessageContextMenu
+                                  messageId={msg.id}
+                                  roomId={msg.room_id}
+                                  content={msg.content}
+                                  isMine={isMine}
+                                  currentUserId={currentUserId}
+                                  isPinned={isPinned}
+                                  isFavorited={isFavorited}
+                                  onDeleteForMe={handleDeleteForMe}
+                                  onDeleteForEveryone={handleDeleteForEveryone}
+                                  onForward={handleForward}
+                                  onPinToggle={handlePinToggle}
+                                  onFavoriteToggle={handleFavoriteToggle}
+                                />
+                              </div>
+                            )}
                           </div>
                         );
                       })}
@@ -1506,6 +1749,49 @@ const CreviaChat = () => {
               <ChatMediaPanel roomId={selectedRoom.id} />
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Forward Message Dialog */}
+      <Dialog open={showForwardDialog} onOpenChange={setShowForwardDialog}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle>Forward Message</DialogTitle>
+            <DialogDescription>Select a conversation to forward this message to</DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="h-[350px]">
+            {rooms.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">No conversations available</div>
+            ) : (
+              <div className="space-y-1">
+                {rooms
+                  .filter((r) => selectedRoom && r.id !== selectedRoom.id)
+                  .map((room) => (
+                    <button
+                      key={room.id}
+                      onClick={() => forwardMessageToRoom(room.id)}
+                      className="w-full p-3 rounded-xl hover:bg-accent transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-bronze/10 flex items-center justify-center text-sm font-semibold overflow-hidden">
+                          {getRoomAvatar(room) ? (
+                            <img src={getRoomAvatar(room)!} alt="" className="h-10 w-10 rounded-full object-cover" />
+                          ) : (
+                            getRoomInitial(room)
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate text-sm">{getRoomDisplayName(room)}</p>
+                          {room.is_group && (
+                            <p className="text-xs text-muted-foreground">{room.members?.length} members</p>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+              </div>
+            )}
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </div>
