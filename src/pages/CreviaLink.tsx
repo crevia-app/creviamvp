@@ -761,8 +761,9 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                               Choose Image
                             </Button>
                           </div>
+                          </div>
                         </div>
-                    </div>
+                      </div>
                     </div>
                   </div>
                 </Card>
