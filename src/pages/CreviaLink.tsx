@@ -50,6 +50,8 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const [buttons, setButtons] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
   const [showAddButton, setShowAddButton] = useState(false);
+  const [showEditButton, setShowEditButton] = useState(false);
+  const [editingButton, setEditingButton] = useState<any>(null);
   const [copied, setCopied] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [uploadingPicture, setUploadingPicture] = useState(false);
