@@ -38,7 +38,7 @@ export function ButtonItem({ button, onEdit, onDelete, onToggleVisibility, onMov
             size="icon"
             onClick={() => onMoveUp?.(button.id)}
             disabled={isFirst}
-            className="h-7 w-7 p-0 disabled:opacity-20 hover:text-bronze"
+            className="h-7 w-7 p-0 disabled:opacity-20 text-bronze hover:text-bronze hover:bg-bronze/10"
           >
             <ChevronUp className="w-5 h-5" />
           </Button>
@@ -47,7 +47,7 @@ export function ButtonItem({ button, onEdit, onDelete, onToggleVisibility, onMov
             size="icon"
             onClick={() => onMoveDown?.(button.id)}
             disabled={isLast}
-            className="h-7 w-7 p-0 disabled:opacity-20 hover:text-bronze"
+            className="h-7 w-7 p-0 disabled:opacity-20 text-bronze hover:text-bronze hover:bg-bronze/10"
           >
             <ChevronDown className="w-5 h-5" />
           </Button>
