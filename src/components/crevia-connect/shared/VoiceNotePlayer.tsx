@@ -22,7 +22,9 @@ const VoiceNotePlayer = ({ audioUrl, duration, isMine }: VoiceNotePlayerProps) =
   };
 
   useEffect(() => {
-    const audio = new Audio(audioUrl);
+    const audio = new Audio();
+    audio.crossOrigin = "anonymous";
+    audio.preload = "metadata";
     audioRef.current = audio;
 
     audio.addEventListener("loadedmetadata", () => {
@@ -37,9 +39,18 @@ const VoiceNotePlayer = ({ audioUrl, duration, isMine }: VoiceNotePlayerProps) =
       if (animRef.current) cancelAnimationFrame(animRef.current);
     });
 
+    audio.addEventListener("error", (e) => {
+      console.error("Audio playback error:", e);
+      setIsPlaying(false);
+    });
+
+    // Set src after attaching listeners
+    audio.src = audioUrl;
+
     return () => {
       audio.pause();
-      audio.src = "";
+      audio.removeAttribute("src");
+      audio.load();
       if (animRef.current) cancelAnimationFrame(animRef.current);
     };
   }, [audioUrl]);
