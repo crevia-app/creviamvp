@@ -126,8 +126,8 @@ const About = () => {
                 A creative industry where impact outweighs influence.
               </h3>
               <p className="text-muted-foreground leading-relaxed">
-                Where every creative — regardless of size — owns their narrative. 
-                Where partnerships value substance. Where your story is enough.
+                Where every creative and brand — regardless of size — owns their narrative. 
+                Where partnerships are built on substance, not status. Where your story is enough.
               </p>
             </div>
           </div>
