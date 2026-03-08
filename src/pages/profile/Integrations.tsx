@@ -92,8 +92,7 @@ const Integrations = () => {
         </div>
 
         <div className="mt-12 text-center">
-          <h2 className="font-vollkorn text-xl font-semibold text-foreground mb-2">{t("integrations.moreComingSoon")}</h2>
-          <p className="text-muted-foreground">{t("integrations.moreComingSoonDesc")}</p>
+          <h2 className="font-vollkorn text-xl font-semibold text-foreground">More integrations coming soon</h2>
         </div>
       </div>
     </div>
