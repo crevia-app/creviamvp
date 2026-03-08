@@ -53,6 +53,7 @@ const ContractPreviewDialog = ({
   });
   const [savingDetails, setSavingDetails] = useState(false);
   const [activeSection, setActiveSection] = useState<"document" | "signatures">("document");
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     if (contract) {
