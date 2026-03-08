@@ -151,7 +151,7 @@ const CreviaChat = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { e2eReady, initEncryption, setupRoomEncryption, encrypt, decrypt, decryptMessages } = useE2EEncryption(currentUserId);
+  const { e2eReady, initEncryption, setupRoomEncryption, encrypt, decrypt, decryptMessages, getRoomKey } = useE2EEncryption(currentUserId);
 
   // Initialize
   useEffect(() => {
