@@ -259,7 +259,7 @@ const SecurityTab = () => {
               <div className="flex items-center gap-2">
                 <Label className="text-sm md:text-base">Authenticator App</Label>
                 {twoFactorEnabled ? (
-                  <Badge variant="outline" className="text-emerald-500 border-emerald-500/30 text-[10px]">Active</Badge>
+                  <Badge variant="outline" className="text-primary border-primary/30 text-[10px]">Active</Badge>
                 ) : (
                   <Badge variant="outline" className="text-muted-foreground text-[10px]">Not set up</Badge>
                 )}
