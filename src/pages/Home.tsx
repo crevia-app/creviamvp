@@ -246,7 +246,8 @@ const Home = () => {
       </section>
 
       {/* ═══════════════ FINAL CTA ═══════════════ */}
-      <section className="py-20 md:py-32 px-4 md:px-6">
+      <section className="relative py-20 md:py-32 px-4 md:px-6 overflow-hidden">
+        <HeroPattern />
         <div className="container mx-auto max-w-3xl text-center">
           <h2 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
             Your story deserves{" "}

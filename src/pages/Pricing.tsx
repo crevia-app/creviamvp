@@ -224,8 +224,9 @@ const Pricing = () => {
       </section>
 
       {/* CTA */}
-      <section className="py-20 md:py-28 px-4 md:px-6">
-        <div className="container mx-auto max-w-3xl text-center">
+      <section className="relative py-20 md:py-28 px-4 md:px-6 overflow-hidden">
+        <HeroPattern />
+        <div className="container mx-auto max-w-3xl text-center relative z-10">
           <h2 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
             Ready to <span className="text-gradient-bronze">own your story?</span>
           </h2>
