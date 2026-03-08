@@ -1238,9 +1238,11 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                             id="bg-image-upload"
                             onChange={async (e) => {
                               const file = e.target.files?.[0];
-                              if (!file || !user) return;
+                              if (!file) return;
+                              const { data: { session } } = await supabase.auth.getSession();
+                              if (!session) return;
                               const ext = file.name.split(".").pop();
-                              const path = `${user.id}/bg-${Date.now()}.${ext}`;
+                              const path = `${session.user.id}/bg-${Date.now()}.${ext}`;
                               const { error } = await supabase.storage.from("avatars").upload(path, file);
                               if (error) {
                                 toast({ title: "Upload failed", description: error.message, variant: "destructive" });
