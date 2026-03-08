@@ -12,9 +12,9 @@ All colors MUST be HSL.
     --background: 0 0% 100%;
     --foreground: 0 0% 0%;
     
-    --bronze: 23 73% 49%; /* #d36725 - Premium bronze */
-    --bronze-light: 23 73% 60%;
-    --bronze-dark: 23 73% 38%;
+    --bronze: 23 87% 56%; /* #f0782f - Premium bronze */
+    --bronze-light: 23 87% 66%;
+    --bronze-dark: 23 87% 45%;
 
     --card: 0 0% 100%;
     --card-foreground: 0 0% 0%;
