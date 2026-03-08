@@ -294,7 +294,7 @@ const ContractsTab = () => {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".txt,.md,.doc,.docx,.pdf"
+        accept=".txt,.md,.doc,.docx,.pdf,.rtf,.odt"
         className="hidden"
         onChange={handleFileUpload}
       />
