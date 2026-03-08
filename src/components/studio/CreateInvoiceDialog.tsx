@@ -101,8 +101,8 @@ const CreateInvoiceDialog = ({
       setItems(data.map((item) => ({
         id: item.id,
         description: item.description,
-        quantity: Number(item.quantity),
-        unit_price: Number(item.unit_price),
+        quantity: String(item.quantity),
+        unit_price: String(item.unit_price),
         total: Number(item.total),
       })));
     }
