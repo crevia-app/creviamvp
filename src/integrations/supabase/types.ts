@@ -388,6 +388,7 @@ export type Database = {
           invoice_id: string | null
           is_encrypted: boolean
           message_type: string
+          reply_to_id: string | null
           room_id: string
           sender_id: string
         }
@@ -404,6 +405,7 @@ export type Database = {
           invoice_id?: string | null
           is_encrypted?: boolean
           message_type?: string
+          reply_to_id?: string | null
           room_id: string
           sender_id: string
         }
@@ -420,6 +422,7 @@ export type Database = {
           invoice_id?: string | null
           is_encrypted?: boolean
           message_type?: string
+          reply_to_id?: string | null
           room_id?: string
           sender_id?: string
         }
@@ -436,6 +439,13 @@ export type Database = {
             columns: ["invoice_id"]
             isOneToOne: false
             referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
             referencedColumns: ["id"]
           },
           {
