@@ -13,6 +13,12 @@ export function ThemeToggle() {
     setMounted(true);
   }, []);
 
+  const handleSetTheme = (value: string) => {
+    // Store as app-level preference (only affects post-login)
+    localStorage.setItem("app-theme", value);
+    setTheme(value);
+  };
+
   if (!mounted) {
     return null;
   }
