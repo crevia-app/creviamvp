@@ -482,15 +482,20 @@ const CreviaChat = () => {
         fileData = { url: fileName, name: selectedFile.name, type: selectedFile.type, size: selectedFile.size };
       }
 
+      // Encrypt the message content
+      const plainContent = newMessage || (fileData ? `Sent a file: ${fileData.name}` : "");
+      const encryptedContent = await encrypt(plainContent, selectedRoom.id);
+
       await supabase.from("chat_messages").insert({
         room_id: selectedRoom.id,
         sender_id: currentUserId,
-        content: newMessage || (fileData ? `Sent a file: ${fileData.name}` : ""),
+        content: encryptedContent || plainContent,
         message_type: fileData ? "file" : "text",
         file_url: fileData?.url,
         file_name: fileData?.name,
         file_type: fileData?.type,
         file_size: fileData?.size,
+        is_encrypted: !!encryptedContent,
       });
 
       // Update room timestamp
