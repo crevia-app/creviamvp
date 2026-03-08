@@ -582,6 +582,12 @@ const ContractsTab = () => {
         onSuccess={fetchContracts}
       />
 
+      <UploadContractDialog
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        onUpload={handleFileUpload}
+      />
+
       <ContractPreviewDialog
         open={!!previewContract}
         onOpenChange={(open) => !open && setPreviewContract(null)}
