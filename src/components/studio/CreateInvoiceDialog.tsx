@@ -210,8 +210,8 @@ const CreateInvoiceDialog = ({
           items.map((item) => ({
             invoice_id: editingInvoice.id,
             description: item.description,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
+            quantity: parseFloat(item.quantity) || 0,
+            unit_price: parseFloat(item.unit_price) || 0,
             total: item.total,
           }))
         );
