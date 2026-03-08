@@ -34,6 +34,11 @@ import {
   Info,
   Hash,
   Pin,
+  Reply,
+  Play,
+  Video,
+  ZoomIn,
+  SearchIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
@@ -92,11 +97,19 @@ interface ChatMessage {
   contract_id: string | null;
   is_encrypted: boolean;
   created_at: string;
+  deleted_for_everyone?: boolean;
+  reply_to_id?: string | null;
   sender?: {
     display_name: string | null;
     handle: string;
     avatar_url: string | null;
   };
+  replyTo?: {
+    id: string;
+    content: string | null;
+    sender_id: string;
+    sender?: { display_name: string | null; handle: string };
+  } | null;
 }
 
 interface AttachableInvoice {
@@ -117,6 +130,40 @@ interface AttachableContract {
   currency: string;
 }
 
+// Proper URL detection without global regex issues
+function linkifyContent(content: string): (string | JSX.Element)[] {
+  const urlPattern = /(https?:\/\/[^\s<]+[^\s<.,;:!?"')\]])/g;
+  const result: (string | JSX.Element)[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = urlPattern.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      result.push(content.slice(lastIndex, match.index));
+    }
+    const url = match[0];
+    result.push(
+      <a
+        key={`link-${match.index}`}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline font-medium hover:opacity-80 break-all"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {url}
+      </a>
+    );
+    lastIndex = match.index + url.length;
+  }
+
+  if (lastIndex < content.length) {
+    result.push(content.slice(lastIndex));
+  }
+
+  return result.length > 0 ? result : [content];
+}
+
 const CreviaChat = () => {
   const [currentUserId, setCurrentUserId] = useState("");
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
@@ -128,7 +175,6 @@ const CreviaChat = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showNewChat, setShowNewChat] = useState(false);
   const [showGroupCreate, setShowGroupCreate] = useState(false);
-  const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [showInvoicePicker, setShowInvoicePicker] = useState(false);
   const [showContractPicker, setShowContractPicker] = useState(false);
   const [showRoomInfo, setShowRoomInfo] = useState(false);
@@ -147,9 +193,20 @@ const CreviaChat = () => {
   const [deletedForMeIds, setDeletedForMeIds] = useState<Set<string>>(new Set());
   const [showForwardDialog, setShowForwardDialog] = useState(false);
   const [forwardingMessageId, setForwardingMessageId] = useState<string | null>(null);
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+
+  // New features state
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const [messageSearch, setMessageSearch] = useState("");
+  const [showMessageSearch, setShowMessageSearch] = useState(false);
+  const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const presenceChannelRef = useRef<any>(null);
 
   const { e2eReady, initEncryption, setupRoomEncryption, encrypt, decrypt, decryptMessages, getRoomKey } = useE2EEncryption(currentUserId);
 
@@ -169,20 +226,39 @@ const CreviaChat = () => {
         { event: "INSERT", schema: "public", table: "chat_messages" },
         (payload) => {
           const newMsg = payload.new as ChatMessage;
-          // If in current room, add message and decrypt
           if (selectedRoom && newMsg.room_id === selectedRoom.id) {
             (async () => {
               const msgWithProfile = await loadSenderProfile(newMsg);
-              // Decrypt content if encrypted
+              // Load reply context if present
+              if (msgWithProfile.reply_to_id) {
+                msgWithProfile.replyTo = await loadReplyContext(msgWithProfile.reply_to_id);
+              }
               if (msgWithProfile.is_encrypted && msgWithProfile.content) {
-                msgWithProfile.content = await decrypt(msgWithProfile.content, msgWithProfile.room_id);
+                try {
+                  msgWithProfile.content = await decrypt(msgWithProfile.content, msgWithProfile.room_id);
+                } catch {
+                  // Keep original content if decryption fails
+                }
               }
               setMessages((prev) => [...prev, msgWithProfile]);
             })();
             updateReadReceipt(newMsg.room_id);
           }
-          // Update room list
           fetchRooms();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "chat_messages" },
+        (payload) => {
+          const updated = payload.new as any;
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === updated.id
+                ? { ...m, deleted_for_everyone: updated.deleted_for_everyone, content: updated.content, file_url: updated.file_url, file_name: updated.file_name }
+                : m
+            )
+          );
         }
       )
       .subscribe();
@@ -192,10 +268,54 @@ const CreviaChat = () => {
     };
   }, [currentUserId, selectedRoom, decrypt]);
 
+  // Typing indicator presence channel
+  useEffect(() => {
+    if (!selectedRoom || !currentUserId) return;
+
+    const channel = supabase.channel(`typing-${selectedRoom.id}`, {
+      config: { presence: { key: currentUserId } },
+    });
+
+    channel
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState();
+        const typers: string[] = [];
+        for (const [userId, presences] of Object.entries(state)) {
+          if (userId !== currentUserId) {
+            const p = presences as any[];
+            if (p.some((pr: any) => pr.typing)) {
+              typers.push(userId);
+            }
+          }
+        }
+        setTypingUsers(typers);
+      })
+      .subscribe();
+
+    presenceChannelRef.current = channel;
+
+    return () => {
+      supabase.removeChannel(channel);
+      presenceChannelRef.current = null;
+    };
+  }, [selectedRoom?.id, currentUserId]);
+
   // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Broadcast typing status
+  const broadcastTyping = useCallback((isTyping: boolean) => {
+    if (!presenceChannelRef.current) return;
+    presenceChannelRef.current.track({ typing: isTyping });
+  }, []);
+
+  const handleTyping = useCallback(() => {
+    broadcastTyping(true);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => broadcastTyping(false), 2000);
+  }, [broadcastTyping]);
 
   const loadSenderProfile = async (msg: ChatMessage): Promise<ChatMessage> => {
     const { data } = await supabase
@@ -206,6 +326,39 @@ const CreviaChat = () => {
     return { ...msg, sender: data || undefined };
   };
 
+  const loadReplyContext = async (replyToId: string): Promise<ChatMessage["replyTo"]> => {
+    const { data } = await supabase
+      .from("chat_messages")
+      .select("id, content, sender_id, is_encrypted, room_id")
+      .eq("id", replyToId)
+      .single() as any;
+    if (!data) return null;
+    
+    // Get sender name
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name, handle")
+      .eq("id", data.sender_id)
+      .single();
+
+    let content = data.content;
+    // Try to decrypt reply content
+    if (data.is_encrypted && content) {
+      try {
+        content = await decrypt(content, data.room_id);
+      } catch {
+        content = "🔒 Encrypted message";
+      }
+    }
+
+    return {
+      id: data.id,
+      content,
+      sender_id: data.sender_id,
+      sender: profile || undefined,
+    };
+  };
+
   const initChat = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -213,7 +366,6 @@ const CreviaChat = () => {
     await fetchRooms();
   };
 
-  // Initialize E2EE after user ID is set
   useEffect(() => {
     if (currentUserId) {
       initEncryption();
@@ -224,7 +376,6 @@ const CreviaChat = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Get rooms the user is a member of
     const { data: memberRooms } = await supabase
       .from("chat_room_members")
       .select("room_id")
@@ -249,10 +400,8 @@ const CreviaChat = () => {
       return;
     }
 
-    // For each room, get members and last message
     const enrichedRooms: ChatRoom[] = await Promise.all(
       roomsData.map(async (room) => {
-        // Get members with profiles
         const { data: members } = await supabase
           .from("chat_room_members")
           .select("user_id, role")
@@ -270,7 +419,6 @@ const CreviaChat = () => {
           }
         }
 
-        // Get last message
         const { data: lastMsgs } = await supabase
           .from("chat_messages")
           .select("*")
@@ -278,7 +426,6 @@ const CreviaChat = () => {
           .order("created_at", { ascending: false })
           .limit(1);
 
-        // Get unread count
         const { data: receipt } = await supabase
           .from("chat_read_receipts")
           .select("last_read_at")
@@ -304,14 +451,12 @@ const CreviaChat = () => {
           unreadCount = count || 0;
         }
 
-        // Decrypt last message for preview
         let lastMessage = lastMsgs?.[0] || null;
         if (lastMessage && lastMessage.is_encrypted && lastMessage.content) {
           try {
             const decryptedContent = await decrypt(lastMessage.content, room.id);
             lastMessage = { ...lastMessage, content: decryptedContent || lastMessage.content };
           } catch {
-            // If decryption fails, show fallback
             lastMessage = { ...lastMessage, content: "🔒 Encrypted message" };
           }
         }
@@ -338,10 +483,17 @@ const CreviaChat = () => {
 
     if (!data) return;
 
-    // Enrich with sender profiles
-    const enriched = await Promise.all(data.map(loadSenderProfile));
-    
-    // Decrypt messages
+    // Enrich with sender profiles and reply contexts
+    const enriched = await Promise.all(
+      data.map(async (msg: any) => {
+        const withProfile = await loadSenderProfile(msg);
+        if (msg.reply_to_id) {
+          withProfile.replyTo = await loadReplyContext(msg.reply_to_id);
+        }
+        return withProfile;
+      })
+    );
+
     const decrypted = await decryptMessages(enriched);
     setMessages(decrypted as ChatMessage[]);
     updateReadReceipt(roomId);
@@ -359,24 +511,21 @@ const CreviaChat = () => {
 
   const selectRoom = async (room: ChatRoom) => {
     setSelectedRoom(room);
-    
-    // Ensure room has encryption keys, setup if missing or broken
+    setReplyingTo(null);
+    setShowMessageSearch(false);
+    setMessageSearch("");
+
     if (currentUserId && room.members && room.members.length > 0) {
       const memberIds = room.members.map(m => m.user_id);
-      
-      // Check if we have a working room key
       const roomKey = await getRoomKey(room.id);
       if (!roomKey) {
-        // Try to setup encryption - this will create new keys if we're the first
-        // or re-distribute if we have access
         await setupRoomEncryption(room.id, memberIds);
       }
     }
-    
+
     await fetchMessages(room.id);
   };
 
-  // Re-setup encryption and retry fetching messages if decryption fails
   const retryDecryption = async (roomId: string, members: RoomMember[]) => {
     if (!currentUserId || members.length === 0) return;
     toast.info("Retrying decryption...");
@@ -385,11 +534,9 @@ const CreviaChat = () => {
     await fetchMessages(roomId);
   };
 
-  // Get or create 1:1 room
   const startDirectChat = async (otherUserId: string) => {
     if (!currentUserId) return;
 
-    // Check if a 1:1 room already exists
     const { data: myRooms } = await supabase
       .from("chat_room_members")
       .select("room_id")
@@ -407,7 +554,6 @@ const CreviaChat = () => {
         .map((r) => r.room_id);
 
       if (commonRoomIds.length > 0) {
-        // Check for non-group room
         const { data: existingRooms } = await supabase
           .from("chat_rooms")
           .select("*")
@@ -415,7 +561,6 @@ const CreviaChat = () => {
           .eq("is_group", false);
 
         if (existingRooms && existingRooms.length > 0) {
-          // Use existing room
           const room = existingRooms[0];
           setShowNewChat(false);
           await fetchRooms();
@@ -423,7 +568,6 @@ const CreviaChat = () => {
           if (enriched) {
             selectRoom(enriched);
           } else {
-            // Fetch fresh
             await fetchRooms();
             selectRoom({ ...room, members: [], lastMessage: null, unreadCount: 0 });
             fetchMessages(room.id);
@@ -433,7 +577,6 @@ const CreviaChat = () => {
       }
     }
 
-    // Create new room
     const { data: newRoom, error } = await supabase
       .from("chat_rooms")
       .insert({ created_by: currentUserId, is_group: false })
@@ -445,13 +588,11 @@ const CreviaChat = () => {
       return;
     }
 
-    // Add both members
     await supabase.from("chat_room_members").insert([
       { room_id: newRoom.id, user_id: currentUserId, role: "member" },
       { room_id: newRoom.id, user_id: otherUserId, role: "member" },
     ]);
 
-    // Setup E2EE for this room
     await setupRoomEncryption(newRoom.id, [currentUserId, otherUserId]);
 
     setShowNewChat(false);
@@ -488,7 +629,6 @@ const CreviaChat = () => {
 
     await supabase.from("chat_room_members").insert(memberInserts);
 
-    // Setup E2EE for group
     const allMemberIds = [currentUserId, ...selectedGroupMembers];
     await setupRoomEncryption(newRoom.id, allMemberIds);
 
@@ -527,11 +667,17 @@ const CreviaChat = () => {
         fileData = { url: fileName, name: selectedFile.name, type: selectedFile.type, size: selectedFile.size };
       }
 
-      // Encrypt the message content
       const plainContent = newMessage || (fileData ? `Sent a file: ${fileData.name}` : "");
-      const encryptedContent = await encrypt(plainContent, selectedRoom.id);
+      
+      // Try encryption, fall back to unencrypted
+      let encryptedContent: string | null = null;
+      try {
+        encryptedContent = await encrypt(plainContent, selectedRoom.id);
+      } catch (err) {
+        console.warn("Encryption failed, sending unencrypted:", err);
+      }
 
-      await supabase.from("chat_messages").insert({
+      const messageData: any = {
         room_id: selectedRoom.id,
         sender_id: currentUserId,
         content: encryptedContent || plainContent,
@@ -541,9 +687,15 @@ const CreviaChat = () => {
         file_type: fileData?.type,
         file_size: fileData?.size,
         is_encrypted: !!encryptedContent,
-      });
+      };
 
-      // Update room timestamp
+      // Add reply reference
+      if (replyingTo) {
+        messageData.reply_to_id = replyingTo.id;
+      }
+
+      await supabase.from("chat_messages").insert(messageData);
+
       await supabase
         .from("chat_rooms")
         .update({ updated_at: new Date().toISOString() })
@@ -551,6 +703,8 @@ const CreviaChat = () => {
 
       setNewMessage("");
       setSelectedFile(null);
+      setReplyingTo(null);
+      broadcastTyping(false);
     } catch (error) {
       console.error("Send error:", error);
       toast.error("Failed to send message");
@@ -563,7 +717,8 @@ const CreviaChat = () => {
     if (!selectedRoom || !currentUserId) return;
 
     const plainContent = `📄 Invoice ${invoice.invoice_number} — ${new Intl.NumberFormat("en-KE", { style: "currency", currency: invoice.currency }).format(Number(invoice.total))} (${invoice.status})`;
-    const encryptedContent = await encrypt(plainContent, selectedRoom.id);
+    let encryptedContent: string | null = null;
+    try { encryptedContent = await encrypt(plainContent, selectedRoom.id); } catch {}
 
     await supabase.from("chat_messages").insert({
       room_id: selectedRoom.id,
@@ -583,7 +738,8 @@ const CreviaChat = () => {
     if (!selectedRoom || !currentUserId) return;
 
     const plainContent = `📋 Contract: ${contract.title} — ${contract.client_name} (${contract.status})`;
-    const encryptedContent = await encrypt(plainContent, selectedRoom.id);
+    let encryptedContent: string | null = null;
+    try { encryptedContent = await encrypt(plainContent, selectedRoom.id); } catch {}
 
     await supabase.from("chat_messages").insert({
       room_id: selectedRoom.id,
@@ -615,7 +771,8 @@ const CreviaChat = () => {
         .getPublicUrl(fileName);
 
       const plainContent = `🎤 Voice note (${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, "0")})`;
-      const encryptedContent = await encrypt(plainContent, selectedRoom.id);
+      let encryptedContent: string | null = null;
+      try { encryptedContent = await encrypt(plainContent, selectedRoom.id); } catch {}
 
       await supabase.from("chat_messages").insert({
         room_id: selectedRoom.id,
@@ -658,6 +815,17 @@ const CreviaChat = () => {
   };
 
   const downloadFile = async (fileUrl: string, fileName: string) => {
+    // If it's a full URL (e.g. voice notes), download directly
+    if (fileUrl.startsWith("http")) {
+      const a = document.createElement("a");
+      a.href = fileUrl;
+      a.download = fileName;
+      a.target = "_blank";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return;
+    }
     const { data, error } = await supabase.storage.from("chat-files").download(fileUrl);
     if (error) {
       toast.error("Download failed");
@@ -684,47 +852,14 @@ const CreviaChat = () => {
     }
   };
 
-  // URL linkification helper
-  const URL_REGEX = /(https?:\/\/[^\s<]+[^\s<.,;:!?"')\]])/g;
-
-  const renderMessageContent = (content: string) => {
-    const parts = content.split(URL_REGEX);
-    return parts.map((part, i) => {
-      if (URL_REGEX.test(part)) {
-        // Reset lastIndex since we reuse the regex
-        URL_REGEX.lastIndex = 0;
-        return (
-          <a
-            key={i}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline font-medium hover:opacity-80 break-all"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {part}
-          </a>
-        );
-      }
-      URL_REGEX.lastIndex = 0;
-      return part;
-    });
-  };
-
-  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
-
   const getFilePublicUrl = useCallback((filePath: string) => {
-    // If already a full URL, return as-is
     if (filePath.startsWith("http")) return filePath;
-    // Return cached signed URL if available
     if (signedUrls[filePath]) return signedUrls[filePath];
-    // Trigger async signed URL fetch
     supabase.storage.from("chat-files").createSignedUrl(filePath, 3600).then(({ data }) => {
       if (data?.signedUrl) {
         setSignedUrls(prev => ({ ...prev, [filePath]: data.signedUrl }));
       }
     });
-    // Return placeholder while loading
     return "";
   }, [signedUrls]);
 
@@ -773,12 +908,21 @@ const CreviaChat = () => {
     return 0;
   };
 
+  const getTypingDisplayNames = (): string => {
+    if (!selectedRoom?.members) return "";
+    return typingUsers
+      .map((uid) => {
+        const member = selectedRoom.members?.find((m) => m.user_id === uid);
+        return member?.profile?.display_name || member?.profile?.handle || "Someone";
+      })
+      .join(", ");
+  };
+
   // Fetch reactions, pins, favorites, deletions when messages change
   const fetchMessageMeta = useCallback(async () => {
     if (!currentUserId || messages.length === 0) return;
     const msgIds = messages.map((m) => m.id);
 
-    // Fetch reactions
     const { data: reactionData } = await supabase
       .from("message_reactions")
       .select("message_id, emoji, user_id")
@@ -799,7 +943,6 @@ const CreviaChat = () => {
       setReactions(grouped);
     }
 
-    // Fetch pins for this room
     if (selectedRoom) {
       const { data: pinData } = await supabase
         .from("pinned_messages")
@@ -808,7 +951,6 @@ const CreviaChat = () => {
       setPinnedMessageIds(new Set(pinData?.map((p) => p.message_id) || []));
     }
 
-    // Fetch favorites
     const { data: favData } = await supabase
       .from("favorite_messages")
       .select("message_id")
@@ -816,7 +958,6 @@ const CreviaChat = () => {
       .in("message_id", msgIds);
     setFavoritedMessageIds(new Set(favData?.map((f) => f.message_id) || []));
 
-    // Fetch deleted for me
     const { data: delData } = await supabase
       .from("deleted_messages")
       .select("message_id")
@@ -829,7 +970,6 @@ const CreviaChat = () => {
     fetchMessageMeta();
   }, [fetchMessageMeta]);
 
-  // Subscribe to reaction changes
   useEffect(() => {
     if (!selectedRoom) return;
     const channel = supabase
@@ -869,7 +1009,8 @@ const CreviaChat = () => {
     if (!msg || !currentUserId) return;
 
     const forwardContent = msg.content ? `↪ Forwarded: ${msg.content}` : "↪ Forwarded message";
-    const encryptedContent = await encrypt(forwardContent, targetRoomId);
+    let encryptedContent: string | null = null;
+    try { encryptedContent = await encrypt(forwardContent, targetRoomId); } catch {}
 
     await supabase.from("chat_messages").insert({
       room_id: targetRoomId,
@@ -924,6 +1065,19 @@ const CreviaChat = () => {
     fetchMessageMeta();
   };
 
+  const handleReply = (msg: ChatMessage) => {
+    setReplyingTo(msg);
+  };
+
+  const scrollToMessage = (msgId: string) => {
+    const el = document.getElementById(`msg-${msgId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlightedMsgId(msgId);
+      setTimeout(() => setHighlightedMsgId(null), 2000);
+    }
+  };
+
   const groupMessagesByDate = (msgs: ChatMessage[]) => {
     const groups: { date: string; messages: ChatMessage[] }[] = [];
     let currentDate = "";
@@ -957,7 +1111,19 @@ const CreviaChat = () => {
       u.handle?.toLowerCase().includes(userSearch.toLowerCase())
   );
 
+  // Message search within conversation
+  const searchResults = messageSearch.trim()
+    ? messages.filter((m) => m.content?.toLowerCase().includes(messageSearch.toLowerCase()))
+    : [];
+
   const messageGroups = groupMessagesByDate(messages);
+
+  // Check if file is a video
+  const isVideoType = (type: string | null) =>
+    type?.startsWith("video/") || false;
+
+  const isImageType = (type: string | null) =>
+    type?.startsWith("image/") || false;
 
   return (
     <div className="flex flex-col h-[calc(100vh-200px)] md:h-[calc(100vh-180px)] bg-background">
@@ -978,18 +1144,18 @@ const CreviaChat = () => {
               setShowGroupCreate(true);
               fetchAllUsers();
             }}
-            className="gap-1.5 hidden sm:flex"
+            className="gap-1.5 text-xs"
           >
             <Users className="h-3.5 w-3.5" />
-            Group
+            <span className="hidden sm:inline">Group</span>
           </Button>
           <Button
-            size="sm"
             onClick={() => {
               setShowNewChat(true);
               fetchAllUsers();
             }}
-            className="gap-1.5 bg-bronze hover:bg-bronze/90"
+            size="sm"
+            className="gap-1.5 bg-bronze hover:bg-bronze/90 text-background text-xs"
           >
             <Plus className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">New Chat</span>
@@ -1143,9 +1309,17 @@ const CreviaChat = () => {
                         {getRoomDisplayName(selectedRoom)}
                       </p>
                       <div className="flex items-center gap-1.5">
-                        <Lock className="h-2.5 w-2.5 text-emerald-500" />
-                        <span className="text-[10px] text-emerald-500 font-medium">End-to-end encrypted</span>
-                        {selectedRoom.is_group && selectedRoom.members && (
+                        {typingUsers.length > 0 ? (
+                          <span className="text-[10px] text-emerald-500 font-medium animate-pulse">
+                            {getTypingDisplayNames()} typing...
+                          </span>
+                        ) : (
+                          <>
+                            <Lock className="h-2.5 w-2.5 text-emerald-500" />
+                            <span className="text-[10px] text-emerald-500 font-medium">End-to-end encrypted</span>
+                          </>
+                        )}
+                        {selectedRoom.is_group && selectedRoom.members && typingUsers.length === 0 && (
                           <span className="text-[10px] text-muted-foreground">
                             • {selectedRoom.members.length} members
                           </span>
@@ -1153,31 +1327,81 @@ const CreviaChat = () => {
                       </div>
                     </div>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setShowRoomInfo(true)}>
-                        <Info className="h-4 w-4 mr-2" />
-                        {selectedRoom.is_group ? "Group Info" : "Contact Info"}
-                      </DropdownMenuItem>
-                      {selectedRoom.is_group && selectedRoom.created_by === currentUserId && (
-                        <DropdownMenuItem
-                          onClick={() => {
-                            fetchAllUsers();
-                            setShowGroupCreate(true);
-                          }}
-                        >
-                          <UserPlus className="h-4 w-4 mr-2" />
-                          Add Members
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setShowMessageSearch(!showMessageSearch)}
+                    >
+                      <Search className="h-4 w-4" />
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setShowRoomInfo(true)}>
+                          <Info className="h-4 w-4 mr-2" />
+                          {selectedRoom.is_group ? "Group Info" : "Contact Info"}
                         </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        {selectedRoom.is_group && selectedRoom.created_by === currentUserId && (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              fetchAllUsers();
+                              setShowGroupCreate(true);
+                            }}
+                          >
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Add Members
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
+
+                {/* Message Search Bar */}
+                {showMessageSearch && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                      <Input
+                        placeholder="Search in conversation..."
+                        value={messageSearch}
+                        onChange={(e) => setMessageSearch(e.target.value)}
+                        className="pl-9 h-8 text-xs"
+                        autoFocus
+                      />
+                    </div>
+                    {searchResults.length > 0 && (
+                      <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                        {searchResults.length} found
+                      </span>
+                    )}
+                    <Button variant="ghost" size="sm" onClick={() => { setShowMessageSearch(false); setMessageSearch(""); }} className="h-8 w-8 p-0">
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                )}
+
+                {/* Search results */}
+                {showMessageSearch && searchResults.length > 0 && (
+                  <div className="mt-1 max-h-32 overflow-y-auto">
+                    {searchResults.slice(0, 5).map((msg) => (
+                      <button
+                        key={msg.id}
+                        onClick={() => scrollToMessage(msg.id)}
+                        className="w-full text-left px-2 py-1.5 hover:bg-accent/50 rounded text-xs flex items-center gap-2"
+                      >
+                        <span className="text-muted-foreground text-[10px] whitespace-nowrap">{format(new Date(msg.created_at), "MMM d, h:mm a")}</span>
+                        <span className="truncate">{msg.content}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Messages */}
@@ -1206,13 +1430,19 @@ const CreviaChat = () => {
                         const isPinned = pinnedMessageIds.has(msg.id);
                         const isFavorited = favoritedMessageIds.has(msg.id);
                         const msgReactions = reactions[msg.id] || [];
+                        const isHighlighted = highlightedMsgId === msg.id;
 
-                        // Skip deleted messages
                         if (isDeletedForMe) return null;
 
                         return (
-                          <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"} mb-2 group`}>
-                            {/* Show avatar for group chats */}
+                          <div
+                            key={msg.id}
+                            id={`msg-${msg.id}`}
+                            className={`flex ${isMine ? "justify-end" : "justify-start"} mb-2 group transition-colors duration-500 ${
+                              isHighlighted ? "bg-bronze/10 rounded-xl -mx-2 px-2 py-1" : ""
+                            }`}
+                          >
+                            {/* Avatar for group chats */}
                             {!isMine && selectedRoom.is_group && (
                               <div className="w-7 h-7 rounded-full bg-bronze/20 flex items-center justify-center text-[10px] font-semibold text-bronze mr-2 mt-1 flex-shrink-0 overflow-hidden">
                                 {msg.sender?.avatar_url ? (
@@ -1223,9 +1453,12 @@ const CreviaChat = () => {
                               </div>
                             )}
 
-                            {/* Action buttons - before message for own messages */}
+                            {/* Action buttons - before message for own */}
                             {isMine && !isDeletedForEveryone && (
-                              <div className="flex items-center gap-0.5 mr-1 self-center">
+                              <div className="flex items-center gap-0.5 mr-1 self-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleReply(msg)}>
+                                  <Reply className="h-3 w-3" />
+                                </Button>
                                 <EmojiReactionPicker onReact={(emoji) => handleReaction(msg.id, emoji)} />
                                 <MessageContextMenu
                                   messageId={msg.id}
@@ -1280,6 +1513,27 @@ const CreviaChat = () => {
                                         : "bg-muted rounded-bl-md"
                                     } ${(isInvoice || isContract) ? "border-2 " + (isMine ? "border-background/20" : "border-bronze/20") : ""}`}
                                   >
+                                    {/* Reply context */}
+                                    {msg.replyTo && (
+                                      <button
+                                        onClick={() => scrollToMessage(msg.replyTo!.id)}
+                                        className={`w-full text-left mb-2 p-2 rounded-lg border-l-2 ${
+                                          isMine
+                                            ? "bg-background/10 border-background/40"
+                                            : "bg-foreground/5 border-bronze/40"
+                                        }`}
+                                      >
+                                        <p className={`text-[10px] font-semibold ${isMine ? "text-background/70" : "text-bronze"}`}>
+                                          {msg.replyTo.sender_id === currentUserId
+                                            ? "You"
+                                            : msg.replyTo.sender?.display_name || msg.replyTo.sender?.handle || "User"}
+                                        </p>
+                                        <p className={`text-[11px] truncate ${isMine ? "text-background/60" : "text-muted-foreground"}`}>
+                                          {msg.replyTo.content || "Message"}
+                                        </p>
+                                      </button>
+                                    )}
+
                                     {/* Invoice attachment */}
                                     {isInvoice && (
                                       <div className="flex items-center gap-2 mb-1">
@@ -1303,27 +1557,77 @@ const CreviaChat = () => {
                                     {/* File attachment */}
                                     {isFile && msg.file_url && (
                                       <div className="mb-2">
-                                        {/* Image preview */}
-                                        {msg.file_type?.startsWith("image/") ? (
+                                        {isImageType(msg.file_type) ? (
                                           <div className="mb-1">
-                                            <img
-                                              src={getFilePublicUrl(msg.file_url)}
-                                              alt={msg.file_name || "Image"}
-                                              className="max-w-full rounded-lg cursor-pointer max-h-[280px] object-cover"
-                                              onClick={() => window.open(getFilePublicUrl(msg.file_url!), "_blank")}
-                                              loading="lazy"
-                                            />
-                                            <div className="flex items-center justify-between mt-1">
-                                              <p className="text-[10px] opacity-60 truncate">{msg.file_name}</p>
-                                              <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() => downloadFile(msg.file_url!, msg.file_name || "file")}
-                                                className="h-6 w-6 p-0 hover:bg-background/20"
-                                              >
-                                                <Download className="h-3 w-3" />
-                                              </Button>
-                                            </div>
+                                            {(() => {
+                                              const url = getFilePublicUrl(msg.file_url!);
+                                              return url ? (
+                                                <div className="relative group/img">
+                                                  <img
+                                                    src={url}
+                                                    alt={msg.file_name || "Image"}
+                                                    className="max-w-full rounded-lg cursor-pointer max-h-[280px] object-cover"
+                                                    onClick={() => setLightboxUrl(url)}
+                                                    loading="lazy"
+                                                  />
+                                                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                                    <Button
+                                                      size="sm"
+                                                      variant="secondary"
+                                                      onClick={(e) => { e.stopPropagation(); setLightboxUrl(url); }}
+                                                      className="h-7 w-7 p-0 bg-background/80 backdrop-blur"
+                                                    >
+                                                      <ZoomIn className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                    <Button
+                                                      size="sm"
+                                                      variant="secondary"
+                                                      onClick={(e) => { e.stopPropagation(); downloadFile(msg.file_url!, msg.file_name || "image"); }}
+                                                      className="h-7 w-7 p-0 bg-background/80 backdrop-blur"
+                                                    >
+                                                      <Download className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                  </div>
+                                                </div>
+                                              ) : (
+                                                <div className="h-32 rounded-lg bg-muted/50 animate-pulse flex items-center justify-center">
+                                                  <ImageIcon className="h-6 w-6 text-muted-foreground/30" />
+                                                </div>
+                                              );
+                                            })()}
+                                            <p className="text-[10px] opacity-60 truncate mt-1">{msg.file_name}</p>
+                                          </div>
+                                        ) : isVideoType(msg.file_type) ? (
+                                          <div className="mb-1">
+                                            {(() => {
+                                              const url = getFilePublicUrl(msg.file_url!);
+                                              return url ? (
+                                                <div className="relative">
+                                                  <video
+                                                    src={url}
+                                                    controls
+                                                    preload="metadata"
+                                                    className="max-w-full rounded-lg max-h-[280px]"
+                                                    playsInline
+                                                  />
+                                                  <div className="flex items-center justify-between mt-1">
+                                                    <p className="text-[10px] opacity-60 truncate">{msg.file_name}</p>
+                                                    <Button
+                                                      size="sm"
+                                                      variant="ghost"
+                                                      onClick={() => downloadFile(msg.file_url!, msg.file_name || "video")}
+                                                      className="h-6 w-6 p-0 hover:bg-background/20"
+                                                    >
+                                                      <Download className="h-3 w-3" />
+                                                    </Button>
+                                                  </div>
+                                                </div>
+                                              ) : (
+                                                <div className="h-32 rounded-lg bg-muted/50 animate-pulse flex items-center justify-center">
+                                                  <Video className="h-6 w-6 text-muted-foreground/30" />
+                                                </div>
+                                              );
+                                            })()}
                                           </div>
                                         ) : (
                                           <div className="p-2 rounded-lg bg-background/10 flex items-center gap-2">
@@ -1372,7 +1676,7 @@ const CreviaChat = () => {
                                         </div>
                                       ) : (
                                         <p className="text-xs md:text-sm whitespace-pre-wrap break-words">
-                                          {renderMessageContent(msg.content)}
+                                          {linkifyContent(msg.content)}
                                         </p>
                                       )
                                     )}
@@ -1400,7 +1704,10 @@ const CreviaChat = () => {
 
                             {/* Action buttons - after message for other's messages */}
                             {!isMine && !isDeletedForEveryone && (
-                              <div className="flex items-center gap-0.5 ml-1 self-center">
+                              <div className="flex items-center gap-0.5 ml-1 self-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleReply(msg)}>
+                                  <Reply className="h-3 w-3" />
+                                </Button>
                                 <EmojiReactionPicker onReact={(emoji) => handleReaction(msg.id, emoji)} />
                                 <MessageContextMenu
                                   messageId={msg.id}
@@ -1423,6 +1730,25 @@ const CreviaChat = () => {
                       })}
                     </div>
                   ))}
+
+                  {/* Typing indicator */}
+                  {typingUsers.length > 0 && (
+                    <div className="flex justify-start mb-2">
+                      <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-2.5">
+                        <div className="flex items-center gap-1.5">
+                          <div className="flex gap-0.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "0ms" }} />
+                            <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "150ms" }} />
+                            <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "300ms" }} />
+                          </div>
+                          <span className="text-[10px] text-muted-foreground ml-1">
+                            {getTypingDisplayNames()} typing
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div ref={messagesEndRef} />
                 </div>
               </ScrollArea>
@@ -1430,9 +1756,35 @@ const CreviaChat = () => {
               {/* Input Area */}
               <div className="p-3 md:p-4 border-t bg-background/95 backdrop-blur flex-shrink-0">
                 <div className="max-w-3xl mx-auto">
+                  {/* Reply preview */}
+                  {replyingTo && (
+                    <div className="mb-2 p-2.5 bg-muted/60 rounded-lg flex items-start gap-2 border-l-2 border-bronze">
+                      <Reply className="h-3.5 w-3.5 text-bronze mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-semibold text-bronze">
+                          Replying to {replyingTo.sender_id === currentUserId ? "yourself" : replyingTo.sender?.display_name || replyingTo.sender?.handle || "User"}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {replyingTo.content || "Message"}
+                        </p>
+                      </div>
+                      <Button size="sm" variant="ghost" onClick={() => setReplyingTo(null)} className="h-6 w-6 p-0 flex-shrink-0">
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  )}
+
                   {selectedFile && !isRecordingVoice && (
                     <div className="mb-2 p-2 bg-muted rounded-lg flex items-center gap-2">
-                      <File className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      {selectedFile.type.startsWith("image/") ? (
+                        <div className="h-12 w-12 rounded overflow-hidden flex-shrink-0">
+                          <img src={URL.createObjectURL(selectedFile)} alt="" className="h-full w-full object-cover" />
+                        </div>
+                      ) : selectedFile.type.startsWith("video/") ? (
+                        <Video className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      ) : (
+                        <File className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      )}
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium truncate">{selectedFile.name}</p>
                         <p className="text-[10px] text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
@@ -1461,13 +1813,32 @@ const CreviaChat = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="start" className="w-52">
-                          <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                          <DropdownMenuItem onClick={() => {
+                            if (fileInputRef.current) {
+                              fileInputRef.current.accept = "*/*";
+                              fileInputRef.current.click();
+                            }
+                          }}>
                             <Paperclip className="h-4 w-4 mr-2" />
                             Attach File
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => { fileInputRef.current?.click(); }}>
+                          <DropdownMenuItem onClick={() => {
+                            if (fileInputRef.current) {
+                              fileInputRef.current.accept = "image/*";
+                              fileInputRef.current.click();
+                            }
+                          }}>
                             <ImageIcon className="h-4 w-4 mr-2" />
                             Send Image
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {
+                            if (fileInputRef.current) {
+                              fileInputRef.current.accept = "video/*";
+                              fileInputRef.current.click();
+                            }
+                          }}>
+                            <Video className="h-4 w-4 mr-2" />
+                            Send Video
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
@@ -1494,7 +1865,10 @@ const CreviaChat = () => {
                       <Textarea
                         placeholder="Type a message..."
                         value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
+                        onChange={(e) => {
+                          setNewMessage(e.target.value);
+                          handleTyping();
+                        }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
@@ -1505,7 +1879,6 @@ const CreviaChat = () => {
                         disabled={uploadingFile}
                       />
 
-                      {/* Show mic button when no text, send button when text */}
                       {newMessage.trim() || selectedFile ? (
                         <Button
                           onClick={sendMessage}
@@ -1542,6 +1915,49 @@ const CreviaChat = () => {
           )}
         </div>
       </div>
+
+      {/* Image Lightbox */}
+      <Dialog open={!!lightboxUrl} onOpenChange={() => setLightboxUrl(null)}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Image Preview</DialogTitle>
+          </DialogHeader>
+          {lightboxUrl && (
+            <div className="relative flex items-center justify-center min-h-[50vh]">
+              <img
+                src={lightboxUrl}
+                alt="Full size"
+                className="max-w-full max-h-[90vh] object-contain"
+              />
+              <div className="absolute top-4 right-4 flex gap-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    const a = document.createElement("a");
+                    a.href = lightboxUrl;
+                    a.download = "image";
+                    a.target = "_blank";
+                    a.click();
+                  }}
+                  className="bg-white/10 hover:bg-white/20 text-white backdrop-blur"
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  Download
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setLightboxUrl(null)}
+                  className="bg-white/10 hover:bg-white/20 text-white backdrop-blur"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* New Chat Dialog */}
       <Dialog open={showNewChat} onOpenChange={setShowNewChat}>
@@ -1811,7 +2227,6 @@ const CreviaChat = () => {
                 </div>
               </div>
 
-
               {selectedRoom.members && selectedRoom.members.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
@@ -1849,7 +2264,6 @@ const CreviaChat = () => {
                 </div>
               )}
 
-              {/* Media, Docs & Links Panel */}
               <ChatMediaPanel roomId={selectedRoom.id} />
             </div>
           )}
