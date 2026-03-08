@@ -66,7 +66,7 @@ const CreateInvoiceDialog = ({
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("Payment is due within 30 days of invoice date.");
   const [items, setItems] = useState<InvoiceItem[]>([
-    { description: "", quantity: 1, unit_price: 0, total: 0 },
+    { description: "", quantity: "", unit_price: "", total: 0 },
   ]);
 
   useEffect(() => {
