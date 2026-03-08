@@ -54,8 +54,13 @@ function isWebAuthnSupported(): boolean {
   return !!(window.PublicKeyCredential && navigator.credentials);
 }
 
+function isInIframe(): boolean {
+  try { return window.self !== window.top; } catch { return true; }
+}
+
 async function isPlatformAuthAvailable(): Promise<boolean> {
   if (!isWebAuthnSupported()) return false;
+  if (isInIframe()) return false;
   try {
     return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
   } catch {
