@@ -520,10 +520,11 @@ const CreviaChat = () => {
     if (!selectedRoom || !currentUserId) return;
     setUploadingVoice(true);
     try {
-      const fileName = `${currentUserId}/${Date.now()}.webm`;
+      const ext = blob.type.includes("mp4") ? "mp4" : blob.type.includes("ogg") ? "ogg" : "webm";
+      const fileName = `${currentUserId}/${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from("voice-notes")
-        .upload(fileName, blob, { contentType: "audio/webm" });
+        .upload(fileName, blob, { contentType: blob.type || "audio/webm" });
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage
@@ -536,8 +537,8 @@ const CreviaChat = () => {
         content: `🎤 Voice note (${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, "0")})`,
         message_type: "voice",
         file_url: urlData.publicUrl,
-        file_name: `voice-${Date.now()}.webm`,
-        file_type: "audio/webm",
+        file_name: `voice-${Date.now()}.${ext}`,
+        file_type: blob.type || "audio/webm",
         file_size: blob.size,
       });
 
