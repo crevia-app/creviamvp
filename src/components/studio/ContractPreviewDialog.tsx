@@ -10,7 +10,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { 
   Printer, CheckCircle2, FileSignature, Calendar, Coins, PenTool, Send, 
-  Edit3, Save, X, Plus, Trash2, FileText
+  Edit3, Save, X, Plus, Trash2, FileText, Maximize2, Minimize2
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
