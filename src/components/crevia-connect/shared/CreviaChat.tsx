@@ -861,7 +861,7 @@ const CreviaChat = () => {
     fetchMessageMeta();
   };
 
-
+  const groupMessagesByDate = (msgs: ChatMessage[]) => {
     const groups: { date: string; messages: ChatMessage[] }[] = [];
     let currentDate = "";
 
