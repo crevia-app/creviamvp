@@ -762,7 +762,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                             </Button>
                           </div>
                         </div>
-                      )}
+                    </div>
                     </div>
                   </div>
                 </Card>
