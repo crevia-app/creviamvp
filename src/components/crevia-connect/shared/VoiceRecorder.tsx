@@ -54,7 +54,8 @@ const VoiceRecorder = ({ onRecordingComplete, onCancel, isUploading }: VoiceReco
       };
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const actualType = mediaRecorder.mimeType || "audio/webm";
+        const blob = new Blob(chunksRef.current, { type: actualType });
         setAudioBlob(blob);
         stream.getTracks().forEach((t) => t.stop());
       };
