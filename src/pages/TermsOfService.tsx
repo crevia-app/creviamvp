@@ -1,24 +1,8 @@
-import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 const TermsOfService = () => {
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 w-full bg-black border-b border-white/10">
-        <div className="container flex h-16 items-center justify-between px-4 md:px-6">
-          <Link to="/" className="font-vollkorn text-2xl font-bold text-white">
-            Crevia
-          </Link>
-          <Link to="/dashboard">
-            <Button variant="ghost" size="sm" className="gap-2 text-white/80 hover:text-bronze">
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Back to Dashboard</span>
-            </Button>
-          </Link>
-        </div>
-      </header>
 
       <main className="container max-w-4xl px-4 py-8 md:py-16">
         <div className="mb-8 md:mb-12">
