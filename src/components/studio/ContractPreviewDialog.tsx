@@ -238,6 +238,10 @@ const ContractPreviewDialog = ({
             <Button variant="ghost" size="sm" onClick={handlePrint} className="gap-1.5 h-8 rounded-lg text-xs">
               <Printer className="h-3 w-3" /> Print
             </Button>
+            <Button variant="ghost" size="sm" onClick={() => setIsFullscreen(!isFullscreen)} className="gap-1.5 h-8 rounded-lg text-xs">
+              {isFullscreen ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
+              {isFullscreen ? "Exit" : "Full"}
+            </Button>
           </div>
         </div>
 
