@@ -23,8 +23,8 @@ import { toast } from "sonner";
 interface InvoiceItem {
   id?: string;
   description: string;
-  quantity: number;
-  unit_price: number;
+  quantity: string;
+  unit_price: string;
   total: number;
 }
 
@@ -61,12 +61,12 @@ const CreateInvoiceDialog = ({
   const [issueDate, setIssueDate] = useState(new Date().toISOString().split("T")[0]);
   const [dueDate, setDueDate] = useState("");
   const [currency, setCurrency] = useState("KES");
-  const [taxRate, setTaxRate] = useState(0);
-  const [discountAmount, setDiscountAmount] = useState(0);
+  const [taxRate, setTaxRate] = useState<string>("");
+  const [discountAmount, setDiscountAmount] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [terms, setTerms] = useState("Payment is due within 30 days of invoice date.");
   const [items, setItems] = useState<InvoiceItem[]>([
-    { description: "", quantity: 1, unit_price: 0, total: 0 },
+    { description: "", quantity: "", unit_price: "", total: 0 },
   ]);
 
   useEffect(() => {
@@ -78,8 +78,8 @@ const CreateInvoiceDialog = ({
       setIssueDate(editingInvoice.issue_date);
       setDueDate(editingInvoice.due_date);
       setCurrency(editingInvoice.currency);
-      setTaxRate(editingInvoice.tax_rate || 0);
-      setDiscountAmount(editingInvoice.discount_amount || 0);
+      setTaxRate(editingInvoice.tax_rate ? String(editingInvoice.tax_rate) : "");
+      setDiscountAmount(editingInvoice.discount_amount ? String(editingInvoice.discount_amount) : "");
       setNotes(editingInvoice.notes || "");
       setTerms(editingInvoice.terms || "");
       
@@ -101,8 +101,8 @@ const CreateInvoiceDialog = ({
       setItems(data.map((item) => ({
         id: item.id,
         description: item.description,
-        quantity: Number(item.quantity),
-        unit_price: Number(item.unit_price),
+        quantity: String(item.quantity),
+        unit_price: String(item.unit_price),
         total: Number(item.total),
       })));
     }
@@ -123,26 +123,28 @@ const CreateInvoiceDialog = ({
     setIssueDate(new Date().toISOString().split("T")[0]);
     setDueDate("");
     setCurrency("KES");
-    setTaxRate(0);
-    setDiscountAmount(0);
+    setTaxRate("");
+    setDiscountAmount("");
     setNotes("");
     setTerms("Payment is due within 30 days of invoice date.");
-    setItems([{ description: "", quantity: 1, unit_price: 0, total: 0 }]);
+    setItems([{ description: "", quantity: "", unit_price: "", total: 0 }]);
   };
 
-  const updateItemTotal = (index: number, field: string, value: any) => {
+  const updateItemTotal = (index: number, field: string, value: string) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
     
     if (field === "quantity" || field === "unit_price") {
-      newItems[index].total = newItems[index].quantity * newItems[index].unit_price;
+      const qty = parseFloat(newItems[index].quantity) || 0;
+      const price = parseFloat(newItems[index].unit_price) || 0;
+      newItems[index].total = qty * price;
     }
     
     setItems(newItems);
   };
 
   const addItem = () => {
-    setItems([...items, { description: "", quantity: 1, unit_price: 0, total: 0 }]);
+    setItems([...items, { description: "", quantity: "", unit_price: "", total: 0 }]);
   };
 
   const removeItem = (index: number) => {
@@ -153,8 +155,10 @@ const CreateInvoiceDialog = ({
 
   const calculateTotals = () => {
     const subtotal = items.reduce((acc, item) => acc + item.total, 0);
-    const taxAmount = subtotal * (taxRate / 100);
-    const total = subtotal + taxAmount - discountAmount;
+    const numTaxRate = parseFloat(taxRate) || 0;
+    const numDiscount = parseFloat(discountAmount) || 0;
+    const taxAmount = subtotal * (numTaxRate / 100);
+    const total = subtotal + taxAmount - numDiscount;
     return { subtotal, taxAmount, total };
   };
 
@@ -187,9 +191,9 @@ const CreateInvoiceDialog = ({
             issue_date: issueDate,
             due_date: dueDate,
             currency,
-            tax_rate: taxRate,
+            tax_rate: parseFloat(taxRate) || 0,
             tax_amount: taxAmount,
-            discount_amount: discountAmount,
+            discount_amount: parseFloat(discountAmount) || 0,
             subtotal,
             total,
             notes: notes || null,
@@ -206,8 +210,8 @@ const CreateInvoiceDialog = ({
           items.map((item) => ({
             invoice_id: editingInvoice.id,
             description: item.description,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
+            quantity: parseFloat(item.quantity) || 0,
+            unit_price: parseFloat(item.unit_price) || 0,
             total: item.total,
           }))
         );
@@ -228,9 +232,9 @@ const CreateInvoiceDialog = ({
             issue_date: issueDate,
             due_date: dueDate,
             currency,
-            tax_rate: taxRate,
+            tax_rate: parseFloat(taxRate) || 0,
             tax_amount: taxAmount,
-            discount_amount: discountAmount,
+            discount_amount: parseFloat(discountAmount) || 0,
             subtotal,
             total,
             notes: notes || null,
@@ -246,8 +250,8 @@ const CreateInvoiceDialog = ({
           items.map((item) => ({
             invoice_id: invoice.id,
             description: item.description,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
+            quantity: parseFloat(item.quantity) || 0,
+            unit_price: parseFloat(item.unit_price) || 0,
             total: item.total,
           }))
         );
@@ -394,7 +398,7 @@ const CreateInvoiceDialog = ({
                       type="number"
                       placeholder="1"
                       value={item.quantity}
-                      onChange={(e) => updateItemTotal(index, "quantity", Number(e.target.value))}
+                      onChange={(e) => updateItemTotal(index, "quantity", e.target.value)}
                       min={1}
                     />
                   </div>
@@ -403,7 +407,7 @@ const CreateInvoiceDialog = ({
                       type="number"
                       placeholder="0.00"
                       value={item.unit_price}
-                      onChange={(e) => updateItemTotal(index, "unit_price", Number(e.target.value))}
+                      onChange={(e) => updateItemTotal(index, "unit_price", e.target.value)}
                       min={0}
                     />
                   </div>
@@ -452,7 +456,8 @@ const CreateInvoiceDialog = ({
               <Input
                 type="number"
                 value={taxRate}
-                onChange={(e) => setTaxRate(Number(e.target.value))}
+                onChange={(e) => setTaxRate(e.target.value)}
+                placeholder="0"
                 className="mt-1"
                 min={0}
                 max={100}
@@ -463,7 +468,8 @@ const CreateInvoiceDialog = ({
               <Input
                 type="number"
                 value={discountAmount}
-                onChange={(e) => setDiscountAmount(Number(e.target.value))}
+                onChange={(e) => setDiscountAmount(e.target.value)}
+                placeholder="0"
                 className="mt-1"
                 min={0}
               />
@@ -476,16 +482,16 @@ const CreateInvoiceDialog = ({
               <span className="text-muted-foreground">Subtotal</span>
               <span className="font-medium">{formatCurrency(subtotal)}</span>
             </div>
-            {taxRate > 0 && (
+            {(parseFloat(taxRate) || 0) > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Tax ({taxRate}%)</span>
                 <span className="font-medium">{formatCurrency(taxAmount)}</span>
               </div>
             )}
-            {discountAmount > 0 && (
+            {(parseFloat(discountAmount) || 0) > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Discount</span>
-                <span className="font-medium text-green-500">-{formatCurrency(discountAmount)}</span>
+                <span className="font-medium text-emerald-500">-{formatCurrency(parseFloat(discountAmount) || 0)}</span>
               </div>
             )}
             <div className="flex justify-between text-lg font-semibold pt-2 border-t border-border">
