@@ -8,7 +8,8 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
-import { Settings as SettingsIcon, Camera, Languages } from "lucide-react";
+import { Settings as SettingsIcon, Camera, Languages, Shield } from "lucide-react";
+import SecurityTab from "@/components/settings/SecurityTab";
 import {
   Select,
   SelectContent,
