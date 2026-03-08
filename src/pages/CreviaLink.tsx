@@ -835,6 +835,16 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         />
                       </div>
                     )}
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <Label className="text-base font-medium">Crevia Branding</Label>
+                        <p className="text-sm text-muted-foreground mt-1">Show "Made with Crevia" on your page</p>
+                      </div>
+                      <Switch
+                        checked={linkProfile?.show_crevia_branding !== false}
+                        onCheckedChange={(checked) => setLinkProfile({ ...linkProfile, show_crevia_branding: checked })}
+                      />
+                    </div>
                   </div>
                 </Card>
 
