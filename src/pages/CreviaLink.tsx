@@ -732,6 +732,95 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                   </div>
                 </Card>
 
+                {/* Background Style */}
+                <Card className="p-6 border-border/50">
+                  <div className="flex items-center gap-3 mb-6">
+                    <ImageIcon className="w-6 h-6 text-bronze" />
+                    <h3 className="font-vollkorn text-2xl font-bold">Background Style</h3>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-sm font-medium mb-2 block">Background Type</Label>
+                      <Select
+                        value={linkProfile?.background?.style || "solid"}
+                        onValueChange={(value) => setLinkProfile({ 
+                          ...linkProfile, 
+                          background: { ...linkProfile?.background, style: value }
+                        })}
+                      >
+                        <SelectTrigger className="h-11">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="solid">Solid Color</SelectItem>
+                          <SelectItem value="gradient">Gradient</SelectItem>
+                          <SelectItem value="pattern">Pattern</SelectItem>
+                          <SelectItem value="blur">Blur Effect</SelectItem>
+                          <SelectItem value="custom_image">Custom Image</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {linkProfile?.background?.style === "custom_image" && (
+                      <div className="mt-4 space-y-3">
+                        <Label className="text-sm font-medium block">Upload Background Image</Label>
+                        {linkProfile?.background?.custom_bg_url && (
+                          <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
+                            <img src={linkProfile.background.custom_bg_url} alt="Background" className="w-full h-full object-cover" />
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="absolute top-2 right-2 h-7 text-xs"
+                              onClick={() => setLinkProfile({
+                                ...linkProfile,
+                                background: { ...linkProfile?.background, custom_bg_url: null }
+                              })}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        )}
+                        <div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            id="emb-bg-image-upload"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const { data: { session } } = await supabase.auth.getSession();
+                              if (!session) return;
+                              const ext = file.name.split(".").pop();
+                              const path = `${session.user.id}/bg-${Date.now()}.${ext}`;
+                              const { error } = await supabase.storage.from("avatars").upload(path, file);
+                              if (error) {
+                                toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+                                return;
+                              }
+                              const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+                              setLinkProfile({
+                                ...linkProfile,
+                                theme: "custom_image",
+                                background: { ...linkProfile?.background, style: "custom_image", custom_bg_url: urlData.publicUrl }
+                              });
+                              toast({ title: "Background uploaded!" });
+                            }}
+                          />
+                          <Button
+                            variant="outline"
+                            className="w-full border-dashed border-2 border-bronze/40 hover:border-bronze"
+                            onClick={() => document.getElementById("emb-bg-image-upload")?.click()}
+                          >
+                            <ImageIcon className="w-4 h-4 mr-2" />
+                            Choose Image
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+
                 {/* Layout */}
                 <Card className="p-6 border-border/50">
                   <div className="flex items-center gap-3 mb-6">
