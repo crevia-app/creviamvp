@@ -27,8 +27,8 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Back button for logged-in users */}
-      {isLoggedIn && (
+      {/* Show Header for non-logged-in users, back button for logged-in */}
+      {isLoggedIn ? (
         <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/50">
           <div className="container mx-auto px-6 py-4">
             <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2 hover:text-bronze">
@@ -36,6 +36,8 @@ const About = () => {
             </Button>
           </div>
         </div>
+      ) : (
+        <Header />
       )}
 
       {/* ═══════════════ HERO ═══════════════ */}
