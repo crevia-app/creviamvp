@@ -335,8 +335,24 @@ const CreviaChat = () => {
       );
   };
 
-  const selectRoom = (room: ChatRoom) => {
+  const selectRoom = async (room: ChatRoom) => {
     setSelectedRoom(room);
+    
+    // Ensure room has encryption keys, setup if missing
+    if (currentUserId && room.members && room.members.length > 0) {
+      const { data: existingKey } = await supabase
+        .from("room_encrypted_keys" as any)
+        .select("id")
+        .eq("room_id", room.id)
+        .eq("user_id", currentUserId)
+        .single() as any;
+      
+      if (!existingKey) {
+        const memberIds = room.members.map(m => m.user_id);
+        await setupRoomEncryption(room.id, memberIds);
+      }
+    }
+    
     fetchMessages(room.id);
   };
 
