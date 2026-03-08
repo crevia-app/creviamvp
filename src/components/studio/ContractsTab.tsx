@@ -184,15 +184,38 @@ const ContractsTab = () => {
     if (!session) return;
 
     const fileName = file.name.replace(/\.[^/.]+$/, "");
+    const fileExt = file.name.split(".").pop()?.toLowerCase();
     
     let content = "";
-    if (file.type === "text/plain" || file.name.endsWith(".txt") || file.name.endsWith(".md")) {
+    let fileUrl: string | null = null;
+
+    // For text-based files, read the content directly for editing
+    if (fileExt === "txt" || fileExt === "md") {
       content = await file.text();
     } else {
-      content = `[Uploaded file: ${file.name}]\n\nThis contract was uploaded from a file. The original document format is preserved for reference.\n\nFile type: ${file.type || "unknown"}\nFile size: ${(file.size / 1024).toFixed(1)} KB\nUploaded: ${new Date().toLocaleString()}`;
+      // For PDF, DOCX, etc. — upload to storage and create editable content
+      const storagePath = `${session.user.id}/${Date.now()}-${file.name}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from("contract-uploads")
+        .upload(storagePath, file);
+
+      if (uploadError) {
+        toast.error("Failed to upload file: " + uploadError.message);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("contract-uploads")
+        .getPublicUrl(storagePath);
+
+      fileUrl = urlData?.publicUrl || null;
+
+      content = `[Original file: ${file.name}]\n[File type: ${file.type || fileExt}]\n[Uploaded: ${new Date().toLocaleString()}]\n\n---\n\nYou can edit this contract content below. The original document has been securely stored.\n\n---\n\n[Add or paste your contract terms here]`;
     }
 
-    const { error } = await supabase.from("contracts").insert({
+    const { data, error } = await supabase.from("contracts").insert({
       user_id: session.user.id,
       title: fileName,
       client_name: "To be specified",
@@ -200,16 +223,22 @@ const ContractsTab = () => {
       content,
       status: "draft",
       currency: "KES",
-    });
+    }).select().single();
 
     if (error) {
-      toast.error("Failed to upload contract");
+      toast.error("Failed to create contract record");
+      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
-    toast.success("Contract uploaded successfully");
+    toast.success("Contract uploaded! You can now edit all details.");
     fetchContracts();
     if (fileInputRef.current) fileInputRef.current.value = "";
+    
+    // Open the edit dialog immediately so user can fill in details
+    if (data) {
+      setEditingContract(data as Contract);
+    }
   };
 
   const formatCurrency = (amount: number | null, currency: string) => {
