@@ -32,24 +32,24 @@ export function ButtonItem({ button, onEdit, onDelete, onToggleVisibility, onMov
     <Card className="p-3 sm:p-4 hover-lift group">
       <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
         {/* Move up/down buttons */}
-        <div className="flex flex-col gap-0.5 flex-shrink-0">
+        <div className="flex flex-col gap-0 flex-shrink-0">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => onMoveUp?.(button.id)}
             disabled={isFirst}
-            className="h-6 w-6 p-0 disabled:opacity-20"
+            className="h-7 w-7 p-0 disabled:opacity-20 hover:text-bronze"
           >
-            <ChevronUp className="w-4 h-4 text-muted-foreground" />
+            <ChevronUp className="w-5 h-5" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => onMoveDown?.(button.id)}
             disabled={isLast}
-            className="h-6 w-6 p-0 disabled:opacity-20"
+            className="h-7 w-7 p-0 disabled:opacity-20 hover:text-bronze"
           >
-            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            <ChevronDown className="w-5 h-5" />
           </Button>
         </div>
         
