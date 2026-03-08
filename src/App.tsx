@@ -56,7 +56,7 @@ const App = () => (
             <Route path="/signup/creator" element={<PublicPageWrapper><CreatorSignup /></PublicPageWrapper>} />
             <Route path="/signup/brand" element={<PublicPageWrapper><BrandSignup /></PublicPageWrapper>} />
             {/* Kira onboarding removed for smoother signup flow */}
-            <Route path="/:username" element={<PublicProfile />} />
+            <Route path="/:username" element={<PublicPageWrapper><PublicProfile /></PublicPageWrapper>} />
             
             {/* Protected routes with AppLayout */}
             <Route path="/dashboard" element={<Navigate to="/kira" replace />} />
