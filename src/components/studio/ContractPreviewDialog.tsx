@@ -206,8 +206,13 @@ const ContractPreviewDialog = ({
   const bothSigned = localContract.creator_signature && localContract.client_signature;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[92vh] overflow-hidden flex flex-col p-0 gap-0 rounded-2xl">
+    <Dialog open={open} onOpenChange={(v) => { if (!v) setIsFullscreen(false); onOpenChange(v); }}>
+      <DialogContent className={cn(
+        "overflow-hidden flex flex-col p-0 gap-0 transition-all duration-300",
+        isFullscreen
+          ? "max-w-[100vw] w-screen h-screen max-h-screen rounded-none"
+          : "max-w-4xl max-h-[92vh] rounded-2xl"
+      )}>
         {/* Top Bar */}
         <div className="sticky top-0 z-10 bg-background border-b border-border/50 px-5 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
