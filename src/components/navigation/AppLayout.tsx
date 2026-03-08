@@ -21,6 +21,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
 
   useEffect(() => {
+    // Apply app theme preference (default dark for post-login)
+    const appTheme = localStorage.getItem("app-theme") || "dark";
+    setTheme(appTheme);
     checkAuth();
   }, []);
 
