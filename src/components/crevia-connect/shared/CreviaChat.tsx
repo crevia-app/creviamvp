@@ -711,12 +711,22 @@ const CreviaChat = () => {
     });
   };
 
-  const getFilePublicUrl = (filePath: string) => {
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+
+  const getFilePublicUrl = useCallback((filePath: string) => {
     // If already a full URL, return as-is
     if (filePath.startsWith("http")) return filePath;
-    const { data } = supabase.storage.from("chat-files").getPublicUrl(filePath);
-    return data.publicUrl;
-  };
+    // Return cached signed URL if available
+    if (signedUrls[filePath]) return signedUrls[filePath];
+    // Trigger async signed URL fetch
+    supabase.storage.from("chat-files").createSignedUrl(filePath, 3600).then(({ data }) => {
+      if (data?.signedUrl) {
+        setSignedUrls(prev => ({ ...prev, [filePath]: data.signedUrl }));
+      }
+    });
+    // Return placeholder while loading
+    return "";
+  }, [signedUrls]);
 
   // Helpers
   const getRoomDisplayName = (room: ChatRoom) => {
