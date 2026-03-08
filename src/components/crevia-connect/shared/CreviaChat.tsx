@@ -1251,24 +1251,46 @@ const CreviaChat = () => {
 
                                     {/* File attachment */}
                                     {isFile && msg.file_url && (
-                                      <div className="mb-2 p-2 rounded-lg bg-background/10 flex items-center gap-2">
+                                      <div className="mb-2">
+                                        {/* Image preview */}
                                         {msg.file_type?.startsWith("image/") ? (
-                                          <ImageIcon className="h-4 w-4 flex-shrink-0" />
+                                          <div className="mb-1">
+                                            <img
+                                              src={getFilePublicUrl(msg.file_url)}
+                                              alt={msg.file_name || "Image"}
+                                              className="max-w-full rounded-lg cursor-pointer max-h-[280px] object-cover"
+                                              onClick={() => window.open(getFilePublicUrl(msg.file_url!), "_blank")}
+                                              loading="lazy"
+                                            />
+                                            <div className="flex items-center justify-between mt-1">
+                                              <p className="text-[10px] opacity-60 truncate">{msg.file_name}</p>
+                                              <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => downloadFile(msg.file_url!, msg.file_name || "file")}
+                                                className="h-6 w-6 p-0 hover:bg-background/20"
+                                              >
+                                                <Download className="h-3 w-3" />
+                                              </Button>
+                                            </div>
+                                          </div>
                                         ) : (
-                                          <File className="h-4 w-4 flex-shrink-0" />
+                                          <div className="p-2 rounded-lg bg-background/10 flex items-center gap-2">
+                                            <File className="h-4 w-4 flex-shrink-0" />
+                                            <div className="flex-1 min-w-0">
+                                              <p className="text-xs font-medium truncate">{msg.file_name}</p>
+                                              <p className="text-[10px] opacity-70">{formatFileSize(msg.file_size)}</p>
+                                            </div>
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              onClick={() => downloadFile(msg.file_url!, msg.file_name || "file")}
+                                              className="h-7 w-7 p-0 hover:bg-background/20"
+                                            >
+                                              <Download className="h-3.5 w-3.5" />
+                                            </Button>
+                                          </div>
                                         )}
-                                        <div className="flex-1 min-w-0">
-                                          <p className="text-xs font-medium truncate">{msg.file_name}</p>
-                                          <p className="text-[10px] opacity-70">{formatFileSize(msg.file_size)}</p>
-                                        </div>
-                                        <Button
-                                          size="sm"
-                                          variant="ghost"
-                                          onClick={() => downloadFile(msg.file_url!, msg.file_name || "file")}
-                                          className="h-7 w-7 p-0 hover:bg-background/20"
-                                        >
-                                          <Download className="h-3.5 w-3.5" />
-                                        </Button>
                                       </div>
                                     )}
 
