@@ -517,12 +517,16 @@ const CreviaChat = () => {
   const sendInvoiceAttachment = async (invoice: AttachableInvoice) => {
     if (!selectedRoom || !currentUserId) return;
 
+    const plainContent = `📄 Invoice ${invoice.invoice_number} — ${new Intl.NumberFormat("en-KE", { style: "currency", currency: invoice.currency }).format(Number(invoice.total))} (${invoice.status})`;
+    const encryptedContent = await encrypt(plainContent, selectedRoom.id);
+
     await supabase.from("chat_messages").insert({
       room_id: selectedRoom.id,
       sender_id: currentUserId,
-      content: `📄 Invoice ${invoice.invoice_number} — ${new Intl.NumberFormat("en-KE", { style: "currency", currency: invoice.currency }).format(Number(invoice.total))} (${invoice.status})`,
+      content: encryptedContent || plainContent,
       message_type: "invoice",
       invoice_id: invoice.id,
+      is_encrypted: !!encryptedContent,
     });
 
     await supabase.from("chat_rooms").update({ updated_at: new Date().toISOString() }).eq("id", selectedRoom.id);
@@ -533,12 +537,16 @@ const CreviaChat = () => {
   const sendContractAttachment = async (contract: AttachableContract) => {
     if (!selectedRoom || !currentUserId) return;
 
+    const plainContent = `📋 Contract: ${contract.title} — ${contract.client_name} (${contract.status})`;
+    const encryptedContent = await encrypt(plainContent, selectedRoom.id);
+
     await supabase.from("chat_messages").insert({
       room_id: selectedRoom.id,
       sender_id: currentUserId,
-      content: `📋 Contract: ${contract.title} — ${contract.client_name} (${contract.status})`,
+      content: encryptedContent || plainContent,
       message_type: "contract",
       contract_id: contract.id,
+      is_encrypted: !!encryptedContent,
     });
 
     await supabase.from("chat_rooms").update({ updated_at: new Date().toISOString() }).eq("id", selectedRoom.id);
@@ -561,15 +569,19 @@ const CreviaChat = () => {
         .from("voice-notes")
         .getPublicUrl(fileName);
 
+      const plainContent = `🎤 Voice note (${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, "0")})`;
+      const encryptedContent = await encrypt(plainContent, selectedRoom.id);
+
       await supabase.from("chat_messages").insert({
         room_id: selectedRoom.id,
         sender_id: currentUserId,
-        content: `🎤 Voice note (${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, "0")})`,
+        content: encryptedContent || plainContent,
         message_type: "voice",
         file_url: urlData.publicUrl,
         file_name: `voice-${Date.now()}.${ext}`,
         file_type: blob.type || "audio/webm",
         file_size: blob.size,
+        is_encrypted: !!encryptedContent,
       });
 
       await supabase.from("chat_rooms").update({ updated_at: new Date().toISOString() }).eq("id", selectedRoom.id);
