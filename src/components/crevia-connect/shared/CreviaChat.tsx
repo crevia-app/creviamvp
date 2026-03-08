@@ -443,6 +443,10 @@ const CreviaChat = () => {
 
     await supabase.from("chat_room_members").insert(memberInserts);
 
+    // Setup E2EE for group
+    const allMemberIds = [currentUserId, ...selectedGroupMembers];
+    await setupRoomEncryption(newRoom.id, allMemberIds);
+
     setShowGroupCreate(false);
     setGroupName("");
     setSelectedGroupMembers([]);
