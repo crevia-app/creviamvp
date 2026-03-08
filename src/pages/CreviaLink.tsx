@@ -649,7 +649,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
             {embeddedTab === "appearance" && (
               <div className="space-y-6">
-                {/* Premium Themes */}
+                {/* Theme & Colors (includes background style) */}
                 <Card className="p-6 border-border/50">
                   <div className="flex items-center gap-3 mb-6">
                     <Palette className="w-6 h-6 text-bronze" />
@@ -661,7 +661,11 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                       <Label className="text-sm font-medium mb-4 block">Color Scheme</Label>
                       <RadioGroup
                         value={linkProfile?.theme || "dark"}
-                        onValueChange={(value) => setLinkProfile({ ...linkProfile, theme: value })}
+                        onValueChange={(value) => {
+                          if (value !== "custom_image") {
+                            setLinkProfile({ ...linkProfile, theme: value, background: { ...linkProfile?.background, style: "solid" } });
+                          }
+                        }}
                         className="grid grid-cols-2 md:grid-cols-3 gap-3"
                       >
                         {[
@@ -699,6 +703,90 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         ))}
                       </RadioGroup>
                     </div>
+
+                    {/* Background Style */}
+                    <div className="pt-4 border-t border-border/40">
+                      <Label className="text-sm font-medium mb-2 block">Background Style</Label>
+                      <Select
+                        value={linkProfile?.background?.style || "solid"}
+                        onValueChange={(value) => {
+                          if (value === "custom_image") {
+                            setLinkProfile({ ...linkProfile, theme: "custom_image", background: { ...linkProfile?.background, style: value } });
+                          } else {
+                            setLinkProfile({ ...linkProfile, background: { ...linkProfile?.background, style: value } });
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="h-11">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="solid">Solid Color</SelectItem>
+                          <SelectItem value="gradient">Gradient</SelectItem>
+                          <SelectItem value="pattern">Pattern</SelectItem>
+                          <SelectItem value="blur">Blur Effect</SelectItem>
+                          <SelectItem value="custom_image">Custom Image</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      {linkProfile?.background?.style === "custom_image" && (
+                        <div className="mt-4 space-y-3">
+                          <Label className="text-xs text-muted-foreground block">Upload your own background image</Label>
+                          {linkProfile?.background?.custom_bg_url && (
+                            <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
+                              <img src={linkProfile.background.custom_bg_url} alt="Background" className="w-full h-full object-cover" />
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                className="absolute top-2 right-2 h-7 text-xs"
+                                onClick={() => setLinkProfile({
+                                  ...linkProfile,
+                                  background: { ...linkProfile?.background, custom_bg_url: null }
+                                })}
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          )}
+                          <div>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              id="emb-bg-image-upload"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const { data: { session } } = await supabase.auth.getSession();
+                                if (!session) return;
+                                const ext = file.name.split(".").pop();
+                                const path = `${session.user.id}/bg-${Date.now()}.${ext}`;
+                                const { error } = await supabase.storage.from("avatars").upload(path, file);
+                                if (error) {
+                                  toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+                                  return;
+                                }
+                                const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+                                setLinkProfile({
+                                  ...linkProfile,
+                                  theme: "custom_image",
+                                  background: { ...linkProfile?.background, style: "custom_image", custom_bg_url: urlData.publicUrl }
+                                });
+                                toast({ title: "Background uploaded!" });
+                              }}
+                            />
+                            <Button
+                              variant="outline"
+                              className="w-full border-dashed border-2 border-bronze/40 hover:border-bronze"
+                              onClick={() => document.getElementById("emb-bg-image-upload")?.click()}
+                            >
+                              <ImageIcon className="w-4 h-4 mr-2" />
+                              Choose Image
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </Card>
 
@@ -729,95 +817,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
-                </Card>
-
-                {/* Background Style */}
-                <Card className="p-6 border-border/50">
-                  <div className="flex items-center gap-3 mb-6">
-                    <ImageIcon className="w-6 h-6 text-bronze" />
-                    <h3 className="font-vollkorn text-2xl font-bold">Background Style</h3>
-                  </div>
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-sm font-medium mb-2 block">Background Type</Label>
-                      <Select
-                        value={linkProfile?.background?.style || "solid"}
-                        onValueChange={(value) => setLinkProfile({ 
-                          ...linkProfile, 
-                          background: { ...linkProfile?.background, style: value }
-                        })}
-                      >
-                        <SelectTrigger className="h-11">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="solid">Solid Color</SelectItem>
-                          <SelectItem value="gradient">Gradient</SelectItem>
-                          <SelectItem value="pattern">Pattern</SelectItem>
-                          <SelectItem value="blur">Blur Effect</SelectItem>
-                          <SelectItem value="custom_image">Custom Image</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {linkProfile?.background?.style === "custom_image" && (
-                      <div className="mt-4 space-y-3">
-                        <Label className="text-sm font-medium block">Upload Background Image</Label>
-                        {linkProfile?.background?.custom_bg_url && (
-                          <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
-                            <img src={linkProfile.background.custom_bg_url} alt="Background" className="w-full h-full object-cover" />
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              className="absolute top-2 right-2 h-7 text-xs"
-                              onClick={() => setLinkProfile({
-                                ...linkProfile,
-                                background: { ...linkProfile?.background, custom_bg_url: null }
-                              })}
-                            >
-                              Remove
-                            </Button>
-                          </div>
-                        )}
-                        <div>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            id="emb-bg-image-upload"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              const { data: { session } } = await supabase.auth.getSession();
-                              if (!session) return;
-                              const ext = file.name.split(".").pop();
-                              const path = `${session.user.id}/bg-${Date.now()}.${ext}`;
-                              const { error } = await supabase.storage.from("avatars").upload(path, file);
-                              if (error) {
-                                toast({ title: "Upload failed", description: error.message, variant: "destructive" });
-                                return;
-                              }
-                              const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
-                              setLinkProfile({
-                                ...linkProfile,
-                                theme: "custom_image",
-                                background: { ...linkProfile?.background, style: "custom_image", custom_bg_url: urlData.publicUrl }
-                              });
-                              toast({ title: "Background uploaded!" });
-                            }}
-                          />
-                          <Button
-                            variant="outline"
-                            className="w-full border-dashed border-2 border-bronze/40 hover:border-bronze"
-                            onClick={() => document.getElementById("emb-bg-image-upload")?.click()}
-                          >
-                            <ImageIcon className="w-4 h-4 mr-2" />
-                            Choose Image
-                          </Button>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </Card>
 
@@ -1238,7 +1237,11 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                     <Label className="text-sm sm:text-base md:text-lg font-medium mb-3 md:mb-6 block">Color Scheme</Label>
                     <RadioGroup
                       value={linkProfile?.theme || "dark"}
-                      onValueChange={(value) => setLinkProfile({ ...linkProfile, theme: value })}
+                      onValueChange={(value) => {
+                        if (value !== "custom_image") {
+                          setLinkProfile({ ...linkProfile, theme: value, background: { ...linkProfile?.background, style: "solid" } });
+                        }
+                      }}
                       className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6"
                     >
                       {[
@@ -1258,13 +1261,12 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         { value: "emerald", label: "Emerald", gradient: "from-emerald-700 to-green-900" },
                         { value: "lavender", label: "Lavender", gradient: "from-violet-400 to-purple-500" },
                         { value: "champagne", label: "Champagne", gradient: "from-amber-100 to-yellow-50" },
-                      ].map((theme) => {
-                        return (
+                      ].map((theme) => (
                         <div key={theme.value} className="relative">
                           <RadioGroupItem value={theme.value} id={theme.value} className="peer sr-only" />
                           <Label
                             htmlFor={theme.value}
-                            className="flex flex-col items-center justify-between rounded-lg md:rounded-xl border-2 border-muted bg-white p-3 sm:p-4 md:p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
+                            className="flex flex-col items-center justify-between rounded-lg md:rounded-xl border-2 border-muted bg-card p-3 sm:p-4 md:p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
                           >
                             <div 
                               className={cn("w-full h-16 sm:h-20 md:h-28 rounded-md md:rounded-lg mb-2 sm:mb-3 md:mb-4 shadow-sm", 
@@ -1274,19 +1276,22 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                             <span className="font-semibold text-xs sm:text-sm md:text-base">{theme.label}</span>
                           </Label>
                         </div>
-                        );
-                      })}
+                      ))}
                     </RadioGroup>
                   </div>
 
-                  <div>
+                  {/* Background Style - embedded in Theme & Colors */}
+                  <div className="pt-4 border-t border-border/40">
                     <Label className="text-sm sm:text-base font-medium mb-2 block">Background Style</Label>
                     <Select
                       value={linkProfile?.background?.style || "solid"}
-                      onValueChange={(value) => setLinkProfile({ 
-                        ...linkProfile, 
-                        background: { ...linkProfile?.background, style: value }
-                      })}
+                      onValueChange={(value) => {
+                        if (value === "custom_image") {
+                          setLinkProfile({ ...linkProfile, theme: "custom_image", background: { ...linkProfile?.background, style: value } });
+                        } else {
+                          setLinkProfile({ ...linkProfile, background: { ...linkProfile?.background, style: value } });
+                        }
+                      }}
                     >
                       <SelectTrigger className="mt-2 h-10 sm:h-11 md:h-12 text-sm sm:text-base">
                         <SelectValue />
@@ -1302,7 +1307,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
                     {linkProfile?.background?.style === "custom_image" && (
                       <div className="mt-4 space-y-3">
-                        <Label className="text-sm font-medium block">Upload Background Image</Label>
+                        <Label className="text-xs text-muted-foreground block">Upload your own background image</Label>
                         {linkProfile?.background?.custom_bg_url && (
                           <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
                             <img src={linkProfile.background.custom_bg_url} alt="Background" className="w-full h-full object-cover" />

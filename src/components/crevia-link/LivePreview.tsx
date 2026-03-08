@@ -7,35 +7,57 @@ interface LivePreviewProps {
 }
 
 const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
-  // Get theme-based styles
-  const getThemeStyles = () => {
-    const theme = linkProfile?.theme || "dark";
+  const theme = linkProfile?.theme || "dark";
+  const bgStyle = linkProfile?.background?.style || "solid";
+  const customBgUrl = linkProfile?.background?.custom_bg_url;
+
+  const gradients: Record<string, string> = {
+    light: "from-gray-50 to-gray-100",
+    dark: "from-gray-800 to-gray-900",
+    bronze: "from-bronze to-bronze-dark",
+    minimal: "bg-white",
+    sunset: "from-orange-400 to-pink-600",
+    ocean: "from-blue-500 to-teal-400",
+    forest: "from-green-600 to-emerald-800",
+    royal: "from-purple-600 to-indigo-800",
+    midnight: "from-slate-900 to-blue-950",
+    rose: "from-rose-400 to-pink-300",
+    noir: "from-zinc-900 to-neutral-950",
+    sapphire: "from-blue-700 to-indigo-900",
+    burgundy: "from-rose-900 to-red-950",
+    emerald: "from-emerald-700 to-green-900",
+    lavender: "from-violet-400 to-purple-500",
+    champagne: "from-amber-100 to-yellow-50",
+  };
+
+  // Build background classes based on style
+  const getBackgroundClass = () => {
+    if (theme === "custom_image" && customBgUrl) return "";
+    const grad = gradients[theme] || gradients.dark;
+    if (theme === "minimal") return grad;
     
-    const gradients: Record<string, string> = {
-      light: "bg-gradient-to-br from-gray-50 to-gray-100",
-      dark: "bg-gradient-to-br from-gray-800 to-gray-900",
-      bronze: "bg-gradient-to-br from-bronze to-bronze-dark",
-      minimal: "bg-white",
-      sunset: "bg-gradient-to-br from-orange-400 to-pink-600",
-      ocean: "bg-gradient-to-br from-blue-500 to-teal-400",
-      forest: "bg-gradient-to-br from-green-600 to-emerald-800",
-      royal: "bg-gradient-to-br from-purple-600 to-indigo-800",
-      midnight: "bg-gradient-to-br from-slate-900 to-blue-950",
-      rose: "bg-gradient-to-br from-rose-400 to-pink-300",
-      noir: "bg-gradient-to-br from-zinc-900 to-neutral-950",
-      sapphire: "bg-gradient-to-br from-blue-700 to-indigo-900",
-      burgundy: "bg-gradient-to-br from-rose-900 to-red-950",
-      emerald: "bg-gradient-to-br from-emerald-700 to-green-900",
-      lavender: "bg-gradient-to-br from-violet-400 to-purple-500",
-      champagne: "bg-gradient-to-br from-amber-100 to-yellow-50",
-    };
-    
-    return { style: {}, className: gradients[theme] || gradients.dark };
+    switch (bgStyle) {
+      case "gradient":
+        return `bg-gradient-to-br ${grad}`;
+      case "pattern":
+        return `bg-gradient-to-br ${grad}`;
+      case "blur":
+        return `bg-gradient-to-br ${grad}`;
+      case "solid":
+      default:
+        return `bg-gradient-to-br ${grad}`;
+    }
+  };
+
+  const getInlineStyles = (): React.CSSProperties => {
+    if (theme === "custom_image" && customBgUrl) {
+      return { backgroundImage: `url(${customBgUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' };
+    }
+    return {};
   };
 
   const getTextColor = () => {
-    const theme = linkProfile?.theme || "dark";
-    const lightTextThemes = ["dark", "bronze", "sunset", "ocean", "forest", "royal", "midnight", "noir", "sapphire", "burgundy", "emerald", "lavender"];
+    const lightTextThemes = ["dark", "bronze", "sunset", "ocean", "forest", "royal", "midnight", "noir", "sapphire", "burgundy", "emerald", "lavender", "custom_image"];
     return lightTextThemes.includes(theme) ? "text-white" : "text-gray-900";
   };
 
@@ -50,9 +72,9 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
     return styles[style] || "rounded-full";
   };
 
-  const { style: bgStyle, className: bgClass } = getThemeStyles();
   const textColor = getTextColor();
   const buttonStyle = getButtonStyle();
+  const isCustomImage = theme === "custom_image" && customBgUrl;
 
   return (
     <div className="relative mx-auto w-[280px]">
@@ -63,13 +85,28 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
         
         {/* Screen */}
         <div 
-          className={cn("h-[520px] overflow-y-auto", bgClass)}
-          style={bgStyle}
+          className={cn("h-[520px] overflow-y-auto relative", getBackgroundClass())}
+          style={getInlineStyles()}
         >
-          <div className="pt-10 pb-8 px-5">
+          {/* Overlay for custom image */}
+          {isCustomImage && <div className="absolute inset-0 bg-black/50" />}
+          
+          {/* Pattern overlay */}
+          {bgStyle === "pattern" && !isCustomImage && (
+            <div className="absolute inset-0 opacity-10" style={{
+              backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
+              backgroundSize: '16px 16px'
+            }} />
+          )}
+          
+          {/* Blur overlay */}
+          {bgStyle === "blur" && !isCustomImage && (
+            <div className="absolute inset-0 backdrop-blur-sm bg-white/5" />
+          )}
+
+          <div className="pt-10 pb-8 px-5 relative z-10">
             {/* Profile Section */}
             <div className="text-center mb-6">
-              {/* Avatar */}
               {linkProfile?.profile_picture ? (
                 <Avatar className="w-20 h-20 mx-auto mb-3 ring-2 ring-white/20">
                   <AvatarImage src={linkProfile.profile_picture} />
@@ -85,17 +122,14 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
                 </div>
               )}
               
-              {/* Name */}
               <h2 className={cn("font-semibold text-lg mb-1", textColor)}>
                 {linkProfile?.display_name || "Your Name"}
               </h2>
               
-              {/* Username */}
               <p className={cn("text-sm opacity-70 mb-2", textColor)}>
                 @{linkProfile?.username || "username"}
               </p>
               
-              {/* Bio */}
               {linkProfile?.bio && (
                 <p className={cn("text-xs opacity-80 max-w-[200px] mx-auto", textColor)}>
                   {linkProfile.bio}

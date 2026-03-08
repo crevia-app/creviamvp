@@ -66,6 +66,8 @@ const PublicProfile = () => {
 
   const getThemeStyles = () => {
     const theme = profile?.theme || "dark";
+    const bgStyle = profile?.background?.style || "solid";
+    
     const themeMap: Record<string, { className: string }> = {
       light: { className: "bg-white text-gray-900" },
       dark: { className: "bg-gray-900 text-white" },
@@ -86,6 +88,28 @@ const PublicProfile = () => {
       custom_image: { className: "text-white" },
     };
     return themeMap[theme] || themeMap.dark;
+  };
+
+  const getBackgroundExtras = () => {
+    const bgStyle = profile?.background?.style || "solid";
+    const theme = profile?.theme || "dark";
+    if (theme === "custom_image") return {};
+    
+    const extras: { className?: string; overlayStyle?: React.CSSProperties } = {};
+    
+    if (bgStyle === "pattern") {
+      extras.overlayStyle = {
+        backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
+        backgroundSize: '20px 20px',
+        opacity: 0.08,
+      };
+    }
+    
+    if (bgStyle === "blur") {
+      extras.className = "backdrop-blur-md bg-white/5";
+    }
+    
+    return extras;
   };
 
   // Get theme-based styles
@@ -196,6 +220,8 @@ const PublicProfile = () => {
   const customBgUrl = profile?.background?.custom_bg_url;
   const isCustomImage = profile?.theme === "custom_image" && customBgUrl;
   
+  const bgExtras = getBackgroundExtras();
+  
   return (
     <div 
       className={`min-h-screen ${themeStyles.className} ${getFontFamily()} ${getFontSize()} py-12 px-6 relative`}
@@ -205,6 +231,8 @@ const PublicProfile = () => {
       }}
     >
       {isCustomImage && <div className="absolute inset-0 bg-black/50" />}
+      {bgExtras.overlayStyle && <div className="absolute inset-0" style={bgExtras.overlayStyle} />}
+      {bgExtras.className && <div className={`absolute inset-0 ${bgExtras.className}`} />}
       <div className={`${getPageWidth()} ${layoutClass} ${fadeAnimation ? 'animate-fade-in' : ''} relative z-10`}>
         {/* Profile Header */}
         <div className="text-center mb-8">
