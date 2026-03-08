@@ -360,17 +360,15 @@ const CreviaChat = () => {
   const selectRoom = async (room: ChatRoom) => {
     setSelectedRoom(room);
     
-    // Ensure room has encryption keys, setup if missing
+    // Ensure room has encryption keys, setup if missing or broken
     if (currentUserId && room.members && room.members.length > 0) {
-      const { data: existingKey } = await supabase
-        .from("room_encrypted_keys" as any)
-        .select("id")
-        .eq("room_id", room.id)
-        .eq("user_id", currentUserId)
-        .single() as any;
+      const memberIds = room.members.map(m => m.user_id);
       
-      if (!existingKey) {
-        const memberIds = room.members.map(m => m.user_id);
+      // Check if we have a working room key
+      const roomKey = await getRoomKey(room.id);
+      if (!roomKey) {
+        // Try to setup encryption - this will create new keys if we're the first
+        // or re-distribute if we have access
         await setupRoomEncryption(room.id, memberIds);
       }
     }
@@ -381,6 +379,7 @@ const CreviaChat = () => {
   // Re-setup encryption and retry fetching messages if decryption fails
   const retryDecryption = async (roomId: string, members: RoomMember[]) => {
     if (!currentUserId || members.length === 0) return;
+    toast.info("Retrying decryption...");
     const memberIds = members.map(m => m.user_id);
     await setupRoomEncryption(roomId, memberIds);
     await fetchMessages(roomId);
