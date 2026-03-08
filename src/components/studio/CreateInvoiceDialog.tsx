@@ -78,8 +78,8 @@ const CreateInvoiceDialog = ({
       setIssueDate(editingInvoice.issue_date);
       setDueDate(editingInvoice.due_date);
       setCurrency(editingInvoice.currency);
-      setTaxRate(editingInvoice.tax_rate || 0);
-      setDiscountAmount(editingInvoice.discount_amount || 0);
+      setTaxRate(editingInvoice.tax_rate ? String(editingInvoice.tax_rate) : "");
+      setDiscountAmount(editingInvoice.discount_amount ? String(editingInvoice.discount_amount) : "");
       setNotes(editingInvoice.notes || "");
       setTerms(editingInvoice.terms || "");
       
