@@ -10,7 +10,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { 
   Printer, CheckCircle2, FileSignature, Calendar, Coins, PenTool, Send, 
-  Edit3, Save, X, Plus, Trash2, FileText
+  Edit3, Save, X, Plus, Trash2, FileText, Maximize2, Minimize2
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -53,6 +53,7 @@ const ContractPreviewDialog = ({
   });
   const [savingDetails, setSavingDetails] = useState(false);
   const [activeSection, setActiveSection] = useState<"document" | "signatures">("document");
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     if (contract) {
@@ -205,8 +206,13 @@ const ContractPreviewDialog = ({
   const bothSigned = localContract.creator_signature && localContract.client_signature;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[92vh] overflow-hidden flex flex-col p-0 gap-0 rounded-2xl">
+    <Dialog open={open} onOpenChange={(v) => { if (!v) setIsFullscreen(false); onOpenChange(v); }}>
+      <DialogContent className={cn(
+        "overflow-hidden flex flex-col p-0 gap-0 transition-all duration-300",
+        isFullscreen
+          ? "max-w-[100vw] w-screen h-screen max-h-screen rounded-none"
+          : "max-w-4xl max-h-[92vh] rounded-2xl"
+      )}>
         {/* Top Bar */}
         <div className="sticky top-0 z-10 bg-background border-b border-border/50 px-5 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
@@ -231,6 +237,10 @@ const ContractPreviewDialog = ({
             )}
             <Button variant="ghost" size="sm" onClick={handlePrint} className="gap-1.5 h-8 rounded-lg text-xs">
               <Printer className="h-3 w-3" /> Print
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setIsFullscreen(!isFullscreen)} className="gap-1.5 h-8 rounded-lg text-xs">
+              {isFullscreen ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
+              {isFullscreen ? "Exit" : "Full"}
             </Button>
           </div>
         </div>
