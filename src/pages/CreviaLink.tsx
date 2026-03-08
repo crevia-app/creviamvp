@@ -11,7 +11,7 @@ import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check, Globe, Shield, Bell, BarChart3, TrendingUp, MousePointer, ExternalLink, Camera, AlertCircle, Users, Star, ArrowUp, ArrowDown, ChevronUp, ChevronDown } from "lucide-react";
+import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check, Globe, Shield, Bell, BarChart3, TrendingUp, MousePointer, ExternalLink, Camera, AlertCircle, Users, Star, ArrowUp, ArrowDown, ChevronUp, ChevronDown, Image as ImageIcon } from "lucide-react";
 import { AddButtonDialog } from "@/components/crevia-link/AddButtonDialog";
 import { EditButtonDialog } from "@/components/crevia-link/EditButtonDialog";
 import { ButtonItem } from "@/components/crevia-link/ButtonItem";
@@ -673,23 +673,20 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                           { value: "ocean", label: "Ocean", gradient: "from-blue-500 to-teal-400" },
                           { value: "forest", label: "Forest", gradient: "from-green-600 to-emerald-800" },
                           { value: "royal", label: "Royal", gradient: "from-purple-600 to-indigo-800" },
-                          { value: "midnight", label: "Midnight", gradient: "from-slate-900 to-blue-950", premium: true },
-                          { value: "rose", label: "Rosé", gradient: "from-rose-400 to-pink-300", premium: true },
-                          { value: "noir", label: "Noir", gradient: "from-zinc-900 to-neutral-950", premium: true },
-                          { value: "sapphire", label: "Sapphire", gradient: "from-blue-700 to-indigo-900", premium: true },
-                          { value: "burgundy", label: "Burgundy", gradient: "from-rose-900 to-red-950", premium: true },
-                          { value: "emerald", label: "Emerald", gradient: "from-emerald-700 to-green-900", premium: true },
-                          { value: "lavender", label: "Lavender", gradient: "from-violet-400 to-purple-500", premium: true },
-                          { value: "champagne", label: "Champagne", gradient: "from-amber-100 to-yellow-50", premium: true },
+                          { value: "midnight", label: "Midnight", gradient: "from-slate-900 to-blue-950" },
+                          { value: "rose", label: "Rosé", gradient: "from-rose-400 to-pink-300" },
+                          { value: "noir", label: "Noir", gradient: "from-zinc-900 to-neutral-950" },
+                          { value: "sapphire", label: "Sapphire", gradient: "from-blue-700 to-indigo-900" },
+                          { value: "burgundy", label: "Burgundy", gradient: "from-rose-900 to-red-950" },
+                          { value: "emerald", label: "Emerald", gradient: "from-emerald-700 to-green-900" },
+                          { value: "lavender", label: "Lavender", gradient: "from-violet-400 to-purple-500" },
+                          { value: "champagne", label: "Champagne", gradient: "from-amber-100 to-yellow-50" },
                         ].map((theme) => (
                           <div key={theme.value} className="relative">
                             <RadioGroupItem value={theme.value} id={`embedded-${theme.value}`} className="peer sr-only" />
                             <Label
                               htmlFor={`embedded-${theme.value}`}
-                              className={cn(
-                                "flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-card p-4 hover:bg-accent peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all",
-                                theme.premium && "ring-1 ring-amber-400/30"
-                              )}
+                               className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-card p-4 hover:bg-accent peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
                             >
                               <div 
                                 className={cn("w-full h-16 rounded-lg mb-3 shadow-sm", 
@@ -697,9 +694,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                                 )}
                               />
                               <span className="text-sm font-medium">{theme.label}</span>
-                              {theme.premium && (
-                                <span className="mt-1 text-[10px] font-medium text-amber-500">PREMIUM</span>
-                              )}
                             </Label>
                           </div>
                         ))}
@@ -1167,24 +1161,21 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         { value: "ocean", label: "Ocean", gradient: "from-blue-500 to-teal-400" },
                         { value: "forest", label: "Forest", gradient: "from-green-600 to-emerald-800" },
                         { value: "royal", label: "Royal", gradient: "from-purple-600 to-indigo-800" },
-                        { value: "midnight", label: "Midnight", gradient: "from-slate-900 to-blue-950", premium: true },
-                        { value: "rose", label: "Rosé", gradient: "from-rose-400 to-pink-300", premium: true },
-                        { value: "noir", label: "Noir", gradient: "from-zinc-900 to-neutral-950", premium: true },
-                        { value: "sapphire", label: "Sapphire", gradient: "from-blue-700 to-indigo-900", premium: true },
-                        { value: "burgundy", label: "Burgundy", gradient: "from-rose-900 to-red-950", premium: true },
-                        { value: "emerald", label: "Emerald", gradient: "from-emerald-700 to-green-900", premium: true },
-                        { value: "lavender", label: "Lavender", gradient: "from-violet-400 to-purple-500", premium: true },
-                        { value: "champagne", label: "Champagne", gradient: "from-amber-100 to-yellow-50", premium: true },
+                        { value: "midnight", label: "Midnight", gradient: "from-slate-900 to-blue-950" },
+                        { value: "rose", label: "Rosé", gradient: "from-rose-400 to-pink-300" },
+                        { value: "noir", label: "Noir", gradient: "from-zinc-900 to-neutral-950" },
+                        { value: "sapphire", label: "Sapphire", gradient: "from-blue-700 to-indigo-900" },
+                        { value: "burgundy", label: "Burgundy", gradient: "from-rose-900 to-red-950" },
+                        { value: "emerald", label: "Emerald", gradient: "from-emerald-700 to-green-900" },
+                        { value: "lavender", label: "Lavender", gradient: "from-violet-400 to-purple-500" },
+                        { value: "champagne", label: "Champagne", gradient: "from-amber-100 to-yellow-50" },
                       ].map((theme) => {
                         return (
                         <div key={theme.value} className="relative">
                           <RadioGroupItem value={theme.value} id={theme.value} className="peer sr-only" />
                           <Label
                             htmlFor={theme.value}
-                            className={cn(
-                              "flex flex-col items-center justify-between rounded-lg md:rounded-xl border-2 border-muted bg-white p-3 sm:p-4 md:p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all",
-                              theme.premium && "ring-1 ring-amber-400/50"
-                            )}
+                            className="flex flex-col items-center justify-between rounded-lg md:rounded-xl border-2 border-muted bg-white p-3 sm:p-4 md:p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
                           >
                             <div 
                               className={cn("w-full h-16 sm:h-20 md:h-28 rounded-md md:rounded-lg mb-2 sm:mb-3 md:mb-4 shadow-sm", 
@@ -1216,8 +1207,67 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         <SelectItem value="gradient">Gradient</SelectItem>
                         <SelectItem value="pattern">Pattern</SelectItem>
                         <SelectItem value="blur">Blur Effect</SelectItem>
+                        <SelectItem value="custom_image">Custom Image</SelectItem>
                       </SelectContent>
                     </Select>
+
+                    {linkProfile?.background?.style === "custom_image" && (
+                      <div className="mt-4 space-y-3">
+                        <Label className="text-sm font-medium block">Upload Background Image</Label>
+                        {linkProfile?.background?.custom_bg_url && (
+                          <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
+                            <img src={linkProfile.background.custom_bg_url} alt="Background" className="w-full h-full object-cover" />
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="absolute top-2 right-2 h-7 text-xs"
+                              onClick={() => setLinkProfile({
+                                ...linkProfile,
+                                background: { ...linkProfile?.background, custom_bg_url: null }
+                              })}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        )}
+                        <div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            id="bg-image-upload"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const { data: { session } } = await supabase.auth.getSession();
+                              if (!session) return;
+                              const ext = file.name.split(".").pop();
+                              const path = `${session.user.id}/bg-${Date.now()}.${ext}`;
+                              const { error } = await supabase.storage.from("avatars").upload(path, file);
+                              if (error) {
+                                toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+                                return;
+                              }
+                              const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+                              setLinkProfile({
+                                ...linkProfile,
+                                theme: "custom_image",
+                                background: { ...linkProfile?.background, style: "custom_image", custom_bg_url: urlData.publicUrl }
+                              });
+                              toast({ title: "Background uploaded!" });
+                            }}
+                          />
+                          <Button
+                            variant="outline"
+                            className="w-full border-dashed border-2 border-bronze/40 hover:border-bronze"
+                            onClick={() => document.getElementById("bg-image-upload")?.click()}
+                          >
+                            <ImageIcon className="w-4 h-4 mr-2" />
+                            Choose Image
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </Card>

@@ -83,6 +83,7 @@ const PublicProfile = () => {
       emerald: { className: "bg-gradient-to-br from-emerald-700 to-green-900 text-white" },
       lavender: { className: "bg-gradient-to-br from-violet-400 to-purple-500 text-white" },
       champagne: { className: "bg-gradient-to-br from-amber-100 to-yellow-50 text-gray-900" },
+      custom_image: { className: "text-white" },
     };
     return themeMap[theme] || themeMap.dark;
   };
@@ -192,13 +193,19 @@ const PublicProfile = () => {
   const fadeAnimation = profile?.background?.fade_animation !== false;
 
   const themeStyles = getThemeStyles();
+  const customBgUrl = profile?.background?.custom_bg_url;
+  const isCustomImage = profile?.theme === "custom_image" && customBgUrl;
   
   return (
     <div 
-      className={`min-h-screen ${themeStyles.className} ${getFontFamily()} ${getFontSize()} py-12 px-6`}
-      style={{ scrollBehavior: smoothScroll ? 'smooth' : 'auto' }}
+      className={`min-h-screen ${themeStyles.className} ${getFontFamily()} ${getFontSize()} py-12 px-6 relative`}
+      style={{ 
+        scrollBehavior: smoothScroll ? 'smooth' : 'auto',
+        ...(isCustomImage ? { backgroundImage: `url(${customBgUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' } : {})
+      }}
     >
-      <div className={`${getPageWidth()} ${layoutClass} ${fadeAnimation ? 'animate-fade-in' : ''}`}>
+      {isCustomImage && <div className="absolute inset-0 bg-black/50" />}
+      <div className={`${getPageWidth()} ${layoutClass} ${fadeAnimation ? 'animate-fade-in' : ''} relative z-10`}>
         {/* Profile Header */}
         <div className="text-center mb-8">
           {profile?.profile_picture && (
