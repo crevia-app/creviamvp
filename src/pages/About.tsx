@@ -164,22 +164,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* ═══════════════ 5-YEAR GOAL ═══════════════ */}
-      <section className="py-16 md:py-24 px-4 md:px-6">
-        <div className="container mx-auto max-w-3xl text-center">
-          <div className="rounded-3xl bg-gradient-to-br from-bronze to-bronze-dark p-10 md:p-16 shadow-2xl">
-            <p className="text-white/70 font-poppins font-semibold text-sm tracking-widest uppercase mb-4">
-              Our 5-Year Goal
-            </p>
-            <div className="text-5xl sm:text-6xl md:text-8xl font-vollkorn font-bold text-white mb-4">
-              1 Million
-            </div>
-            <p className="text-lg md:text-xl text-white/90 leading-relaxed">
-              Stories told. Voices amplified. Businesses built.
-            </p>
-          </div>
-        </div>
-      </section>
 
       {/* ═══════════════ CTA ═══════════════ */}
       <section className="relative py-20 md:py-28 px-4 md:px-6 overflow-hidden">
