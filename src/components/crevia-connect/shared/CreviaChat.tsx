@@ -406,6 +406,9 @@ const CreviaChat = () => {
       { room_id: newRoom.id, user_id: otherUserId, role: "member" },
     ]);
 
+    // Setup E2EE for this room
+    await setupRoomEncryption(newRoom.id, [currentUserId, otherUserId]);
+
     setShowNewChat(false);
     await fetchRooms();
     selectRoom({ ...newRoom, members: [], lastMessage: null, unreadCount: 0 });
