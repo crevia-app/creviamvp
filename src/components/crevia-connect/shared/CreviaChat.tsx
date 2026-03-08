@@ -141,6 +141,12 @@ const CreviaChat = () => {
   const [loadingRooms, setLoadingRooms] = useState(true);
   const [isRecordingVoice, setIsRecordingVoice] = useState(false);
   const [uploadingVoice, setUploadingVoice] = useState(false);
+  const [reactions, setReactions] = useState<Record<string, { emoji: string; count: number; reacted: boolean }[]>>({});
+  const [pinnedMessageIds, setPinnedMessageIds] = useState<Set<string>>(new Set());
+  const [favoritedMessageIds, setFavoritedMessageIds] = useState<Set<string>>(new Set());
+  const [deletedForMeIds, setDeletedForMeIds] = useState<Set<string>>(new Set());
+  const [showForwardDialog, setShowForwardDialog] = useState(false);
+  const [forwardingMessageId, setForwardingMessageId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
