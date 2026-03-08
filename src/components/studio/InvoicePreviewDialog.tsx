@@ -124,8 +124,13 @@ const InvoicePreviewDialog = ({
   const status = statusConfig[invoice.status] || statusConfig.draft;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
+    <Dialog open={open} onOpenChange={(v) => { if (!v) setIsFullscreen(false); onOpenChange(v); }}>
+      <DialogContent className={cn(
+        "overflow-y-auto p-0 transition-all duration-300",
+        isFullscreen
+          ? "max-w-[100vw] w-screen h-screen max-h-screen rounded-none"
+          : "max-w-3xl max-h-[90vh]"
+      )}>
         {/* Toolbar */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-6 py-3 flex items-center justify-between">
           <DialogTitle className="font-vollkorn text-lg">Invoice Preview</DialogTitle>
@@ -139,6 +144,10 @@ const InvoicePreviewDialog = ({
             <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5">
               <Printer className="h-3.5 w-3.5" />
               Print
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setIsFullscreen(!isFullscreen)} className="gap-1.5">
+              {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+              {isFullscreen ? "Exit" : "Fullscreen"}
             </Button>
           </div>
         </div>
