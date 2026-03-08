@@ -178,18 +178,13 @@ const ContractsTab = () => {
     fetchContracts();
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const handleFileUpload = async (file: File, contractType: string, title: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const fileName = file.name.replace(/\.[^/.]+$/, "");
     const fileExt = file.name.split(".").pop()?.toLowerCase();
     
     let content = "";
-    let fileUrl: string | null = null;
 
     // For text-based files, read the content directly for editing
     if (fileExt === "txt" || fileExt === "md") {
@@ -204,24 +199,17 @@ const ContractsTab = () => {
 
       if (uploadError) {
         toast.error("Failed to upload file: " + uploadError.message);
-        if (fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
-
-      const { data: urlData } = supabase.storage
-        .from("contract-uploads")
-        .getPublicUrl(storagePath);
-
-      fileUrl = urlData?.publicUrl || null;
 
       content = `[Original file: ${file.name}]\n[File type: ${file.type || fileExt}]\n[Uploaded: ${new Date().toLocaleString()}]\n\n---\n\nYou can edit this contract content below. The original document has been securely stored.\n\n---\n\n[Add or paste your contract terms here]`;
     }
 
     const { data, error } = await supabase.from("contracts").insert({
       user_id: session.user.id,
-      title: fileName,
+      title,
       client_name: "To be specified",
-      contract_type: "uploaded",
+      contract_type: contractType,
       content,
       status: "draft",
       currency: "KES",
@@ -229,13 +217,11 @@ const ContractsTab = () => {
 
     if (error) {
       toast.error("Failed to create contract record");
-      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
     toast.success("Contract uploaded! You can now edit all details.");
     fetchContracts();
-    if (fileInputRef.current) fileInputRef.current.value = "";
     
     // Open the edit dialog immediately so user can fill in details
     if (data) {
