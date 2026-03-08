@@ -98,6 +98,7 @@ const ContractsTab = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [previewContract, setPreviewContract] = useState<Contract | null>(null);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchContracts = async () => {
