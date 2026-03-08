@@ -1361,28 +1361,115 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
           {/* ===== SETTINGS TAB ===== */}
           {currentTab === "settings" && (
-            <Card className="p-6 md:p-8 border-border/50">
-              <h3 className="font-vollkorn text-3xl md:text-4xl font-bold mb-8 text-bronze">Settings</h3>
-              
-              <div className="space-y-8">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <Label className="text-base font-medium">Contact Button</Label>
-                    <p className="text-sm text-muted-foreground mt-1">Allow visitors to contact you</p>
-                  </div>
-                  <Switch
-                    checked={linkProfile?.contact_enabled || false}
-                    onCheckedChange={(checked) => 
-                      setLinkProfile({ ...linkProfile, contact_enabled: checked })
-                    }
-                  />
+            <div className="space-y-6 md:space-y-8">
+              {/* General Settings */}
+              <Card className="p-6 md:p-8 border-border/50">
+                <div className="flex items-center gap-3 mb-6">
+                  <Globe className="w-6 h-6 text-bronze" />
+                  <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">General Settings</h3>
                 </div>
+                <div className="space-y-6">
+                  {/* Contact Button */}
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <Label className="text-base font-medium">Contact Button</Label>
+                      <p className="text-sm text-muted-foreground mt-1">Allow visitors to contact you via email</p>
+                    </div>
+                    <Switch
+                      checked={linkProfile?.contact_enabled || false}
+                      onCheckedChange={(checked) => setLinkProfile({ ...linkProfile, contact_enabled: checked })}
+                    />
+                  </div>
+                  {linkProfile?.contact_enabled && (
+                    <div>
+                      <Label className="text-sm font-medium mb-2 block">Contact Email</Label>
+                      <Input
+                        value={linkProfile?.contact_email || ""}
+                        onChange={(e) => setLinkProfile({ ...linkProfile, contact_email: e.target.value })}
+                        placeholder="your@email.com"
+                        className="h-11"
+                      />
+                    </div>
+                  )}
 
-                <Button onClick={handleSave} disabled={saving} className="w-full bg-bronze hover:bg-bronze-dark h-12">
-                  {saving ? "Saving..." : "Save Settings"}
-                </Button>
-              </div>
-            </Card>
+                  {/* Verified Badge */}
+                  {profile?.is_verified && (
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <Label className="text-base font-medium">Verified Badge</Label>
+                        <p className="text-sm text-muted-foreground mt-1">Show your verified badge on your page</p>
+                      </div>
+                      <Switch
+                        checked={linkProfile?.show_verified_badge || false}
+                        onCheckedChange={(checked) => setLinkProfile({ ...linkProfile, show_verified_badge: checked })}
+                      />
+                    </div>
+                  )}
+
+                  {/* Crevia Branding */}
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <Label className="text-base font-medium">Crevia Branding</Label>
+                      <p className="text-sm text-muted-foreground mt-1">Show "Made with Crevia" on your page</p>
+                    </div>
+                    <Switch
+                      checked={linkProfile?.show_crevia_branding !== false}
+                      onCheckedChange={(checked) => setLinkProfile({ ...linkProfile, show_crevia_branding: checked })}
+                    />
+                  </div>
+                </div>
+              </Card>
+
+              {/* SEO & Sharing */}
+              <Card className="p-6 md:p-8 border-border/50">
+                <div className="flex items-center gap-3 mb-6">
+                  <Shield className="w-6 h-6 text-bronze" />
+                  <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">SEO & Sharing</h3>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Page Title</Label>
+                    <Input
+                      value={linkProfile?.seo_title || ""}
+                      onChange={(e) => setLinkProfile({ ...linkProfile, seo_title: e.target.value })}
+                      placeholder="Custom title for search engines"
+                      className="h-11"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Meta Description</Label>
+                    <Textarea
+                      value={linkProfile?.seo_description || ""}
+                      onChange={(e) => setLinkProfile({ ...linkProfile, seo_description: e.target.value })}
+                      placeholder="Description for search results..."
+                      className="min-h-[80px] resize-none"
+                    />
+                  </div>
+                </div>
+              </Card>
+
+              {/* Share Your Link */}
+              <Card className="p-6 md:p-8 border-border/50">
+                <div className="flex items-center gap-3 mb-6">
+                  <ExternalLink className="w-6 h-6 text-bronze" />
+                  <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">Your Link</h3>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Input
+                    readOnly
+                    value={`${window.location.origin}/${linkProfile?.username}`}
+                    className="h-11 bg-muted/50"
+                  />
+                  <Button onClick={handleCopyLink} variant="outline" className="h-11 flex-shrink-0">
+                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </Card>
+
+              <Button onClick={handleSave} disabled={saving} className="w-full bg-bronze hover:bg-bronze-dark h-12">
+                {saving ? "Saving..." : "Save Settings"}
+              </Button>
+            </div>
           )}
 
           {/* ===== ANALYTICS TAB ===== */}
