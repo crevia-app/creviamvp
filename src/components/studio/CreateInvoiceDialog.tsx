@@ -407,7 +407,7 @@ const CreateInvoiceDialog = ({
                       type="number"
                       placeholder="0.00"
                       value={item.unit_price}
-                      onChange={(e) => updateItemTotal(index, "unit_price", Number(e.target.value))}
+                      onChange={(e) => updateItemTotal(index, "unit_price", e.target.value)}
                       min={0}
                     />
                   </div>
