@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/select";
 import CreateContractDialog from "./CreateContractDialog";
 import ContractPreviewDialog from "./ContractPreviewDialog";
+import UploadContractDialog from "./UploadContractDialog";
 
 interface Contract {
   id: string;
