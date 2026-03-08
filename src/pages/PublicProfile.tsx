@@ -83,6 +83,7 @@ const PublicProfile = () => {
       emerald: { className: "bg-gradient-to-br from-emerald-700 to-green-900 text-white" },
       lavender: { className: "bg-gradient-to-br from-violet-400 to-purple-500 text-white" },
       champagne: { className: "bg-gradient-to-br from-amber-100 to-yellow-50 text-gray-900" },
+      custom_image: { className: "text-white" },
     };
     return themeMap[theme] || themeMap.dark;
   };
