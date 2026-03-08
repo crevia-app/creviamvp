@@ -4,6 +4,17 @@ import { Switch } from "@/components/ui/switch";
 import { Pencil, Trash2, Link2, ChevronUp, ChevronDown } from "lucide-react";
 import { iconMap } from "./iconOptions";
 
+interface ButtonItemProps {
+  button: any;
+  onEdit: (button: any) => void;
+  onDelete: (id: string) => void;
+  onToggleVisibility: (id: string, visible: boolean) => void;
+  onMoveUp?: (id: string) => void;
+  onMoveDown?: (id: string) => void;
+  isFirst?: boolean;
+  isLast?: boolean;
+}
+
 export function ButtonItem({ button, onEdit, onDelete, onToggleVisibility, onMoveUp, onMoveDown, isFirst, isLast }: ButtonItemProps) {
   const Icon = iconMap[button.icon] || Link2;
 
