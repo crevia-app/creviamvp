@@ -14,10 +14,12 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const MobileBottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [profile, setProfile] = useState<any>(null);
   const [userType, setUserType] = useState<"creator" | "brand" | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -83,21 +85,19 @@ const MobileBottomNav = () => {
           );
         })}
 
-        {/* More Sheet */}
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
             <button className="flex flex-col items-center justify-center gap-1 text-white/60">
               <MoreHorizontal className="h-5 w-5" />
-              <span className="font-poppins text-xs font-medium">More</span>
+              <span className="font-poppins text-xs font-medium">{t("common.more")}</span>
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="bg-black border-white/10 h-[85vh] max-h-[85vh] flex flex-col p-0">
             <SheetHeader className="px-4 pt-4 pb-2 flex-shrink-0">
-              <SheetTitle className="text-white font-vollkorn text-lg">More Options</SheetTitle>
+              <SheetTitle className="text-white font-vollkorn text-lg">{t("nav.moreOptions")}</SheetTitle>
             </SheetHeader>
             
             <ScrollArea className="flex-1 px-4">
-              {/* Profile Info */}
               {profile && (
                 <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 mb-4">
                   <Avatar className="h-12 w-12 ring-2 ring-bronze/30 flex-shrink-0">
@@ -121,25 +121,23 @@ const MobileBottomNav = () => {
               )}
               
               <div className="space-y-4 pb-8">
-                {/* Tools Section */}
                 <div className="space-y-1">
-                  <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider px-2 mb-1">Tools</p>
+                  <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider px-2 mb-1">{t("nav.tools")}</p>
                   <Button 
                     variant="ghost" 
                     className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-11 text-sm font-medium rounded-xl"
                     onClick={() => handleNavigation("/crevia-link")}
                   >
-                    Crevia Link
+                    {t("nav.creviaLink")}
                   </Button>
                 </div>
 
                 <Separator className="bg-white/10" />
 
-                {/* Integrations Section */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 px-2 mb-2">
                     <Plug className="w-4 h-4 text-bronze" />
-                    <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider">Integrations</p>
+                    <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider">{t("profile.integrations")}</p>
                   </div>
                   <Button 
                     variant="ghost" 
@@ -147,91 +145,87 @@ const MobileBottomNav = () => {
                     onClick={() => handleNavigation("/profile/integrations")}
                   >
                     <Plug className="w-4 h-4 mr-3" />
-                    Manage Integrations
+                    {t("integrations.manageIntegrations")}
                   </Button>
                 </div>
 
                 <Separator className="bg-white/10" />
 
-                {/* Account Section */}
                 <div className="space-y-1">
-                  <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider px-2 mb-1">Account</p>
+                  <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider px-2 mb-1">{t("nav.account")}</p>
                   <Button 
                     variant="ghost" 
                     className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-11 text-sm font-medium rounded-xl"
                     onClick={() => handleNavigation("/profile/settings")}
                   >
-                    Settings
+                    {t("profile.settings")}
                   </Button>
                   <Button 
                     variant="ghost" 
                     className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-11 text-sm font-medium rounded-xl"
                     onClick={() => handleNavigation("/profile/payments-billing")}
                   >
-                    Payments & Billing
+                    {t("profile.paymentsBilling")}
                   </Button>
                   <Button 
                     variant="ghost" 
                     className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-11 text-sm font-medium rounded-xl"
                     onClick={() => handleNavigation("/profile/feedback")}
                   >
-                    Feedback
+                    {t("nav.feedback")}
                   </Button>
                 </div>
 
                 <Separator className="bg-white/10" />
 
-                {/* Support Section */}
                 <div className="space-y-1">
-                  <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider px-2 mb-1">Support</p>
+                  <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider px-2 mb-1">{t("nav.support")}</p>
                   <Button 
                     variant="ghost" 
                     className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-11 text-sm font-medium rounded-xl"
                     onClick={() => handleNavigation("/profile/help")}
                   >
-                    Help & Support
+                    {t("nav.helpSupport")}
                   </Button>
                   <Button 
                     variant="ghost" 
                     className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-11 text-sm font-medium rounded-xl"
                     onClick={() => handleNavigation("/about")}
                   >
-                    About Crevia
+                    {t("nav.aboutCrevia")}
                   </Button>
                 </div>
 
                 <Separator className="bg-white/10" />
 
-                {/* Legal Section */}
                 <div className="space-y-1">
-                  <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider px-2 mb-1">Legal</p>
+                  <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider px-2 mb-1">{t("nav.legal")}</p>
                   <div className="flex gap-2">
                     <Button 
                       variant="ghost" 
                       className="flex-1 text-white/60 hover:text-bronze hover:bg-white/5 h-10 text-xs font-medium rounded-xl"
                       onClick={() => handleNavigation("/privacy-policy")}
                     >
-                      Privacy
+                      {t("nav.privacy")}
                     </Button>
                     <Button 
                       variant="ghost" 
                       className="flex-1 text-white/60 hover:text-bronze hover:bg-white/5 h-10 text-xs font-medium rounded-xl"
                       onClick={() => handleNavigation("/terms-of-service")}
                     >
-                      Terms
+                      {t("nav.terms")}
                     </Button>
                   </div>
                 </div>
 
                 <Separator className="bg-white/10" />
 
-                {/* Logout */}
                 <Button 
                   variant="ghost" 
                   className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10 h-11 text-sm font-medium rounded-xl"
                   onClick={handleSignOut}
                 >
-                  Log Out
+                  {t("nav.logOut")}
                 </Button>
               </div>
             </ScrollArea>
