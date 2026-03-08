@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import HeroPattern from "@/components/HeroPattern";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import gallery1 from "@/assets/about-gallery-1.jpg";
