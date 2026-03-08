@@ -144,7 +144,7 @@ const CreateInvoiceDialog = ({
   };
 
   const addItem = () => {
-    setItems([...items, { description: "", quantity: 1, unit_price: 0, total: 0 }]);
+    setItems([...items, { description: "", quantity: "", unit_price: "", total: 0 }]);
   };
 
   const removeItem = (index: number) => {
