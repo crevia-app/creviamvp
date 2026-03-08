@@ -149,7 +149,7 @@ const About = () => {
               </p>
               <blockquote className="font-vollkorn text-xl md:text-2xl font-bold leading-relaxed text-foreground italic">
                 "We see a future where your story doesn't need permission to thrive. 
-                Where creatives are measured by impact, not metrics. Crevia exists to make this real."
+                Where creatives and brands are measured by impact, not metrics. Crevia exists to make this real."
               </blockquote>
               <p className="text-muted-foreground leading-relaxed">
                 Create. Via. Us. Because every story deserves to be heard.
