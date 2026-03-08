@@ -23,8 +23,8 @@ import { toast } from "sonner";
 interface InvoiceItem {
   id?: string;
   description: string;
-  quantity: number;
-  unit_price: number;
+  quantity: string;
+  unit_price: string;
   total: number;
 }
 
