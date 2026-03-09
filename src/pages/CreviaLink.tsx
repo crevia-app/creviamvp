@@ -18,6 +18,7 @@ import { ButtonItem } from "@/components/crevia-link/ButtonItem";
 import LinkSidebarDesktop from "@/components/crevia-link/LinkSidebarDesktop";
 import LinkTabsMobile from "@/components/crevia-link/LinkTabsMobile";
 import LivePreview from "@/components/crevia-link/LivePreview";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
