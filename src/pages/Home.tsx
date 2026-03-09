@@ -38,7 +38,7 @@ const Home = () => {
               className="flex flex-col sm:flex-row gap-3 pt-2 animate-fade-in"
               style={{ animationDelay: "0.45s" }}
             >
-              <Link to="/auth">
+              <Link to="/auth?mode=signup">
                 <Button
                   size="lg"
                   className="bg-bronze hover:bg-bronze-dark text-base md:text-lg px-10 py-7 font-poppins font-semibold shadow-lg hover-scale"
