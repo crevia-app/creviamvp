@@ -545,8 +545,8 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     return (
       <div className="bg-background">
         {/* Embedded Tab Navigation */}
-        <div className="sticky top-[120px] md:top-[120px] z-20 bg-background/95 backdrop-blur-sm border-b border-border/40">
-          <div className="flex gap-1 px-4 md:px-6 py-3 overflow-x-auto scrollbar-none">
+        <div className="sticky top-[120px] md:top-[120px] z-20 bg-background border-b border-border">
+          <div className="flex gap-2 px-4 md:px-6 py-3 overflow-x-auto scrollbar-none">
             {[
               { id: "profile", label: "Profile" },
               { id: "buttons", label: "Buttons" },
@@ -558,10 +558,10 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 key={tab.id}
                 onClick={() => navigate(`/crevia-studio?tab=link&section=${tab.id}`)}
                 className={cn(
-                  "px-4 py-2 rounded-lg font-poppins text-sm font-medium whitespace-nowrap transition-all",
+                  "px-4 py-2.5 rounded-full font-poppins text-sm font-medium whitespace-nowrap transition-all border",
                   embeddedTab === tab.id
-                    ? "bg-bronze/10 text-bronze"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    ? "bg-bronze text-white border-bronze shadow-sm"
+                    : "text-muted-foreground border-border hover:text-foreground hover:bg-muted/50"
                 )}
               >
                 {tab.label}
