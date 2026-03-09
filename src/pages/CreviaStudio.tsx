@@ -74,7 +74,7 @@ const CreviaStudio = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Studio Header */}
-      <div className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-16 z-30">
+      <div className="border-b border-border bg-background/80 backdrop-blur-sm md:sticky md:top-16 z-30">
         <div className="px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center gap-3 mb-3 md:mb-4">
             <div className="p-1.5 md:p-2 rounded-xl bg-bronze/10">
@@ -91,48 +91,54 @@ const CreviaStudio = () => {
           </div>
           
           {/* Tabs */}
-          <div className="flex gap-1 overflow-x-auto pb-1 -mb-px scrollbar-none">
-            {studioTabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabChange(tab.id)}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-2 rounded-t-lg font-poppins text-xs sm:text-sm font-medium whitespace-nowrap transition-all duration-300",
-                    isActive
-                      ? "bg-bronze/10 text-bronze border-b-2 border-bronze"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  )}
-                >
-                  <Icon className="h-4 w-4 flex-shrink-0" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          <ScrollArea className="w-full">
+            <div className="flex items-center gap-1 pb-1 -mb-px">
+              {studioTabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-2 rounded-t-lg font-poppins text-xs sm:text-sm font-medium whitespace-nowrap transition-all duration-300",
+                      isActive
+                        ? "bg-bronze/10 text-bronze border-b-2 border-bronze"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    )}
+                  >
+                    <Icon className="h-4 w-4 flex-shrink-0" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <ScrollBar orientation="horizontal" className="h-1.5" />
+          </ScrollArea>
 
           {activeTab === "link" && (
             <div className="md:hidden mt-3 border-t border-border/40 pt-3">
-              <div className="flex gap-2 overflow-x-auto scrollbar-none">
-                {linkSections.map((section) => (
-                  <button
-                    key={section.id}
-                    type="button"
-                    onClick={() => handleLinkSectionChange(section.id)}
-                    className={cn(
-                      "inline-flex items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors",
-                      activeLinkSection === section.id
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-background text-muted-foreground border-border hover:bg-muted hover:text-foreground"
-                    )}
-                  >
-                    {section.label}
-                  </button>
-                ))}
-              </div>
+              <ScrollArea className="w-full">
+                <div className="flex items-center gap-2">
+                  {linkSections.map((section) => (
+                    <button
+                      key={section.id}
+                      type="button"
+                      onClick={() => handleLinkSectionChange(section.id)}
+                      className={cn(
+                        "inline-flex items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors",
+                        activeLinkSection === section.id
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background text-muted-foreground border-border hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      {section.label}
+                    </button>
+                  ))}
+                </div>
+                <ScrollBar orientation="horizontal" className="h-1.5" />
+              </ScrollArea>
             </div>
           )}
         </div>
