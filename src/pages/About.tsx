@@ -18,7 +18,6 @@ import { useRef } from "react";
 const galleryImages = [gallery1, gallery2, gallery3, gallery4];
 
 const About = () => {
-  const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [eventsTab, setEventsTab] = useState<"previous" | "upcoming">("upcoming");
   const scrollRef = useRef<HTMLDivElement>(null);
