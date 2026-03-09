@@ -17,6 +17,8 @@ import creviaSummit2026 from "@/assets/crevia-summit-2026.png";
 const About = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [eventsTab, setEventsTab] = useState<"previous" | "upcoming">("upcoming");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const check = async () => {
