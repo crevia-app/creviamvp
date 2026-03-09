@@ -60,11 +60,11 @@ const CreviaStudio = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Studio Header */}
-      <div className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-40">
-        <div className="px-4 md:px-6 py-4">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-bronze/10">
-              <Sparkles className="h-5 w-5 text-bronze" />
+      <div className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-16 z-30">
+        <div className="px-4 md:px-6 py-3 md:py-4">
+          <div className="flex items-center gap-3 mb-3 md:mb-4">
+            <div className="p-1.5 md:p-2 rounded-xl bg-bronze/10">
+              <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-bronze" />
             </div>
             <div>
               <h1 className="font-vollkorn text-xl md:text-2xl font-semibold text-foreground">
@@ -87,15 +87,14 @@ const CreviaStudio = () => {
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-t-lg font-poppins text-sm font-medium whitespace-nowrap transition-all duration-300",
+                    "flex items-center gap-1.5 px-3 py-2 rounded-t-lg font-poppins text-xs sm:text-sm font-medium whitespace-nowrap transition-all duration-300",
                     isActive
                       ? "bg-bronze/10 text-bronze border-b-2 border-bronze"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   )}
                 >
-                  <Icon className="h-4 w-4" />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                  <span className="sm:hidden">{tab.label.split(' ').pop()}</span>
+                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  <span>{tab.label}</span>
                 </button>
               );
             })}

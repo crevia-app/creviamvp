@@ -60,57 +60,57 @@ const Dashboard = () => {
     <div className="space-y-6">
       {/* Welcome Header */}
       <div className="space-y-2">
-        <h1 className="font-vollkorn text-4xl font-bold text-foreground">
+        <h1 className="font-vollkorn text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
           Welcome back, {profile?.display_name || "Creator"} 👋
         </h1>
-        <p className="text-muted-foreground font-poppins">
+        <p className="text-sm md:text-base text-muted-foreground font-poppins">
           Here's what's happening with your creative journey today ✨
         </p>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
         <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-poppins font-medium">Total Earnings</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6 md:pb-2">
+            <CardTitle className="text-xs md:text-sm font-poppins font-medium">Total Earnings</CardTitle>
             <DollarSign className="h-4 w-4 text-bronze" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-vollkorn font-bold">$0</div>
-            <p className="text-xs text-muted-foreground">No campaigns yet 🚀</p>
+          <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+            <div className="text-xl md:text-2xl font-vollkorn font-bold">$0</div>
+            <p className="text-[10px] md:text-xs text-muted-foreground">No campaigns yet 🚀</p>
           </CardContent>
         </Card>
         
         <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-poppins font-medium">Active Campaigns</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6 md:pb-2">
+            <CardTitle className="text-xs md:text-sm font-poppins font-medium">Active Campaigns</CardTitle>
             <Briefcase className="h-4 w-4 text-bronze" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-vollkorn font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Get started today 💪</p>
+          <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+            <div className="text-xl md:text-2xl font-vollkorn font-bold">0</div>
+            <p className="text-[10px] md:text-xs text-muted-foreground">Get started today 💪</p>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-poppins font-medium">Profile Views</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6 md:pb-2">
+            <CardTitle className="text-xs md:text-sm font-poppins font-medium">Profile Views</CardTitle>
             <Eye className="h-4 w-4 text-bronze" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-vollkorn font-bold">{creatorProfile?.profile_views || 0}</div>
-            <p className="text-xs text-muted-foreground">Last 30 days</p>
+          <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+            <div className="text-xl md:text-2xl font-vollkorn font-bold">{creatorProfile?.profile_views || 0}</div>
+            <p className="text-[10px] md:text-xs text-muted-foreground">Last 30 days</p>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-poppins font-medium">Engagement Rate</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6 md:pb-2">
+            <CardTitle className="text-xs md:text-sm font-poppins font-medium">Engagement Rate</CardTitle>
             <TrendingUp className="h-4 w-4 text-bronze" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-vollkorn font-bold">{creatorProfile?.engagement_rate || 0}%</div>
-            <p className="text-xs text-muted-foreground">Average</p>
+          <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+            <div className="text-xl md:text-2xl font-vollkorn font-bold">{creatorProfile?.engagement_rate || 0}%</div>
+            <p className="text-[10px] md:text-xs text-muted-foreground">Average</p>
           </CardContent>
         </Card>
       </div>
@@ -171,7 +171,7 @@ const Dashboard = () => {
           <CardTitle className="font-vollkorn text-xl">Quick Actions ⚡</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
             <Link to="/crevia-connect?tab=opportunities">
               <Button variant="outline" className="w-full gap-2 justify-start">
                 <Target className="h-4 w-4" /> Find Campaigns
@@ -214,16 +214,16 @@ const Dashboard = () => {
     <div className="space-y-6">
       {/* Welcome Header */}
       <div className="space-y-2">
-        <h1 className="font-vollkorn text-4xl font-bold text-foreground">
+        <h1 className="font-vollkorn text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
           Welcome back, {profile?.display_name || "Brand"} 👋
         </h1>
-        <p className="text-muted-foreground font-poppins">
+        <p className="text-sm md:text-base text-muted-foreground font-poppins">
           Here's your campaign overview and performance insights 📈
         </p>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-poppins font-medium">Active Campaigns</CardTitle>
@@ -325,7 +325,7 @@ const Dashboard = () => {
           <CardTitle className="font-vollkorn text-xl">Quick Actions ⚡</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
             <Link to="/crevia-connect?tab=campaigns">
               <Button variant="outline" className="w-full gap-2 justify-start">
                 <Briefcase className="h-4 w-4" /> Create Campaign

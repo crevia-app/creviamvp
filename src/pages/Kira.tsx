@@ -539,7 +539,7 @@ const Kira = () => {
   const activeProject = getActiveProject();
 
   return (
-    <div className="h-[calc(100vh-64px)] flex bg-background">
+    <div className="h-[calc(100vh-64px-64px)] md:h-[calc(100vh-64px)] flex bg-background">
       {/* Desktop Sidebar */}
       <div 
         className={`hidden md:flex flex-col bg-card/50 border-r border-border/50 transition-all duration-300 ${
