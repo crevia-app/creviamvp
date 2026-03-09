@@ -40,8 +40,8 @@ const Header = () => {
           {/* Mobile Menu */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild className="lg:hidden">
-              <Button variant="ghost" size="icon" className="h-9 w-9">
-                <Menu className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="h-10 w-10">
+                <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] sm:w-[320px] bg-background">
@@ -68,7 +68,7 @@ const Header = () => {
                       Log In
                     </Button>
                   </Link>
-                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                  <Link to="/auth?mode=signup" onClick={() => setMobileMenuOpen(false)}>
                     <Button className="w-full bg-bronze hover:bg-bronze-dark font-poppins font-semibold">
                       Get Started
                     </Button>
@@ -85,7 +85,7 @@ const Header = () => {
                 Log In
               </Button>
             </Link>
-            <Link to="/auth">
+            <Link to="/auth?mode=signup">
               <Button size="sm" className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold transition-all duration-300 hover-lift hover-glow text-sm">
                 Get Started
               </Button>

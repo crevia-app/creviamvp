@@ -38,7 +38,7 @@ const Home = () => {
               className="flex flex-col sm:flex-row gap-3 pt-2 animate-fade-in"
               style={{ animationDelay: "0.45s" }}
             >
-              <Link to="/auth">
+              <Link to="/auth?mode=signup">
                 <Button
                   size="lg"
                   className="bg-bronze hover:bg-bronze-dark text-base md:text-lg px-10 py-7 font-poppins font-semibold shadow-lg hover-scale"
@@ -193,7 +193,7 @@ const Home = () => {
                 the invoices, contracts, link-in-bio, and AI strategy to prove it — 
                 to clients, to brands, and to yourself.
               </p>
-              <Link to="/auth">
+              <Link to="/auth?mode=signup">
                 <Button className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold mt-2">
                   Start Free <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
@@ -213,7 +213,7 @@ const Home = () => {
                 and deliverables at scale? That's where Crevia comes in. One platform.
                 Zero chaos.
               </p>
-              <Link to="/auth">
+              <Link to="/auth?mode=signup">
                 <Button className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold mt-2">
                   Start Free <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
@@ -257,7 +257,7 @@ const Home = () => {
             Join the creatives and brands building real businesses on Crevia.
             Start free. Scale when you're ready.
           </p>
-          <Link to="/auth">
+          <Link to="/auth?mode=signup">
             <Button
               size="lg"
               className="bg-bronze hover:bg-bronze-dark text-lg px-12 py-7 font-poppins font-semibold shadow-lg hover-scale"
