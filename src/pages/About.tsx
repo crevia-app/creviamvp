@@ -33,18 +33,8 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Show Header for non-logged-in users, back button for logged-in */}
-      {isLoggedIn ? (
-        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/50">
-          <div className="container mx-auto px-6 py-4">
-            <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2 hover:text-bronze">
-              <ArrowLeft className="w-4 h-4" /> Go Back
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <Header />
-      )}
+      {/* Show Header for non-logged-in users; logged-in users get AppLayout wrapper from route */}
+      {!isLoggedIn && <Header />}
 
       {/* ═══════════════ HERO ═══════════════ */}
       <section className="relative pt-28 md:pt-36 pb-16 md:pb-20 px-4 md:px-6 overflow-hidden">
