@@ -68,7 +68,7 @@ const Header = () => {
                       Log In
                     </Button>
                   </Link>
-                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                  <Link to="/auth?mode=signup" onClick={() => setMobileMenuOpen(false)}>
                     <Button className="w-full bg-bronze hover:bg-bronze-dark font-poppins font-semibold">
                       Get Started
                     </Button>
