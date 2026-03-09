@@ -220,6 +220,7 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
             </div>
           </div>
         </div>
+      </div>
     </div>
   );
 };
