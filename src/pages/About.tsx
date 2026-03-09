@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Play, Calendar } from "lucide-react";
+import { ArrowRight, Calendar } from "lucide-react";
 import HeroPattern from "@/components/HeroPattern";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
