@@ -13,8 +13,10 @@ import gallery4 from "@/assets/about-gallery-4.jpg";
 import creviaLogo from "@/assets/crevia-logo-full.png";
 import founderPhoto from "@/assets/founder-photo.jpg";
 import creviaSummit2026 from "@/assets/crevia-summit-2026.png";
+import { useRef } from "react";
 
-const About = () => {
+const galleryImages = [gallery1, gallery2, gallery3, gallery4];
+
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [eventsTab, setEventsTab] = useState<"previous" | "upcoming">("upcoming");
