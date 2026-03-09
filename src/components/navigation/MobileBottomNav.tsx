@@ -190,7 +190,7 @@ const MobileBottomNav = () => {
                   <Button 
                     variant="ghost" 
                     className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-11 text-sm font-medium rounded-xl"
-                    onClick={() => handleNavigation("/about")}
+                    onClick={() => handleNavigation("/app/about")}
                   >
                     {t("nav.aboutCrevia")}
                   </Button>

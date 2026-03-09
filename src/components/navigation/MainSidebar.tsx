@@ -86,7 +86,7 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 bg-black border-white/10">
             <DropdownMenuItem asChild className="hover:bg-transparent focus:bg-transparent">
-              <Link to="/about" className="text-white/80 hover:text-bronze focus:text-bronze">
+              <Link to="/app/about" className="text-white/80 hover:text-bronze focus:text-bronze">
                 {t("nav.about")}
               </Link>
             </DropdownMenuItem>
