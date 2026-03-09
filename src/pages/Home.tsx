@@ -257,7 +257,7 @@ const Home = () => {
             Join the creatives and brands building real businesses on Crevia.
             Start free. Scale when you're ready.
           </p>
-          <Link to="/auth">
+          <Link to="/auth?mode=signup">
             <Button
               size="lg"
               className="bg-bronze hover:bg-bronze-dark text-lg px-12 py-7 font-poppins font-semibold shadow-lg hover-scale"
