@@ -546,29 +546,33 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     return (
       <div className="bg-background">
         {/* Embedded Tab Navigation */}
-        <div className="z-20 bg-background border-b border-border">
-          <div className="flex gap-2 px-4 md:px-6 py-3 overflow-x-auto scrollbar-none">
-            {[
-              { id: "profile", label: "Profile" },
-              { id: "buttons", label: "Buttons" },
-              { id: "appearance", label: "Appearance" },
-              { id: "settings", label: "Settings" },
-              { id: "analytics", label: "Analytics" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => navigate(`/crevia-studio?tab=link&section=${tab.id}`)}
-                className={cn(
-                  "px-4 py-2.5 rounded-full font-poppins text-sm font-medium whitespace-nowrap transition-all border",
-                  embeddedTab === tab.id
-                    ? "bg-bronze text-white border-bronze shadow-sm"
-                    : "text-muted-foreground border-border hover:text-foreground hover:bg-muted/50"
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+        <div className="border-b border-border/60 bg-background/95 backdrop-blur-sm">
+          <ScrollArea className="w-full">
+            <div className="flex items-center gap-2 px-4 md:px-6 py-3">
+              {[
+                { id: "profile", label: "Profile" },
+                { id: "buttons", label: "Buttons" },
+                { id: "appearance", label: "Appearance" },
+                { id: "settings", label: "Settings" },
+                { id: "analytics", label: "Analytics" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => navigate(`/crevia-studio?tab=link&section=${tab.id}`)}
+                  className={cn(
+                    "inline-flex items-center justify-center rounded-lg border px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors",
+                    embeddedTab === tab.id
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background text-muted-foreground border-border hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            <ScrollBar orientation="horizontal" className="h-1.5" />
+          </ScrollArea>
         </div>
 
         {/* Embedded Content with Preview */}
