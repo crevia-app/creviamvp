@@ -69,10 +69,10 @@ const Dashboard = () => {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
         <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-poppins font-medium">Total Earnings</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6 md:pb-2">
+            <CardTitle className="text-xs md:text-sm font-poppins font-medium">Total Earnings</CardTitle>
             <DollarSign className="h-4 w-4 text-bronze" />
           </CardHeader>
           <CardContent>
