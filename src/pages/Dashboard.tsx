@@ -86,15 +86,15 @@ const Dashboard = () => {
             <CardTitle className="text-xs md:text-sm font-poppins font-medium">Active Campaigns</CardTitle>
             <Briefcase className="h-4 w-4 text-bronze" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-vollkorn font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Get started today 💪</p>
+          <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+            <div className="text-xl md:text-2xl font-vollkorn font-bold">0</div>
+            <p className="text-[10px] md:text-xs text-muted-foreground">Get started today 💪</p>
           </CardContent>
         </Card>
 
         <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-poppins font-medium">Profile Views</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 md:p-6 md:pb-2">
+            <CardTitle className="text-xs md:text-sm font-poppins font-medium">Profile Views</CardTitle>
             <Eye className="h-4 w-4 text-bronze" />
           </CardHeader>
           <CardContent>
