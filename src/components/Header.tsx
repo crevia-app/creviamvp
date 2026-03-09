@@ -85,7 +85,7 @@ const Header = () => {
                 Log In
               </Button>
             </Link>
-            <Link to="/auth">
+            <Link to="/auth?mode=signup">
               <Button size="sm" className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold transition-all duration-300 hover-lift hover-glow text-sm">
                 Get Started
               </Button>
