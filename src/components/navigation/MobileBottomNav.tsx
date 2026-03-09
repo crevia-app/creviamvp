@@ -121,16 +121,6 @@ const MobileBottomNav = () => {
               )}
               
               <div className="space-y-4 pb-8">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider px-2 mb-1">{t("nav.tools")}</p>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-11 text-sm font-medium rounded-xl"
-                    onClick={() => handleNavigation("/crevia-link")}
-                  >
-                    {t("nav.creviaLink")}
-                  </Button>
-                </div>
 
                 <Separator className="bg-white/10" />
 
