@@ -33,7 +33,7 @@ const About = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Show Header for non-logged-in users; logged-in users get AppLayout wrapper from route */}
-      {!isLoggedIn && <Header />}
+      <Header />
 
       {/* ═══════════════ HERO ═══════════════ */}
       <section className="relative pt-28 md:pt-36 pb-16 md:pb-20 px-4 md:px-6 overflow-hidden">
