@@ -89,113 +89,135 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-gray-800 rounded-b-2xl z-20" />
         
         {/* Screen */}
-        <div 
-          className={cn(
-            "h-[520px] overflow-y-auto relative scrollbar-none",
+        <div className="h-[520px] flex flex-col relative">
+          {/* Scrollable content area */}
+          <div 
+            className={cn(
+              "flex-1 overflow-y-auto relative scrollbar-none",
+              !isCustomImage && currentTheme.bg,
+              fontClass
+            )}
+            style={isCustomImage ? { 
+              backgroundImage: `url(${customBgUrl})`, 
+              backgroundSize: 'cover', 
+              backgroundPosition: 'center' 
+            } : {}}
+          >
+            {/* Custom image overlay */}
+            {isCustomImage && <div className="absolute inset-0 bg-black/50 z-0" />}
+            
+            {/* Pattern overlay */}
+            {bgStyle === "pattern" && !isCustomImage && (
+              <div className="absolute inset-0 opacity-10 z-0" style={{
+                backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
+                backgroundSize: '16px 16px'
+              }} />
+            )}
+            
+            {/* Blur overlay */}
+            {bgStyle === "blur" && !isCustomImage && (
+              <div className="absolute inset-0 backdrop-blur-sm bg-white/5 z-0" />
+            )}
+
+            <div className={cn(
+              "pt-10 pb-4 px-5 relative z-10",
+              fadeAnimation && "animate-fade-in"
+            )}>
+              {/* Profile Section */}
+              <div className="text-center mb-5">
+                {linkProfile?.profile_picture ? (
+                  <Avatar className="w-20 h-20 mx-auto mb-3 ring-2 ring-white/20">
+                    <AvatarImage src={linkProfile.profile_picture} />
+                    <AvatarFallback className="bg-gradient-to-br from-bronze/30 to-bronze-dark/30 text-2xl font-bold">
+                      {linkProfile?.display_name?.[0]?.toUpperCase() || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <div className={cn(
+                    "w-20 h-20 mx-auto mb-3 rounded-full bg-gradient-to-br from-bronze/30 to-bronze-dark/30 flex items-center justify-center ring-2 ring-white/20",
+                  )}>
+                    <span className={cn("text-2xl font-bold", currentTheme.text)}>
+                      {linkProfile?.display_name?.[0]?.toUpperCase() || "U"}
+                    </span>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <h2 className={cn("font-semibold text-lg", currentTheme.text)}>
+                    {linkProfile?.display_name || "Your Name"}
+                  </h2>
+                  {showVerified && (
+                    <CheckCircle2 className="w-4 h-4 text-[#CF8150]" />
+                  )}
+                </div>
+                
+                <p className={cn("text-xs opacity-70 mb-1.5", currentTheme.text)}>
+                  @{linkProfile?.username || "username"}
+                </p>
+                
+                {linkProfile?.bio && (
+                  <p className={cn("text-[10px] opacity-80 max-w-[200px] mx-auto leading-relaxed", currentTheme.text)}>
+                    {linkProfile.bio}
+                  </p>
+                )}
+              </div>
+
+              {/* Buttons */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: `${Math.max(4, buttonSpacing * 0.6)}px` }}>
+                {visibleButtons.length > 0 ? (
+                  visibleButtons.map((button, index) => (
+                    <div
+                      key={button.id}
+                      className={cn(
+                        getButtonClasses(button.style),
+                        hoverEffects && "hover:scale-[1.02] hover:shadow-md",
+                        fadeAnimation && "animate-fade-in"
+                      )}
+                      style={fadeAnimation ? { animationDelay: `${index * 80}ms` } : {}}
+                    >
+                      <div className="font-medium truncate">{button.title}</div>
+                      {button.subtitle && (
+                        <div className="text-[9px] opacity-70 truncate mt-0.5">{button.subtitle}</div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    <div className={getButtonClasses("filled")}>My Portfolio</div>
+                    <div className={getButtonClasses("filled")}>Book Me</div>
+                    <div className={getButtonClasses("filled")}>Latest Work</div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom pinned area */}
+          <div className={cn(
+            "px-5 py-3 text-center border-t border-white/10 flex-shrink-0",
             !isCustomImage && currentTheme.bg,
             fontClass
           )}
-          style={isCustomImage ? { 
-            backgroundImage: `url(${customBgUrl})`, 
-            backgroundSize: 'cover', 
-            backgroundPosition: 'center' 
+          style={isCustomImage ? {
+            backgroundImage: `url(${customBgUrl})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'bottom center'
           } : {}}
-        >
-          {/* Custom image overlay */}
-          {isCustomImage && <div className="absolute inset-0 bg-black/50 z-0" />}
-          
-          {/* Pattern overlay */}
-          {bgStyle === "pattern" && !isCustomImage && (
-            <div className="absolute inset-0 opacity-10 z-0" style={{
-              backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
-              backgroundSize: '16px 16px'
-            }} />
-          )}
-          
-          {/* Blur overlay */}
-          {bgStyle === "blur" && !isCustomImage && (
-            <div className="absolute inset-0 backdrop-blur-sm bg-white/5 z-0" />
-          )}
-
-          <div className={cn(
-            "pt-10 pb-8 px-5 relative z-10",
-            fadeAnimation && "animate-fade-in"
-          )}>
-            {/* Profile Section */}
-            <div className="text-center mb-5">
-              {linkProfile?.profile_picture ? (
-                <Avatar className="w-20 h-20 mx-auto mb-3 ring-2 ring-white/20">
-                  <AvatarImage src={linkProfile.profile_picture} />
-                  <AvatarFallback className="bg-gradient-to-br from-bronze/30 to-bronze-dark/30 text-2xl font-bold">
-                    {linkProfile?.display_name?.[0]?.toUpperCase() || "U"}
-                  </AvatarFallback>
-                </Avatar>
-              ) : (
-                <div className={cn(
-                  "w-20 h-20 mx-auto mb-3 rounded-full bg-gradient-to-br from-bronze/30 to-bronze-dark/30 flex items-center justify-center ring-2 ring-white/20",
-                )}>
-                  <span className={cn("text-2xl font-bold", currentTheme.text)}>
-                    {linkProfile?.display_name?.[0]?.toUpperCase() || "U"}
-                  </span>
-                </div>
-              )}
-              
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <h2 className={cn("font-semibold text-lg", currentTheme.text)}>
-                  {linkProfile?.display_name || "Your Name"}
-                </h2>
-                {showVerified && (
-                  <CheckCircle2 className="w-4 h-4 text-[#CF8150]" />
-                )}
+          >
+            {isCustomImage && <div className="absolute inset-0 bg-black/60 z-0" />}
+            <div className="relative z-10">
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <Sparkles className={cn("w-3 h-3 opacity-50", currentTheme.text)} />
+                <span className={cn("text-[9px] opacity-50", currentTheme.text)}>
+                  Create your link-in-bio
+                </span>
               </div>
-              
-              <p className={cn("text-xs opacity-70 mb-1.5", currentTheme.text)}>
-                @{linkProfile?.username || "username"}
-              </p>
-              
-              {linkProfile?.bio && (
-                <p className={cn("text-[10px] opacity-80 max-w-[200px] mx-auto leading-relaxed", currentTheme.text)}>
-                  {linkProfile.bio}
-                </p>
-              )}
-            </div>
-
-            {/* Buttons */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: `${Math.max(4, buttonSpacing * 0.6)}px` }}>
-              {visibleButtons.length > 0 ? (
-                visibleButtons.map((button, index) => (
-                  <div
-                    key={button.id}
-                    className={cn(
-                      getButtonClasses(button.style),
-                      hoverEffects && "hover:scale-[1.02] hover:shadow-md",
-                      fadeAnimation && "animate-fade-in"
-                    )}
-                    style={fadeAnimation ? { animationDelay: `${index * 80}ms` } : {}}
-                  >
-                    <div className="font-medium truncate">{button.title}</div>
-                    {button.subtitle && (
-                      <div className="text-[9px] opacity-70 truncate mt-0.5">{button.subtitle}</div>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <>
-                  <div className={getButtonClasses("filled")}>My Portfolio</div>
-                  <div className={getButtonClasses("filled")}>Book Me</div>
-                  <div className={getButtonClasses("filled")}>Latest Work</div>
-                </>
-              )}
-            </div>
-
-            {/* Crevia Branding */}
-            {showBranding && (
-              <div className="mt-6 text-center">
+              {showBranding && (
                 <span className={cn("text-[10px] font-semibold opacity-40 tracking-wide", currentTheme.text)}>
                   Crevia
                 </span>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
