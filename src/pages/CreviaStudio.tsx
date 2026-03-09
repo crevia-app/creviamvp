@@ -17,6 +17,7 @@ const CreviaStudio = () => {
   const [userType, setUserType] = useState<"creator" | "brand">("creator");
   
   const activeTab = searchParams.get("tab") || "link";
+  const activeLinkSection = searchParams.get("section") || "profile";
 
   useEffect(() => {
     const checkUser = async () => {
@@ -45,8 +46,20 @@ const CreviaStudio = () => {
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
+  const linkSections = [
+    { id: "profile", label: "Profile" },
+    { id: "buttons", label: "Buttons" },
+    { id: "appearance", label: "Appearance" },
+    { id: "settings", label: "Settings" },
+    { id: "analytics", label: "Analytics" },
+  ];
+
   const handleTabChange = (tabId: string) => {
     setSearchParams({ tab: tabId });
+  };
+
+  const handleLinkSectionChange = (sectionId: string) => {
+    setSearchParams({ tab: "link", section: sectionId });
   };
 
   if (loading) {
