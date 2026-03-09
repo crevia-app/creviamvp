@@ -61,7 +61,7 @@ const CreviaStudio = () => {
     <div className="min-h-screen bg-background">
       {/* Studio Header */}
       <div className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-16 z-30">
-        <div className="px-4 md:px-6 py-4">
+        <div className="px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center gap-3 mb-3 md:mb-4">
             <div className="p-1.5 md:p-2 rounded-xl bg-bronze/10">
               <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-bronze" />
