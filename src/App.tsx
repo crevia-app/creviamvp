@@ -52,6 +52,7 @@ const App = () => (
             <Route path="/reset-password" element={<PublicPageWrapper><ResetPassword /></PublicPageWrapper>} />
             <Route path="/pricing" element={<PublicPageWrapper><Pricing /></PublicPageWrapper>} />
             <Route path="/about" element={<PublicPageWrapper><About /></PublicPageWrapper>} />
+            <Route path="/app/about" element={<AppLayout><About /></AppLayout>} />
             <Route path="/privacy-policy" element={<AppLayout><PrivacyPolicy /></AppLayout>} />
             <Route path="/terms-of-service" element={<AppLayout><TermsOfService /></AppLayout>} />
             <Route path="/user-type-selection" element={<Navigate to="/auth" replace />} />
