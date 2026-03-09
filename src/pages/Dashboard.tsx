@@ -171,7 +171,7 @@ const Dashboard = () => {
           <CardTitle className="font-vollkorn text-xl">Quick Actions ⚡</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
             <Link to="/crevia-connect?tab=opportunities">
               <Button variant="outline" className="w-full gap-2 justify-start">
                 <Target className="h-4 w-4" /> Find Campaigns
