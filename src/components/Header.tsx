@@ -40,8 +40,8 @@ const Header = () => {
           {/* Mobile Menu */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild className="lg:hidden">
-              <Button variant="ghost" size="icon" className="h-9 w-9">
-                <Menu className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="h-10 w-10">
+                <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] sm:w-[320px] bg-background">
