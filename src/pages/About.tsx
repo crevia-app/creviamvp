@@ -135,56 +135,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* ═══════════════ MISSION & VISION ═══════════════ */}
-      <section className="py-16 md:py-24 px-4 md:px-6 bg-secondary/30">
-        <div className="container mx-auto max-w-4xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-            <div className="p-8 md:p-10 rounded-2xl border border-border bg-card space-y-4">
-              <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase">
-                Our Mission
-              </p>
-              <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">
-                Give creatives and brands the tools to build scalable businesses.
-              </h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Not content calendars. Not vanity metrics. Real business infrastructure — 
-                intelligence, invoicing, contracts, communication, and payments — in one place.
-              </p>
-            </div>
-            <div className="p-8 md:p-10 rounded-2xl border border-border bg-card space-y-4">
-              <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase">
-                Our Vision
-              </p>
-              <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">
-                A creative industry where impact outweighs influence.
-              </h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Where every creative and brand — regardless of size — owns their narrative. 
-                Where partnerships are built on substance, not status. Where your story is enough.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════ FOUNDER ═══════════════ */}
-      <section className="py-20 md:py-28 px-4 md:px-6">
-      <div className="container mx-auto max-w-3xl text-center">
-          <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase mb-6">
-            Founder's Note
-          </p>
-          <blockquote className="font-vollkorn text-xl md:text-2xl font-bold leading-relaxed text-foreground italic mb-6">
-            "We see a future where your story doesn't need permission to thrive. 
-            Where creatives and brands are measured by impact, not metrics. Crevia exists to make this real."
-          </blockquote>
-          <p className="text-muted-foreground leading-relaxed mb-4">
-            Create. Via. Us. Because every story deserves to be heard.
-          </p>
-          <p className="font-poppins font-semibold text-foreground">Amin Hussein</p>
-          <p className="text-sm text-muted-foreground">Founder & CEO</p>
-        </div>
-      </section>
-
       {/* ═══════════════ EVENTS ═══════════════ */}
       <section className="py-20 md:py-28 px-4 md:px-6 bg-secondary/30">
         <div className="container mx-auto max-w-5xl">
@@ -254,7 +204,6 @@ const About = () => {
           {/* Previous Events */}
           {eventsTab === "previous" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Freelancers Summit 2024 */}
               <div className="rounded-2xl overflow-hidden border border-border bg-card">
                 <div className="aspect-video">
                   <iframe
@@ -270,8 +219,6 @@ const About = () => {
                   <p className="text-muted-foreground text-sm">Empowering digital independence</p>
                 </div>
               </div>
-
-              {/* AI Summit 2024 */}
               <div className="rounded-2xl overflow-hidden border border-border bg-card">
                 <div className="aspect-video">
                   <iframe
@@ -289,6 +236,56 @@ const About = () => {
               </div>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* ═══════════════ MISSION & VISION ═══════════════ */}
+      <section className="py-16 md:py-24 px-4 md:px-6">
+        <div className="container mx-auto max-w-4xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+            <div className="p-8 md:p-10 rounded-2xl border border-border bg-card space-y-4">
+              <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase">
+                Our Mission
+              </p>
+              <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">
+                Give creatives and brands the tools to build scalable businesses.
+              </h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Not content calendars. Not vanity metrics. Real business infrastructure — 
+                intelligence, invoicing, contracts, communication, and payments — in one place.
+              </p>
+            </div>
+            <div className="p-8 md:p-10 rounded-2xl border border-border bg-card space-y-4">
+              <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase">
+                Our Vision
+              </p>
+              <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">
+                A creative industry where impact outweighs influence.
+              </h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Where every creative and brand — regardless of size — owns their narrative. 
+                Where partnerships are built on substance, not status. Where your story is enough.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════ FOUNDER ═══════════════ */}
+      <section className="py-20 md:py-28 px-4 md:px-6 bg-secondary/30">
+        <div className="container mx-auto max-w-3xl text-center">
+          <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase mb-6">
+            Founder's Note
+          </p>
+          <blockquote className="font-vollkorn text-xl md:text-2xl font-bold leading-relaxed text-foreground italic mb-6">
+            "We see a future where your story doesn't need permission to thrive. 
+            Where creatives and brands are measured by impact, not metrics. Crevia exists to make this real."
+          </blockquote>
+          <p className="text-muted-foreground leading-relaxed mb-4">
+            Create. Via. Us. Because every story deserves to be heard.
+          </p>
+          <p className="font-poppins font-semibold text-foreground">Amin Hussein</p>
+          <p className="text-sm text-muted-foreground">Founder & CEO</p>
         </div>
       </section>
 
