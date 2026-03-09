@@ -60,10 +60,10 @@ const Dashboard = () => {
     <div className="space-y-6">
       {/* Welcome Header */}
       <div className="space-y-2">
-        <h1 className="font-vollkorn text-4xl font-bold text-foreground">
+        <h1 className="font-vollkorn text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
           Welcome back, {profile?.display_name || "Creator"} 👋
         </h1>
-        <p className="text-muted-foreground font-poppins">
+        <p className="text-sm md:text-base text-muted-foreground font-poppins">
           Here's what's happening with your creative journey today ✨
         </p>
       </div>
