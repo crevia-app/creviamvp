@@ -545,7 +545,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     return (
       <div className="bg-background">
         {/* Embedded Tab Navigation */}
-        <div className="sticky top-[120px] md:top-[120px] z-20 bg-background border-b border-border">
+        <div className="z-20 bg-background border-b border-border">
           <div className="flex gap-2 px-4 md:px-6 py-3 overflow-x-auto scrollbar-none">
             {[
               { id: "profile", label: "Profile" },
