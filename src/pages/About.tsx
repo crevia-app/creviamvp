@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Play, Calendar } from "lucide-react";
 import HeroPattern from "@/components/HeroPattern";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
@@ -12,6 +12,7 @@ import gallery3 from "@/assets/about-gallery-3.jpg";
 import gallery4 from "@/assets/about-gallery-4.jpg";
 import creviaLogo from "@/assets/crevia-logo-full.png";
 import founderPhoto from "@/assets/founder-photo.jpg";
+import creviaSummit2026 from "@/assets/crevia-summit-2026.png";
 
 const About = () => {
   const navigate = useNavigate();
