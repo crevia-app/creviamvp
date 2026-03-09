@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Link2, Receipt, FileSignature, MessageSquare, Sparkles, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 // Import tab content
 import CreviaLink from "./CreviaLink";
