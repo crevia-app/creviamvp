@@ -121,7 +121,6 @@ const MobileBottomNav = () => {
               )}
               
               <div className="space-y-4 pb-8">
-                <div className="space-y-1">
 
                 <Separator className="bg-white/10" />
 
