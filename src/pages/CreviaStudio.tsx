@@ -17,6 +17,7 @@ const CreviaStudio = () => {
   const [userType, setUserType] = useState<"creator" | "brand">("creator");
   
   const activeTab = searchParams.get("tab") || "link";
+  const activeLinkSection = searchParams.get("section") || "profile";
 
   useEffect(() => {
     const checkUser = async () => {
@@ -45,8 +46,20 @@ const CreviaStudio = () => {
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
+  const linkSections = [
+    { id: "profile", label: "Profile" },
+    { id: "buttons", label: "Buttons" },
+    { id: "appearance", label: "Appearance" },
+    { id: "settings", label: "Settings" },
+    { id: "analytics", label: "Analytics" },
+  ];
+
   const handleTabChange = (tabId: string) => {
     setSearchParams({ tab: tabId });
+  };
+
+  const handleLinkSectionChange = (sectionId: string) => {
+    setSearchParams({ tab: "link", section: sectionId });
   };
 
   if (loading) {
@@ -99,6 +112,28 @@ const CreviaStudio = () => {
               );
             })}
           </div>
+
+          {activeTab === "link" && (
+            <div className="md:hidden mt-3 border-t border-border/40 pt-3">
+              <div className="flex gap-2 overflow-x-auto scrollbar-none">
+                {linkSections.map((section) => (
+                  <button
+                    key={section.id}
+                    type="button"
+                    onClick={() => handleLinkSectionChange(section.id)}
+                    className={cn(
+                      "inline-flex items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors",
+                      activeLinkSection === section.id
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background text-muted-foreground border-border hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    {section.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
