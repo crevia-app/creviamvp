@@ -159,6 +159,103 @@ const About = () => {
         </div>
       </section>
 
+      {/* ═══════════════ EVENTS ═══════════════ */}
+      <section className="py-20 md:py-28 px-4 md:px-6 bg-secondary/30">
+        <div className="container mx-auto max-w-5xl">
+          <div className="text-center mb-10">
+            <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase mb-4">
+              Crevia Events
+            </p>
+            <h2 className="font-vollkorn text-3xl md:text-4xl font-bold mb-6">
+              Where <span className="text-gradient-bronze">stories</span> come together.
+            </h2>
+            
+            {/* Toggle */}
+            <div className="inline-flex bg-card border border-border rounded-full p-1 gap-1">
+              <button
+                onClick={() => setEventsTab("upcoming")}
+                className={`px-6 py-2 rounded-full text-sm font-poppins font-medium transition-all ${
+                  eventsTab === "upcoming"
+                    ? "bg-bronze text-white"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Upcoming
+              </button>
+              <button
+                onClick={() => setEventsTab("previous")}
+                className={`px-6 py-2 rounded-full text-sm font-poppins font-medium transition-all ${
+                  eventsTab === "previous"
+                    ? "bg-bronze text-white"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Previous
+              </button>
+            </div>
+          </div>
+
+          {/* Upcoming Events */}
+          {eventsTab === "upcoming" && (
+            <div className="max-w-md mx-auto">
+              <div className="rounded-2xl overflow-hidden border border-bronze/30 shadow-2xl bg-card">
+                <img
+                  src={creviaSummit2026}
+                  alt="Crevia Summit 2026"
+                  className="w-full aspect-square object-cover"
+                />
+                <div className="p-6 text-center">
+                  <div className="inline-flex items-center gap-2 text-bronze text-sm font-poppins mb-2">
+                    <Calendar className="w-4 h-4" />
+                    June 27th, 2026
+                  </div>
+                  <h3 className="font-vollkorn text-xl font-bold mb-2">Crevia Summit 2026</h3>
+                  <p className="text-muted-foreground">Building a successful personal brand</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Previous Events */}
+          {eventsTab === "previous" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Freelancers Summit 2024 */}
+              <div className="rounded-2xl overflow-hidden border border-border bg-card">
+                <div className="aspect-video">
+                  <iframe
+                    src="https://www.youtube.com/embed/-20xdAqoBfo"
+                    title="Freelancers Summit 2024"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full"
+                  />
+                </div>
+                <div className="p-5">
+                  <h3 className="font-vollkorn text-lg font-bold mb-1">Freelancers Summit 2024</h3>
+                  <p className="text-muted-foreground text-sm">Empowering digital independence</p>
+                </div>
+              </div>
+
+              {/* AI Summit 2024 */}
+              <div className="rounded-2xl overflow-hidden border border-border bg-card">
+                <div className="aspect-video">
+                  <iframe
+                    src="https://www.youtube.com/embed/BKaxVxiLz0Y"
+                    title="AI Summit 2024"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full"
+                  />
+                </div>
+                <div className="p-5">
+                  <h3 className="font-vollkorn text-lg font-bold mb-1">AI Summit 2024</h3>
+                  <p className="text-muted-foreground text-sm">Building AI for Impact</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* ═══════════════ CTA ═══════════════ */}
       <section className="relative py-20 md:py-28 px-4 md:px-6 overflow-hidden">
