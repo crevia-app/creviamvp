@@ -193,7 +193,7 @@ const Home = () => {
                 the invoices, contracts, link-in-bio, and AI strategy to prove it — 
                 to clients, to brands, and to yourself.
               </p>
-              <Link to="/auth">
+              <Link to="/auth?mode=signup">
                 <Button className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold mt-2">
                   Start Free <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
