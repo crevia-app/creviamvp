@@ -325,7 +325,7 @@ const Dashboard = () => {
           <CardTitle className="font-vollkorn text-xl">Quick Actions ⚡</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
             <Link to="/crevia-connect?tab=campaigns">
               <Button variant="outline" className="w-full gap-2 justify-start">
                 <Briefcase className="h-4 w-4" /> Create Campaign
