@@ -210,7 +210,16 @@ const About = () => {
                     June 27th, 2026
                   </div>
                   <h3 className="font-vollkorn text-xl font-bold mb-2">Crevia Summit 2026</h3>
-                  <p className="text-muted-foreground">Building a successful personal brand</p>
+                  <p className="text-muted-foreground mb-4">Building a successful personal brand</p>
+                  <a
+                    href="https://vabu.app/l/CS2026"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold px-6">
+                      Register Now <ArrowRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </a>
                 </div>
               </div>
             </div>
