@@ -65,12 +65,39 @@ const About = () => {
       </section>
 
       {/* ═══════════════ SCROLLING GALLERY ═══════════════ */}
-      <section className="relative w-full overflow-hidden py-4">
-        <div className="flex gap-4 md:gap-6 animate-scroll-left">
-          {[gallery1, gallery2, gallery3, gallery4, gallery1, gallery2, gallery3, gallery4].map((src, i) => (
+      <section className="relative w-full py-4">
+        {/* Desktop: arrows */}
+        <div className="hidden md:flex absolute top-1/2 -translate-y-1/2 left-2 z-10">
+          <Button
+            variant="outline"
+            size="icon"
+            className="rounded-full border-border bg-card/80 backdrop-blur-sm shadow-lg"
+            onClick={() => scrollRef.current?.scrollBy({ left: -320, behavior: "smooth" })}
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+        </div>
+        <div className="hidden md:flex absolute top-1/2 -translate-y-1/2 right-2 z-10">
+          <Button
+            variant="outline"
+            size="icon"
+            className="rounded-full border-border bg-card/80 backdrop-blur-sm shadow-lg"
+            onClick={() => scrollRef.current?.scrollBy({ left: 320, behavior: "smooth" })}
+          >
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Scrollable container — touch-scroll on mobile, arrow-driven on desktop */}
+        <div
+          ref={scrollRef}
+          className="flex gap-4 md:gap-6 px-6 overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          {galleryImages.map((src, i) => (
             <div
               key={i}
-              className="flex-shrink-0 w-64 h-48 md:w-80 md:h-60 rounded-2xl overflow-hidden shadow-xl"
+              className="flex-shrink-0 w-64 h-48 md:w-80 md:h-60 rounded-2xl overflow-hidden shadow-xl snap-center"
               style={{ transform: `rotate(${i % 2 === 0 ? -2 : 2}deg)` }}
             >
               <img src={src} alt="Crevia community" className="w-full h-full object-cover" />
