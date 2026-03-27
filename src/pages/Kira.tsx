@@ -28,6 +28,8 @@ import {
   FileUp,
   X,
   Mic,
+  FileSignature,
+  Receipt,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -41,6 +43,8 @@ import { CreateProjectDialog } from "@/components/kira/CreateProjectDialog";
 import { ProjectDetailSheet } from "@/components/kira/ProjectDetailSheet";
 import { ProjectsView } from "@/components/kira/ProjectsView";
 import { VoiceChatDialog } from "@/components/kira/VoiceChatDialog";
+import { CreateContractDialog } from "@/components/studio/CreateContractDialog";
+import { CreateInvoiceDialog } from "@/components/studio/CreateInvoiceDialog";
 
 
 interface ChatHistory {
@@ -134,6 +138,9 @@ const Kira = () => {
   const [projectDetailOpen, setProjectDetailOpen] = useState(false);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [voiceChatOpen, setVoiceChatOpen] = useState(false);
+  const [contractDialogOpen, setContractDialogOpen] = useState(false);
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -348,7 +355,24 @@ const Kira = () => {
       }
 
       if (assistantContent) {
-        await saveMessage(conversationId, "assistant", assistantContent);
+        // Parse and strip ACTION signal from Kira's response
+        const actionMatch = assistantContent.match(/\nACTION:(\{[^}]+\})/);
+        let cleanContent = assistantContent;
+        if (actionMatch) {
+          try {
+            const action = JSON.parse(actionMatch[1]);
+            setPendingAction(action.type);
+            cleanContent = assistantContent.replace(/\nACTION:\{[^}]+\}/, '').trimEnd();
+            setMessages(prev => {
+              const last = prev[prev.length - 1];
+              if (last?.role === "assistant") {
+                return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: cleanContent } : m);
+              }
+              return prev;
+            });
+          } catch { /* ignore malformed action */ }
+        }
+        await saveMessage(conversationId, "assistant", cleanContent);
       }
 
       return assistantContent;
@@ -411,6 +435,7 @@ const Kira = () => {
     setMessages(updatedMessages);
     setInput("");
     setSelectedFile(null);
+    setPendingAction(null);
     setIsLoading(true);
     
     await saveMessage(conversationId, "user", newMessage.content, newMessage.file);
@@ -935,41 +960,76 @@ const Kira = () => {
                     /* Messages */
                     <div className="space-y-6 py-4">
                       {messages.map((msg, idx) => (
-                        <div
-                          key={idx}
-                          className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''} animate-fade-in`}
-                        >
-                          {/* Avatar */}
-                          <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${
-                            msg.role === 'user' 
-                              ? 'bg-bronze text-background' 
-                              : 'bg-gradient-to-br from-bronze/20 to-bronze-dark/20'
-                          }`}>
-                            {msg.role === 'user' ? (
-                              <span className="text-xs font-semibold">You</span>
-                            ) : (
-                              <img src={kiraImage} alt="Kira" className="w-5 h-5 object-contain" />
-                            )}
-                          </div>
-
-                          {/* Message */}
-                          <div className={`flex-1 ${msg.role === 'user' ? 'text-right' : ''}`}>
-                            <div
-                              className={`inline-block max-w-[85%] rounded-2xl px-4 py-3 ${
-                                msg.role === 'user'
-                                  ? 'bg-bronze text-background rounded-tr-md'
-                                  : 'bg-muted rounded-tl-md'
-                              }`}
-                            >
-                              <p className="text-sm md:text-base whitespace-pre-wrap text-left">{msg.content}</p>
-                              {msg.file && (
-                                <div className="mt-2 flex items-center gap-2 text-xs opacity-70">
-                                  <Paperclip className="w-3 h-3" />
-                                  {msg.file}
-                                </div>
+                        <div key={idx} className="animate-fade-in">
+                          <div className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                            {/* Avatar */}
+                            <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${
+                              msg.role === 'user'
+                                ? 'bg-bronze text-background'
+                                : 'bg-gradient-to-br from-bronze/20 to-bronze-dark/20'
+                            }`}>
+                              {msg.role === 'user' ? (
+                                <span className="text-xs font-semibold">You</span>
+                              ) : (
+                                <img src={kiraImage} alt="Kira" className="w-5 h-5 object-contain" />
                               )}
                             </div>
+
+                            {/* Message */}
+                            <div className={`flex-1 ${msg.role === 'user' ? 'text-right' : ''}`}>
+                              <div
+                                className={`inline-block max-w-[85%] rounded-2xl px-4 py-3 ${
+                                  msg.role === 'user'
+                                    ? 'bg-bronze text-background rounded-tr-md'
+                                    : 'bg-muted rounded-tl-md'
+                                }`}
+                              >
+                                <p className="text-sm md:text-base whitespace-pre-wrap text-left">{msg.content}</p>
+                                {msg.file && (
+                                  <div className="mt-2 flex items-center gap-2 text-xs opacity-70">
+                                    <Paperclip className="w-3 h-3" />
+                                    {msg.file}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           </div>
+
+                          {/* Action card — shown below last assistant message when Kira signals an action */}
+                          {msg.role === 'assistant' && idx === messages.length - 1 && !isLoading && pendingAction && (
+                            <div className="ml-11 mt-3">
+                              {pendingAction === 'open_contract' && (
+                                <button
+                                  onClick={() => setContractDialogOpen(true)}
+                                  className="flex items-center gap-3 px-4 py-3 rounded-xl border border-bronze/40 bg-bronze/5 hover:bg-bronze/10 hover:border-bronze/60 transition-all text-left w-fit"
+                                >
+                                  <div className="p-1.5 rounded-lg bg-bronze/15 text-bronze">
+                                    <FileSignature className="w-4 h-4" />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium">Create Contract</p>
+                                    <p className="text-xs text-muted-foreground">Open the contract builder</p>
+                                  </div>
+                                  <ArrowRight className="w-4 h-4 text-bronze ml-2" />
+                                </button>
+                              )}
+                              {pendingAction === 'open_invoice' && (
+                                <button
+                                  onClick={() => setInvoiceDialogOpen(true)}
+                                  className="flex items-center gap-3 px-4 py-3 rounded-xl border border-bronze/40 bg-bronze/5 hover:bg-bronze/10 hover:border-bronze/60 transition-all text-left w-fit"
+                                >
+                                  <div className="p-1.5 rounded-lg bg-bronze/15 text-bronze">
+                                    <Receipt className="w-4 h-4" />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium">Create Invoice</p>
+                                    <p className="text-xs text-muted-foreground">Open the invoice builder</p>
+                                  </div>
+                                  <ArrowRight className="w-4 h-4 text-bronze ml-2" />
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </div>
                       ))}
                       
@@ -1126,6 +1186,18 @@ const Kira = () => {
           description: getActiveProject()!.description,
           customInstructions: getActiveProject()!.custom_instructions
         } : null}
+      />
+
+      <CreateContractDialog
+        open={contractDialogOpen}
+        onOpenChange={setContractDialogOpen}
+        onSuccess={() => setContractDialogOpen(false)}
+      />
+
+      <CreateInvoiceDialog
+        open={invoiceDialogOpen}
+        onOpenChange={setInvoiceDialogOpen}
+        onSuccess={() => setInvoiceDialogOpen(false)}
       />
     </div>
   );
