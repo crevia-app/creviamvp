@@ -143,6 +143,8 @@ const Kira = () => {
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [kiraContractContext, setKiraContractContext] = useState<Record<string, unknown> | null>(null);
+  const [kiraInvoiceContext, setKiraInvoiceContext] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -358,13 +360,20 @@ const Kira = () => {
 
       if (assistantContent) {
         // Parse and strip ACTION signal from Kira's response
-        const actionMatch = assistantContent.match(/\nACTION:(\{[^}]+\})/);
+        // ACTION line may contain nested JSON with "context" so match to end of line
+        const actionMatch = assistantContent.match(/\nACTION:(\{.+\})[\s]*$/m);
         let cleanContent = assistantContent;
         if (actionMatch) {
           try {
             const action = JSON.parse(actionMatch[1]);
             setPendingAction(action.type);
-            cleanContent = assistantContent.replace(/\nACTION:\{[^}]+\}/, '').trimEnd();
+            if (action.type === 'open_contract' && action.context) {
+              setKiraContractContext(action.context);
+            }
+            if (action.type === 'open_invoice' && action.context) {
+              setKiraInvoiceContext(action.context);
+            }
+            cleanContent = assistantContent.replace(/\nACTION:\{.+\}[\s]*$/m, '').trimEnd();
             setMessages(prev => {
               const last = prev[prev.length - 1];
               if (last?.role === "assistant") {
@@ -438,6 +447,8 @@ const Kira = () => {
     setInput("");
     setSelectedFile(null);
     setPendingAction(null);
+    setKiraContractContext(null);
+    setKiraInvoiceContext(null);
     setIsLoading(true);
     
     await saveMessage(conversationId, "user", newMessage.content, newMessage.file);
@@ -1209,12 +1220,14 @@ const Kira = () => {
         open={contractDialogOpen}
         onOpenChange={setContractDialogOpen}
         onSuccess={() => setContractDialogOpen(false)}
+        kiraContext={kiraContractContext}
       />
 
       <CreateInvoiceDialog
         open={invoiceDialogOpen}
         onOpenChange={setInvoiceDialogOpen}
         onSuccess={() => setInvoiceDialogOpen(false)}
+        kiraContext={kiraInvoiceContext}
       />
 
       <ApproveActionDialog

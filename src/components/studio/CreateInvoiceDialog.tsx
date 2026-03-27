@@ -33,6 +33,7 @@ interface CreateInvoiceDialogProps {
   onOpenChange: (open: boolean) => void;
   editingInvoice?: any;
   onSuccess: () => void;
+  kiraContext?: Record<string, unknown> | null;
 }
 
 const currencies = [
@@ -52,6 +53,7 @@ const CreateInvoiceDialog = ({
   onOpenChange,
   editingInvoice,
   onSuccess,
+  kiraContext,
 }: CreateInvoiceDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState("");
@@ -82,14 +84,27 @@ const CreateInvoiceDialog = ({
       setDiscountAmount(editingInvoice.discount_amount ? String(editingInvoice.discount_amount) : "");
       setNotes(editingInvoice.notes || "");
       setTerms(editingInvoice.terms || "");
-      
-      // Fetch items
       fetchItems(editingInvoice.id);
     } else {
       generateInvoiceNumber();
       resetForm();
+      // Prefill from Kira conversation context
+      if (kiraContext) {
+        if (kiraContext.client_name) setClientName(kiraContext.client_name as string);
+        if (kiraContext.client_email) setClientEmail(kiraContext.client_email as string);
+        if (kiraContext.currency) setCurrency(kiraContext.currency as string);
+        if (kiraContext.notes) setNotes(kiraContext.notes as string);
+        if (Array.isArray(kiraContext.items) && kiraContext.items.length > 0) {
+          setItems((kiraContext.items as Array<{description: string; quantity: number; unit_price: number}>).map(item => ({
+            description: item.description || "",
+            quantity: String(item.quantity || 1),
+            unit_price: String(item.unit_price || 0),
+            total: (item.quantity || 1) * (item.unit_price || 0),
+          })));
+        }
+      }
     }
-  }, [editingInvoice, open]);
+  }, [editingInvoice, kiraContext, open]);
 
   const fetchItems = async (invoiceId: string) => {
     const { data } = await supabase

@@ -28,6 +28,7 @@ interface CreateContractDialogProps {
   onOpenChange: (open: boolean) => void;
   editingContract?: any;
   onSuccess: () => void;
+  kiraContext?: Record<string, unknown> | null;
 }
 
 const contractTypes = [
@@ -318,6 +319,7 @@ const CreateContractDialog = ({
   onOpenChange,
   editingContract,
   onSuccess,
+  kiraContext,
 }: CreateContractDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -354,11 +356,25 @@ const CreateContractDialog = ({
       setExclusivityDetails(editingContract.exclusivity_details || "");
       setUsageRights(editingContract.usage_rights || "");
       setTerminationClause(editingContract.termination_clause || "");
-      setCurrentStep(1); // skip type selection when editing
+      setCurrentStep(1);
+    } else if (kiraContext) {
+      // Prefill from Kira conversation context
+      if (kiraContext.title) setTitle(kiraContext.title as string);
+      if (kiraContext.client_name) setClientName(kiraContext.client_name as string);
+      if (kiraContext.client_email) setClientEmail(kiraContext.client_email as string);
+      if (kiraContext.contract_type) setContractType(kiraContext.contract_type as string);
+      if (kiraContext.value) setValue(kiraContext.value as number);
+      if (kiraContext.currency) setCurrency(kiraContext.currency as string);
+      if (kiraContext.payment_terms) setPaymentTerms(kiraContext.payment_terms as string);
+      if (Array.isArray(kiraContext.deliverables) && kiraContext.deliverables.length > 0) {
+        setDeliverables(kiraContext.deliverables as string[]);
+      }
+      // Skip to parties step if we have enough context
+      if (kiraContext.client_name || kiraContext.contract_type) setCurrentStep(1);
     } else {
       resetForm();
     }
-  }, [editingContract, open]);
+  }, [editingContract, kiraContext, open]);
 
   const resetForm = () => {
     setTitle("");
