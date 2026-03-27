@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.invoices-create]
 verify_jwt = false
+
+[functions.approve-action]
+verify_jwt = false

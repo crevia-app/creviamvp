@@ -45,6 +45,7 @@ import { ProjectsView } from "@/components/kira/ProjectsView";
 import { VoiceChatDialog } from "@/components/kira/VoiceChatDialog";
 import { CreateContractDialog } from "@/components/studio/CreateContractDialog";
 import { CreateInvoiceDialog } from "@/components/studio/CreateInvoiceDialog";
+import { ApproveActionDialog } from "@/components/kira/ApproveActionDialog";
 
 
 interface ChatHistory {
@@ -140,6 +141,7 @@ const Kira = () => {
   const [voiceChatOpen, setVoiceChatOpen] = useState(false);
   const [contractDialogOpen, setContractDialogOpen] = useState(false);
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
 
   useEffect(() => {
@@ -1028,6 +1030,21 @@ const Kira = () => {
                                   <ArrowRight className="w-4 h-4 text-bronze ml-2" />
                                 </button>
                               )}
+                              {pendingAction === 'open_approve' && (
+                                <button
+                                  onClick={() => setApproveDialogOpen(true)}
+                                  className="flex items-center gap-3 px-4 py-3 rounded-xl border border-bronze/40 bg-bronze/5 hover:bg-bronze/10 hover:border-bronze/60 transition-all text-left w-fit"
+                                >
+                                  <div className="p-1.5 rounded-lg bg-bronze/15 text-bronze">
+                                    <FileSignature className="w-4 h-4" />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-medium">Approve / Update Document</p>
+                                    <p className="text-xs text-muted-foreground">Move a contract or invoice to the next stage</p>
+                                  </div>
+                                  <ArrowRight className="w-4 h-4 text-bronze ml-2" />
+                                </button>
+                              )}
                             </div>
                           )}
                         </div>
@@ -1198,6 +1215,11 @@ const Kira = () => {
         open={invoiceDialogOpen}
         onOpenChange={setInvoiceDialogOpen}
         onSuccess={() => setInvoiceDialogOpen(false)}
+      />
+
+      <ApproveActionDialog
+        open={approveDialogOpen}
+        onOpenChange={setApproveDialogOpen}
       />
     </div>
   );
