@@ -205,7 +205,7 @@ const CreviaChat = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const presenceChannelRef = useRef<any>(null);
 
   const { e2eReady, initEncryption, setupRoomEncryption, encrypt, decrypt, decryptMessages, getRoomKey } = useE2EEncryption(currentUserId);

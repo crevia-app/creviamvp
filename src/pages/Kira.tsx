@@ -43,8 +43,8 @@ import { CreateProjectDialog } from "@/components/kira/CreateProjectDialog";
 import { ProjectDetailSheet } from "@/components/kira/ProjectDetailSheet";
 import { ProjectsView } from "@/components/kira/ProjectsView";
 import { VoiceChatDialog } from "@/components/kira/VoiceChatDialog";
-import { CreateContractDialog } from "@/components/studio/CreateContractDialog";
-import { CreateInvoiceDialog } from "@/components/studio/CreateInvoiceDialog";
+import CreateContractDialog from "@/components/studio/CreateContractDialog";
+import CreateInvoiceDialog from "@/components/studio/CreateInvoiceDialog";
 import { ApproveActionDialog } from "@/components/kira/ApproveActionDialog";
 
 
