@@ -258,7 +258,7 @@ const ContractsTab = () => {
 
   if (loading) {
     return (
-      <div className="p-4 md:p-8 space-y-8">
+      <div className="mx-auto w-full max-w-6xl space-y-8 p-4 md:p-8">
         <div className="animate-pulse space-y-8">
           <div className="h-10 bg-muted rounded-2xl w-1/3" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -276,7 +276,7 @@ const ContractsTab = () => {
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-6 max-w-6xl mx-auto">
+    <div className="mx-auto w-full max-w-6xl min-w-0 space-y-6 p-4 md:p-8 xl:max-w-7xl">
 
       {/* Header — Clean & Minimal */}
       <motion.div 
@@ -316,7 +316,7 @@ const ContractsTab = () => {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05 }}
-        className="grid grid-cols-2 md:grid-cols-4 gap-3"
+        className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
       >
         {[
           { label: "Total", value: stats.total, icon: <File className="h-4 w-4" />, accent: "primary" },
@@ -357,7 +357,7 @@ const ContractsTab = () => {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="flex flex-col sm:flex-row gap-2"
+        className="flex flex-col gap-2 lg:flex-row"
       >
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -453,7 +453,7 @@ const ContractsTab = () => {
                   transition={{ delay: index * 0.03 }}
                 >
                   <div
-                    className="group relative flex items-center gap-4 p-4 rounded-2xl border border-border/50 bg-card hover:border-primary/20 hover:shadow-md hover:shadow-primary/5 cursor-pointer transition-all duration-300"
+                    className="group relative flex flex-col gap-4 rounded-2xl border border-border/50 bg-card p-4 transition-all duration-300 hover:border-primary/20 hover:shadow-md hover:shadow-primary/5 cursor-pointer xl:flex-row xl:items-center"
                     onClick={() => setPreviewContract(contract)}
                   >
                     {/* Type Icon */}
@@ -463,11 +463,11 @@ const ContractsTab = () => {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <h4 className="font-semibold text-foreground truncate text-sm">
+                      <div className="mb-0.5 flex flex-wrap items-start gap-2">
+                        <h4 className="min-w-0 break-words font-semibold text-foreground text-sm">
                           {contract.title}
                         </h4>
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${status.bg} ${status.color}`}>
+                        <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${status.bg} ${status.color}`}>
                           {status.icon}
                           {status.label}
                         </span>
@@ -478,7 +478,7 @@ const ContractsTab = () => {
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
                           {contract.client_name}
@@ -500,9 +500,9 @@ const ContractsTab = () => {
                     </div>
 
                     {/* Value & Actions */}
-                    <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex w-full items-center justify-between gap-3 xl:w-auto xl:justify-end" onClick={(e) => e.stopPropagation()}>
                       {contract.value && (
-                        <div className="text-right hidden sm:block">
+                        <div className="hidden min-w-[8rem] text-left sm:block xl:text-right">
                           <p className="text-sm font-bold text-foreground tabular-nums">
                             {formatCurrency(Number(contract.value), contract.currency)}
                           </p>
@@ -510,7 +510,7 @@ const ContractsTab = () => {
                       )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl opacity-0 group-hover:opacity-100 transition-all">
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl opacity-100 transition-all xl:opacity-0 xl:group-hover:opacity-100">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
