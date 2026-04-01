@@ -72,10 +72,10 @@ const CreviaStudio = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Studio Header */}
       <div className="border-b border-border bg-background/80 backdrop-blur-sm md:sticky md:top-16 z-30">
-        <div className="px-4 md:px-6 py-3 md:py-4">
+        <div className="mx-auto w-full max-w-7xl px-4 py-3 md:px-6 md:py-4">
           <div className="flex items-center gap-3 mb-3 md:mb-4">
             <div className="p-1.5 md:p-2 rounded-xl bg-bronze/10">
               <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-bronze" />
@@ -145,7 +145,7 @@ const CreviaStudio = () => {
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1">
+      <div className="flex-1 min-w-0 overflow-x-hidden">
         {activeTab === "link" && <CreviaLink isEmbedded />}
         {activeTab === "chat" && <CreviaChat />}
         {activeTab === "invoices" && <SmartInvoicesTab />}

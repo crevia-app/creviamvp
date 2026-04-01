@@ -227,7 +227,7 @@ const SmartInvoicesTab = () => {
 
   if (loading) {
     return (
-      <div className="p-6 md:p-8 space-y-6">
+      <div className="mx-auto w-full max-w-6xl space-y-6 p-6 md:p-8">
         <div className="animate-pulse space-y-6">
           <div className="h-12 bg-muted rounded-xl w-2/5" />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -245,7 +245,7 @@ const SmartInvoicesTab = () => {
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-6">
+    <div className="mx-auto w-full max-w-6xl min-w-0 space-y-6 p-4 md:p-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -266,47 +266,47 @@ const SmartInvoicesTab = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 xl:grid-cols-4">
         <Card className="p-4 md:p-5 border-0 bg-gradient-to-br from-bronze/10 via-bronze/5 to-transparent shadow-sm">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <div className="p-2.5 rounded-xl bg-bronze/15">
               <Receipt className="h-5 w-5 text-bronze" />
             </div>
-            <div>
-              <p className="text-2xl md:text-3xl font-bold text-foreground">{stats.total}</p>
+            <div className="min-w-0">
+              <p className="break-words text-2xl font-bold leading-none text-foreground md:text-3xl">{stats.total}</p>
               <p className="text-xs text-muted-foreground font-medium">Total</p>
             </div>
           </div>
         </Card>
         <Card className="p-4 md:p-5 border-0 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent shadow-sm">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <div className="p-2.5 rounded-xl bg-emerald-500/15">
               <CheckCircle2 className="h-5 w-5 text-emerald-500" />
             </div>
-            <div>
-              <p className="text-2xl md:text-3xl font-bold text-foreground">{stats.paid}</p>
+            <div className="min-w-0">
+              <p className="break-words text-2xl font-bold leading-none text-foreground md:text-3xl">{stats.paid}</p>
               <p className="text-xs text-muted-foreground font-medium">Paid</p>
             </div>
           </div>
         </Card>
         <Card className="p-4 md:p-5 border-0 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent shadow-sm">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <div className="p-2.5 rounded-xl bg-blue-500/15">
               <Clock className="h-5 w-5 text-blue-500" />
             </div>
-            <div>
-              <p className="text-2xl md:text-3xl font-bold text-foreground">{stats.pending}</p>
+            <div className="min-w-0">
+              <p className="break-words text-2xl font-bold leading-none text-foreground md:text-3xl">{stats.pending}</p>
               <p className="text-xs text-muted-foreground font-medium">Pending</p>
             </div>
           </div>
         </Card>
         <Card className="p-4 md:p-5 border-0 bg-gradient-to-br from-red-500/10 via-red-500/5 to-transparent shadow-sm">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <div className="p-2.5 rounded-xl bg-red-500/15">
               <AlertCircle className="h-5 w-5 text-red-500" />
             </div>
-            <div>
-              <p className="text-2xl md:text-3xl font-bold text-foreground">{stats.overdue}</p>
+            <div className="min-w-0">
+              <p className="break-words text-2xl font-bold leading-none text-foreground md:text-3xl">{stats.overdue}</p>
               <p className="text-xs text-muted-foreground font-medium">Overdue</p>
             </div>
           </div>
@@ -315,13 +315,13 @@ const SmartInvoicesTab = () => {
 
       {/* Revenue Summary */}
       <Card className="p-5 md:p-6 border-0 bg-gradient-to-r from-bronze/8 via-background to-emerald-500/8 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <DollarSign className="h-4 w-4 text-muted-foreground" />
               <p className="text-sm text-muted-foreground font-medium">Total Revenue</p>
             </div>
-            <p className="text-2xl md:text-3xl font-bold text-foreground">
+            <p className="break-words text-2xl font-bold leading-tight text-foreground md:text-3xl">
               {formatCurrency(stats.totalValue, "KES")}
             </p>
           </div>
@@ -330,7 +330,7 @@ const SmartInvoicesTab = () => {
               <TrendingUp className="h-4 w-4 text-emerald-500" />
               <p className="text-sm text-muted-foreground font-medium">Collected</p>
             </div>
-            <p className="text-2xl md:text-3xl font-bold text-emerald-500">
+            <p className="break-words text-2xl font-bold leading-tight text-emerald-500 md:text-3xl">
               {formatCurrency(stats.paidValue, "KES")}
             </p>
           </div>
@@ -339,7 +339,7 @@ const SmartInvoicesTab = () => {
               <Clock className="h-4 w-4 text-amber-500" />
               <p className="text-sm text-muted-foreground font-medium">Outstanding</p>
             </div>
-            <p className="text-2xl md:text-3xl font-bold text-amber-500">
+            <p className="break-words text-2xl font-bold leading-tight text-amber-500 md:text-3xl">
               {formatCurrency(stats.outstandingValue, "KES")}
             </p>
           </div>
@@ -347,7 +347,7 @@ const SmartInvoicesTab = () => {
       </Card>
 
       {/* Search, Filter & Sort */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col gap-3 lg:flex-row">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -420,7 +420,7 @@ const SmartInvoicesTab = () => {
                 }`}
                 onClick={() => setPreviewInvoice(invoice)}
               >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-center">
                   <div className="flex items-start gap-4 flex-1 min-w-0">
                     <div className={`p-3 rounded-2xl flex-shrink-0 transition-colors ${
                       isOverdue ? "bg-red-100 dark:bg-red-900/20" : "bg-bronze/10 group-hover:bg-bronze/15"
@@ -432,7 +432,7 @@ const SmartInvoicesTab = () => {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <div className="mb-1 flex flex-wrap items-center gap-2">
                         <h4 className="font-semibold text-foreground">
                           {invoice.invoice_number}
                         </h4>
@@ -441,7 +441,7 @@ const SmartInvoicesTab = () => {
                       <p className="text-sm text-muted-foreground">
                         {invoice.client_name}
                       </p>
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
+                      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         <span>Issued {format(new Date(invoice.issue_date), "MMM d, yyyy")}</span>
                         <span>•</span>
                         <span className={isOverdue ? "text-red-500 font-medium" : ""}>
@@ -450,8 +450,8 @@ const SmartInvoicesTab = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4" onClick={(e) => e.stopPropagation()}>
-                    <div className="text-right">
+                  <div className="flex w-full items-center justify-between gap-4 xl:w-auto xl:justify-end" onClick={(e) => e.stopPropagation()}>
+                    <div className="min-w-[8rem] text-left xl:text-right">
                       <p className="text-lg font-bold text-foreground">
                         {formatCurrency(Number(invoice.total), invoice.currency)}
                       </p>
@@ -459,7 +459,7 @@ const SmartInvoicesTab = () => {
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" className="opacity-100 transition-opacity xl:opacity-0 xl:group-hover:opacity-100">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>

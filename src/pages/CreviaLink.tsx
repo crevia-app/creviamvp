@@ -544,7 +544,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     const embeddedTab = new URLSearchParams(location.search).get("section") || "profile";
     
     return (
-      <div className="bg-background">
+      <div className="bg-background overflow-x-hidden">
         {/* Embedded Tab Navigation */}
         <div className="hidden md:block border-b border-border/60 bg-background/95 backdrop-blur-sm">
           <ScrollArea className="w-full">
@@ -576,11 +576,11 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
         </div>
 
         {/* Embedded Content with Preview */}
-        <div className="flex">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 md:px-6 md:py-8 xl:flex-row xl:items-start">
           {/* Main Content */}
-          <div className="flex-1 max-w-3xl mx-auto px-4 md:px-6 py-6 md:py-8">
+          <div className="min-w-0 flex-1 xl:max-w-[54rem]">
             {embeddedTab === "profile" && (
-              <Card className="p-6 border-border/50">
+              <Card className="min-w-0 p-6 border-border/50">
                 <h3 className="font-vollkorn text-2xl font-bold mb-6">Profile Information</h3>
                 <div className="space-y-5">
                   {renderProfilePicture()}
@@ -619,8 +619,8 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
             )}
 
             {embeddedTab === "buttons" && (
-              <Card className="p-6 border-border/50">
-                <div className="flex items-center justify-between mb-6">
+              <Card className="min-w-0 p-6 border-border/50">
+                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <h3 className="font-vollkorn text-2xl font-bold">Links & Buttons</h3>
                   <Button onClick={() => setShowAddButton(true)} className="bg-bronze hover:bg-bronze-dark">
                     <Plus className="w-4 h-4 mr-2" />
@@ -655,7 +655,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
             {embeddedTab === "appearance" && (
               <div className="space-y-6">
                 {/* Theme & Colors (includes background style) */}
-                <Card className="p-6 border-border/50">
+                <Card className="min-w-0 p-6 border-border/50">
                   <div className="flex items-center gap-3 mb-6">
                     <Palette className="w-6 h-6 text-bronze" />
                     <h3 className="font-vollkorn text-2xl font-bold">Theme & Colors</h3>
@@ -772,7 +772,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 </Card>
 
                 {/* Typography */}
-                <Card className="p-6 border-border/50">
+                <Card className="min-w-0 p-6 border-border/50">
                   <div className="flex items-center gap-3 mb-6">
                     <Type className="w-6 h-6 text-bronze" />
                     <h3 className="font-vollkorn text-2xl font-bold">Typography</h3>
@@ -802,7 +802,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 </Card>
 
                 {/* Layout */}
-                <Card className="p-6 border-border/50">
+                <Card className="min-w-0 p-6 border-border/50">
                   <div className="flex items-center gap-3 mb-6">
                     <Layout className="w-6 h-6 text-bronze" />
                     <h3 className="font-vollkorn text-2xl font-bold">Layout</h3>
@@ -859,7 +859,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
             {embeddedTab === "settings" && (
               <div className="space-y-6">
                 {/* General Settings */}
-                <Card className="p-6 border-border/50">
+                <Card className="min-w-0 p-6 border-border/50">
                   <div className="flex items-center gap-3 mb-6">
                     <Globe className="w-6 h-6 text-bronze" />
                     <h3 className="font-vollkorn text-2xl font-bold">General Settings</h3>
@@ -912,7 +912,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 </Card>
 
                 {/* SEO Settings */}
-                <Card className="p-6 border-border/50">
+                <Card className="min-w-0 p-6 border-border/50">
                   <div className="flex items-center gap-3 mb-6">
                     <Shield className="w-6 h-6 text-bronze" />
                     <h3 className="font-vollkorn text-2xl font-bold">SEO & Sharing</h3>
@@ -949,8 +949,8 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
           </div>
 
           {/* Live Preview - Desktop Only */}
-          <div className="hidden lg:block w-[340px] sticky top-0 h-screen py-8 pr-6">
-            <div className="sticky top-8">
+          <div className="hidden xl:block xl:w-[300px] xl:flex-shrink-0 2xl:w-[340px]">
+            <div className="sticky top-24">
               <p className="text-sm font-medium text-center text-muted-foreground mb-4">Live Preview</p>
               <LivePreview linkProfile={linkProfile} buttons={buttons} />
             </div>

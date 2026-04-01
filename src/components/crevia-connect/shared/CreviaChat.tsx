@@ -205,7 +205,7 @@ const CreviaChat = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const presenceChannelRef = useRef<any>(null);
 
   const { e2eReady, initEncryption, setupRoomEncryption, encrypt, decrypt, decryptMessages, getRoomKey } = useE2EEncryption(currentUserId);
@@ -1126,7 +1126,7 @@ const CreviaChat = () => {
     type?.startsWith("image/") || false;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)] md:h-[calc(100vh-180px)] bg-background">
+    <div className="mx-auto flex h-[calc(100vh-200px)] w-full min-w-0 max-w-7xl flex-col overflow-hidden bg-background md:h-[calc(100vh-180px)]">
       {/* Header */}
       <div className="flex items-center justify-between p-3 md:p-4 border-b bg-background/95 backdrop-blur flex-shrink-0">
         <div className="flex items-center gap-2">
@@ -1167,7 +1167,7 @@ const CreviaChat = () => {
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
         {/* Sidebar / Room List */}
         <div
-          className={`${selectedRoom ? "hidden md:flex" : "flex"} md:w-80 lg:w-96 border-b md:border-b-0 md:border-r flex-col bg-muted/20 flex-shrink-0`}
+          className={`${selectedRoom ? "hidden md:flex" : "flex"} min-w-0 border-b bg-muted/20 md:w-[18rem] md:border-b-0 md:border-r xl:w-[22rem] 2xl:w-96 flex-col flex-shrink-0`}
         >
           {/* Search */}
           <div className="p-3">
@@ -1280,13 +1280,13 @@ const CreviaChat = () => {
         </div>
 
         {/* Chat Area */}
-        <div className={`${selectedRoom ? "flex" : "hidden md:flex"} flex-1 flex-col bg-background min-h-0`}>
+        <div className={`${selectedRoom ? "flex" : "hidden md:flex"} flex-1 min-h-0 min-w-0 flex-col bg-background`}>
           {selectedRoom ? (
             <>
               {/* Chat Header */}
               <div className="p-3 md:p-4 border-b bg-background/95 backdrop-blur flex-shrink-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                <div className="flex min-w-0 items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -1304,7 +1304,7 @@ const CreviaChat = () => {
                         getRoomInitial(selectedRoom)
                       )}
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="font-poppins font-semibold text-sm truncate">
                         {getRoomDisplayName(selectedRoom)}
                       </p>
@@ -1327,7 +1327,7 @@ const CreviaChat = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex flex-shrink-0 items-center gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
