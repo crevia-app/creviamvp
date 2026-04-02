@@ -8,11 +8,13 @@ import Footer from "@/components/Footer";
 
 const Pricing = () => {
   const [selectedType, setSelectedType] = useState<"creative" | "brand">("creative");
+  const [billingCycle, setBillingCycle] = useState<"weekly" | "monthly">("monthly");
 
   const creativePlans = [
     {
       name: "Free",
-      price: "$0",
+      priceMonthly: "$0",
+      priceWeekly: "$0",
       period: "",
       description: "Everything you need to start running your business.",
       features: [
@@ -27,8 +29,9 @@ const Pricing = () => {
     },
     {
       name: "Pro",
-      price: "$14.99",
-      period: "/mo",
+      priceMonthly: "$14.99",
+      priceWeekly: "$4.99",
+      period: billingCycle === "monthly" ? "/mo" : "/wk",
       description: "For creatives who are ready to scale.",
       features: [
         "Everything in Free",
@@ -47,10 +50,13 @@ const Pricing = () => {
   const brandPlans = [
     {
       name: "Free",
-      price: "$0",
+      priceMonthly: "$0",
+      priceWeekly: "$0",
       period: "",
+      seats: "1 seat",
       description: "Start finding and working with creatives.",
       features: [
+        "1 team seat",
         "Creator discovery",
         "Basic campaign management",
         "Crevia Wallet for payments",
@@ -62,10 +68,13 @@ const Pricing = () => {
     },
     {
       name: "Pro",
-      price: "$19.99",
-      period: "/mo",
+      priceMonthly: "$19.99",
+      priceWeekly: "$6.99",
+      period: billingCycle === "monthly" ? "/mo" : "/wk",
+      seats: "3 seats",
       description: "For brands scaling creative operations.",
       features: [
+        "3 team seats included",
         "Everything in Free",
         "Kira AI — creator matching & insights",
         "Unlimited campaigns",
@@ -123,6 +132,30 @@ const Pricing = () => {
               For Brands
             </button>
           </div>
+
+          {/* Billing cycle toggle */}
+          <div className="inline-flex items-center p-1 bg-secondary rounded-full animate-fade-in" style={{ animationDelay: "0.35s" }}>
+            <button
+              onClick={() => setBillingCycle("weekly")}
+              className={`px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-xs transition-all ${
+                billingCycle === "weekly"
+                  ? "bg-foreground text-background shadow-md"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Weekly
+            </button>
+            <button
+              onClick={() => setBillingCycle("monthly")}
+              className={`px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-xs transition-all ${
+                billingCycle === "monthly"
+                  ? "bg-foreground text-background shadow-md"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Monthly
+            </button>
+          </div>
         </div>
       </section>
 
@@ -154,7 +187,7 @@ const Pricing = () => {
 
                 <div className="flex items-baseline gap-1 mb-8">
                   <span className="font-vollkorn text-5xl md:text-6xl font-bold">
-                    {plan.price}
+                    {billingCycle === "monthly" ? plan.priceMonthly : plan.priceWeekly}
                   </span>
                   {plan.period && (
                     <span className="text-muted-foreground text-lg">{plan.period}</span>
