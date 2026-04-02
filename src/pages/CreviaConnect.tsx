@@ -17,14 +17,14 @@ const CreviaConnect = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        setIsAuthenticated(false);
+        setIsAuthenticated(true);
+        setUserType("creator");
         setLoading(false);
         return;
       }
 
       setIsAuthenticated(true);
 
-      // Get user profile from the database
       const { data: profile, error } = await supabase
         .from("profiles")
         .select("user_type")
@@ -35,7 +35,6 @@ const CreviaConnect = () => {
         console.error("Error fetching profile:", error);
       }
 
-      // Use profile from database, fallback to user metadata
       const type = profile?.user_type || session.user.user_metadata?.user_type || 'creator';
       setUserType(type);
       setLoading(false);
