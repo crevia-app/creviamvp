@@ -187,7 +187,7 @@ const Pricing = () => {
 
                 <div className="flex items-baseline gap-1 mb-8">
                   <span className="font-vollkorn text-5xl md:text-6xl font-bold">
-                    {plan.price}
+                    {billingCycle === "monthly" ? plan.priceMonthly : plan.priceWeekly}
                   </span>
                   {plan.period && (
                     <span className="text-muted-foreground text-lg">{plan.period}</span>
