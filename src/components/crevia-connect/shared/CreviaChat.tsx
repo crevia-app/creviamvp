@@ -1128,7 +1128,7 @@ const CreviaChat = () => {
   return (
     <div className="mx-auto flex h-[calc(100vh-200px)] w-full min-w-0 max-w-7xl flex-col overflow-hidden bg-background md:h-[calc(100vh-180px)]">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 md:p-4 border-b bg-background/95 backdrop-blur flex-shrink-0">
+      <div className="flex items-center justify-between p-3 md:p-4 border-b bg-background flex-shrink-0">
         <div className="flex items-center gap-2">
           <h2 className="font-vollkorn text-lg md:text-xl font-bold">Messages</h2>
           <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
