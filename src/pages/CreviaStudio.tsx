@@ -74,7 +74,7 @@ const CreviaStudio = () => {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Studio Header */}
-      <div className="border-b border-border bg-background/80 backdrop-blur-sm md:sticky md:top-16 z-30">
+      <div className="border-b border-border bg-background md:sticky md:top-0 z-30">
         <div className="mx-auto w-full max-w-7xl px-4 py-3 md:px-6 md:py-4">
           <div className="flex items-center gap-3 mb-3 md:mb-4">
             <div className="p-1.5 md:p-2 rounded-xl bg-bronze/10">
