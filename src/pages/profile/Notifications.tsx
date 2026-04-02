@@ -36,11 +36,7 @@ const Notifications = () => {
   });
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) navigate("/auth");
-    };
-    checkAuth();
+    // Auth check removed - allow guest access
   }, []);
 
   const toggle = (id: string) => setSettings((s) => ({ ...s, [id]: !s[id] }));

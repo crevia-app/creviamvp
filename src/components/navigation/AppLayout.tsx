@@ -21,27 +21,28 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
 
   useEffect(() => {
-    // Apply app theme preference (default dark for post-login)
     const appTheme = localStorage.getItem("app-theme") || "dark";
     setTheme(appTheme);
-    checkAuth();
+    loadProfile();
   }, []);
 
-  const checkAuth = async () => {
+  const loadProfile = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-      return;
+    
+    if (session) {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+
+      setProfile(profileData);
+      setUserType(profileData?.user_type || null);
+    } else {
+      // Allow access without auth with defaults
+      setUserType("creator");
+      setProfile({ display_name: "Guest", email: "" });
     }
-
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
-
-    setProfile(profileData);
-    setUserType(profileData?.user_type || null);
     setLoading(false);
   };
 
