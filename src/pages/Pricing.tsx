@@ -8,11 +8,13 @@ import Footer from "@/components/Footer";
 
 const Pricing = () => {
   const [selectedType, setSelectedType] = useState<"creative" | "brand">("creative");
+  const [billingCycle, setBillingCycle] = useState<"weekly" | "monthly">("monthly");
 
   const creativePlans = [
     {
       name: "Free",
-      price: "$0",
+      priceMonthly: "$0",
+      priceWeekly: "$0",
       period: "",
       description: "Everything you need to start running your business.",
       features: [
@@ -27,8 +29,9 @@ const Pricing = () => {
     },
     {
       name: "Pro",
-      price: "$14.99",
-      period: "/mo",
+      priceMonthly: "$14.99",
+      priceWeekly: "$4.99",
+      period: billingCycle === "monthly" ? "/mo" : "/wk",
       description: "For creatives who are ready to scale.",
       features: [
         "Everything in Free",
@@ -47,10 +50,13 @@ const Pricing = () => {
   const brandPlans = [
     {
       name: "Free",
-      price: "$0",
+      priceMonthly: "$0",
+      priceWeekly: "$0",
       period: "",
+      seats: "1 seat",
       description: "Start finding and working with creatives.",
       features: [
+        "1 team seat",
         "Creator discovery",
         "Basic campaign management",
         "Crevia Wallet for payments",
@@ -62,10 +68,13 @@ const Pricing = () => {
     },
     {
       name: "Pro",
-      price: "$19.99",
-      period: "/mo",
+      priceMonthly: "$19.99",
+      priceWeekly: "$6.99",
+      period: billingCycle === "monthly" ? "/mo" : "/wk",
+      seats: "3 seats",
       description: "For brands scaling creative operations.",
       features: [
+        "3 team seats included",
         "Everything in Free",
         "Kira AI — creator matching & insights",
         "Unlimited campaigns",
