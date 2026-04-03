@@ -465,11 +465,9 @@ const KiraOnboarding = () => {
               transition={{ type: "spring", delay: 0.2 }}
               className="w-24 h-24 mx-auto mb-6 relative"
             >
-              <img 
-                src={kiraMascot} 
-                alt="Kira" 
-                className="w-full h-full object-contain"
-              />
+              <div className="w-full h-full rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center">
+                <span className="font-vollkorn text-4xl font-bold text-bronze">K</span>
+              </div>
               <motion.div
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ repeat: Infinity, duration: 2 }}
