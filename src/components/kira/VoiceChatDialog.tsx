@@ -182,7 +182,7 @@ export const VoiceChatDialog = ({
         <div className="flex items-center justify-between p-4 border-b border-border/50 bg-gradient-to-r from-bronze/10 to-bronze-dark/10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center">
-              <img src={kiraImage} alt="Kira" className="w-6 h-6 object-contain" />
+              <span className="font-vollkorn text-sm font-bold text-bronze">K</span>
             </div>
             <div>
               <h3 className="font-semibold">Voice Chat with Kira</h3>
