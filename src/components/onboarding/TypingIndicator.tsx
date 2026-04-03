@@ -4,7 +4,7 @@ const TypingIndicator = () => {
   return (
     <div className="flex items-start gap-3">
       <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-bronze/20 to-bronze/10 flex items-center justify-center">
-        <span className="font-vollkorn text-lg font-bold text-bronze">K</span>
+        <span className="text-lg">✨</span>
       </div>
       
       <div className="bg-card rounded-2xl rounded-tl-sm px-5 py-4 shadow-sm border border-border/50">

@@ -89,7 +89,7 @@ const Home = () => {
 
           {/* KIRA — Intelligence Layer */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center mb-20 md:mb-28">
-            <div className="space-y-6">
+            <div className="space-y-6 lg:col-span-2 max-w-3xl">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-bronze/10 border border-bronze/20">
                 <Brain className="w-4 h-4 text-bronze" />
                 <span className="text-bronze font-poppins font-semibold text-sm">
@@ -118,21 +118,11 @@ const Home = () => {
                 ))}
               </ul>
             </div>
-            <div className="relative">
-              <div className="aspect-square rounded-3xl bg-gradient-to-br from-bronze/10 via-bronze/5 to-transparent border border-bronze/20 flex items-center justify-center">
-                <Brain className="w-24 h-24 md:w-32 md:h-32 text-bronze/30" />
-              </div>
-            </div>
           </div>
 
           {/* CREVIA STUDIO — Operations Layer */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center">
-            <div className="order-2 lg:order-1 relative">
-              <div className="aspect-square rounded-3xl bg-gradient-to-br from-bronze/10 via-bronze/5 to-transparent border border-bronze/20 flex items-center justify-center">
-                <FileText className="w-24 h-24 md:w-32 md:h-32 text-bronze/30" />
-              </div>
-            </div>
-            <div className="order-1 lg:order-2 space-y-6">
+            <div className="space-y-6 lg:col-span-2 max-w-3xl">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-bronze/10 border border-bronze/20">
                 <FileText className="w-4 h-4 text-bronze" />
                 <span className="text-bronze font-poppins font-semibold text-sm">
@@ -148,7 +138,7 @@ const Home = () => {
                 For creatives, it turns individuals into companies. For brands, 
                 it turns chaos into structured creative operations.
               </p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 max-w-md">
                 {[
                   { icon: Link2, label: "Crevia Link" },
                   { icon: MessageCircle, label: "Crevia Chat" },

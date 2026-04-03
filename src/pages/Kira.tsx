@@ -935,7 +935,7 @@ const Kira = () => {
                     /* Empty State - Claude-style centered */
                     <div className="flex flex-col items-center justify-center py-12 md:py-24 text-center">
                       <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center mb-8 ring-4 ring-bronze/10">
-                        <span className="font-vollkorn text-3xl font-bold text-bronze">K</span>
+                        <span className="text-3xl">✨</span>
                       </div>
                       
                       <h1 className="font-vollkorn text-2xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-bronze to-bronze-dark bg-clip-text text-transparent">
@@ -983,7 +983,7 @@ const Kira = () => {
                               {msg.role === 'user' ? (
                                 <span className="text-xs font-semibold">You</span>
                               ) : (
-                                <span className="font-vollkorn text-xs font-bold text-bronze">K</span>
+                                <span className="text-xs">✨</span>
                               )}
                             </div>
 
@@ -1064,7 +1064,7 @@ const Kira = () => {
                       {isLoading && messages[messages.length - 1]?.role === 'user' && (
                         <div className="flex gap-3 animate-fade-in">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center">
-                            <span className="font-vollkorn text-xs font-bold text-bronze">K</span>
+                            <span className="text-xs">✨</span>
                           </div>
                           <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
                             <div className="flex items-center gap-2">
