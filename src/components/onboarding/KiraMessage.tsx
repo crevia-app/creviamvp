@@ -15,7 +15,7 @@ const KiraMessage = ({ content }: KiraMessageProps) => {
         transition={{ type: "spring", damping: 15 }}
         className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-bronze/20 to-bronze/10 flex items-center justify-center"
       >
-        <span className="font-vollkorn text-lg font-bold text-bronze">K</span>
+        <span className="text-lg">✨</span>
       </motion.div>
       
       <div className="flex-1 bg-card rounded-2xl rounded-tl-sm p-4 shadow-sm border border-border/50 max-w-[85%]">
