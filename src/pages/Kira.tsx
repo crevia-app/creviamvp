@@ -38,7 +38,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import kiraImage from "@/assets/kira-mascot-new.png";
 import { CreateProjectDialog } from "@/components/kira/CreateProjectDialog";
 import { ProjectDetailSheet } from "@/components/kira/ProjectDetailSheet";
 import { ProjectsView } from "@/components/kira/ProjectsView";
@@ -936,7 +935,7 @@ const Kira = () => {
                     /* Empty State - Claude-style centered */
                     <div className="flex flex-col items-center justify-center py-12 md:py-24 text-center">
                       <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center mb-8 ring-4 ring-bronze/10">
-                        <img src={kiraImage} alt="Kira" className="w-12 h-12 md:w-14 md:h-14 object-contain" />
+                        <span className="font-vollkorn text-3xl font-bold text-bronze">K</span>
                       </div>
                       
                       <h1 className="font-vollkorn text-2xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-bronze to-bronze-dark bg-clip-text text-transparent">
@@ -984,7 +983,7 @@ const Kira = () => {
                               {msg.role === 'user' ? (
                                 <span className="text-xs font-semibold">You</span>
                               ) : (
-                                <img src={kiraImage} alt="Kira" className="w-5 h-5 object-contain" />
+                                <span className="font-vollkorn text-xs font-bold text-bronze">K</span>
                               )}
                             </div>
 
@@ -1065,7 +1064,7 @@ const Kira = () => {
                       {isLoading && messages[messages.length - 1]?.role === 'user' && (
                         <div className="flex gap-3 animate-fade-in">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center">
-                            <img src={kiraImage} alt="Kira" className="w-5 h-5 object-contain" />
+                            <span className="font-vollkorn text-xs font-bold text-bronze">K</span>
                           </div>
                           <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
                             <div className="flex items-center gap-2">
