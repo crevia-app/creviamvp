@@ -30,7 +30,7 @@ const Pricing = () => {
     {
       name: "Pro",
       priceMonthly: "$14.99",
-      priceWeekly: "$4.99",
+      priceWeekly: "$3.75",
       period: billingCycle === "monthly" ? "/mo" : "/wk",
       description: "For creatives who are ready to scale.",
       features: [
@@ -50,8 +50,7 @@ const Pricing = () => {
   const brandPlans = [
     {
       name: "Free",
-      priceMonthly: "$0",
-      priceWeekly: "$0",
+      price: "$0",
       period: "",
       seats: "1 seat",
       description: "Start finding and working with creatives.",
@@ -68,9 +67,8 @@ const Pricing = () => {
     },
     {
       name: "Pro",
-      priceMonthly: "$19.99",
-      priceWeekly: "$6.99",
-      period: billingCycle === "monthly" ? "/mo" : "/wk",
+      price: "$19.99",
+      period: "/mo",
       seats: "3 seats",
       description: "For brands scaling creative operations.",
       features: [
@@ -133,29 +131,31 @@ const Pricing = () => {
             </button>
           </div>
 
-          {/* Billing cycle toggle */}
-          <div className="inline-flex items-center p-1 bg-secondary rounded-full animate-fade-in" style={{ animationDelay: "0.35s" }}>
-            <button
-              onClick={() => setBillingCycle("weekly")}
-              className={`px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-xs transition-all ${
-                billingCycle === "weekly"
-                  ? "bg-foreground text-background shadow-md"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Weekly
-            </button>
-            <button
-              onClick={() => setBillingCycle("monthly")}
-              className={`px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-xs transition-all ${
-                billingCycle === "monthly"
-                  ? "bg-foreground text-background shadow-md"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Monthly
-            </button>
-          </div>
+          {/* Billing cycle toggle - only for creatives */}
+          {selectedType === "creative" && (
+            <div className="inline-flex items-center p-1 bg-secondary rounded-full animate-fade-in" style={{ animationDelay: "0.35s" }}>
+              <button
+                onClick={() => setBillingCycle("weekly")}
+                className={`px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-xs transition-all ${
+                  billingCycle === "weekly"
+                    ? "bg-foreground text-background shadow-md"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Weekly
+              </button>
+              <button
+                onClick={() => setBillingCycle("monthly")}
+                className={`px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-xs transition-all ${
+                  billingCycle === "monthly"
+                    ? "bg-foreground text-background shadow-md"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Monthly
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -187,7 +187,11 @@ const Pricing = () => {
 
                 <div className="flex items-baseline gap-1 mb-8">
                   <span className="font-vollkorn text-5xl md:text-6xl font-bold">
-                    {billingCycle === "monthly" ? plan.priceMonthly : plan.priceWeekly}
+                    {"price" in plan
+                      ? (plan as any).price
+                      : billingCycle === "monthly"
+                        ? (plan as any).priceMonthly
+                        : (plan as any).priceWeekly}
                   </span>
                   {plan.period && (
                     <span className="text-muted-foreground text-lg">{plan.period}</span>
