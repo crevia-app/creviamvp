@@ -939,7 +939,7 @@ const Kira = () => {
                     /* Empty State - Claude-style centered */
                     <div className="flex flex-col items-center justify-center py-12 md:py-24 text-center">
                       <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center mb-8 ring-4 ring-bronze/10">
-                        <img src={kiraImage} alt="Kira" className="w-12 h-12 md:w-14 md:h-14 object-contain" />
+                        <span className="font-vollkorn text-3xl font-bold text-bronze">K</span>
                       </div>
                       
                       <h1 className="font-vollkorn text-2xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-bronze to-bronze-dark bg-clip-text text-transparent">
