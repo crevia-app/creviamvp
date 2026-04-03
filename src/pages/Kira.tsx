@@ -1064,7 +1064,7 @@ const Kira = () => {
                       {isLoading && messages[messages.length - 1]?.role === 'user' && (
                         <div className="flex gap-3 animate-fade-in">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center">
-                            <span className="font-vollkorn text-xs font-bold text-bronze">K</span>
+                            <span className="text-xs">✨</span>
                           </div>
                           <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
                             <div className="flex items-center gap-2">
