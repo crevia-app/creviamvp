@@ -987,7 +987,7 @@ const Kira = () => {
                               {msg.role === 'user' ? (
                                 <span className="text-xs font-semibold">You</span>
                               ) : (
-                                <img src={kiraImage} alt="Kira" className="w-5 h-5 object-contain" />
+                                <span className="font-vollkorn text-xs font-bold text-bronze">K</span>
                               )}
                             </div>
 
