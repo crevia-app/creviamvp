@@ -131,29 +131,31 @@ const Pricing = () => {
             </button>
           </div>
 
-          {/* Billing cycle toggle */}
-          <div className="inline-flex items-center p-1 bg-secondary rounded-full animate-fade-in" style={{ animationDelay: "0.35s" }}>
-            <button
-              onClick={() => setBillingCycle("weekly")}
-              className={`px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-xs transition-all ${
-                billingCycle === "weekly"
-                  ? "bg-foreground text-background shadow-md"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Weekly
-            </button>
-            <button
-              onClick={() => setBillingCycle("monthly")}
-              className={`px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-xs transition-all ${
-                billingCycle === "monthly"
-                  ? "bg-foreground text-background shadow-md"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Monthly
-            </button>
-          </div>
+          {/* Billing cycle toggle - only for creatives */}
+          {selectedType === "creative" && (
+            <div className="inline-flex items-center p-1 bg-secondary rounded-full animate-fade-in" style={{ animationDelay: "0.35s" }}>
+              <button
+                onClick={() => setBillingCycle("weekly")}
+                className={`px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-xs transition-all ${
+                  billingCycle === "weekly"
+                    ? "bg-foreground text-background shadow-md"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Weekly
+              </button>
+              <button
+                onClick={() => setBillingCycle("monthly")}
+                className={`px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-xs transition-all ${
+                  billingCycle === "monthly"
+                    ? "bg-foreground text-background shadow-md"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Monthly
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
