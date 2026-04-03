@@ -38,10 +38,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-// Kira avatar helper
-const KiraAvatar = ({ className = "w-5 h-5" }: { className?: string }) => (
-  <span className={`font-vollkorn font-bold text-bronze ${className === "w-5 h-5" ? "text-xs" : className.includes("w-12") || className.includes("w-14") ? "text-3xl" : "text-xs"}`}>K</span>
-);
 import { CreateProjectDialog } from "@/components/kira/CreateProjectDialog";
 import { ProjectDetailSheet } from "@/components/kira/ProjectDetailSheet";
 import { ProjectsView } from "@/components/kira/ProjectsView";
