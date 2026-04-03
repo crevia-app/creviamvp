@@ -50,8 +50,7 @@ const Pricing = () => {
   const brandPlans = [
     {
       name: "Free",
-      priceMonthly: "$0",
-      priceWeekly: "$0",
+      price: "$0",
       period: "",
       seats: "1 seat",
       description: "Start finding and working with creatives.",
@@ -68,9 +67,8 @@ const Pricing = () => {
     },
     {
       name: "Pro",
-      priceMonthly: "$19.99",
-      priceWeekly: "$6.99",
-      period: billingCycle === "monthly" ? "/mo" : "/wk",
+      price: "$19.99",
+      period: "/mo",
       seats: "3 seats",
       description: "For brands scaling creative operations.",
       features: [
