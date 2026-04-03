@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useVoiceChat } from "@/hooks/use-voice-chat";
 import { Mic, MicOff, Volume2, VolumeX, X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import kiraImage from "@/assets/kira-mascot-new.png";
+
 import { cn } from "@/lib/utils";
 
 interface VoiceChatDialogProps {
