@@ -983,7 +983,7 @@ const Kira = () => {
                               {msg.role === 'user' ? (
                                 <span className="text-xs font-semibold">You</span>
                               ) : (
-                                <span className="font-vollkorn text-xs font-bold text-bronze">K</span>
+                                <span className="text-xs">✨</span>
                               )}
                             </div>
 
