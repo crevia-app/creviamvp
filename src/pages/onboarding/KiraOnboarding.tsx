@@ -9,7 +9,7 @@ import OptionButtons from "@/components/onboarding/OptionButtons";
 import TypingIndicator from "@/components/onboarding/TypingIndicator";
 import OnboardingHeader from "@/components/onboarding/OnboardingHeader";
 import TextInput from "@/components/onboarding/TextInput";
-import kiraMascot from "@/assets/kira-mascot-new.png";
+
 
 // Creator flow steps
 const creatorSteps = [
