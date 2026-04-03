@@ -30,7 +30,7 @@ const Pricing = () => {
     {
       name: "Pro",
       priceMonthly: "$14.99",
-      priceWeekly: "$4.99",
+      priceWeekly: "$3.75",
       period: billingCycle === "monthly" ? "/mo" : "/wk",
       description: "For creatives who are ready to scale.",
       features: [
