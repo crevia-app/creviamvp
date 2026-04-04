@@ -180,10 +180,7 @@ export const VoiceChatDialog = ({
       <DialogContent className="sm:max-w-lg p-0 gap-0 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border/50 bg-gradient-to-r from-bronze/10 to-bronze-dark/10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center">
-              <span className="text-sm">✨</span>
-            </div>
+           <div className="flex items-center gap-3">
             <div>
               <h3 className="font-semibold">Voice Chat with Kira</h3>
               <p className="text-xs text-muted-foreground">

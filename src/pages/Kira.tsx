@@ -933,10 +933,7 @@ const Kira = () => {
                 <div className="max-w-2xl mx-auto w-full">
                   {messages.length === 0 ? (
                     /* Empty State - Claude-style centered */
-                    <div className="flex flex-col items-center justify-center py-12 md:py-24 text-center">
-                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center mb-8 ring-4 ring-bronze/10">
-                        <span className="text-3xl">✨</span>
-                      </div>
+                     <div className="flex flex-col items-center justify-center py-12 md:py-24 text-center">
                       
                       <h1 className="font-vollkorn text-2xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-bronze to-bronze-dark bg-clip-text text-transparent">
                         {activeProject ? `Working on ${activeProject.name}` : currentGreeting}
@@ -974,18 +971,12 @@ const Kira = () => {
                       {messages.map((msg, idx) => (
                         <div key={idx} className="animate-fade-in">
                           <div className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                            {/* Avatar */}
-                            <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${
-                              msg.role === 'user'
-                                ? 'bg-bronze text-background'
-                                : 'bg-gradient-to-br from-bronze/20 to-bronze-dark/20'
-                            }`}>
-                              {msg.role === 'user' ? (
-                                <span className="text-xs font-semibold">You</span>
-                              ) : (
-                                <span className="text-xs">✨</span>
-                              )}
-                            </div>
+                             {/* Avatar - user only */}
+                             {msg.role === 'user' && (
+                               <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center bg-bronze text-background">
+                                 <span className="text-xs font-semibold">You</span>
+                               </div>
+                             )}
 
                             {/* Message */}
                             <div className={`flex-1 ${msg.role === 'user' ? 'text-right' : ''}`}>
@@ -1062,10 +1053,7 @@ const Kira = () => {
                       
                       {/* Loading indicator */}
                       {isLoading && messages[messages.length - 1]?.role === 'user' && (
-                        <div className="flex gap-3 animate-fade-in">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center">
-                            <span className="text-xs">✨</span>
-                          </div>
+                         <div className="flex gap-3 animate-fade-in">
                           <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
                             <div className="flex items-center gap-2">
                               <Loader2 className="w-4 h-4 animate-spin text-bronze" />
