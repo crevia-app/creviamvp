@@ -72,7 +72,7 @@ const App = () => (
             <Route path="/profile/settings" element={<AppLayout><Settings /></AppLayout>} />
             <Route path="/profile/help" element={<AppLayout><Help /></AppLayout>} />
             <Route path="/profile/feedback" element={<AppLayout><Feedback /></AppLayout>} />
-            <Route path="/profile/integrations" element={<AppLayout><Integrations /></AppLayout>} />
+            
             
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
