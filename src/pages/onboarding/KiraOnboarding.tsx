@@ -458,24 +458,21 @@ const KiraOnboarding = () => {
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-lg text-center"
         >
-          <div className="mb-8">
-            <motion.div 
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", delay: 0.2 }}
-              className="w-24 h-24 mx-auto mb-6 relative"
-            >
-              <div className="w-full h-full rounded-full bg-gradient-to-br from-bronze/20 to-bronze-dark/20 flex items-center justify-center">
-                <span className="text-4xl">✨</span>
-              </div>
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                className="absolute -top-1 -right-1 text-2xl"
-              >
-                👋
-              </motion.div>
-            </motion.div>
+           <div className="mb-8">
+             <motion.div 
+               initial={{ scale: 0 }}
+               animate={{ scale: 1 }}
+               transition={{ type: "spring", delay: 0.2 }}
+               className="w-24 h-24 mx-auto mb-6 relative"
+             >
+               <motion.div
+                 animate={{ scale: [1, 1.2, 1] }}
+                 transition={{ repeat: Infinity, duration: 2 }}
+                 className="text-5xl flex items-center justify-center w-full h-full"
+               >
+                 👋
+               </motion.div>
+             </motion.div>
             <h1 className="font-vollkorn text-3xl md:text-4xl font-bold mb-3">
               Hey {userName || "there"}! 
             </h1>
