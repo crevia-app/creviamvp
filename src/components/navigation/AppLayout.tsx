@@ -21,7 +21,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
 
   useEffect(() => {
-    const appTheme = localStorage.getItem("app-theme") || "dark";
+    const appTheme = localStorage.getItem("app-theme") || "light";
     setTheme(appTheme);
     loadProfile();
   }, []);
