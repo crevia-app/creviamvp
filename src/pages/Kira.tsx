@@ -971,18 +971,12 @@ const Kira = () => {
                       {messages.map((msg, idx) => (
                         <div key={idx} className="animate-fade-in">
                           <div className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                            {/* Avatar */}
-                            <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${
-                              msg.role === 'user'
-                                ? 'bg-bronze text-background'
-                                : 'bg-gradient-to-br from-bronze/20 to-bronze-dark/20'
-                            }`}>
-                              {msg.role === 'user' ? (
-                                <span className="text-xs font-semibold">You</span>
-                              ) : (
-                                <span className="text-xs">✨</span>
-                              )}
-                            </div>
+                             {/* Avatar - user only */}
+                             {msg.role === 'user' && (
+                               <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center bg-bronze text-background">
+                                 <span className="text-xs font-semibold">You</span>
+                               </div>
+                             )}
 
                             {/* Message */}
                             <div className={`flex-1 ${msg.role === 'user' ? 'text-right' : ''}`}>
