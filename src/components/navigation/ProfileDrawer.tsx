@@ -14,7 +14,7 @@ import {
   ShieldCheck, 
   Settings, 
   LogOut,
-  Puzzle
+  Crown
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -40,7 +40,6 @@ const ProfileDrawer = ({ isOpen, onClose, profile, userType }: ProfileDrawerProp
     { icon: Bell, label: t("profile.notifications"), path: "/profile/notifications" },
     { icon: ShieldCheck, label: t("profile.verification"), path: "/profile/verification" },
     { icon: Settings, label: t("profile.settings"), path: "/profile/settings" },
-    { icon: Puzzle, label: t("profile.integrations"), path: "/profile/integrations" },
   ];
 
   return (
@@ -67,6 +66,16 @@ const ProfileDrawer = ({ isOpen, onClose, profile, userType }: ProfileDrawerProp
             </p>
           </div>
         </div>
+
+        {/* Upgrade to Pro */}
+        <Link
+          to="/pricing"
+          onClick={onClose}
+          className="flex items-center gap-3 px-4 py-3 mb-2 rounded-lg bg-gradient-to-r from-bronze to-bronze-dark text-white hover:opacity-90 transition-all"
+        >
+          <Crown className="h-5 w-5" />
+          <span className="font-poppins text-sm font-semibold">Upgrade to Pro</span>
+        </Link>
 
         <Separator className="bg-white/10 mb-4" />
 
