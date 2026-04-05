@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import SuccessOverlay from "@/components/ui/SuccessOverlay";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,6 +57,7 @@ const CreateInvoiceDialog = ({
   kiraContext,
 }: CreateInvoiceDialogProps) => {
   const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
@@ -233,9 +235,10 @@ const CreateInvoiceDialog = ({
 
         if (itemsError) throw itemsError;
 
-        toast.success("Invoice updated successfully");
+        onSuccess();
+        onOpenChange(false);
+        toast.success("Invoice updated");
       } else {
-        // Create new invoice
         const { data: invoice, error: invoiceError } = await supabase
           .from("invoices")
           .insert({
@@ -273,11 +276,9 @@ const CreateInvoiceDialog = ({
 
         if (itemsError) throw itemsError;
 
-        toast.success("Invoice created successfully");
+        onOpenChange(false);
+        setShowSuccess(true);
       }
-
-      onSuccess();
-      onOpenChange(false);
     } catch (error: any) {
       toast.error(error.message || "Failed to save invoice");
     } finally {
@@ -295,6 +296,13 @@ const CreateInvoiceDialog = ({
   };
 
   return (
+    <>
+    <SuccessOverlay
+      show={showSuccess}
+      title="Invoice Created"
+      subtitle="Your invoice is ready to send"
+      onComplete={() => { setShowSuccess(false); onSuccess(); }}
+    />
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -555,6 +563,7 @@ const CreateInvoiceDialog = ({
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 };
 

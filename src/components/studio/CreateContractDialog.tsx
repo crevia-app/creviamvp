@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import SuccessOverlay from "@/components/ui/SuccessOverlay";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -322,6 +323,7 @@ const CreateContractDialog = ({
   kiraContext,
 }: CreateContractDialogProps) => {
   const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [title, setTitle] = useState("");
   const [clientName, setClientName] = useState("");
@@ -457,15 +459,15 @@ const CreateContractDialog = ({
       if (editingContract) {
         const { error } = await supabase.from("contracts").update(contractData).eq("id", editingContract.id);
         if (error) throw error;
+        onSuccess();
+        onOpenChange(false);
         toast.success("Contract updated");
       } else {
         const { error } = await supabase.from("contracts").insert(contractData);
         if (error) throw error;
-        toast.success("Contract created");
+        onOpenChange(false);
+        setShowSuccess(true);
       }
-
-      onSuccess();
-      onOpenChange(false);
     } catch (error: any) {
       toast.error(error.message || "Failed to save contract");
     } finally {
@@ -480,6 +482,13 @@ const CreateContractDialog = ({
   };
 
   return (
+    <>
+    <SuccessOverlay
+      show={showSuccess}
+      title="Contract Created"
+      subtitle="Your contract is ready to sign"
+      onComplete={() => { setShowSuccess(false); onSuccess(); }}
+    />
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 rounded-2xl">
         {/* Header with Steps */}
@@ -780,6 +789,7 @@ const CreateContractDialog = ({
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 };
 

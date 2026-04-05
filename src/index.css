@@ -96,11 +96,31 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
     font-family: 'Poppins', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Vollkorn', serif;
     font-weight: 700;
+  }
+
+  /* Apple-style button press — subtle scale down on active */
+  button, [role="button"], a[class*="btn"], [data-state] {
+    transition: transform 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+                opacity 0.18s ease,
+                box-shadow 0.25s ease;
+  }
+
+  button:active:not(:disabled), [role="button"]:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  /* Smooth card hover lift — universal */
+  .card-interactive,
+  [class*="Card"]:not([data-no-hover]) {
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1),
+                box-shadow 0.35s cubic-bezier(0.32, 0.72, 0, 1);
   }
 }
 
