@@ -482,6 +482,13 @@ const CreateContractDialog = ({
   };
 
   return (
+    <>
+    <SuccessOverlay
+      show={showSuccess}
+      title="Contract Created"
+      subtitle="Your contract is ready to sign"
+      onComplete={() => { setShowSuccess(false); onSuccess(); }}
+    />
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 rounded-2xl">
         {/* Header with Steps */}
