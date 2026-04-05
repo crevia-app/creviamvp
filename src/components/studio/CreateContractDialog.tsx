@@ -789,6 +789,7 @@ const CreateContractDialog = ({
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 };
 

@@ -296,6 +296,13 @@ const CreateInvoiceDialog = ({
   };
 
   return (
+    <>
+    <SuccessOverlay
+      show={showSuccess}
+      title="Invoice Created"
+      subtitle="Your invoice is ready to send"
+      onComplete={() => { setShowSuccess(false); onSuccess(); }}
+    />
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -556,6 +563,7 @@ const CreateInvoiceDialog = ({
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 };
 
