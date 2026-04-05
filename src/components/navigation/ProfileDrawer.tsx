@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Sheet,
   SheetContent,
@@ -6,11 +6,14 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   CreditCard, 
   Bell, 
   ShieldCheck, 
   Settings, 
+  LogOut,
   Crown
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
@@ -24,7 +27,13 @@ interface ProfileDrawerProps {
 }
 
 const ProfileDrawer = ({ isOpen, onClose, profile, userType }: ProfileDrawerProps) => {
+  const navigate = useNavigate();
   const { t } = useLanguage();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
 
   const menuItems = [
     { icon: CreditCard, label: t("profile.paymentsBilling"), path: "/profile/payments-billing" },
@@ -86,6 +95,17 @@ const ProfileDrawer = ({ isOpen, onClose, profile, userType }: ProfileDrawerProp
             );
           })}
         </nav>
+
+        <Separator className="bg-white/10 my-4" />
+
+        <Button
+          variant="ghost"
+          onClick={handleSignOut}
+          className="w-full justify-start gap-3 text-white/80 hover:text-red-400 hover:bg-white/5"
+        >
+          <LogOut className="h-5 w-5" />
+          <span className="font-poppins text-sm font-medium">{t("profile.logout")}</span>
+        </Button>
       </SheetContent>
     </Sheet>
   );
