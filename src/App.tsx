@@ -6,13 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import Home from "./pages/Home";
-import Auth from "./pages/Auth";
-import ResetPassword from "./pages/ResetPassword";
-import CreatorSignup from "./pages/CreatorSignup";
-import BrandSignup from "./pages/BrandSignup";
-// KiraOnboarding removed for smoother signup flow
-// KiraOnboarding removed for smoother signup flow
-// Dashboard removed - redirects to /kira
+// Auth imports removed - will return later
 import Kira from "./pages/Kira";
 import CreviaLink from "./pages/CreviaLink";
 import CreviaStudio from "./pages/CreviaStudio";
@@ -48,20 +42,14 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<PublicPageWrapper><Home /></PublicPageWrapper>} />
-            <Route path="/auth" element={<PublicPageWrapper><Auth /></PublicPageWrapper>} />
-            <Route path="/reset-password" element={<PublicPageWrapper><ResetPassword /></PublicPageWrapper>} />
             <Route path="/pricing" element={<PublicPageWrapper><Pricing /></PublicPageWrapper>} />
             <Route path="/about" element={<PublicPageWrapper><About /></PublicPageWrapper>} />
             <Route path="/app/about" element={<AppLayout><About /></AppLayout>} />
             <Route path="/privacy-policy" element={<AppLayout><PrivacyPolicy /></AppLayout>} />
             <Route path="/terms-of-service" element={<AppLayout><TermsOfService /></AppLayout>} />
-            <Route path="/user-type-selection" element={<Navigate to="/auth" replace />} />
-            <Route path="/signup/creator" element={<PublicPageWrapper><CreatorSignup /></PublicPageWrapper>} />
-            <Route path="/signup/brand" element={<PublicPageWrapper><BrandSignup /></PublicPageWrapper>} />
-            {/* Kira onboarding removed for smoother signup flow */}
             <Route path="/:username" element={<PublicPageWrapper><PublicProfile /></PublicPageWrapper>} />
             
-            {/* Protected routes with AppLayout */}
+            {/* App routes with AppLayout */}
             <Route path="/dashboard" element={<Navigate to="/kira" replace />} />
             <Route path="/kira" element={<AppLayout><Kira /></AppLayout>} />
             <Route path="/crevia-link" element={<AppLayout><CreviaLink /></AppLayout>} />
@@ -72,7 +60,6 @@ const App = () => (
             <Route path="/profile/settings" element={<AppLayout><Settings /></AppLayout>} />
             <Route path="/profile/help" element={<AppLayout><Help /></AppLayout>} />
             <Route path="/profile/feedback" element={<AppLayout><Feedback /></AppLayout>} />
-            
             
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
