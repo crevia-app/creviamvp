@@ -5,6 +5,8 @@ import { Check, ArrowRight } from "lucide-react";
 import HeroPattern from "@/components/HeroPattern";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ScrollReveal from "@/components/ui/ScrollReveal";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Pricing = () => {
   const [selectedType, setSelectedType] = useState<"creative" | "brand">("creative");
@@ -96,141 +98,170 @@ const Pricing = () => {
       <section className="relative pt-28 md:pt-36 pb-8 md:pb-12 px-4 md:px-6 overflow-hidden">
         <HeroPattern />
         <div className="container mx-auto max-w-4xl text-center relative z-10">
-          <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase mb-4 animate-fade-in">
-            Pricing
-          </p>
-          <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            Simple pricing.{" "}
-            <span className="text-gradient-bronze">Serious tools.</span>
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in" style={{ animationDelay: "0.2s" }}>
-            Start free. Upgrade when your business is ready for more power.
-          </p>
+          <ScrollReveal>
+            <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase mb-4">
+              Pricing
+            </p>
+          </ScrollReveal>
+          <ScrollReveal delay={0.08}>
+            <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+              Simple pricing.{" "}
+              <span className="text-gradient-bronze">Serious tools.</span>
+            </h1>
+          </ScrollReveal>
+          <ScrollReveal delay={0.16}>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+              Start free. Upgrade when your business is ready for more power.
+            </p>
+          </ScrollReveal>
 
           {/* Toggle */}
-          <div className="inline-flex items-center p-1 bg-secondary rounded-full mb-6 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-            <button
-              onClick={() => setSelectedType("creative")}
-              className={`px-6 md:px-8 py-2.5 rounded-full font-poppins font-semibold text-sm transition-all ${
-                selectedType === "creative"
-                  ? "bg-bronze text-white shadow-md"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              For Creatives
-            </button>
-            <button
-              onClick={() => setSelectedType("brand")}
-              className={`px-6 md:px-8 py-2.5 rounded-full font-poppins font-semibold text-sm transition-all ${
-                selectedType === "brand"
-                  ? "bg-bronze text-white shadow-md"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              For Brands
-            </button>
-          </div>
-
-          {/* Billing cycle toggle - only for creatives */}
-          {selectedType === "creative" && (
-            <div className="inline-flex items-center p-1 bg-secondary rounded-full animate-fade-in" style={{ animationDelay: "0.35s" }}>
+          <ScrollReveal delay={0.24}>
+            <div className="inline-flex items-center p-1 bg-secondary rounded-full mb-6">
               <button
-                onClick={() => setBillingCycle("weekly")}
-                className={`px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-xs transition-all ${
-                  billingCycle === "weekly"
-                    ? "bg-foreground text-background shadow-md"
+                onClick={() => setSelectedType("creative")}
+                className={`px-6 md:px-8 py-2.5 rounded-full font-poppins font-semibold text-sm transition-all duration-300 ${
+                  selectedType === "creative"
+                    ? "bg-bronze text-white shadow-md"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Weekly
+                For Creatives
               </button>
               <button
-                onClick={() => setBillingCycle("monthly")}
-                className={`px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-xs transition-all ${
-                  billingCycle === "monthly"
-                    ? "bg-foreground text-background shadow-md"
+                onClick={() => setSelectedType("brand")}
+                className={`px-6 md:px-8 py-2.5 rounded-full font-poppins font-semibold text-sm transition-all duration-300 ${
+                  selectedType === "brand"
+                    ? "bg-bronze text-white shadow-md"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Monthly
+                For Brands
               </button>
             </div>
-          )}
+
+            {selectedType === "creative" && (
+              <div className="block">
+                <div className="inline-flex items-center p-1 bg-secondary rounded-full">
+                  <button
+                    onClick={() => setBillingCycle("weekly")}
+                    className={`px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-xs transition-all duration-300 ${
+                      billingCycle === "weekly"
+                        ? "bg-foreground text-background shadow-md"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Weekly
+                  </button>
+                  <button
+                    onClick={() => setBillingCycle("monthly")}
+                    className={`px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-xs transition-all duration-300 ${
+                      billingCycle === "monthly"
+                        ? "bg-foreground text-background shadow-md"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Monthly
+                  </button>
+                </div>
+              </div>
+            )}
+          </ScrollReveal>
         </div>
       </section>
 
       {/* Cards */}
       <section className="pb-20 md:pb-28 px-4 md:px-6">
         <div className="container mx-auto max-w-4xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-            {plans.map((plan) => (
-              <div
-                key={plan.name}
-                className={`rounded-2xl p-8 md:p-10 transition-all duration-300 hover:shadow-xl ${
-                  plan.highlighted
-                    ? "border-2 border-bronze bg-gradient-to-br from-bronze/5 to-background shadow-lg"
-                    : "border border-border bg-card"
-                }`}
-              >
-                {plan.highlighted && (
-                  <span className="inline-block bg-bronze text-white px-4 py-1 rounded-full text-xs font-poppins font-semibold mb-6 uppercase tracking-wider">
-                    Recommended
-                  </span>
-                )}
-
-                <h3 className="font-vollkorn text-2xl md:text-3xl font-bold mb-2">
-                  {plan.name}
-                </h3>
-                <p className="text-muted-foreground text-sm mb-6">
-                  {plan.description}
-                </p>
-
-                <div className="flex items-baseline gap-1 mb-8">
-                  <span className="font-vollkorn text-5xl md:text-6xl font-bold">
-                    {"price" in plan
-                      ? (plan as any).price
-                      : billingCycle === "monthly"
-                        ? (plan as any).priceMonthly
-                        : (plan as any).priceWeekly}
-                  </span>
-                  {plan.period && (
-                    <span className="text-muted-foreground text-lg">{plan.period}</span>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={selectedType}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8"
+            >
+              {plans.map((plan, i) => (
+                <motion.div
+                  key={plan.name}
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 * i, ease: [0.25, 0.46, 0.45, 0.94] }}
+                  className={`rounded-2xl p-8 md:p-10 transition-all duration-300 hover:shadow-xl ${
+                    plan.highlighted
+                      ? "border-2 border-bronze bg-gradient-to-br from-bronze/5 to-background shadow-lg"
+                      : "border border-border bg-card"
+                  }`}
+                >
+                  {plan.highlighted && (
+                    <span className="inline-block bg-bronze text-white px-4 py-1 rounded-full text-xs font-poppins font-semibold mb-6 uppercase tracking-wider">
+                      Recommended
+                    </span>
                   )}
-                </div>
 
-                <ul className="space-y-3.5 mb-10">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3">
-                      <Check className="w-5 h-5 text-bronze flex-shrink-0 mt-0.5" />
-                      <span className="text-sm leading-relaxed">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+                  <h3 className="font-vollkorn text-2xl md:text-3xl font-bold mb-2">
+                    {plan.name}
+                  </h3>
+                  <p className="text-muted-foreground text-sm mb-6">
+                    {plan.description}
+                  </p>
 
-                <Link to="/auth">
-                  <Button
-                    className={`w-full font-poppins font-semibold ${
-                      plan.highlighted
-                        ? "bg-bronze hover:bg-bronze-dark"
-                        : "bg-secondary hover:bg-secondary/80 text-foreground"
-                    }`}
-                    size="lg"
-                  >
-                    {plan.cta} <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </Link>
-              </div>
-            ))}
-          </div>
+                  <div className="flex items-baseline gap-1 mb-8">
+                    <span className="font-vollkorn text-5xl md:text-6xl font-bold">
+                      {"price" in plan
+                        ? (plan as any).price
+                        : billingCycle === "monthly"
+                          ? (plan as any).priceMonthly
+                          : (plan as any).priceWeekly}
+                    </span>
+                    {plan.period && (
+                      <span className="text-muted-foreground text-lg">{plan.period}</span>
+                    )}
+                  </div>
+
+                  <ul className="space-y-3.5 mb-10">
+                    {plan.features.map((feature, fi) => (
+                      <motion.li
+                        key={feature}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: 0.2 + fi * 0.04 }}
+                        className="flex items-start gap-3"
+                      >
+                        <Check className="w-5 h-5 text-bronze flex-shrink-0 mt-0.5" />
+                        <span className="text-sm leading-relaxed">{feature}</span>
+                      </motion.li>
+                    ))}
+                  </ul>
+
+                  <Link to="/auth">
+                    <Button
+                      className={`w-full font-poppins font-semibold ${
+                        plan.highlighted
+                          ? "bg-bronze hover:bg-bronze-dark"
+                          : "bg-secondary hover:bg-secondary/80 text-foreground"
+                      }`}
+                      size="lg"
+                    >
+                      {plan.cta} <ArrowRight className="ml-2 w-4 h-4" />
+                    </Button>
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </section>
 
       {/* FAQ */}
       <section className="py-16 md:py-24 px-4 md:px-6 bg-secondary/30">
         <div className="container mx-auto max-w-3xl">
-          <h2 className="font-vollkorn text-3xl md:text-4xl font-bold text-center mb-12">
-            Questions? <span className="text-gradient-bronze">Answers.</span>
-          </h2>
+          <ScrollReveal>
+            <h2 className="font-vollkorn text-3xl md:text-4xl font-bold text-center mb-12">
+              Questions? <span className="text-gradient-bronze">Answers.</span>
+            </h2>
+          </ScrollReveal>
 
           <div className="space-y-6">
             {[
@@ -250,11 +281,13 @@ const Pricing = () => {
                 q: "Is there a free trial for Pro?",
                 a: "Yes — 14-day free trial on all Pro plans. No commitment.",
               },
-            ].map(({ q, a }) => (
-              <div key={q} className="p-6 md:p-8 rounded-xl border border-border bg-card">
-                <h3 className="font-vollkorn text-lg md:text-xl font-bold mb-2">{q}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{a}</p>
-              </div>
+            ].map(({ q, a }, i) => (
+              <ScrollReveal key={q} delay={i * 0.06}>
+                <div className="p-6 md:p-8 rounded-xl border border-border bg-card">
+                  <h3 className="font-vollkorn text-lg md:text-xl font-bold mb-2">{q}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{a}</p>
+                </div>
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -264,20 +297,24 @@ const Pricing = () => {
       <section className="relative py-20 md:py-28 px-4 md:px-6 overflow-hidden">
         <HeroPattern />
         <div className="container mx-auto max-w-3xl text-center relative z-10">
-          <h2 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
-            Ready to <span className="text-gradient-bronze">own your story?</span>
-          </h2>
-          <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
-            Start free today. No credit card. No friction.
-          </p>
-          <Link to="/auth">
-            <Button
-              size="lg"
-              className="bg-bronze hover:bg-bronze-dark text-lg px-12 py-7 font-poppins font-semibold shadow-lg hover-scale"
-            >
-              Get Started <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-          </Link>
+          <ScrollReveal variant="blur">
+            <h2 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
+              Ready to <span className="text-gradient-bronze">own your story?</span>
+            </h2>
+            <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
+              Start free today. No credit card. No friction.
+            </p>
+          </ScrollReveal>
+          <ScrollReveal delay={0.15} variant="scale">
+            <Link to="/auth">
+              <Button
+                size="lg"
+                className="bg-bronze hover:bg-bronze-dark text-lg px-12 py-7 font-poppins font-semibold shadow-lg hover-scale"
+              >
+                Get Started <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+          </ScrollReveal>
         </div>
       </section>
 

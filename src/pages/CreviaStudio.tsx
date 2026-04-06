@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Link2, Receipt, FileSignature, MessageSquare, Sparkles, Settings } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
@@ -146,11 +147,21 @@ const CreviaStudio = () => {
 
       {/* Tab Content */}
       <div className="flex-1 min-w-0 overflow-x-hidden">
-        {activeTab === "link" && <CreviaLink isEmbedded />}
-        {activeTab === "chat" && <CreviaChat />}
-        {activeTab === "invoices" && <SmartInvoicesTab />}
-        {activeTab === "contracts" && <ContractsTab />}
-        {activeTab === "settings" && <StudioSettingsTab />}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            {activeTab === "link" && <CreviaLink isEmbedded />}
+            {activeTab === "chat" && <CreviaChat />}
+            {activeTab === "invoices" && <SmartInvoicesTab />}
+            {activeTab === "contracts" && <ContractsTab />}
+            {activeTab === "settings" && <StudioSettingsTab />}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );

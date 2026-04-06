@@ -45,6 +45,7 @@ import { VoiceChatDialog } from "@/components/kira/VoiceChatDialog";
 import CreateContractDialog from "@/components/studio/CreateContractDialog";
 import CreateInvoiceDialog from "@/components/studio/CreateInvoiceDialog";
 import { ApproveActionDialog } from "@/components/kira/ApproveActionDialog";
+import { motion } from "framer-motion";
 
 
 interface ChatHistory {
@@ -845,7 +846,12 @@ const Kira = () => {
                     /* Messages */
                     <div className="space-y-6 py-4">
                       {messages.map((msg, idx) => (
-                        <div key={idx} className="animate-fade-in">
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, y: 12, filter: "blur(3px)" }}
+                          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                          transition={{ duration: 0.4, delay: idx === messages.length - 1 ? 0.05 : 0, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        >
                           <div className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                              {/* Avatar - user only */}
                              {msg.role === 'user' && (
@@ -924,19 +930,24 @@ const Kira = () => {
                               )}
                             </div>
                           )}
-                        </div>
+                        </motion.div>
                       ))}
                       
                       {/* Loading indicator */}
                       {isLoading && messages[messages.length - 1]?.role === 'user' && (
-                         <div className="flex gap-3 animate-fade-in">
+                         <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="flex gap-3"
+                         >
                           <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
                             <div className="flex items-center gap-2">
                               <Loader2 className="w-4 h-4 animate-spin text-bronze" />
                               <span className="text-sm text-muted-foreground">Thinking...</span>
                             </div>
                           </div>
-                        </div>
+                         </motion.div>
                       )}
                       <div ref={messagesEndRef} />
                     </div>
