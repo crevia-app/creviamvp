@@ -13,7 +13,7 @@ interface ScrollRevealProps {
   once?: boolean;
 }
 
-const variants: Record<AnimationVariant, { hidden: Record<string, unknown>; visible: Record<string, unknown> }> = {
+const variants: Record<AnimationVariant, { hidden: any; visible: any }> = {
   "fade-up": {
     hidden: { opacity: 0, y: 32, filter: "blur(4px)" },
     visible: { opacity: 1, y: 0, filter: "blur(0px)" },
