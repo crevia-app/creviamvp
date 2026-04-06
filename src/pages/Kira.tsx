@@ -945,9 +945,9 @@ const Kira = () => {
                             <div className="flex items-center gap-2">
                               <Loader2 className="w-4 h-4 animate-spin text-bronze" />
                               <span className="text-sm text-muted-foreground">Thinking...</span>
-                         </motion.div>
+                            </div>
                           </div>
-                        </div>
+                         </motion.div>
                       )}
                       <div ref={messagesEndRef} />
                     </div>
