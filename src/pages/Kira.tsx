@@ -935,12 +935,17 @@ const Kira = () => {
                       
                       {/* Loading indicator */}
                       {isLoading && messages[messages.length - 1]?.role === 'user' && (
-                         <div className="flex gap-3 animate-fade-in">
+                         <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="flex gap-3"
+                         >
                           <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
                             <div className="flex items-center gap-2">
                               <Loader2 className="w-4 h-4 animate-spin text-bronze" />
                               <span className="text-sm text-muted-foreground">Thinking...</span>
-                            </div>
+                         </motion.div>
                           </div>
                         </div>
                       )}
