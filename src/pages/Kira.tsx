@@ -845,7 +845,12 @@ const Kira = () => {
                     /* Messages */
                     <div className="space-y-6 py-4">
                       {messages.map((msg, idx) => (
-                        <div key={idx} className="animate-fade-in">
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, y: 12, filter: "blur(3px)" }}
+                          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                          transition={{ duration: 0.4, delay: idx === messages.length - 1 ? 0.05 : 0, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        >
                           <div className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                              {/* Avatar - user only */}
                              {msg.role === 'user' && (
@@ -924,7 +929,7 @@ const Kira = () => {
                               )}
                             </div>
                           )}
-                        </div>
+                        </motion.div>
                       ))}
                       
                       {/* Loading indicator */}
