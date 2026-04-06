@@ -45,6 +45,7 @@ import { VoiceChatDialog } from "@/components/kira/VoiceChatDialog";
 import CreateContractDialog from "@/components/studio/CreateContractDialog";
 import CreateInvoiceDialog from "@/components/studio/CreateInvoiceDialog";
 import { ApproveActionDialog } from "@/components/kira/ApproveActionDialog";
+import { motion } from "framer-motion";
 
 
 interface ChatHistory {
