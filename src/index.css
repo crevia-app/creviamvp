@@ -349,7 +349,7 @@ All colors MUST be HSL.
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
-}
+
 
 @layer utilities {
   .scrollbar-hide {
