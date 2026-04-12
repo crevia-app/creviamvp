@@ -211,44 +211,20 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center p-4 md:p-6">
       <Card className="w-full max-w-md p-6 md:p-8 mx-4 animate-fade-in">
-        {/* Clear Mode Selection at Top */}
-        <div className="mb-6">
-          <div className="flex rounded-lg bg-muted p-1">
-            <button
-              onClick={() => setIsSignup(false)}
-              className={cn(
-                "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200",
-                !isSignup
-                  ? "bg-white shadow-sm text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              Log In
-            </button>
-            <button
-              onClick={() => setIsSignup(true)}
-              className={cn(
-                "flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200",
-                isSignup
-                  ? "bg-white shadow-sm text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              Sign Up
-            </button>
-          </div>
-        </div>
-
         <div className="text-center mb-6 md:mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-4 md:mb-6 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:opacity-80">
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-bronze rounded-lg transition-transform duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-105"></div>
+            <img 
+              src="/crevia-logo.png" 
+              alt="Crevia Logo" 
+              className="w-8 h-8 md:w-10 md:h-10 transition-transform duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-105" 
+            />
             <span className="font-vollkorn text-2xl md:text-3xl font-bold">Crevia</span>
           </Link>
           <h1 className="font-vollkorn text-2xl md:text-3xl font-bold mb-2 animate-fade-in stagger-1 animate-stagger">
-            {isSignup ? "Join Crevia" : "Welcome back"}
+            {isSignup ? "Create your account" : "Welcome back"}
           </h1>
           <p className="text-sm md:text-base text-muted-foreground animate-fade-in stagger-2 animate-stagger">
-            {isSignup ? "Create your account to get started" : "Sign in to your account"}
+            {isSignup ? "Sign up to get started" : "Log in to continue"}
           </p>
         </div>
 
@@ -330,20 +306,8 @@ const Auth = () => {
             <div className="w-full border-t border-border"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-card px-2 text-muted-foreground">
-              {isSignup ? "Or create account with email" : "Or sign in with email"}
-            </span>
+            <span className="bg-card px-2 text-muted-foreground">Or sign in with email</span>
           </div>
-        </div>
-
-        {/* Helper text for clarity */}
-        <div className="mb-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            {isSignup
-              ? "Enter your details below to create your Crevia account"
-              : "Enter your email and password to access your account"
-            }
-          </p>
         </div>
 
         <form onSubmit={handleAuth} className="space-y-4">
@@ -439,12 +403,12 @@ const Auth = () => {
         </form>
 
         <p className="text-center mt-6 text-sm text-muted-foreground">
-          {isSignup ? "Already have an account?" : "Don't have an account yet?"}{" "}
-          <button
+          {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
+          <button 
             onClick={() => setIsSignup(!isSignup)}
-            className="text-bronze hover:text-bronze-dark font-semibold bronze-underline transition-all duration-300"
+            className="text-bronze hover:text-bronze-dark font-semibold bronze-underline"
           >
-            {isSignup ? "Sign in instead" : "Create one now"}
+            {isSignup ? "Log In" : "Sign Up"}
           </button>
         </p>
       </Card>

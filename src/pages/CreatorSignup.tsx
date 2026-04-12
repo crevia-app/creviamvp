@@ -121,7 +121,11 @@ const CreatorSignup = () => {
       <Card className="w-full max-w-md p-8">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 bg-bronze rounded-lg"></div>
+            <img 
+              src="/crevia-logo.png" 
+              alt="Crevia Logo" 
+              className="w-10 h-10" 
+            />
             <span className="font-vollkorn text-3xl font-bold">Crevia</span>
           </Link>
           <h1 className="font-vollkorn text-3xl font-bold mb-2">
