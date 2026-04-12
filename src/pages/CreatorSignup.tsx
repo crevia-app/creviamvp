@@ -28,7 +28,7 @@ const CreatorSignup = () => {
           redirectTo: `${window.location.origin}/dashboard`,
           queryParams: {
             access_type: 'offline',
-            prompt: 'consent',
+            prompt: 'select_account',
           },
         },
       });
@@ -59,6 +59,9 @@ const CreatorSignup = () => {
         provider: 'apple',
         options: {
           redirectTo: `${window.location.origin}/dashboard`,
+          queryParams: {
+            prompt: 'login',
+          },
         },
       });
 

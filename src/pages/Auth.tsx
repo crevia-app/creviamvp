@@ -69,7 +69,7 @@ const Auth = () => {
           redirectTo: `${window.location.origin}/auth`,
           queryParams: {
             access_type: 'offline',
-            prompt: 'consent',
+            prompt: 'select_account',
           },
         },
       });
@@ -100,6 +100,9 @@ const Auth = () => {
         provider: 'apple',
         options: {
           redirectTo: `${window.location.origin}/auth`,
+          queryParams: {
+            prompt: 'login',
+          },
         },
       });
 
