@@ -1,3 +1,4 @@
+
 -- Create enum types
 CREATE TYPE public.user_type AS ENUM ('creator', 'brand');
 CREATE TYPE public.verification_status AS ENUM ('pending', 'verified', 'rejected');
