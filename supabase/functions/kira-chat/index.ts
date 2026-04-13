@@ -126,6 +126,49 @@ serve(async (req) => {
 
     const { messages, userType, projectContext } = await req.json();
 
+    // === USAGE LIMIT CHECK ===
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('kira_actions_used, kira_actions_limit, kira_usage_month, kira_tokens_used, kira_tokens_limit')
+      .eq('id', claimsData.claims.sub)
+      .single();
+
+    if (profileError || !profile) {
+      return new Response(JSON.stringify({ error: 'Profile not found' }), {
+        status: 404,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Reset usage if it's a new month
+    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+    if (profile.kira_usage_month !== currentMonth) {
+      await supabase
+        .from('profiles')
+        .update({
+          kira_actions_used: 0,
+          kira_tokens_used: 0,
+          kira_usage_month: currentMonth
+        })
+        .eq('id', claimsData.claims.sub);
+      profile.kira_actions_used = 0;
+      profile.kira_tokens_used = 0;
+    }
+
+    // Check if the user has reached their limit
+    if (profile.kira_actions_used >= profile.kira_actions_limit) {
+      return new Response(JSON.stringify({
+        error: "You've reached your free Kira limit! Upgrade to Pro for unlimited access.",
+        limitReached: true,
+        actionsUsed: profile.kira_actions_used,
+        actionsLimit: profile.kira_actions_limit
+      }), {
+        status: 429,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+    // === END USAGE LIMIT CHECK ===
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       console.error("LOVABLE_API_KEY is not configured");
@@ -183,6 +226,19 @@ serve(async (req) => {
         headers: { ...cors, "Content-Type": "application/json" },
       });
     }
+
+    // === INCREMENT USAGE ===
+    // Increment action count for successful requests
+    await supabase
+      .from('profiles')
+      .update({
+        kira_actions_used: profile.kira_actions_used + 1,
+        // For now, we'll estimate ~1000 tokens per action
+        // In production, you'd parse the actual token usage from the AI response
+        kira_tokens_used: profile.kira_tokens_used + 1000
+      })
+      .eq('id', claimsData.claims.sub);
+    // === END INCREMENT USAGE ===
 
     return new Response(response.body, {
       headers: { ...cors, "Content-Type": "text/event-stream" },
