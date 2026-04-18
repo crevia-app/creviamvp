@@ -1,4 +1,4 @@
-project_id = "uirtqximofzbhgttbbhh"
+project_id = "bcbzixdcsigxhqdiveei"
 
 [functions.ai-match-score]
 verify_jwt = false
@@ -20,7 +20,7 @@ verify_jwt = false
 
 [functions.kira-gpt]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/kira-gpt/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx

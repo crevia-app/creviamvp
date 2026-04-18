@@ -236,12 +236,21 @@ const Kira = () => {
   }, [messages]);
 
   const saveMessage = async (conversationId: string, role: "user" | "assistant", content: string, fileName?: string) => {
-    await supabase.from('kira_messages').insert({
+    if (!content) {
+      console.log("saveMessage skipped- content is empty");
+      return;
+    }
+    const { error } = await supabase.from('kira_messages').insert({
       conversation_id: conversationId,
       role,
       content,
       file_name: fileName
     });
+
+    if (error) {
+      console.log("saveMessage error:", JSON.stringify(error));
+      console.log("values:", {conversationId, role, content, fileName });
+    }
   };
 
   const updateConversationTitle = async (conversationId: string, firstMessage: string) => {
@@ -261,13 +270,48 @@ const Kira = () => {
   };
 
   const streamKiraResponse = useCallback(async (userMessages: Message[], conversationId: string) => {
-    const assistantContent = "I'm Kira, your creative companion! AI responses are currently disabled. This is a frontend-only preview.";
+    const lastUserContent = userMessages[userMessages.length - 1].content;
+    const {data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+    if (!session) {
+      throw new Error("User session not found. Please log in again.");
+    }
+
+
+    console.log("Session token:", session?.access_token ? "EXISTS" : "MISSING");
+    console.log("Token preview:", session?.access_token?.slice(0, 20));
+
+
+    //calling the live edge function
+    const {data, error } = await supabase.functions.invoke('kira-gpt', {
+      body: { prompt: lastUserContent },
+        // headers: {
+        //   Authorization: `Bearer ${session.access_token}`,
+        // },
     
+    });
+    if (error) throw error;
+
+    //constarcting the actual ai text
+    // const assistantContent = data.choices[0].message.content; assumes raw openai response shape
+
+    const assistantContent = data.reply;//matches the edge function response shape
+
+    //save and display
     setMessages(prev => [...prev, { role: "assistant", content: assistantContent }]);
     await saveMessage(conversationId, "assistant", assistantContent);
     
     return assistantContent;
-  }, [userType, activeProjectId, projects]);
+      
+    }, [userType, activeProjectId, projects]);
+    
+    // const assistantContent = "I'm Kira, your creative companion! AI responses are currently disabled. This is a frontend-only preview.";
+    
+  //   setMessages(prev => [...prev, { role: "assistant", content: assistantContent }]);
+  //   await saveMessage(conversationId, "assistant", assistantContent);
+    
+  //   return assistantContent;
+  // }, [userType, activeProjectId, projects]);
 
   const handleSend = async () => {
     if (!input.trim() && !selectedFile) return;
@@ -317,6 +361,13 @@ const Kira = () => {
         project_id: activeProjectId
       }, ...prev]);
     }
+
+    //added debug logs
+    console.log("conversation_id:", conversationId);
+    console.log("userId:", userId);
+    console.log("content:", newMessage.content);
+
+
 
     const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
