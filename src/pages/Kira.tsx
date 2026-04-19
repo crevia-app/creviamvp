@@ -516,10 +516,10 @@ const Kira = () => {
 
   const activeProject = getActiveProject();
 
-  const formatTime = (date?: Date) => {
-    if (!date) return "";
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+  // const formatTime = (date?: Date) => {
+  //   if (!date) return "";
+  //   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  // };
 
   return (
     <div className="h-[calc(100vh-64px-64px)] md:h-[calc(100vh-64px)] flex bg-background">
@@ -902,10 +902,7 @@ const Kira = () => {
                                     )}
                                   </div>
 
-                                  {/* ── TIMESTAMP ── */}
-                                  <p className={`text-[10px] text-muted-foreground mt-1 ${msg.role === 'user' ? 'text-right pr-1' : 'pl-1'}`}>
-                                    {formatTime(msg.timestamp)}
-                                  </p>
+                                 
 
                                   {/* ── HOVER ACTION BUTTONS ── */}
                                   <AnimatePresence>
