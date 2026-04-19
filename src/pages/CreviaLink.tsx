@@ -150,10 +150,11 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     if (!session) return;
 
     const fileExt = file.name.split(".").pop();
-    const filePath = `avatars/${session.user.id}-link-${Date.now()}.${fileExt}`;
+    const filePath = `${session.user.id}/link-${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
-      .from("chat-files")
+      // .from("chat-files")//->wrong bucket
+      .from("avatars") //->correct bucket
       .upload(filePath, file);
 
     if (uploadError) {
@@ -162,7 +163,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
       return;
     }
 
-    const { data: { publicUrl } } = supabase.storage.from("chat-files").getPublicUrl(filePath);
+    const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
     const { error: updateError } = await supabase
       .from("link_profiles")
