@@ -22,7 +22,7 @@ const Auth = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [isResetting, setIsResetting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isAppleLoading, setIsAppleLoading] = useState(false);
+  // const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [userType, setUserType] = useState<"creator" | "brand">("creator");
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
@@ -93,37 +93,37 @@ const Auth = () => {
     }
   };
 
-  const handleAppleSignIn = async () => {
-    setIsAppleLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
-        options: {
-          redirectTo: `${window.location.origin}/auth`,
-          queryParams: {
-            prompt: 'login',
-          },
-        },
-      });
+  // const handleAppleSignIn = async () => {
+  //   setIsAppleLoading(true);
+  //   try {
+  //     const { error } = await supabase.auth.signInWithOAuth({
+  //       provider: 'apple',
+  //       options: {
+  //         redirectTo: `${window.location.origin}/auth`,
+  //         queryParams: {
+  //           prompt: 'login',
+  //         },
+  //       },
+  //     });
 
-      if (error) {
-        toast({ 
-          title: "Apple sign-in failed 😅", 
-          description: error.message, 
-          variant: "destructive" 
-        });
-        setIsAppleLoading(false);
-      }
-    } catch (err) {
-      console.error("Apple auth error:", err);
-      toast({ 
-        title: "Connection hiccup! 📡", 
-        description: "Unable to connect to Apple. Please try again.", 
-        variant: "destructive" 
-      });
-      setIsAppleLoading(false);
-    }
-  };
+  //     if (error) {
+  //       toast({ 
+  //         title: "Apple sign-in failed 😅", 
+  //         description: error.message, 
+  //         variant: "destructive" 
+  //       });
+  //       setIsAppleLoading(false);
+  //     }
+  //   } catch (err) {
+  //     console.error("Apple auth error:", err);
+  //     toast({ 
+  //       title: "Connection hiccup! 📡", 
+  //       description: "Unable to connect to Apple. Please try again.", 
+  //       variant: "destructive" 
+  //     });
+  //     setIsAppleLoading(false);
+  //   }
+  // };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -265,12 +265,12 @@ const Auth = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="justify-center">
           <Button 
             variant="outline" 
-            className="h-12"
+            className="w-full h-12"
             onClick={handleGoogleSignIn}
-            disabled={isGoogleLoading || isAppleLoading}
+            disabled={isGoogleLoading}
           >
             {isGoogleLoading ? (
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
@@ -282,9 +282,9 @@ const Auth = () => {
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
             )}
-            Google
+             Google
           </Button>
-          <Button 
+          {/* <Button 
             variant="outline" 
             className="h-12"
             onClick={handleAppleSignIn}
@@ -298,7 +298,7 @@ const Auth = () => {
               </svg>
             )}
             Apple
-          </Button>
+          </Button> */}
         </div>
 
         <div className="relative my-6">
