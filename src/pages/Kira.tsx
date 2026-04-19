@@ -30,6 +30,10 @@ import {
   Mic,
   FileSignature,
   Receipt,
+  Copy,
+  Check,
+  Pencil,
+  RotateCcw,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -45,7 +49,7 @@ import { VoiceChatDialog } from "@/components/kira/VoiceChatDialog";
 import CreateContractDialog from "@/components/studio/CreateContractDialog";
 import CreateInvoiceDialog from "@/components/studio/CreateInvoiceDialog";
 import { ApproveActionDialog } from "@/components/kira/ApproveActionDialog";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 
 interface ChatHistory {
@@ -59,6 +63,7 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   file?: string;
+  timestamp?: Date;
 }
 
 interface Project {
@@ -146,6 +151,12 @@ const Kira = () => {
   const [kiraContractContext, setKiraContractContext] = useState<Record<string, unknown> | null>(null);
   const [kiraInvoiceContext, setKiraInvoiceContext] = useState<Record<string, unknown> | null>(null);
 
+  // ── NEW: message interaction state ──
+  const [editingMessageIdx, setEditingMessageIdx] = useState<number | null>(null);
+  const [editingContent, setEditingContent] = useState("");
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+
   useEffect(() => {
     const fetchUserData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -162,7 +173,6 @@ const Kira = () => {
           setUserType(profile.user_type);
         }
 
-        // Load conversations
         const { data: conversations, error } = await supabase
           .from('kira_conversations')
           .select('*')
@@ -182,7 +192,6 @@ const Kira = () => {
           }
         }
 
-        // Load projects
         const { data: projectsData, error: projectsError } = await supabase
           .from('kira_projects')
           .select('*')
@@ -216,7 +225,8 @@ const Kira = () => {
         setMessages(msgs.map(m => ({
           role: m.role as "user" | "assistant",
           content: m.content,
-          file: m.file_name || undefined
+          file: m.file_name || undefined,
+          timestamp: new Date(m.created_at),
         })));
       }
     };
@@ -249,7 +259,7 @@ const Kira = () => {
 
     if (error) {
       console.log("saveMessage error:", JSON.stringify(error));
-      console.log("values:", {conversationId, role, content, fileName });
+      console.log("values:", { conversationId, role, content, fileName });
     }
   };
 
@@ -271,50 +281,36 @@ const Kira = () => {
 
   const streamKiraResponse = useCallback(async (userMessages: Message[], conversationId: string) => {
     const lastUserContent = userMessages[userMessages.length - 1].content;
-    const {data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
     if (!session) {
       throw new Error("User session not found. Please log in again.");
     }
 
-
-    console.log("Session token:", session?.access_token ? "EXISTS" : "MISSING");
-    console.log("Token preview:", session?.access_token?.slice(0, 20));
-
-
-    //calling the live edge function
-    const {data, error } = await supabase.functions.invoke('kira-gpt', {
+    const { data, error } = await supabase.functions.invoke('kira-gpt', {
       body: { prompt: lastUserContent },
-        // headers: {
-        //   Authorization: `Bearer ${session.access_token}`,
-        // },
-    
     });
     if (error) throw error;
 
-    //constarcting the actual ai text
-    // const assistantContent = data.choices[0].message.content; assumes raw openai response shape
+    const assistantContent = data.reply;
 
-    const assistantContent = data.reply;//matches the edge function response shape
-
-    //save and display
-    setMessages(prev => [...prev, { role: "assistant", content: assistantContent }]);
+    setMessages(prev => [...prev, { role: "assistant", content: assistantContent, timestamp: new Date() }]);
     await saveMessage(conversationId, "assistant", assistantContent);
     
     return assistantContent;
-      
-    }, [userType, activeProjectId, projects]);
-    
-    // const assistantContent = "I'm Kira, your creative companion! AI responses are currently disabled. This is a frontend-only preview.";
-    
-  //   setMessages(prev => [...prev, { role: "assistant", content: assistantContent }]);
-  //   await saveMessage(conversationId, "assistant", assistantContent);
-    
-  //   return assistantContent;
-  // }, [userType, activeProjectId, projects]);
+  }, [userType, activeProjectId, projects]);
 
-  const handleSend = async () => {
-    if (!input.trim() && !selectedFile) return;
+  // ── NEW: copy handler ──
+  const handleCopy = (content: string, idx: number) => {
+    navigator.clipboard.writeText(content);
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx(null), 2000);
+  };
+
+  // ── NEW: send with optional override (used by retry/edit) ──
+  const handleSend = async (overrideInput?: string) => {
+    const messageContent = overrideInput ?? input;
+    if (!messageContent.trim() && !selectedFile) return;
     if (!userId) {
       toast({
         title: "Please sign in",
@@ -326,8 +322,9 @@ const Kira = () => {
     
     const newMessage: Message = { 
       role: "user", 
-      content: input,
-      file: selectedFile?.name 
+      content: messageContent,
+      file: selectedFile?.name,
+      timestamp: new Date(),
     };
     
     let conversationId = activeChat;
@@ -362,16 +359,9 @@ const Kira = () => {
       }, ...prev]);
     }
 
-    //added debug logs
-    console.log("conversation_id:", conversationId);
-    console.log("userId:", userId);
-    console.log("content:", newMessage.content);
-
-
-
     const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
-    setInput("");
+    if (!overrideInput) setInput("");
     setSelectedFile(null);
     setPendingAction(null);
     setKiraContractContext(null);
@@ -400,11 +390,34 @@ const Kira = () => {
       });
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: "Sorry, I had a little hiccup! Could you try asking me again?"
+        content: "Sorry, I had a little hiccup! Could you try asking me again?",
+        timestamp: new Date(),
       }]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // ── NEW: edit + retry handler ──
+  const handleEditRetry = async (idx: number) => {
+    const edited = editingContent.trim();
+    if (!edited) return;
+
+    // Slice off this message and everything after it
+    const newMessages = messages.slice(0, idx);
+    setMessages(newMessages);
+    setEditingMessageIdx(null);
+    setEditingContent("");
+
+    // Send the edited content directly
+    await handleSend(edited);
+  };
+
+  // ── NEW: retry without editing ──
+  const handleRetry = async (content: string, idx: number) => {
+    const newMessages = messages.slice(0, idx);
+    setMessages(newMessages);
+    await handleSend(content);
   };
 
   const handleNewChat = async (projectId?: string | null) => {
@@ -503,6 +516,11 @@ const Kira = () => {
 
   const activeProject = getActiveProject();
 
+  const formatTime = (date?: Date) => {
+    if (!date) return "";
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
     <div className="h-[calc(100vh-64px-64px)] md:h-[calc(100vh-64px)] flex bg-background">
       {/* Desktop Sidebar */}
@@ -511,7 +529,6 @@ const Kira = () => {
           sidebarCollapsed ? 'w-16' : 'w-72'
         }`}
       >
-        {/* Sidebar Header */}
         <div className="h-14 flex items-center justify-between px-3 border-b border-border/50">
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2">
@@ -531,7 +548,6 @@ const Kira = () => {
           </Button>
         </div>
 
-        {/* New Chat Button */}
         <div className="p-3">
           <Button 
             onClick={() => handleNewChat(null)}
@@ -545,7 +561,6 @@ const Kira = () => {
           </Button>
         </div>
 
-        {/* Search */}
         {!sidebarCollapsed && (
           <div className="px-3 pb-3">
             <div className="relative">
@@ -560,7 +575,6 @@ const Kira = () => {
           </div>
         )}
 
-        {/* Navigation */}
         {!sidebarCollapsed && (
           <div className="px-3 space-y-1 mb-2">
             <button
@@ -587,7 +601,6 @@ const Kira = () => {
           </div>
         )}
 
-        {/* Chat List */}
         {!sidebarCollapsed && viewMode === "chat" && (
           <>
             <div className="px-3 py-2">
@@ -626,34 +639,24 @@ const Kira = () => {
                             : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                         }`}
                       >
-                        <MessageSquare className={`w-4 h-4 flex-shrink-0 ${
-                          activeChat === chat.id ? 'text-bronze' : ''
-                        }`} />
+                        <MessageSquare className={`w-4 h-4 flex-shrink-0 ${activeChat === chat.id ? 'text-bronze' : ''}`} />
                         <span className="flex-1 text-sm truncate">{chat.title}</span>
                         <button 
                           className="opacity-0 group-hover:opacity-100 p-1 hover:bg-destructive/10 rounded transition-all"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteChat(chat.id);
-                          }}
+                          onClick={(e) => { e.stopPropagation(); handleDeleteChat(chat.id); }}
                         >
                           <Trash2 className="w-3 h-3 text-muted-foreground hover:text-destructive" />
                         </button>
                       </div>
                     ))}
 
-                    {/* Project Chats */}
                     {projects.map(project => {
                       const projectConversations = projectChats.filter(c => c.project_id === project.id);
                       if (projectConversations.length === 0) return null;
-                      
                       return (
                         <div key={project.id} className="mt-3">
                           <button
-                            onClick={() => {
-                              setSelectedProject(project);
-                              setProjectDetailOpen(true);
-                            }}
+                            onClick={() => { setSelectedProject(project); setProjectDetailOpen(true); }}
                             className="w-full flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                           >
                             <FolderOpen className="w-3 h-3" />
@@ -664,20 +667,14 @@ const Kira = () => {
                             {projectConversations.slice(0, 3).map((chat) => (
                               <div
                                 key={chat.id}
-                                onClick={() => {
-                                  setActiveChat(chat.id);
-                                  setActiveProjectId(project.id);
-                                  setViewMode("chat");
-                                }}
+                                onClick={() => { setActiveChat(chat.id); setActiveProjectId(project.id); setViewMode("chat"); }}
                                 className={`group flex items-center gap-2 p-2 pl-7 rounded-lg cursor-pointer transition-all ${
                                   activeChat === chat.id 
                                     ? 'bg-bronze/10 text-foreground' 
                                     : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                                 }`}
                               >
-                                <MessageSquare className={`w-3.5 h-3.5 flex-shrink-0 ${
-                                  activeChat === chat.id ? 'text-bronze' : ''
-                                }`} />
+                                <MessageSquare className={`w-3.5 h-3.5 flex-shrink-0 ${activeChat === chat.id ? 'text-bronze' : ''}`} />
                                 <span className="flex-1 text-sm truncate">{chat.title}</span>
                               </div>
                             ))}
@@ -692,23 +689,12 @@ const Kira = () => {
           </>
         )}
 
-        {/* Collapsed state icons */}
         {sidebarCollapsed && (
           <div className="flex flex-col items-center gap-2 px-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => { setSidebarCollapsed(false); setViewMode("chat"); }}
-              className="w-10 h-10 text-muted-foreground hover:text-foreground"
-            >
+            <Button variant="ghost" size="icon" onClick={() => { setSidebarCollapsed(false); setViewMode("chat"); }} className="w-10 h-10 text-muted-foreground hover:text-foreground">
               <MessageSquare className="h-4 w-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => { setSidebarCollapsed(false); setViewMode("projects"); }}
-              className="w-10 h-10 text-muted-foreground hover:text-foreground"
-            >
+            <Button variant="ghost" size="icon" onClick={() => { setSidebarCollapsed(false); setViewMode("projects"); }} className="w-10 h-10 text-muted-foreground hover:text-foreground">
               <FolderOpen className="h-4 w-4" />
             </Button>
           </div>
@@ -729,11 +715,7 @@ const Kira = () => {
           
           <div className="flex flex-col h-[calc(100%-56px)]">
             <div className="p-3">
-              <Button 
-                onClick={() => { handleNewChat(null); setMobileSidebarOpen(false); }}
-                className="w-full justify-start gap-2 bg-bronze hover:bg-bronze/90 text-background"
-                size="sm"
-              >
+              <Button onClick={() => { handleNewChat(null); setMobileSidebarOpen(false); }} className="w-full justify-start gap-2 bg-bronze hover:bg-bronze/90 text-background" size="sm">
                 <Plus className="w-4 h-4" />
                 New Chat
               </Button>
@@ -742,37 +724,19 @@ const Kira = () => {
             <div className="px-3 pb-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search chats..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9 text-sm"
-                />
+                <Input placeholder="Search chats..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-9 text-sm" />
               </div>
             </div>
 
-            {/* Navigation */}
             <div className="px-3 space-y-1 mb-2">
-              <button
-                onClick={() => { setViewMode("chat"); }}
-                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  viewMode === "chat" ? "bg-bronze/10 text-foreground" : "text-muted-foreground hover:bg-muted/50"
-                }`}
-              >
+              <button onClick={() => setViewMode("chat")} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${viewMode === "chat" ? "bg-bronze/10 text-foreground" : "text-muted-foreground hover:bg-muted/50"}`}>
                 <MessageSquare className="w-4 h-4" />
                 Chats
               </button>
-              <button
-                onClick={() => { setViewMode("projects"); setMobileSidebarOpen(false); }}
-                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  viewMode === "projects" ? "bg-bronze/10 text-foreground" : "text-muted-foreground hover:bg-muted/50"
-                }`}
-              >
+              <button onClick={() => { setViewMode("projects"); setMobileSidebarOpen(false); }} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${viewMode === "projects" ? "bg-bronze/10 text-foreground" : "text-muted-foreground hover:bg-muted/50"}`}>
                 <FolderOpen className="w-4 h-4" />
                 Projects
-                <span className="ml-auto text-xs bg-muted px-1.5 py-0.5 rounded">
-                  {projects.length}
-                </span>
+                <span className="ml-auto text-xs bg-muted px-1.5 py-0.5 rounded">{projects.length}</span>
               </button>
             </div>
 
@@ -785,17 +749,8 @@ const Kira = () => {
                 {filteredChats.map((chat) => (
                   <div
                     key={chat.id}
-                    onClick={() => { 
-                      setActiveChat(chat.id); 
-                      setActiveProjectId(chat.project_id || null);
-                      setMobileSidebarOpen(false);
-                      setViewMode("chat");
-                    }}
-                    className={`group flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-all ${
-                      activeChat === chat.id 
-                        ? 'bg-bronze/10' 
-                        : 'hover:bg-muted/50'
-                    }`}
+                    onClick={() => { setActiveChat(chat.id); setActiveProjectId(chat.project_id || null); setMobileSidebarOpen(false); setViewMode("chat"); }}
+                    className={`group flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-all ${activeChat === chat.id ? 'bg-bronze/10' : 'hover:bg-muted/50'}`}
                   >
                     <MessageSquare className={`w-4 h-4 ${activeChat === chat.id ? 'text-bronze' : 'text-muted-foreground'}`} />
                     <span className="flex-1 text-sm truncate">{chat.title}</span>
@@ -813,22 +768,13 @@ const Kira = () => {
           projects={projects}
           isLoading={isLoadingProjects}
           onCreateProject={() => setCreateProjectOpen(true)}
-          onSelectProject={(project) => {
-            setSelectedProject(project);
-            setProjectDetailOpen(true);
-          }}
+          onSelectProject={(project) => { setSelectedProject(project); setProjectDetailOpen(true); }}
         />
       ) : (
-        /* Main Chat Area */
         <div className="flex-1 flex flex-col min-w-0">
           {/* Mobile Header */}
           <div className="md:hidden h-12 flex items-center gap-3 px-4 border-b border-border/50">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setMobileSidebarOpen(true)}
-              className="h-8 w-8"
-            >
+            <Button variant="ghost" size="icon" onClick={() => setMobileSidebarOpen(true)} className="h-8 w-8">
               <PanelLeft className="h-4 w-4" />
             </Button>
             <div className="flex items-center gap-2">
@@ -842,10 +788,7 @@ const Kira = () => {
           {/* Project Context Banner */}
           {activeProject && (
             <button
-              onClick={() => {
-                setSelectedProject(activeProject);
-                setProjectDetailOpen(true);
-              }}
+              onClick={() => { setSelectedProject(activeProject); setProjectDetailOpen(true); }}
               className="flex items-center gap-2 px-4 py-2 bg-bronze/5 border-b border-bronze/20 hover:bg-bronze/10 transition-colors"
             >
               <FolderOpen className="w-4 h-4 text-bronze" />
@@ -854,19 +797,16 @@ const Kira = () => {
             </button>
           )}
 
-          {/* Messages Area - Premium Centered Layout */}
+          {/* Messages Area */}
           <div className="flex-1 overflow-hidden flex flex-col">
             <ScrollArea className="flex-1">
               <div className="min-h-full flex flex-col justify-center px-4 py-8">
                 <div className="max-w-2xl mx-auto w-full">
                   {messages.length === 0 ? (
-                    /* Empty State - Claude-style centered */
-                     <div className="flex flex-col items-center justify-center py-12 md:py-24 text-center">
-                      
+                    <div className="flex flex-col items-center justify-center py-12 md:py-24 text-center">
                       <h1 className="font-vollkorn text-2xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-bronze to-bronze-dark bg-clip-text text-transparent">
                         {activeProject ? `Working on ${activeProject.name}` : currentGreeting}
                       </h1>
-                      
                       <p className="text-muted-foreground text-sm md:text-base max-w-md mb-12">
                         {activeProject 
                           ? activeProject.description || "Start chatting with project context"
@@ -875,8 +815,6 @@ const Kira = () => {
                             : "I can help with content ideas, brand pitches, and growth strategies"
                         }
                       </p>
-
-                      {/* Quick Actions */}
                       <div className="grid grid-cols-2 gap-3 w-full max-w-lg">
                         {quickActions.map((action, idx) => (
                           <button
@@ -894,7 +832,6 @@ const Kira = () => {
                       </div>
                     </div>
                   ) : (
-                    /* Messages */
                     <div className="space-y-6 py-4">
                       {messages.map((msg, idx) => (
                         <motion.div
@@ -902,80 +839,144 @@ const Kira = () => {
                           initial={{ opacity: 0, y: 12, filter: "blur(3px)" }}
                           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                           transition={{ duration: 0.4, delay: idx === messages.length - 1 ? 0.05 : 0, ease: [0.25, 0.46, 0.45, 0.94] }}
+                          onMouseEnter={() => setHoveredIdx(idx)}
+                          onMouseLeave={() => setHoveredIdx(null)}
                         >
                           <div className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                             {/* Avatar - user only */}
-                             {msg.role === 'user' && (
-                               <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center bg-bronze text-background">
-                                 <span className="text-xs font-semibold">You</span>
-                               </div>
-                             )}
-
-                            {/* Message */}
-                            <div className={`flex-1 ${msg.role === 'user' ? 'text-right' : ''}`}>
-                              <div
-                                className={`inline-block max-w-[85%] rounded-2xl px-4 py-3 ${
-                                  msg.role === 'user'
-                                    ? 'bg-bronze text-background rounded-tr-md'
-                                    : 'bg-muted rounded-tl-md'
-                                }`}
-                              >
-                                <p className="text-sm md:text-base whitespace-pre-wrap text-left">{msg.content}</p>
-                                {msg.file && (
-                                  <div className="mt-2 flex items-center gap-2 text-xs opacity-70">
-                                    <Paperclip className="w-3 h-3" />
-                                    {msg.file}
-                                  </div>
-                                )}
+                            {msg.role === 'user' && (
+                              <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center bg-bronze text-background">
+                                <span className="text-xs font-semibold">You</span>
                               </div>
+                            )}
+
+                            <div className={`flex-1 ${msg.role === 'user' ? 'text-right' : ''}`}>
+                              
+                              {/* ── EDIT MODE ── */}
+                              {editingMessageIdx === idx ? (
+                                <div className="inline-flex flex-col gap-2 max-w-[85%] w-full text-left">
+                                  <textarea
+                                    value={editingContent}
+                                    onChange={(e) => setEditingContent(e.target.value)}
+                                    className="w-full rounded-2xl px-4 py-3 text-sm bg-muted border border-bronze/50 focus:outline-none focus:ring-1 focus:ring-bronze resize-none"
+                                    rows={3}
+                                    autoFocus
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleEditRetry(idx);
+                                      }
+                                      if (e.key === 'Escape') setEditingMessageIdx(null);
+                                    }}
+                                  />
+                                  <div className="flex gap-2 justify-end">
+                                    <button
+                                      onClick={() => { setEditingMessageIdx(null); setEditingContent(""); }}
+                                      className="px-3 py-1.5 text-xs rounded-lg border border-border/50 text-muted-foreground hover:bg-muted transition-colors"
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      onClick={() => handleEditRetry(idx)}
+                                      className="px-3 py-1.5 text-xs rounded-lg bg-bronze text-background hover:bg-bronze/90 transition-colors"
+                                    >
+                                      Resend
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  {/* ── MESSAGE BUBBLE ── */}
+                                  <div
+                                    className={`inline-block max-w-[85%] rounded-2xl px-4 py-3 ${
+                                      msg.role === 'user'
+                                        ? 'bg-bronze text-background rounded-tr-md'
+                                        : 'bg-muted rounded-tl-md'
+                                    }`}
+                                  >
+                                    <p className="text-sm md:text-base whitespace-pre-wrap text-left">{msg.content}</p>
+                                    {msg.file && (
+                                      <div className="mt-2 flex items-center gap-2 text-xs opacity-70">
+                                        <Paperclip className="w-3 h-3" />
+                                        {msg.file}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* ── TIMESTAMP ── */}
+                                  <p className={`text-[10px] text-muted-foreground mt-1 ${msg.role === 'user' ? 'text-right pr-1' : 'pl-1'}`}>
+                                    {formatTime(msg.timestamp)}
+                                  </p>
+
+                                  {/* ── HOVER ACTION BUTTONS ── */}
+                                  <AnimatePresence>
+                                    {hoveredIdx === idx && (
+                                      <motion.div
+                                        initial={{ opacity: 0, y: 4 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 4 }}
+                                        transition={{ duration: 0.15 }}
+                                        className={`flex items-center gap-1 mt-1 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                                      >
+                                        {/* Copy */}
+                                        <button
+                                          onClick={() => handleCopy(msg.content, idx)}
+                                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-all border border-transparent hover:border-border/50"
+                                        >
+                                          {copiedIdx === idx ? (
+                                            <><Check className="w-3 h-3 text-green-500" /><span className="text-green-500">Copied</span></>
+                                          ) : (
+                                            <><Copy className="w-3 h-3" /><span>Copy</span></>
+                                          )}
+                                        </button>
+
+                                        {/* Edit + Retry — user messages only */}
+                                        {msg.role === 'user' && (
+                                          <>
+                                            <button
+                                              onClick={() => { setEditingMessageIdx(idx); setEditingContent(msg.content); }}
+                                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-all border border-transparent hover:border-border/50"
+                                            >
+                                              <Pencil className="w-3 h-3" />
+                                              <span>Edit</span>
+                                            </button>
+                                            <button
+                                              onClick={() => handleRetry(msg.content, idx)}
+                                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-all border border-transparent hover:border-border/50"
+                                            >
+                                              <RotateCcw className="w-3 h-3" />
+                                              <span>Retry</span>
+                                            </button>
+                                          </>
+                                        )}
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </>
+                              )}
                             </div>
                           </div>
 
-                          {/* Action card — shown below last assistant message when Kira signals an action */}
+                          {/* Action card — shown below last assistant message */}
                           {msg.role === 'assistant' && idx === messages.length - 1 && !isLoading && pendingAction && (
                             <div className="ml-11 mt-3">
                               {pendingAction === 'open_contract' && (
-                                <button
-                                  onClick={() => setContractDialogOpen(true)}
-                                  className="flex items-center gap-3 px-4 py-3 rounded-xl border border-bronze/40 bg-bronze/5 hover:bg-bronze/10 hover:border-bronze/60 transition-all text-left w-fit"
-                                >
-                                  <div className="p-1.5 rounded-lg bg-bronze/15 text-bronze">
-                                    <FileSignature className="w-4 h-4" />
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-medium">Create Contract</p>
-                                    <p className="text-xs text-muted-foreground">Open the contract builder</p>
-                                  </div>
+                                <button onClick={() => setContractDialogOpen(true)} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-bronze/40 bg-bronze/5 hover:bg-bronze/10 hover:border-bronze/60 transition-all text-left w-fit">
+                                  <div className="p-1.5 rounded-lg bg-bronze/15 text-bronze"><FileSignature className="w-4 h-4" /></div>
+                                  <div><p className="text-sm font-medium">Create Contract</p><p className="text-xs text-muted-foreground">Open the contract builder</p></div>
                                   <ArrowRight className="w-4 h-4 text-bronze ml-2" />
                                 </button>
                               )}
                               {pendingAction === 'open_invoice' && (
-                                <button
-                                  onClick={() => setInvoiceDialogOpen(true)}
-                                  className="flex items-center gap-3 px-4 py-3 rounded-xl border border-bronze/40 bg-bronze/5 hover:bg-bronze/10 hover:border-bronze/60 transition-all text-left w-fit"
-                                >
-                                  <div className="p-1.5 rounded-lg bg-bronze/15 text-bronze">
-                                    <Receipt className="w-4 h-4" />
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-medium">Create Invoice</p>
-                                    <p className="text-xs text-muted-foreground">Open the invoice builder</p>
-                                  </div>
+                                <button onClick={() => setInvoiceDialogOpen(true)} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-bronze/40 bg-bronze/5 hover:bg-bronze/10 hover:border-bronze/60 transition-all text-left w-fit">
+                                  <div className="p-1.5 rounded-lg bg-bronze/15 text-bronze"><Receipt className="w-4 h-4" /></div>
+                                  <div><p className="text-sm font-medium">Create Invoice</p><p className="text-xs text-muted-foreground">Open the invoice builder</p></div>
                                   <ArrowRight className="w-4 h-4 text-bronze ml-2" />
                                 </button>
                               )}
                               {pendingAction === 'open_approve' && (
-                                <button
-                                  onClick={() => setApproveDialogOpen(true)}
-                                  className="flex items-center gap-3 px-4 py-3 rounded-xl border border-bronze/40 bg-bronze/5 hover:bg-bronze/10 hover:border-bronze/60 transition-all text-left w-fit"
-                                >
-                                  <div className="p-1.5 rounded-lg bg-bronze/15 text-bronze">
-                                    <FileSignature className="w-4 h-4" />
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-medium">Approve / Update Document</p>
-                                    <p className="text-xs text-muted-foreground">Move a contract or invoice to the next stage</p>
-                                  </div>
+                                <button onClick={() => setApproveDialogOpen(true)} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-bronze/40 bg-bronze/5 hover:bg-bronze/10 hover:border-bronze/60 transition-all text-left w-fit">
+                                  <div className="p-1.5 rounded-lg bg-bronze/15 text-bronze"><FileSignature className="w-4 h-4" /></div>
+                                  <div><p className="text-sm font-medium">Approve / Update Document</p><p className="text-xs text-muted-foreground">Move a contract or invoice to the next stage</p></div>
                                   <ArrowRight className="w-4 h-4 text-bronze ml-2" />
                                 </button>
                               )}
@@ -986,19 +987,14 @@ const Kira = () => {
                       
                       {/* Loading indicator */}
                       {isLoading && messages[messages.length - 1]?.role === 'user' && (
-                         <motion.div
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="flex gap-3"
-                         >
+                        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="flex gap-3">
                           <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
                             <div className="flex items-center gap-2">
                               <Loader2 className="w-4 h-4 animate-spin text-bronze" />
                               <span className="text-sm text-muted-foreground">Thinking...</span>
                             </div>
                           </div>
-                         </motion.div>
+                        </motion.div>
                       )}
                       <div ref={messagesEndRef} />
                     </div>
@@ -1008,19 +1004,14 @@ const Kira = () => {
             </ScrollArea>
           </div>
 
-          {/* Input Area - Premium Centered with Claude-style + menu */}
+          {/* Input Area */}
           <div className="p-4 md:p-6 bg-background">
             <div className="max-w-2xl mx-auto">
               {selectedFile && (
                 <div className="mb-3 flex items-center gap-2 p-3 bg-muted rounded-xl text-sm border border-border/50">
                   <Paperclip className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   <span className="flex-1 truncate">{selectedFile.name}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedFile(null)}
-                    className="h-6 w-6 p-0 hover:bg-destructive/10"
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedFile(null)} className="h-6 w-6 p-0 hover:bg-destructive/10">
                     <X className="w-3 h-3" />
                   </Button>
                 </div>
@@ -1038,61 +1029,38 @@ const Kira = () => {
                 
                 <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
                   <div className="flex items-center gap-1">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      accept="image/*,.pdf,.doc,.docx,.txt"
-                    />
+                    <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/*,.pdf,.doc,.docx,.txt" />
                     
-                    {/* Claude-style + Dropdown */}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 rounded-lg hover:bg-muted"
-                        >
+                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-muted">
                           <Plus className="w-5 h-5 text-muted-foreground" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="w-56">
                         <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="gap-3 cursor-pointer">
                           <Image className="w-4 h-4 text-muted-foreground" />
-                          <div className="flex flex-col">
-                            <span className="font-medium">Add images</span>
-                            <span className="text-xs text-muted-foreground">Upload photos or screenshots</span>
-                          </div>
+                          <div className="flex flex-col"><span className="font-medium">Add images</span><span className="text-xs text-muted-foreground">Upload photos or screenshots</span></div>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="gap-3 cursor-pointer">
                           <FileUp className="w-4 h-4 text-muted-foreground" />
-                          <div className="flex flex-col">
-                            <span className="font-medium">Add files</span>
-                            <span className="text-xs text-muted-foreground">PDF, DOC, TXT files</span>
-                          </div>
+                          <div className="flex flex-col"><span className="font-medium">Add files</span><span className="text-xs text-muted-foreground">PDF, DOC, TXT files</span></div>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => setVoiceChatOpen(true)} className="gap-3 cursor-pointer">
                           <Mic className="w-4 h-4 text-muted-foreground" />
-                          <div className="flex flex-col">
-                            <span className="font-medium">Voice chat</span>
-                            <span className="text-xs text-muted-foreground">Talk with Kira</span>
-                          </div>
+                          <div className="flex flex-col"><span className="font-medium">Voice chat</span><span className="text-xs text-muted-foreground">Talk with Kira</span></div>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setViewMode("projects")} className="gap-3 cursor-pointer">
                           <FolderOpen className="w-4 h-4 text-muted-foreground" />
-                          <div className="flex flex-col">
-                            <span className="font-medium">Use project</span>
-                            <span className="text-xs text-muted-foreground">Add project context</span>
-                          </div>
+                          <div className="flex flex-col"><span className="font-medium">Use project</span><span className="text-xs text-muted-foreground">Add project context</span></div>
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
                   
                   <Button 
-                    onClick={handleSend}
+                    onClick={() => handleSend()}
                     disabled={isLoading || (!input.trim() && !selectedFile)}
                     size="icon"
                     className="h-9 w-9 rounded-lg bg-bronze hover:bg-bronze-dark text-background"
