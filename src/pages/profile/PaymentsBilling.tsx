@@ -11,6 +11,9 @@ const PaymentsBilling = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [userType, setUserType] = useState<string | null>(null);
+  //added subscription state
+  const [subscription, setSubscription] = useState<string>('free');
+  const [isPaystackLoading, setIsPaystackLoading] = useState(false);
 
   useEffect(() => { checkAuth(); }, []);
 
@@ -19,22 +22,67 @@ const PaymentsBilling = () => {
     if (!session) { navigate("/auth"); return; }
     const { data: profile } = await supabase.from("profiles").select("user_type").eq("id", session.user.id).single();
     setUserType(profile?.user_type || null);
+    //updated check auth to fetch supscription
+    setSubscription(profile?.subscription_plan || 'free');
+
   };
 
   const starterFeatures = [
-    "Crevia Link page",
-    "Crevia Chat messaging",
-    "Basic Kira AI assistant",
-    "1 Smart Invoice per month",
+    // "Crevia Link page",
+    // "Crevia Chat messaging",
+    // "Basic Kira AI assistant",
+    // "1 Smart Invoice per month",
+    "10 Kira AI actions per day",
+    "Crevia Link — basic templates",
+    "Unlimited bio links",
+    "5 invoices per month",
+    "5 contracts per month",
+    "Standard chat interface",
   ];
 
-  const proFeatures = [
-    "Everything in Starter",
-    "Unlimited Smart Invoices & Contracts",
-    "Advanced Kira AI insights & suggestions",
-    "Custom Crevia Link themes",
-    "Priority support",
-  ];
+  const proFeatures = userType === "brand" ? [
+  "3 admin seats included",
+  "$9.99 per extra seat",
+  "Verified badge",
+  "40 Kira AI actions per day",
+  "Unlimited talent roster",
+  "All premium themes + analytics",
+  "Client Portal access",
+  "Unlimited invoices & contracts",
+  "E-Signatures inside the app",
+] : [
+  "Verified badge",
+  "40 Kira AI actions per day",
+  "All premium themes + analytics",
+  "Client Portal access",
+  "Unlimited invoices & contracts",
+  "E-Signatures inside the app",
+  "Priority support",
+];
+
+const handleUpgrade = () => {
+  setIsPaystackLoading(true);
+  const plan = userType === 'brand' ? 'brand_workspace' : 'creative_pro';
+  const amount = userType === 'brand' ? 2900 : 799; // in cents
+  
+  // Initialize Paystack payment
+  const handler = (window as any).PaystackPop.setup({
+    key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+    email: supabase.auth.getUser().then(({ data }) => data.user?.email),
+    amount: amount * 100, // Paystack uses kobo/pesewas
+    currency: 'USD',
+    metadata: { plan },
+    callback: (response: any) => {
+      console.log('Payment successful:', response.reference);
+      setSubscription(plan);
+      setIsPaystackLoading(false);
+    },
+    onClose: () => {
+      setIsPaystackLoading(false);
+    },
+  });
+  handler.openIframe();
+};
 
   return (
     <div className="min-h-screen bg-background">
@@ -54,8 +102,11 @@ const PaymentsBilling = () => {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="font-vollkorn text-xl font-bold">Starter Plan</h2>
-                  <Badge variant="outline" className="text-bronze border-bronze/40">Active</Badge>
+                <h2 className="font-vollkorn text-xl font-bold">
+                  {subscription === 'free' ? 'Free Plan' : 
+                    subscription === 'creative_pro' ? 'Creative Pro' : 
+                     'Brand Workspace'}
+                </h2>                  <Badge variant="outline" className="text-bronze border-bronze/40">Active</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">Free — no billing required</p>
               </div>
@@ -111,7 +162,7 @@ const PaymentsBilling = () => {
             </div>
             <h3 className="font-vollkorn text-xl font-bold mb-1">Pro</h3>
             <div className="flex items-baseline gap-1 mb-5">
-              <span className="text-3xl font-bold">{userType === "brand" ? "$19.99" : "$14.99"}</span>
+              <span className="text-3xl font-bold">{userType === "brand" ? "$29.00" : "$7.99"}</span>
               <span className="text-muted-foreground text-sm">/month</span>
             </div>
             <ul className="space-y-3 mb-6">
@@ -122,7 +173,16 @@ const PaymentsBilling = () => {
                 </li>
               ))}
             </ul>
-            <Button className="w-full bg-bronze hover:bg-bronze/90 text-white">Upgrade to Pro</Button>
+          <Button 
+            onClick={handleUpgrade}
+            disabled={isPaystackLoading || subscription !== 'free'}
+            className="w-full bg-bronze hover:bg-bronze/90 text-white"
+         >
+            {isPaystackLoading ? "Processing..." : 
+             subscription !== 'free' ? "Current Plan" : 
+             "Upgrade Now"}
+          </Button>
+            
           </Card>
         </div>
 
