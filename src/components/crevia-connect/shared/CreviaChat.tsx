@@ -1130,7 +1130,7 @@ const CreviaChat = () => {
       {/* Header */}
       <div className="flex items-center justify-between p-3 md:p-4 border-b bg-background flex-shrink-0">
         <div className="flex items-center gap-2">
-          <h2 className="font-vollkorn text-lg md:text-xl font-bold">Messages</h2>
+          <h2 className="font-vollkorn text-lg md:text-xl font-bold">Workspace</h2>
           <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
             <Lock className="h-3 w-3" />
             <span className="text-[10px] font-semibold uppercase tracking-wider">Encrypted</span>
@@ -1907,7 +1907,7 @@ const CreviaChat = () => {
                 <div className="w-20 h-20 rounded-full bg-bronze/10 flex items-center justify-center mx-auto mb-4">
                   <MessageSquare className="h-10 w-10 text-bronze/50" />
                 </div>
-                <p className="text-lg font-semibold mb-1">Crevia Chat</p>
+                <p className="text-lg font-semibold mb-1">Crevia Workspace</p>
                 <p className="text-sm opacity-70 mb-1">End-to-end encrypted messaging</p>
                 <p className="text-xs opacity-50">Chat with brands, creators, or create groups</p>
               </div>

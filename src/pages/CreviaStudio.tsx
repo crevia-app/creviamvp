@@ -10,13 +10,16 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import CreviaLink from "./CreviaLink";
 import SmartInvoicesTab from "@/components/studio/SmartInvoicesTab";
 import ContractsTab from "@/components/studio/ContractsTab";
-import CreviaChat from "@/components/crevia-connect/shared/CreviaChat";
+// import CreviaWorkspace from "@/components/crevia-connect/shared/CreviaWorkspace";
+// import CreviaChat from "@/components/crevia-connect/shared/CreviaChat";
+import WorkspacesList from "./WorkspacesList";
+import FinanceOverview from "./FinanceOverview";
 import StudioSettingsTab from "@/components/studio/StudioSettingsTab";
 
 const CreviaStudio = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [loading, setLoading] = useState(true);
   const [userType, setUserType] = useState<"creator" | "brand">("creator");
+  const [loading, setLoading] = useState(true);
   
   const activeTab = searchParams.get("tab") || "link";
   const activeLinkSection = searchParams.get("section") || "profile";
@@ -42,9 +45,9 @@ const CreviaStudio = () => {
 
   const studioTabs = [
     { id: "link", label: "Crevia Link", icon: Link2 },
-    { id: "chat", label: "Crevia Chat", icon: MessageSquare },
-    { id: "contracts", label: "Contracts", icon: FileSignature },
-    { id: "invoices", label: "Invoices", icon: Receipt },
+    { id: "chat", label: "Workspaces", icon: MessageSquare },
+    { id: "finance", label: "Finance", icon: Receipt },
+    // { id: "invoices", label: "Invoices", icon: Receipt },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
@@ -156,7 +159,8 @@ const CreviaStudio = () => {
             transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             {activeTab === "link" && <CreviaLink isEmbedded />}
-            {activeTab === "chat" && <CreviaChat />}
+            {activeTab === "chat" && <WorkspacesList />}
+            {activeTab === "finance" && <FinanceOverview />}
             {activeTab === "invoices" && <SmartInvoicesTab />}
             {activeTab === "contracts" && <ContractsTab />}
             {activeTab === "settings" && <StudioSettingsTab />}
