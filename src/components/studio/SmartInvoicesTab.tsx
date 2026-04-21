@@ -58,7 +58,7 @@ interface Invoice {
   created_at: string;
 }
 
-const SmartInvoicesTab = () => {
+const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -72,6 +72,22 @@ const SmartInvoicesTab = () => {
   const fetchInvoices = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
+
+    if (workspaceId) {
+      const { data: msgs } = await supabase
+        .from("chat_messages")
+        .select("invoice_id")
+        .eq("room_id", workspaceId)
+        .not("invoice_id", "is", null);
+      const ids = [...new Set((msgs || []).map((m: any) => m.invoice_id).filter(Boolean))];
+      if (ids.length === 0) { setInvoices([]); setLoading(false); return; }
+      const { data, error } = await supabase.from("invoices").select("*").in("id", ids).order("created_at", { ascending: false });
+      if (error) { toast.error("Failed to load invoices"); return; }
+      const now = new Date();
+      setInvoices((data || []).map((inv: any) => inv.status === "sent" && isAfter(now, new Date(inv.due_date)) ? { ...inv, status: "overdue" } : inv));
+      setLoading(false);
+      return;
+    }
 
     const { data, error } = await supabase
       .from("invoices")
@@ -99,7 +115,7 @@ const SmartInvoicesTab = () => {
 
   useEffect(() => {
     fetchInvoices();
-  }, []);
+  }, [workspaceId]);
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("invoices").delete().eq("id", id);

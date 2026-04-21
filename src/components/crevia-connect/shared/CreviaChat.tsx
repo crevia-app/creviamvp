@@ -39,6 +39,9 @@ import {
   Video,
   ZoomIn,
   SearchIcon,
+  Sparkles,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
@@ -164,7 +167,13 @@ function linkifyContent(content: string): (string | JSX.Element)[] {
   return result.length > 0 ? result : [content];
 }
 
-const CreviaChat = () => {
+interface CreiaChatProps {
+  externalRoomId?: string;
+  hideRoomList?: boolean;
+  onBack?: () => void;
+}
+
+const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {}) => {
   const [currentUserId, setCurrentUserId] = useState("");
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
@@ -202,18 +211,70 @@ const CreviaChat = () => {
   const [messageSearch, setMessageSearch] = useState("");
   const [showMessageSearch, setShowMessageSearch] = useState(false);
   const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
+  const [externalRoomNotFound, setExternalRoomNotFound] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const presenceChannelRef = useRef<any>(null);
+  const selectedExternalRef = useRef<string>("");
 
   const { e2eReady, initEncryption, setupRoomEncryption, encrypt, decrypt, decryptMessages, getRoomKey } = useE2EEncryption(currentUserId);
+
+  const handleDeclineInvite = async (msg: ChatMessage) => {
+    await supabase.from("chat_messages").update({
+      content: JSON.stringify({ status: "declined" }),
+    }).eq("id", msg.id);
+  };
+
+  const handleAcceptInvite = async (msg: ChatMessage) => {
+    if (!currentUserId) return;
+    let inv: any = { status: "pending" };
+    try { if (msg.content) inv = JSON.parse(msg.content); } catch {}
+    const workspaceName = inv.workspace_name || "New Workspace";
+
+    const { data: room, error } = await supabase
+      .from("chat_rooms")
+      .insert({ name: workspaceName, created_by: currentUserId, is_group: false })
+      .select()
+      .single();
+
+    if (error || !room) {
+      toast.error("Failed to create workspace");
+      return;
+    }
+
+    await supabase.from("chat_room_members").insert([
+      { room_id: room.id, user_id: currentUserId, role: "admin" },
+      ...(msg.sender_id !== currentUserId ? [{ room_id: room.id, user_id: msg.sender_id, role: "member" }] : []),
+    ]);
+
+    await supabase.from("chat_messages").update({
+      content: JSON.stringify({ status: "accepted", workspace_id: room.id, workspace_name: workspaceName }),
+    }).eq("id", msg.id);
+
+    toast.success(`Workspace "${workspaceName}" created!`);
+    await fetchRooms();
+  };
 
   // Initialize
   useEffect(() => {
     initChat();
   }, []);
+
+  // Sync external room selection into the chat when controlled from hub
+  useEffect(() => {
+    if (!externalRoomId || loadingRooms) return;
+    if (selectedExternalRef.current === externalRoomId) return;
+    const room = rooms.find((r) => r.id === externalRoomId);
+    if (!room) {
+      setExternalRoomNotFound(true);
+      return;
+    }
+    setExternalRoomNotFound(false);
+    selectedExternalRef.current = externalRoomId;
+    selectRoom(room);
+  }, [externalRoomId, rooms, loadingRooms]);
 
   // Subscribe to new messages
   useEffect(() => {
@@ -1126,48 +1187,63 @@ const CreviaChat = () => {
     type?.startsWith("image/") || false;
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-200px)] w-full min-w-0 max-w-7xl flex-col overflow-hidden bg-background md:h-[calc(100vh-180px)]">
-      {/* Header */}
-      <div className="flex items-center justify-between p-3 md:p-4 border-b bg-background flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <h2 className="font-vollkorn text-lg md:text-xl font-bold">Workspace</h2>
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-            <Lock className="h-3 w-3" />
-            <span className="text-[10px] font-semibold uppercase tracking-wider">Encrypted</span>
+    <div className={hideRoomList ? "flex h-full w-full flex-col overflow-hidden bg-background" : "mx-auto flex h-[calc(100vh-200px)] w-full min-w-0 max-w-7xl flex-col overflow-hidden bg-background md:h-[calc(100vh-180px)]"}>
+      {/* Header — hidden when embedded in the hub (hideRoomList=true) */}
+      {!hideRoomList && (
+        <div className="flex items-center justify-between p-3 md:p-4 border-b bg-background flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <h2 className="font-vollkorn text-lg md:text-xl font-bold">Workspace</h2>
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              <Lock className="h-3 w-3" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Encrypted</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowGroupCreate(true);
+                fetchAllUsers();
+              }}
+              className="gap-1.5 text-xs"
+            >
+              <Users className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Group</span>
+            </Button>
+            <Button
+              onClick={() => {
+                setShowNewChat(true);
+                fetchAllUsers();
+              }}
+              size="sm"
+              className="gap-1.5 bg-bronze hover:bg-bronze/90 text-background text-xs"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">New Chat</span>
+            </Button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setShowGroupCreate(true);
-              fetchAllUsers();
-            }}
-            className="gap-1.5 text-xs"
-          >
-            <Users className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Group</span>
-          </Button>
-          <Button
-            onClick={() => {
-              setShowNewChat(true);
-              fetchAllUsers();
-            }}
-            size="sm"
-            className="gap-1.5 bg-bronze hover:bg-bronze/90 text-background text-xs"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">New Chat</span>
-          </Button>
+      )}
+
+      {/* Access denied state when embedded and user is not a workspace member */}
+      {hideRoomList && externalRoomNotFound && !loadingRooms && (
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center p-8">
+          <div className="p-3 rounded-full bg-muted">
+            <Lock className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <p className="font-poppins text-sm font-medium text-foreground">Not a member</p>
+          <p className="font-poppins text-xs text-muted-foreground max-w-[220px]">
+            You're not part of this workspace. Ask a member to add you.
+          </p>
         </div>
-      </div>
+      )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
+      <div className={`flex-1 flex flex-col md:flex-row overflow-hidden min-h-0 ${hideRoomList && externalRoomNotFound ? "hidden" : ""}`}>
         {/* Sidebar / Room List */}
         <div
-          className={`${selectedRoom ? "hidden md:flex" : "flex"} min-w-0 border-b bg-muted/20 md:w-[18rem] md:border-b-0 md:border-r xl:w-[22rem] 2xl:w-96 flex-col flex-shrink-0`}
+          className={`${hideRoomList ? "hidden" : selectedRoom ? "hidden md:flex" : "flex"} min-w-0 border-b bg-muted/20 md:w-[18rem] md:border-b-0 md:border-r xl:w-[22rem] 2xl:w-96 flex-col flex-shrink-0`}
         >
           {/* Search */}
           <div className="p-3">
@@ -1280,7 +1356,7 @@ const CreviaChat = () => {
         </div>
 
         {/* Chat Area */}
-        <div className={`${selectedRoom ? "flex" : "hidden md:flex"} flex-1 min-h-0 min-w-0 flex-col bg-background`}>
+        <div className={`${selectedRoom ? "flex" : hideRoomList ? "hidden" : "hidden md:flex"} flex-1 min-h-0 min-w-0 flex-col bg-background`}>
           {selectedRoom ? (
             <>
               {/* Chat Header */}
@@ -1290,7 +1366,7 @@ const CreviaChat = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setSelectedRoom(null)}
+                      onClick={() => onBack ? onBack() : setSelectedRoom(null)}
                       className="md:hidden -ml-2 h-8 w-8 p-0"
                     >
                       <ArrowLeft className="h-5 w-5" />
@@ -1425,6 +1501,7 @@ const CreviaChat = () => {
                         const isContract = msg.message_type === "contract";
                         const isFile = msg.message_type === "file";
                         const isVoice = msg.message_type === "voice";
+                        const isWorkspaceInvite = msg.message_type === "workspace_invite";
                         const isDeletedForEveryone = (msg as any).deleted_for_everyone;
                         const isDeletedForMe = deletedForMeIds.has(msg.id);
                         const isPinned = pinnedMessageIds.has(msg.id);
@@ -1504,6 +1581,67 @@ const CreviaChat = () => {
                                     </p>
                                   </div>
                                 </div>
+                              ) : isWorkspaceInvite ? (
+                                <>
+                                  {/* ── Workspace invite card ── */}
+                                  {(() => {
+                                    let inv: any = { status: "pending" };
+                                    try { if (msg.content) inv = JSON.parse(msg.content); } catch {}
+                                    const status = inv.status ?? "pending";
+                                    return (
+                                      <div className="max-w-[230px] rounded-2xl border border-bronze/30 bg-bronze/5 dark:bg-bronze/10 overflow-hidden shadow-sm">
+                                        <div className="px-3.5 py-2.5 border-b border-bronze/15">
+                                          <div className="flex items-center gap-1.5 mb-0.5">
+                                            <Sparkles className="w-3 h-3 text-bronze" />
+                                            <span className="text-[11px] font-semibold text-bronze">Workspace Invite</span>
+                                          </div>
+                                          {inv.workspace_name && (
+                                            <p className="text-[12px] font-semibold text-foreground truncate mb-0.5">{inv.workspace_name}</p>
+                                          )}
+                                          <p className="text-[11px] text-muted-foreground leading-snug">
+                                            {isMine
+                                              ? "You proposed a workspace"
+                                              : `${msg.sender?.display_name || "Someone"} wants to start a workspace with you`}
+                                          </p>
+                                        </div>
+                                        <div className="px-3.5 py-2.5 space-y-2">
+                                          {status === "pending" && !isMine && (
+                                            <div className="flex gap-1.5">
+                                              <Button size="sm" onClick={() => handleAcceptInvite(msg)}
+                                                className="flex-1 h-7 text-[10px] bg-bronze hover:bg-bronze/90 text-background font-semibold">
+                                                Accept
+                                              </Button>
+                                              <Button size="sm" variant="outline" onClick={() => handleDeclineInvite(msg)}
+                                                className="flex-1 h-7 text-[10px] border-border hover:bg-muted">
+                                                Decline
+                                              </Button>
+                                            </div>
+                                          )}
+                                          {status === "pending" && isMine && (
+                                            <p className="text-[10px] text-muted-foreground/60 text-center">Waiting for response…</p>
+                                          )}
+                                          {status === "accepted" && (
+                                            <div className="flex items-center gap-1.5">
+                                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                              <span className="text-[11px] text-emerald-600 font-semibold truncate">
+                                                Accepted — {inv.workspace_name}
+                                              </span>
+                                            </div>
+                                          )}
+                                          {status === "declined" && (
+                                            <div className="flex items-center gap-1.5">
+                                              <X className="w-3.5 h-3.5 text-muted-foreground/50" />
+                                              <span className="text-[10px] text-muted-foreground">Declined</span>
+                                            </div>
+                                          )}
+                                          <p className="text-[9px] text-muted-foreground/40 text-right">
+                                            {format(new Date(msg.created_at), "h:mm a")}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    );
+                                  })()}
+                                </>
                               ) : (
                                 <>
                                   <div
@@ -2312,6 +2450,7 @@ const CreviaChat = () => {
           </ScrollArea>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 };

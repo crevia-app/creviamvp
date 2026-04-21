@@ -29,6 +29,7 @@ interface CreateContractDialogProps {
   onOpenChange: (open: boolean) => void;
   editingContract?: any;
   onSuccess: () => void;
+  onCreated?: (id: string) => void;
   kiraContext?: Record<string, unknown> | null;
 }
 
@@ -320,6 +321,7 @@ const CreateContractDialog = ({
   onOpenChange,
   editingContract,
   onSuccess,
+  onCreated,
   kiraContext,
 }: CreateContractDialogProps) => {
   const [loading, setLoading] = useState(false);
@@ -463,8 +465,9 @@ const CreateContractDialog = ({
         onOpenChange(false);
         toast.success("Contract updated");
       } else {
-        const { error } = await supabase.from("contracts").insert(contractData);
+        const { data: created, error } = await supabase.from("contracts").insert(contractData).select("id").single();
         if (error) throw error;
+        if (created?.id) onCreated?.(created.id);
         onOpenChange(false);
         setShowSuccess(true);
       }

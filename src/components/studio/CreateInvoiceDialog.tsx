@@ -34,6 +34,7 @@ interface CreateInvoiceDialogProps {
   onOpenChange: (open: boolean) => void;
   editingInvoice?: any;
   onSuccess: () => void;
+  onCreated?: (id: string) => void;
   kiraContext?: Record<string, unknown> | null;
 }
 
@@ -54,6 +55,7 @@ const CreateInvoiceDialog = ({
   onOpenChange,
   editingInvoice,
   onSuccess,
+  onCreated,
   kiraContext,
 }: CreateInvoiceDialogProps) => {
   const [loading, setLoading] = useState(false);
@@ -276,6 +278,7 @@ const CreateInvoiceDialog = ({
 
         if (itemsError) throw itemsError;
 
+        if (invoice?.id) onCreated?.(invoice.id);
         onOpenChange(false);
         setShowSuccess(true);
       }

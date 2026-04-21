@@ -89,7 +89,7 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
   cancelled: { label: "Cancelled", color: "text-destructive", bg: "bg-destructive/10", icon: <XCircle className="h-3 w-3" /> },
 };
 
-const ContractsTab = () => {
+const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -103,6 +103,21 @@ const ContractsTab = () => {
   const fetchContracts = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
+
+    if (workspaceId) {
+      const { data: msgs } = await supabase
+        .from("chat_messages")
+        .select("contract_id")
+        .eq("room_id", workspaceId)
+        .not("contract_id", "is", null);
+      const ids = [...new Set((msgs || []).map((m: any) => m.contract_id).filter(Boolean))];
+      if (ids.length === 0) { setContracts([]); setLoading(false); return; }
+      const { data, error } = await supabase.from("contracts").select("*").in("id", ids).order("created_at", { ascending: false });
+      if (error) { toast.error("Failed to load contracts"); return; }
+      setContracts(data || []);
+      setLoading(false);
+      return;
+    }
 
     const { data, error } = await supabase
       .from("contracts")
@@ -121,7 +136,7 @@ const ContractsTab = () => {
 
   useEffect(() => {
     fetchContracts();
-  }, []);
+  }, [workspaceId]);
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("contracts").delete().eq("id", id);
