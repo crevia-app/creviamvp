@@ -209,7 +209,7 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
               <div className="flex items-center justify-center gap-1.5 mb-1">
                 <Sparkles className={cn("w-3 h-3 opacity-50", currentTheme.text)} />
                 <span className={cn("text-[9px] opacity-50", currentTheme.text)}>
-                  Create your link-in-bio
+                  Get Crevia Link
                 </span>
               </div>
               {showBranding && (

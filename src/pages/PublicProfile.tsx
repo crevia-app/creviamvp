@@ -313,10 +313,10 @@ const PublicProfile = () => {
           <div className="text-center mt-16 pt-8 border-t border-[#CF8150]/20">
             <Button
               onClick={() => navigate('/')}
-              className="bg-gradient-to-r from-[#CF8150] to-[#D9955F] hover:from-[#B8704A] hover:to-[#CF8150] text-white font-poppins font-semibold px-8 py-6 rounded-full mb-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="bg-gradient-to-r from-[#D9955F] to-[#D9955F] hover:from-[#D9955F] hover:to-[#111111] text-white font-poppins font-semibold px-8 py-6 rounded-full mb-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
             >
               <Sparkles className="w-5 h-5 mr-2" />
-              Create your link-in-bio
+              Get Crevia Link
             </Button>
             <p className="text-sm font-poppins font-semibold opacity-40 tracking-wide">
               Crevia
