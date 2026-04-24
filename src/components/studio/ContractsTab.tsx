@@ -44,6 +44,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CreateContractDialog from "./CreateContractDialog";
+import { useSubscription } from "@/hooks/use-subscription";
+import UpgradePrompt from "@/components/subscription/UpgradePrompt";
 import ContractPreviewDialog from "./ContractPreviewDialog";
 import UploadContractDialog from "./UploadContractDialog";
 
@@ -95,6 +97,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "value">("newest");
+  const { limits, isFree } = useSubscription();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [previewContract, setPreviewContract] = useState<Contract | null>(null);
@@ -317,7 +320,19 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
             <span className="hidden sm:inline">Upload</span>
           </Button>
           <Button
-            onClick={() => setCreateDialogOpen(true)}
+            // onClick={() => setCreateDialogOpen(true)}
+            onClick={async () => {
+              if (isFree) {
+                const { count } = await supabase
+                  .from("contracts")
+                  .select("*", { count: "exact", head: true });
+                if ((count || 0) >= limits.contractsPerMonth) {
+                  toast.error("You've reached your free plan limit of 5 contracts. Upgrade to Pro for unlimited contracts.");
+                return;
+              }
+            } 
+            setCreateDialogOpen(true);
+          }}
             className="gap-2 h-10 rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
           >
             <Plus className="h-4 w-4" />
@@ -434,8 +449,21 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
               {!searchQuery && statusFilter === "all" && (
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Button
-                    onClick={() => setCreateDialogOpen(true)}
-                    className="gap-2 rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 h-11"
+                    // onClick={() => setCreateDialogOpen(true)}
+                    onClick={async () => {
+                      if (isFree) {
+                         const { count } = await supabase
+                            .from("contracts")
+                            .select("*", { count: "exact", head: true });
+                         if ((count || 0) >= limits.contractsPerMonth) {
+                           toast.error("You've reached your free plan limit of 5 contracts. Upgrade to Pro for unlimited contracts.");
+                           return;
+                         }
+                       }
+                   setCreateDialogOpen(true);
+                  }}
+                 className="gap-2 rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 h-11"
+                    // className="gap-2 rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 h-11"
                   >
                     <Sparkles className="h-4 w-4" />
                     Create from Template

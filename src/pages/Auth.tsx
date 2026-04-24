@@ -46,14 +46,14 @@ const Auth = () => {
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate("/kira");
+        navigate("/kira", { replace: true });
       }
     });
 
     // Listen for auth state changes (for OAuth redirects)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        navigate("/kira");
+        navigate("/kira", { replace: true });
       }
     });
 
@@ -152,7 +152,7 @@ const Auth = () => {
           toast({ title: "Oops! 😅", description: error.message, variant: "destructive" });
         } else {
           toast({ title: "You're in! 🎉 Please check your email to confirm your account." });
-          navigate("/kira");
+          navigate("/kira", { replace: true });
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -167,7 +167,7 @@ const Auth = () => {
             title: "Welcome back! 👋", 
             description: "Great to see you! 🌟" 
           });
-          navigate("/kira");
+          navigate("/kira", { replace: true });
         }
       }
     } catch (err) {

@@ -41,6 +41,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CreateInvoiceDialog from "./CreateInvoiceDialog";
+import { useSubscription } from "@/hooks/use-subscription";
 import InvoicePreviewDialog from "./InvoicePreviewDialog";
 import ReceiptPreviewDialog from "./ReceiptPreviewDialog";
 
@@ -64,6 +65,7 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "amount">("newest");
+  const { limits, isFree } = useSubscription();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
@@ -273,7 +275,19 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
           </p>
         </div>
         <Button
-          onClick={() => setCreateDialogOpen(true)}
+          // onClick={() => setCreateDialogOpen(true)}
+          onClick={async () => {
+  if (isFree) {
+    const { count } = await supabase
+      .from("invoices")
+      .select("*", { count: "exact", head: true });
+    if ((count || 0) >= limits.invoicesPerMonth) {
+      toast.error("You've reached your free plan limit of 5 invoices. Upgrade to Pro for unlimited invoices.");
+      return;
+    }
+  }
+  setCreateDialogOpen(true);
+}}
           className="gap-2 bg-bronze hover:bg-bronze/90 shadow-lg shadow-bronze/20"
         >
           <Plus className="h-4 w-4" />
@@ -415,7 +429,19 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
           </p>
           {!searchQuery && statusFilter === "all" && (
             <Button
-              onClick={() => setCreateDialogOpen(true)}
+              // onClick={() => setCreateDialogOpen(true)}
+              onClick={async () => {
+  if (isFree) {
+    const { count } = await supabase
+      .from("invoices")
+      .select("*", { count: "exact", head: true });
+    if ((count || 0) >= limits.invoicesPerMonth) {
+      toast.error("You've reached your free plan limit of 5 invoices. Upgrade to Pro for unlimited invoices.");
+      return;
+    }
+  }
+  setCreateDialogOpen(true);
+}}
               className="gap-2 bg-bronze hover:bg-bronze/90"
             >
               <Sparkles className="h-4 w-4" />

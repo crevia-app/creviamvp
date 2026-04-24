@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscription } from "@/hooks/use-subscription";
+import UsageLimitBanner from "@/components/subscription/UsageLimitBanner";
 import { 
   Lightbulb, 
   Users, 
@@ -79,6 +81,7 @@ type ViewMode = "chat" | "projects";
 
 const Kira = () => {
   const { toast } = useToast();
+  const { kiraActionsToday, kiraActionsLimit } = useSubscription();
   const [userType, setUserType] = useState<'creator' | 'brand' | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -286,6 +289,19 @@ const Kira = () => {
     if (!session) {
       throw new Error("User session not found. Please log in again.");
     }
+    // ── CHECK KIRA DAILY LIMIT ──
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('kira_actions_today, kira_actions_limit')
+      .eq('id', userId)
+      .single();
+
+const actionsToday = profile?.kira_actions_today || 0;
+const actionsLimit = profile?.kira_actions_limit || 10;
+
+if (actionsToday >= actionsLimit) {
+  throw new Error("You have reached your daily Kira limit of " + actionsLimit + " actions. Upgrade to Pro for 40 actions per day.");
+}
 
     const { data, error } = await supabase.functions.invoke('kira-gpt', {
       body: { prompt: lastUserContent },
@@ -799,6 +815,11 @@ const Kira = () => {
 
           {/* Messages Area */}
           <div className="flex-1 overflow-hidden flex flex-col">
+          <UsageLimitBanner
+            current={kiraActionsToday}
+            limit={kiraActionsLimit}
+            feature="Kira AI actions"
+          />
             <ScrollArea className="flex-1">
               <div className="min-h-full flex flex-col justify-center px-4 py-8">
                 <div className="max-w-2xl mx-auto w-full">
