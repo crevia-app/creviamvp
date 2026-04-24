@@ -1,53 +1,3 @@
-// import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-// const corsHeaders = {
-//   'Access-Control-Allow-Origin': '*',
-//   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-// }
-
-// serve(async (req) => {
-//   // Handle CORS (This allows your website to talk to the function)
-//   if (req.method === 'OPTIONS') {
-//     return new Response('ok', { headers: corsHeaders })
-//   }
-
-//   try {
-//     const { prompt } = await req.json()
-//     const apiKey = Deno.env.get('OPENAI_API_KEY')
-
-//     const response = await fetch('https://api.openai.com/v1/chat/completions', {
-//       method: 'POST',
-//       headers: {
-//         'Authorization': `Bearer ${apiKey}`,
-//         'Content-Type': 'application/json',
-//       },
-//       body: JSON.stringify({
-//         model: 'gpt-4o', 
-//         messages: [
-//           { 
-//             role: 'system', 
-//             content: 'You are Kira, the Chief Storyteller for Crevia. Your goal is to help African creators turn their creative passion into a scalable B2B business. Be concise, inspiring, and avoid fluff.' 
-//           },
-//           { role: 'user', content: prompt }
-//         ],
-//         temperature: 0.7,
-//       }),
-//     })
-
-//     const data = await response.json()
-    
-//     return new Response(JSON.stringify(data), {
-//       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-//     })
-
-//   } catch (error) {
-//     return new Response(JSON.stringify({ error: error.message }), {
-//       status: 500,
-//       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-//     })
-//   }
-// })
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -66,6 +16,28 @@ function getCorsHeaders(req: Request) {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     'Vary': 'Origin',
   };
+}
+
+function sanitizePrompt(prompt: string): string {
+  return prompt
+    .trim()
+    .slice(0, 2000)
+    .replace(/<[^>]*>/g, '')
+    .replace(/[^\x20-\x7E\n\r\t\u00C0-\u024F\u0400-\u04FF]/g, '');
+}
+
+function isPromptAbuse(prompt: string): boolean {
+  const abusePatterns = [
+    /ignore (all |previous |above )?instructions/i,
+    /you are now/i,
+    /pretend (you are|to be)/i,
+    /act as (a |an )?/i,
+    /forget (your |all )?instructions/i,
+    /system prompt/i,
+    /jailbreak/i,
+    /DAN mode/i,
+  ];
+  return abusePatterns.some(pattern => pattern.test(prompt));
 }
 
 const KIRA_SYSTEM_PROMPT = `ROLE & CORE IDENTITY
@@ -108,18 +80,48 @@ serve(async (req) => {
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Missing Authorization' }), { status: 401, headers: cors });
     }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const token = authHeader?.replace('Bearer ', '');
+    const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) return new Response(JSON.stringify({ error: 'Invalid Session' }), { status: 401, headers: cors });
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Invalid Session' }), { status: 401, headers: cors });
+    }
 
-    const { prompt } = await req.json();
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > 10000) {
+      return new Response(JSON.stringify({ error: 'Request too large' }), { status: 413, headers: cors });
+    }
 
-    // 1. CHECK DAILY LIMITS
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400, headers: cors });
+    }
+
+    const { prompt } = body;
+
+    if (!prompt || typeof prompt !== 'string') {
+      return new Response(JSON.stringify({ error: 'Prompt is required' }), { status: 400, headers: cors });
+    }
+
+    if (prompt.trim().length < 2) {
+      return new Response(JSON.stringify({ error: 'Prompt is too short' }), { status: 400, headers: cors });
+    }
+
+    if (isPromptAbuse(prompt)) {
+      return new Response(JSON.stringify({
+        reply: "I am Kira, built specifically for the creative economy. I cannot help with that, but I am here to help you grow your creative business. What do you need?"
+      }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
+    }
+
+    const sanitizedPrompt = sanitizePrompt(prompt);
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('kira_tokens_used_today, kira_tokens_limit_daily')
@@ -127,12 +129,11 @@ serve(async (req) => {
       .single();
 
     if (profile && profile.kira_tokens_used_today >= profile.kira_tokens_limit_daily) {
-      return new Response(JSON.stringify({ 
-        choices: [{ message: { content: "You've reached your daily limit! 😅 Your tokens reset at midnight EAT." } }] 
-      }), { headers: { ...cors, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({
+        reply: "You have reached your daily Kira limit. Upgrade to Pro for 40 actions per day."
+      }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
-    // 2. CALL OPENAI
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -141,24 +142,30 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        messages: [{ role: "system", content: KIRA_SYSTEM_PROMPT }, { role: "user", content: prompt }],
+        max_tokens: 1000,
+        messages: [
+          { role: "system", content: KIRA_SYSTEM_PROMPT },
+          { role: "user", content: sanitizedPrompt }
+        ],
       }),
     });
 
+    if (!response.ok) {
+      throw new Error("OpenAI API error: " + response.status);
+    }
+
     const aiData = await response.json();
-    const tokensUsed = aiData.usage.total_tokens;
+    const tokensUsed = aiData.usage?.total_tokens || 0;
+    const assistantContent = aiData.choices?.[0]?.message?.content;
 
+    if (!assistantContent) {
+      throw new Error('No response from AI');
+    }
 
-    
-
-    // 3. UPDATE DB
-    await supabase.rpc('increment_kira_tokens', { 
-      user_id: user.id, 
-      tokens_to_add: tokensUsed 
+    await supabase.rpc('increment_kira_tokens', {
+      user_id: user.id,
+      tokens_to_add: tokensUsed
     });
-
-
-    const assistantContent = aiData.choices[0].message.content;
 
     return new Response(JSON.stringify({ reply: assistantContent }), {
       headers: { ...cors, 'Content-Type': 'application/json' },
@@ -166,7 +173,8 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("Function Error:", error.message);
-    return new Response(JSON.stringify(
-      { error: error.message }), { status: 500, headers: cors });
+    return new Response(JSON.stringify({ error: 'Something went wrong. Please try again.' }), {
+      status: 500, headers: cors
+    });
   }
 });
