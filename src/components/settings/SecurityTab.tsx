@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import MFASetup from "@/components/auth/MFASetup";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   Shield,
@@ -420,7 +421,7 @@ const SecurityTab = () => {
         )}
       </Card>
 
-      {/* Two-Factor Authentication */}
+      {/* Two-Factor Authentication
       <Card className="p-4 md:p-8">
         <div className="flex items-center gap-3 mb-1">
           <Smartphone className="w-5 h-5 text-bronze" />
@@ -458,7 +459,34 @@ const SecurityTab = () => {
             />
           </div>
         </div>
-      </Card>
+      </Card> */}
+
+
+      {/* Two-Factor Authentication */}
+      <Card className="p-4 md:p-8">
+        <div className="flex items-center gap-3 mb-1">
+          <Smartphone className="w-5 h-5 text-bronze" />
+            <h2 className="font-vollkorn text-xl md:text-2xl font-bold">Two-Factor Authentication</h2>
+        </div>
+        <p className="text-sm text-muted-foreground mb-5">
+          Add an extra layer of protection. Even if your password is compromised, your account stays safe.
+        </p>
+        <MFASetup
+          onComplete={() => {
+             setTwoFactorEnabled(true);
+             toast({
+               title: "2FA Enabled!",
+               description: "Your account is now secured with two-factor authentication.",
+             });
+            }}
+            onSkip={() => setTwoFactorEnabled(false)}
+         />
+       </Card>
+
+
+
+
+
 
       {/* Biometric Authentication */}
       <Card className="p-4 md:p-8">

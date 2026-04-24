@@ -44,16 +44,26 @@ const Auth = () => {
 
   useEffect(() => {
     // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
-        navigate("/kira", { replace: true });
+        const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aalData?.nextLevel === "aal2" && aalData?.nextLevel !== aalData?.currentLevel) {
+          navigate("/mfa-verify", { replace: true });
+        } else {
+          navigate("/kira", { replace: true });
+        }
       }
     });
 
     // Listen for auth state changes (for OAuth redirects)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        navigate("/kira", { replace: true });
+        const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aalData?.nextLevel === "aal2" && aalData?.nextLevel !== aalData?.currentLevel) {
+          navigate("/mfa-verify", { replace: true });
+        } else {
+          navigate("/kira", { replace: true });
+        }
       }
     });
 
@@ -152,7 +162,12 @@ const Auth = () => {
           toast({ title: "Oops! 😅", description: error.message, variant: "destructive" });
         } else {
           toast({ title: "You're in! 🎉 Please check your email to confirm your account." });
+          const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aalData?.nextLevel === "aal2" && aalData?.nextLevel !== aalData?.currentLevel) {
+          navigate("/mfa-verify", { replace: true });
+        } else {
           navigate("/kira", { replace: true });
+        }
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -167,7 +182,12 @@ const Auth = () => {
             title: "Welcome back! 👋", 
             description: "Great to see you! 🌟" 
           });
+          const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aalData?.nextLevel === "aal2" && aalData?.nextLevel !== aalData?.currentLevel) {
+          navigate("/mfa-verify", { replace: true });
+        } else {
           navigate("/kira", { replace: true });
+        }
         }
       }
     } catch (err) {

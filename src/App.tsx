@@ -17,6 +17,7 @@ import Kira from "./pages/Kira";
 import CreviaLink from "./pages/CreviaLink";
 import CreviaStudio from "./pages/CreviaStudio";
 import WorkspacesList from "./pages/WorkspacesList";
+import MFAVerify from "./components/auth/MFAVerify";
 import WorkspacePage from "./pages/WorkspacePage";
 
 import PublicProfile from "./pages/PublicProfile";
@@ -68,6 +69,7 @@ const App = () => (
             <Route path="/kira" element={<AppLayout><Kira /></AppLayout>} />
             <Route path="/crevia-link" element={<AppLayout><CreviaLink /></AppLayout>} />
             <Route path="/crevia-studio" element={<AppLayout><CreviaStudio /></AppLayout>} />
+            <Route path="/mfa-verify" element={<MFAVerify />} />
             <Route path="/crevia-workspace" element={<AppLayout><WorkspacesList /></AppLayout>} />
             <Route path="/crevia-workspace/:id" element={<AppLayout><WorkspacePage /></AppLayout>} />
             <Route path="/profile/payments-billing" element={<AppLayout><PaymentsBilling /></AppLayout>} />
