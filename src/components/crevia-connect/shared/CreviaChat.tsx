@@ -62,6 +62,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { format, isToday, isYesterday } from "date-fns";
 import ChatMediaPanel from "./ChatMediaPanel";
+import { useE2EEncryption } from "@/hooks/use-e2e-encryption";
 
 interface ChatRoom {
   id: string;
@@ -219,7 +220,24 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const presenceChannelRef = useRef<any>(null);
   const selectedExternalRef = useRef<string>("");
 
-  
+  const { initEncryption, setupRoomEncryption, encrypt, decrypt, decryptMessages, getRoomKey } =
+    useE2EEncryption(currentUserId);
+
+  // Encrypts content for a room, falling back to plaintext if no room key exists yet
+  const encryptContent = useCallback(
+    async (plaintext: string, roomId: string): Promise<{ content: string; is_encrypted: boolean }> => {
+      try {
+        const encrypted = await encrypt(plaintext, roomId);
+        if (encrypted) return { content: encrypted, is_encrypted: true };
+      } catch (_e) {
+        // fall through to plaintext
+      }
+      return { content: plaintext, is_encrypted: false };
+    },
+    [encrypt]
+  );
+
+
 
   const handleDeclineInvite = async (msg: ChatMessage) => {
     await supabase.from("chat_messages").update({
@@ -294,11 +312,11 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
               if (msgWithProfile.reply_to_id) {
                 msgWithProfile.replyTo = await loadReplyContext(msgWithProfile.reply_to_id);
               }
-              if (false) {
+              if (msgWithProfile.is_encrypted && msgWithProfile.content) {
                 try {
-
+                  msgWithProfile.content = await decrypt(msgWithProfile.content, msgWithProfile.room_id);
                 } catch {
-                  // Keep original content if decryption fails
+                  // keep original content if decryption fails
                 }
               }
               setMessages((prev) => [...prev, msgWithProfile]);
@@ -327,7 +345,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUserId, selectedRoom]);
+  }, [currentUserId, selectedRoom]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Typing indicator presence channel
   useEffect(() => {
@@ -403,10 +421,9 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
       .single();
 
     let content = data.content;
-    // Try to decrypt reply content
-    if (false) {
+    if (data.is_encrypted && content) {
       try {
-
+        content = await decrypt(content, data.room_id);
       } catch {
         content = "🔒 Encrypted message";
       }
@@ -429,9 +446,9 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
 
   useEffect(() => {
     if (currentUserId) {
-
+      initEncryption();
     }
-  }, [currentUserId]);
+  }, [currentUserId, initEncryption]);
 
   const fetchRooms = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -513,10 +530,10 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
         }
 
         let lastMessage = lastMsgs?.[0] || null;
-        if (false) {
+        if (lastMessage?.is_encrypted && lastMessage.content) {
           try {
-            // const decryptedContent = await decrypt(lastMessage.content, room.id);
-            // lastMessage = { ...lastMessage, content: decryptedContent || lastMessage.content };
+            const decryptedContent = await decrypt(lastMessage.content, room.id);
+            lastMessage = { ...lastMessage, content: decryptedContent || lastMessage.content };
           } catch {
             lastMessage = { ...lastMessage, content: "🔒 Encrypted message" };
           }
@@ -555,7 +572,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
       })
     );
 
-    const decrypted = enriched;
+    const decrypted = await decryptMessages(enriched);
     setMessages(decrypted as ChatMessage[]);
     updateReadReceipt(roomId);
   };
@@ -580,7 +597,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
       const memberIds = room.members.map(m => m.user_id);
       const roomKey = await getRoomKey(room.id);
       if (!roomKey) {
-        // encryption disabled
+        await setupRoomEncryption(room.id, memberIds);
       }
     }
 
@@ -591,7 +608,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     if (!currentUserId || members.length === 0) return;
     toast.info("Retrying decryption...");
     const memberIds = members.map(m => m.user_id);
-    // encryption disabled
+    await setupRoomEncryption(roomId, memberIds);
     await fetchMessages(roomId);
   };
 
@@ -654,7 +671,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
       { room_id: newRoom.id, user_id: otherUserId, role: "member" },
     ]);
 
-    // encryption disabled
+    await setupRoomEncryption(newRoom.id, [currentUserId, otherUserId]);
 
     setShowNewChat(false);
     await fetchRooms();
@@ -691,7 +708,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     await supabase.from("chat_room_members").insert(memberInserts);
 
     const allMemberIds = [currentUserId, ...selectedGroupMembers];
-    // encryption disabled
+    await setupRoomEncryption(newRoom.id, allMemberIds);
 
     setShowGroupCreate(false);
     setGroupName("");
@@ -729,25 +746,18 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
       }
 
       const plainContent = newMessage || (fileData ? `Sent a file: ${fileData.name}` : "");
-      
-      // Try encryption, fall back to unencrypted
-      
-      try {
-
-      } catch (err) {
-        console.warn("Encryption failed, sending unencrypted:", err);
-      }
+      const { content: finalContent, is_encrypted } = await encryptContent(plainContent, selectedRoom.id);
 
       const messageData: any = {
         room_id: selectedRoom.id,
         sender_id: currentUserId,
-        content: plainContent,
+        content: finalContent,
         message_type: fileData ? "file" : "text",
         file_url: fileData?.url,
         file_name: fileData?.name,
         file_type: fileData?.type,
         file_size: fileData?.size,
-        is_encrypted: false,
+        is_encrypted,
       };
 
       // Add reply reference
@@ -778,16 +788,15 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     if (!selectedRoom || !currentUserId) return;
 
     const plainContent = `📄 Invoice ${invoice.invoice_number} — ${new Intl.NumberFormat("en-KE", { style: "currency", currency: invoice.currency }).format(Number(invoice.total))} (${invoice.status})`;
-    
-    
+    const { content, is_encrypted } = await encryptContent(plainContent, selectedRoom.id);
 
     await supabase.from("chat_messages").insert({
       room_id: selectedRoom.id,
       sender_id: currentUserId,
-      content: plainContent,
+      content,
       message_type: "invoice",
       invoice_id: invoice.id,
-      is_encrypted: false,
+      is_encrypted,
     });
 
     await supabase.from("chat_rooms").update({ updated_at: new Date().toISOString() }).eq("id", selectedRoom.id);
@@ -799,16 +808,15 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     if (!selectedRoom || !currentUserId) return;
 
     const plainContent = `📋 Contract: ${contract.title} — ${contract.client_name} (${contract.status})`;
-    
-    
+    const { content, is_encrypted } = await encryptContent(plainContent, selectedRoom.id);
 
     await supabase.from("chat_messages").insert({
       room_id: selectedRoom.id,
       sender_id: currentUserId,
-      content: plainContent,
+      content,
       message_type: "contract",
       contract_id: contract.id,
-      is_encrypted: false,
+      is_encrypted,
     });
 
     await supabase.from("chat_rooms").update({ updated_at: new Date().toISOString() }).eq("id", selectedRoom.id);
@@ -832,19 +840,18 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
         .getPublicUrl(fileName);
 
       const plainContent = `🎤 Voice note (${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, "0")})`;
-      
-      
+      const { content, is_encrypted } = await encryptContent(plainContent, selectedRoom.id);
 
       await supabase.from("chat_messages").insert({
         room_id: selectedRoom.id,
         sender_id: currentUserId,
-        content: plainContent,
+        content,
         message_type: "voice",
         file_url: urlData.publicUrl,
         file_name: `voice-${Date.now()}.${ext}`,
         file_type: blob.type || "audio/webm",
         file_size: blob.size,
-        is_encrypted: false,
+        is_encrypted,
       });
 
       await supabase.from("chat_rooms").update({ updated_at: new Date().toISOString() }).eq("id", selectedRoom.id);
@@ -1070,19 +1077,18 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     if (!msg || !currentUserId) return;
 
     const forwardContent = msg.content ? `↪ Forwarded: ${msg.content}` : "↪ Forwarded message";
-    
-    
+    const { content, is_encrypted } = await encryptContent(forwardContent, targetRoomId);
 
     await supabase.from("chat_messages").insert({
       room_id: targetRoomId,
       sender_id: currentUserId,
-      content: forwardContent,
+      content,
       message_type: msg.message_type,
       file_url: msg.file_url,
       file_name: msg.file_name,
       file_type: msg.file_type,
       file_size: msg.file_size,
-      is_encrypted: false,
+      is_encrypted,
     });
 
     await supabase.from("chat_rooms").update({ updated_at: new Date().toISOString() }).eq("id", targetRoomId);

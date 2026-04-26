@@ -11,6 +11,8 @@ import {
   cacheRoomKey,
   getCachedRoomKey,
   isEncryptedContent,
+  backupPrivateKey,
+  restorePrivateKey,
 } from "@/lib/e2e-crypto";
 
 export function useE2EEncryption(currentUserId: string) {
@@ -18,52 +20,99 @@ export function useE2EEncryption(currentUserId: string) {
   const publicKeyRef = useRef<JsonWebKey | null>(null);
   const initPromiseRef = useRef<Promise<void> | null>(null);
 
-  // Initialize user keys (generate if needed, store public key in DB)
   const initEncryption = useCallback(async () => {
     if (!currentUserId || initPromiseRef.current) return;
-    
+
     initPromiseRef.current = (async () => {
       try {
         const { publicKeyJwk, isNew } = await initUserKeys(currentUserId);
         publicKeyRef.current = publicKeyJwk;
 
-        if (isNew) {
-          // Store public key in database
+        const privateKey = await getUserPrivateKey(currentUserId);
+
+        if (isNew && privateKey) {
+          // New key pair — back it up encrypted to Supabase immediately
+          const { encryptedKey, saltBase64 } = await backupPrivateKey(currentUserId, privateKey);
           await supabase.from("user_encryption_keys" as any).upsert(
             {
               user_id: currentUserId,
               public_key: JSON.stringify(publicKeyJwk),
+              encrypted_private_key: encryptedKey,
+              key_salt: saltBase64,
               updated_at: new Date().toISOString(),
             },
             { onConflict: "user_id" }
           );
         } else {
-          // Ensure DB has our key
+          // Existing key — check if backup exists in DB; if not, create it now
           const { data: existing } = await supabase
             .from("user_encryption_keys" as any)
-            .select("id")
+            .select("id, encrypted_private_key")
             .eq("user_id", currentUserId)
-            .single();
+            .single() as any;
 
           if (!existing) {
-            await supabase.from("user_encryption_keys" as any).insert({
-              user_id: currentUserId,
-              public_key: JSON.stringify(publicKeyJwk),
-            });
+            // First time in DB — save public key + backup
+            if (privateKey) {
+              const { encryptedKey, saltBase64 } = await backupPrivateKey(currentUserId, privateKey);
+              await supabase.from("user_encryption_keys" as any).insert({
+                user_id: currentUserId,
+                public_key: JSON.stringify(publicKeyJwk),
+                encrypted_private_key: encryptedKey,
+                key_salt: saltBase64,
+              });
+            } else {
+              await supabase.from("user_encryption_keys" as any).insert({
+                user_id: currentUserId,
+                public_key: JSON.stringify(publicKeyJwk),
+              });
+            }
+          } else if (!existing.encrypted_private_key && privateKey) {
+            // Existing DB record but no backup yet (pre-migration users) — add backup now
+            const { encryptedKey, saltBase64 } = await backupPrivateKey(currentUserId, privateKey);
+            await supabase
+              .from("user_encryption_keys" as any)
+              .update({
+                encrypted_private_key: encryptedKey,
+                key_salt: saltBase64,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("user_id", currentUserId);
           }
         }
 
         setE2eReady(true);
       } catch (err) {
         console.error("E2EE init failed:", err);
-        setE2eReady(true); // Still allow chat to work
+        setE2eReady(true); // Degrade gracefully — chat still works, just unencrypted
       }
     })();
-    
+
     await initPromiseRef.current;
   }, [currentUserId]);
 
-  // Get another user's public key from DB
+  // Gets the user's private key from IndexedDB, falling back to the encrypted Supabase backup.
+  // This is the cross-device fix: new devices decrypt the backup and cache locally.
+  const getOrRestorePrivateKey = useCallback(async (): Promise<CryptoKey | null> => {
+    const cached = await getUserPrivateKey(currentUserId);
+    if (cached) return cached;
+
+    const { data } = await supabase
+      .from("user_encryption_keys" as any)
+      .select("encrypted_private_key, key_salt")
+      .eq("user_id", currentUserId)
+      .single() as any;
+
+    if (!data?.encrypted_private_key || !data?.key_salt) return null;
+
+    try {
+      return await restorePrivateKey(currentUserId, data.encrypted_private_key, data.key_salt);
+    } catch (err) {
+      console.error("Failed to restore private key from backup:", err);
+      return null;
+    }
+  }, [currentUserId]);
+
   const getPublicKey = useCallback(async (userId: string): Promise<JsonWebKey | null> => {
     const { data } = await supabase
       .from("user_encryption_keys" as any)
@@ -77,17 +126,15 @@ export function useE2EEncryption(currentUserId: string) {
     return null;
   }, []);
 
-  // Setup room encryption (create room key and distribute to members)
   const setupRoomEncryption = useCallback(async (roomId: string, memberUserIds: string[]) => {
     if (!currentUserId) return;
 
-    const privateKey = await getUserPrivateKey(currentUserId);
+    const privateKey = await getOrRestorePrivateKey();
     if (!privateKey) return;
 
     const roomKey = await generateRoomKey();
     await cacheRoomKey(roomId, roomKey);
 
-    // Get all members' public keys and wrap the room key for each
     for (const memberId of memberUserIds) {
       const memberPublicKey = await getPublicKey(memberId);
       if (!memberPublicKey) continue;
@@ -107,19 +154,16 @@ export function useE2EEncryption(currentUserId: string) {
         console.error(`Failed to wrap key for ${memberId}:`, err);
       }
     }
-  }, [currentUserId, getPublicKey]);
+  }, [currentUserId, getPublicKey, getOrRestorePrivateKey]);
 
-  // Get the room key (from cache or unwrap from DB)
   const getRoomKey = useCallback(async (roomId: string): Promise<CryptoKey | null> => {
-    // Check cache first
     const cached = await getCachedRoomKey(roomId);
     if (cached) return cached;
 
     if (!currentUserId) return null;
-    const privateKey = await getUserPrivateKey(currentUserId);
+    const privateKey = await getOrRestorePrivateKey();
     if (!privateKey) return null;
 
-    // Get our encrypted key from DB
     const { data: keyRecord } = await supabase
       .from("room_encrypted_keys" as any)
       .select("encrypted_key, encrypted_by")
@@ -129,7 +173,6 @@ export function useE2EEncryption(currentUserId: string) {
 
     if (!keyRecord?.encrypted_key) return null;
 
-    // Get the public key of the person who encrypted it for us
     const encryptorPublicKey = await getPublicKey(keyRecord.encrypted_by);
     if (!encryptorPublicKey) return null;
 
@@ -142,20 +185,17 @@ export function useE2EEncryption(currentUserId: string) {
       await cacheRoomKey(roomId, roomKey);
       return roomKey;
     } catch (err) {
-      console.warn("Failed to unwrap room key, clearing stale cache:", err);
-      // Clear any stale cached key
+      console.warn("Failed to unwrap room key:", err);
       return null;
     }
-  }, [currentUserId, getPublicKey]);
+  }, [currentUserId, getPublicKey, getOrRestorePrivateKey]);
 
-  // Encrypt a message for a room
   const encrypt = useCallback(async (plaintext: string, roomId: string): Promise<string | null> => {
     const roomKey = await getRoomKey(roomId);
     if (!roomKey) return null;
     return encryptMessage(plaintext, roomKey);
   }, [getRoomKey]);
 
-  // Decrypt a message from a room
   const decrypt = useCallback(async (ciphertext: string, roomId: string): Promise<string> => {
     if (!isEncryptedContent(ciphertext)) return ciphertext;
     const roomKey = await getRoomKey(roomId);
@@ -163,7 +203,6 @@ export function useE2EEncryption(currentUserId: string) {
     return decryptMessage(ciphertext, roomKey);
   }, [getRoomKey]);
 
-  // Decrypt multiple messages in batch
   const decryptMessages = useCallback(async (
     messages: Array<{ content: string | null; room_id: string; is_encrypted: boolean; [key: string]: any }>
   ) => {
@@ -180,7 +219,10 @@ export function useE2EEncryption(currentUserId: string) {
         }
 
         if (!roomKey) {
-          return { ...msg, content: isEncryptedContent(msg.content) ? "[Encryption key unavailable]" : msg.content };
+          return {
+            ...msg,
+            content: isEncryptedContent(msg.content) ? "[Encryption key unavailable]" : msg.content,
+          };
         }
 
         if (isEncryptedContent(msg.content)) {

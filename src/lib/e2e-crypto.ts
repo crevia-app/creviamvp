@@ -287,6 +287,75 @@ export async function getCachedRoomKey(roomId: string): Promise<CryptoKey | null
   return getRoomKeyFromCache(roomId);
 }
 
+// ========================
+// Private Key Cloud Backup (cross-device sync)
+// ========================
+
+// Derives a wrapping key from userId + random salt via PBKDF2.
+// The salt is stored per-user in Supabase; only the user's UUID is needed to derive the key.
+async function deriveWrappingKey(userId: string, salt: Uint8Array): Promise<CryptoKey> {
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(userId),
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"]
+  );
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt, iterations: 100_000, hash: "SHA-256" },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
+}
+
+// Encrypts the private key for cloud storage. Returns base64-encoded ciphertext and salt.
+// The private key is exported as JWK, encrypted with AES-256-GCM using the wrapping key.
+export async function backupPrivateKey(
+  userId: string,
+  privateKey: CryptoKey
+): Promise<{ encryptedKey: string; saltBase64: string }> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const wrappingKey = await deriveWrappingKey(userId, salt);
+  const exported = await crypto.subtle.exportKey("jwk", privateKey);
+  const encoded = new TextEncoder().encode(JSON.stringify(exported));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, wrappingKey, encoded);
+  const combined = new Uint8Array(iv.length + ciphertext.byteLength);
+  combined.set(iv);
+  combined.set(new Uint8Array(ciphertext), iv.length);
+  return {
+    encryptedKey: btoa(String.fromCharCode(...combined)),
+    saltBase64: btoa(String.fromCharCode(...salt)),
+  };
+}
+
+// Decrypts the private key from cloud storage and caches it in IndexedDB.
+// Called on a new device where IndexedDB has no key yet.
+export async function restorePrivateKey(
+  userId: string,
+  encryptedKey: string,
+  saltBase64: string
+): Promise<CryptoKey> {
+  const salt = Uint8Array.from(atob(saltBase64), (c) => c.charCodeAt(0));
+  const wrappingKey = await deriveWrappingKey(userId, salt);
+  const combined = Uint8Array.from(atob(encryptedKey), (c) => c.charCodeAt(0));
+  const iv = combined.slice(0, 12);
+  const ciphertext = combined.slice(12);
+  const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, wrappingKey, ciphertext);
+  const jwk = JSON.parse(new TextDecoder().decode(decrypted)) as JsonWebKey;
+  const privateKey = await crypto.subtle.importKey(
+    "jwk",
+    jwk,
+    { name: "ECDH", namedCurve: "P-256" },
+    false,
+    ["deriveBits"]
+  );
+  await storePrivateKey(userId, privateKey);
+  return privateKey;
+}
+
 // Check if a string looks like it's E2EE encrypted (base64 with sufficient length)
 export function isEncryptedContent(content: string | null): boolean {
   if (!content) return false;
