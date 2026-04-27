@@ -1,73 +1,22 @@
-# Welcome to your Lovable project
+Mostly yes, but let me be honest about what's solid and what still has gaps before you treat it as truly production-ready.
 
-## Project info
+Solid:
 
-**URL**: https://lovable.dev/projects/e029bc4b-a91b-448f-b7da-4a155c933cfb
+RSA-OAEP key generation with extractable: true ✅
+Private key in IndexedDB, public key in Supabase ✅
+Room key wrapping per member ✅
+Self-healing redistribution on selectRoom ✅
+No plaintext messages can reach the DB ✅
+RLS policies correct ✅
+Cross-device private key recovery ✅
+Known gaps before real launch (June 27):
 
-## How can I edit this code?
+Private key backup is weak — backupPrivateKey derives the wrapping key from PBKDF2(userId, salt). The userId is a UUID stored in Supabase, so if someone compromised your DB they could brute-force the private key. A user-chosen password would be much stronger. This is the biggest security concern.
 
-There are several ways of editing your application.
+No key rotation when a member leaves a group room — if someone is removed from a group chat, they still have the room key. For DMs this doesn't apply.
 
-**Use Lovable**
+The "Securing chat..." error has no auto-retry — if account 1 tries to send before account 2 has redistributed, they see an error and have to manually retry. There's no polling or realtime trigger.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/e029bc4b-a91b-448f-b7da-4a155c933cfb) and start prompting.
+Cross-device and multi-browser hasn't been stress tested — we fixed the logic but only tested the happy path.
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/e029bc4b-a91b-448f-b7da-4a155c933cfb) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+My recommendation: it's fine for your April 30 test launch with known testers. For the June 27 real launch, address point 1 (password-derived key wrapping) before you onboard real users. The rest are acceptable trade-offs for an MVP.

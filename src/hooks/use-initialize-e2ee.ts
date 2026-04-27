@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { generateUserKeyPair, backupPrivateKey, restorePrivateKey } from "@/lib/e2e-crypto";
-import { idbGetPrivateKey, idbStorePrivateKey, idbClear } from "@/lib/indexeddb-crypto";
+import { idbGetPrivateKey, idbStorePrivateKey, idbStorePublicKeyJwk, idbClear } from "@/lib/indexeddb-crypto";
 
 export type E2EEStatus = "idle" | "initializing" | "ready" | "error";
 
@@ -43,11 +43,11 @@ export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
 
         // ── Step 2: Check Supabase ────────────────────────────────────────────
         console.log(`${TAG} Syncing with Supabase — fetching key record...`);
-        const { data, error: fetchError } = await (supabase
-          .from("user_encryption_keys" as any)
+        const { data, error: fetchError } = await supabase
+          .from("user_encryption_keys")
           .select("public_key, encrypted_private_key, key_salt")
           .eq("user_id", userId)
-          .maybeSingle() as any);
+          .maybeSingle();
 
         if (cancelled) return;
 
@@ -72,14 +72,20 @@ export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
 
         // ── Cross-device recovery: Supabase has backup, IDB is empty ─────────
         if (hasSupabaseRecord && !cachedPrivateKey) {
-          const { encrypted_private_key, key_salt } = data as {
-            encrypted_private_key: string | null;
-            key_salt: string | null;
-          };
+          const { public_key, encrypted_private_key, key_salt } = data!;
 
           if (encrypted_private_key && key_salt) {
             console.log(`${TAG} 🔄 Cross-device recovery — restoring private key from Supabase backup...`);
             await restorePrivateKey(userId, encrypted_private_key, key_salt);
+            // Cache the public JWK locally so initUserKeys (called from chat) won't
+            // treat the missing public-userId IDB entry as a signal to regenerate keys.
+            if (public_key) {
+              try {
+                await idbStorePublicKeyJwk(userId, JSON.parse(public_key));
+              } catch {
+                // non-fatal — initUserKeys still works via the private key
+              }
+            }
             console.log(`${TAG} ✅ Private key restored to IndexedDB`);
             if (!cancelled) setStatus("ready");
             return;
@@ -97,6 +103,7 @@ export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
 
         console.log(`${TAG} 💾 Storing private key in IndexedDB...`);
         await idbStorePrivateKey(userId, privateKey);
+        await idbStorePublicKeyJwk(userId, publicKeyJwk);
         console.log(`${TAG} ✅ Private key stored in IndexedDB`);
 
         console.log(`${TAG} 🔒 Encrypting private key backup (PBKDF2 + AES-256-GCM)...`);
@@ -104,8 +111,8 @@ export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
         console.log(`${TAG} ✅ Private key encrypted for cloud backup`);
 
         console.log(`${TAG} ☁️  Syncing public key + encrypted backup to Supabase...`);
-        const { error: upsertError } = await (supabase
-          .from("user_encryption_keys" as any)
+        const { error: upsertError } = await supabase
+          .from("user_encryption_keys")
           .upsert(
             {
               user_id: userId,
@@ -115,7 +122,7 @@ export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
               updated_at: new Date().toISOString(),
             },
             { onConflict: "user_id" }
-          ) as any);
+          );
 
         if (upsertError) {
           throw new Error(`Failed to save encryption keys: ${upsertError.message}`);
@@ -143,7 +150,7 @@ export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
           } catch {
             // best-effort cleanup
           }
-          window.location.replace("/login");
+          window.location.replace("/auth");
           return;
         }
 

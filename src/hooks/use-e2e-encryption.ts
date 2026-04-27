@@ -12,7 +12,6 @@ import {
   getCachedRoomKey,
   clearRoomKeyCache,
   isEncryptedContent,
-  backupPrivateKey,
   restorePrivateKey,
 } from "@/lib/e2e-crypto";
 
@@ -21,71 +20,22 @@ export function useE2EEncryption(currentUserId: string) {
   const publicKeyRef = useRef<JsonWebKey | null>(null);
   const initPromiseRef = useRef<Promise<void> | null>(null);
 
+  // Initialises local (IDB) key state for the current user.
+  // Supabase sync is owned by useInitializeE2EE in App.tsx — this hook must not
+  // write to user_encryption_keys or it will race against the app-level init and
+  // risk overwriting a correctly backed-up key pair with a freshly generated one.
   const initEncryption = useCallback(async () => {
     if (!currentUserId || initPromiseRef.current) return;
 
     initPromiseRef.current = (async () => {
       try {
-        const { publicKeyJwk, isNew } = await initUserKeys(currentUserId);
+        const { publicKeyJwk } = await initUserKeys(currentUserId);
         publicKeyRef.current = publicKeyJwk;
-
-        const privateKey = await getUserPrivateKey(currentUserId);
-
-        if (isNew && privateKey) {
-          // New key pair — back it up encrypted to Supabase immediately
-          const { encryptedKey, saltBase64 } = await backupPrivateKey(currentUserId, privateKey);
-          await supabase.from("user_encryption_keys" as any).upsert(
-            {
-              user_id: currentUserId,
-              public_key: JSON.stringify(publicKeyJwk),
-              encrypted_private_key: encryptedKey,
-              key_salt: saltBase64,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "user_id" }
-          );
-        } else {
-          // Existing key — check if backup exists in DB; if not, create it now
-          const { data: existing } = await supabase
-            .from("user_encryption_keys" as any)
-            .select("id, encrypted_private_key")
-            .eq("user_id", currentUserId)
-            .maybeSingle() as any;
-
-          if (!existing) {
-            // First time in DB — save public key + backup
-            if (privateKey) {
-              const { encryptedKey, saltBase64 } = await backupPrivateKey(currentUserId, privateKey);
-              await supabase.from("user_encryption_keys" as any).insert({
-                user_id: currentUserId,
-                public_key: JSON.stringify(publicKeyJwk),
-                encrypted_private_key: encryptedKey,
-                key_salt: saltBase64,
-              });
-            } else {
-              await supabase.from("user_encryption_keys" as any).insert({
-                user_id: currentUserId,
-                public_key: JSON.stringify(publicKeyJwk),
-              });
-            }
-          } else if (!existing.encrypted_private_key && privateKey) {
-            // Existing DB record but no backup yet (pre-migration users) — add backup now
-            const { encryptedKey, saltBase64 } = await backupPrivateKey(currentUserId, privateKey);
-            await supabase
-              .from("user_encryption_keys" as any)
-              .update({
-                encrypted_private_key: encryptedKey,
-                key_salt: saltBase64,
-                updated_at: new Date().toISOString(),
-              })
-              .eq("user_id", currentUserId);
-          }
-        }
-
         setE2eReady(true);
       } catch (err) {
         console.error("E2EE init failed:", err);
-        setE2eReady(true); // Degrade gracefully — chat still works, just unencrypted
+        // Privacy by Default: do NOT set e2eReady on failure.
+        // The send path will throw before writing an unencrypted message.
       }
     })();
 
@@ -99,10 +49,10 @@ export function useE2EEncryption(currentUserId: string) {
     if (cached) return cached;
 
     const { data } = await supabase
-      .from("user_encryption_keys" as any)
+      .from("user_encryption_keys")
       .select("encrypted_private_key, key_salt")
       .eq("user_id", currentUserId)
-      .maybeSingle() as any;
+      .maybeSingle();
 
     if (!data?.encrypted_private_key || !data?.key_salt) return null;
 
@@ -116,10 +66,10 @@ export function useE2EEncryption(currentUserId: string) {
 
   const getPublicKey = useCallback(async (userId: string): Promise<JsonWebKey | null> => {
     const { data } = await supabase
-      .from("user_encryption_keys" as any)
+      .from("user_encryption_keys")
       .select("public_key")
       .eq("user_id", userId)
-      .maybeSingle() as any;
+      .maybeSingle();
 
     if (data?.public_key) {
       return JSON.parse(data.public_key);
