@@ -219,7 +219,16 @@ export function useE2EEncryption(currentUserId: string) {
 
     return Promise.all(
       messages.map(async (msg) => {
-        if (!msg.content || !msg.is_encrypted) return msg;
+        if (!msg.content) return msg;
+
+        // Privacy by Default: never render unencrypted text message content.
+        // Non-text types (file, voice, invoice) store metadata only — allow through.
+        if (!msg.is_encrypted) {
+          if (msg.message_type === "text" || !msg.message_type) {
+            return { ...msg, content: "🔒 [Sent before encryption]" };
+          }
+          return msg;
+        }
 
         let roomKey = roomKeys.get(msg.room_id);
         if (roomKey === undefined) {

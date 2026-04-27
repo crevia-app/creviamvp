@@ -243,9 +243,29 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
         }
       }
 
-      // Attempt encryption; if no room key exists yet, establish it first.
+      // Attempt encryption using the current user's copy of the room key.
       let encrypted = await encrypt(plaintext, roomId);
+
       if (!encrypted) {
+        // Before generating a new key, check if any key already exists for this
+        // room. If it does, we must not generate a new one — that would make all
+        // previously encrypted messages unreadable. Instead, the other participant
+        // needs to redistribute their copy of the existing key to us.
+        const { data: existingKeys } = await (supabase
+          .from("room_encrypted_keys" as any)
+          .select("id")
+          .eq("room_id", roomId)
+          .limit(1)) as { data: { id: string }[] | null };
+
+        if (existingKeys && existingKeys.length > 0) {
+          // Key exists in the DB but not for the current user — ask the other
+          // party to open the chat, which triggers redistribution via selectRoom.
+          throw new Error(
+            "Securing chat... The other person needs to open the chat once to sync your key. Then try again."
+          );
+        }
+
+        // Truly new room — no key exists anywhere. Generate the first one.
         await setupRoomEncryption(roomId, memberIds);
         encrypted = await encrypt(plaintext, roomId);
       }
@@ -616,13 +636,16 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     setMessageSearch("");
 
     if (currentUserId && room.members && room.members.length > 0) {
-      // Only try to redistribute — never generate a new room key for an existing room.
-      // Generating a new key here invalidates all previously encrypted messages.
+      const memberIds = room.members.map(m => m.user_id);
       const roomKey = await getRoomKey(room.id);
-      if (!roomKey) {
-        const memberIds = room.members.map(m => m.user_id);
-        await redistributeRoomKey(room.id, memberIds);
+
+      if (roomKey) {
+        // We have the key — silently redistribute to any member who is missing
+        // their wrapped copy. The upsert is idempotent, so this is always safe.
+        redistributeRoomKey(room.id, memberIds);
       }
+      // If we don't have the key, we can't redistribute — the other participant
+      // will push their copy to us the next time they open this room.
     }
 
     await fetchMessages(room.id);
