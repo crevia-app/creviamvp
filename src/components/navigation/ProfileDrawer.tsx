@@ -44,7 +44,7 @@ const ProfileDrawer = ({ isOpen, onClose, profile, userType }: ProfileDrawerProp
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="bg-black border-white/10 w-[320px]">
+      <SheetContent side="right" className="bg-black border-white/10 w-full sm:w-[320px]">
         <SheetHeader className="pb-6">
           <SheetTitle className="text-white font-vollkorn">{t("profile.menu")}</SheetTitle>
         </SheetHeader>

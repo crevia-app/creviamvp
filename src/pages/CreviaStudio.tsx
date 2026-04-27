@@ -75,7 +75,7 @@ const CreviaStudio = () => {
     <div className={cn(
       "bg-background",
       activeTab === "chat"
-        ? "h-[calc(100vh-64px)] flex flex-col overflow-hidden"
+        ? "h-[calc(100vh-128px)] md:h-[calc(100vh-64px)] flex flex-col overflow-hidden"
         : "min-h-screen overflow-x-hidden"
     )}>
       {/* Studio Header */}
