@@ -251,10 +251,37 @@ export function useE2EEncryption(currentUserId: string) {
     );
   }, [getRoomKey]);
 
+  // Redistributes the EXISTING room key to all members without generating a new one.
+  // Call this when a member can't decrypt — the person who HAS the key runs this.
+  const redistributeRoomKey = useCallback(async (roomId: string, memberUserIds: string[]): Promise<boolean> => {
+    if (!currentUserId) return false;
+    const roomKey = await getRoomKey(roomId);
+    if (!roomKey) return false; // caller doesn't have the key — can't redistribute
+
+    const privateKey = await getOrRestorePrivateKey();
+    if (!privateKey) return false;
+
+    for (const memberId of memberUserIds) {
+      const memberPublicKey = await getPublicKey(memberId);
+      if (!memberPublicKey) continue;
+      try {
+        const encryptedKey = await wrapRoomKey(roomKey, privateKey, memberPublicKey);
+        await supabase.from("room_encrypted_keys" as any).upsert(
+          { room_id: roomId, user_id: memberId, encrypted_by: currentUserId, encrypted_key: encryptedKey },
+          { onConflict: "room_id,user_id" }
+        );
+      } catch (err) {
+        console.error(`Failed to redistribute key for ${memberId}:`, err);
+      }
+    }
+    return true;
+  }, [currentUserId, getRoomKey, getOrRestorePrivateKey, getPublicKey]);
+
   return {
     e2eReady,
     initEncryption,
     setupRoomEncryption,
+    redistributeRoomKey,
     encrypt,
     decrypt,
     decryptMessages,

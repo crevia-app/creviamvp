@@ -220,7 +220,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const presenceChannelRef = useRef<any>(null);
   const selectedExternalRef = useRef<string>("");
 
-  const { initEncryption, setupRoomEncryption, encrypt, decrypt, decryptMessages, getRoomKey } =
+  const { initEncryption, setupRoomEncryption, redistributeRoomKey, encrypt, decrypt, decryptMessages, getRoomKey } =
     useE2EEncryption(currentUserId);
 
   // Encrypts content for a room, falling back to plaintext if no room key exists yet
@@ -594,10 +594,12 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     setMessageSearch("");
 
     if (currentUserId && room.members && room.members.length > 0) {
-      const memberIds = room.members.map(m => m.user_id);
+      // Only try to redistribute — never generate a new room key for an existing room.
+      // Generating a new key here invalidates all previously encrypted messages.
       const roomKey = await getRoomKey(room.id);
       if (!roomKey) {
-        await setupRoomEncryption(room.id, memberIds);
+        const memberIds = room.members.map(m => m.user_id);
+        await redistributeRoomKey(room.id, memberIds);
       }
     }
 
@@ -606,9 +608,13 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
 
   const retryDecryption = async (roomId: string, members: RoomMember[]) => {
     if (!currentUserId || members.length === 0) return;
-    toast.info("Retrying decryption...");
+    toast.info("Syncing encryption key...");
     const memberIds = members.map(m => m.user_id);
-    await setupRoomEncryption(roomId, memberIds);
+    const didRedistribute = await redistributeRoomKey(roomId, memberIds);
+    if (!didRedistribute) {
+      toast.info("Ask the other person to open the chat to sync the key.");
+      return;
+    }
     await fetchMessages(roomId);
   };
 
