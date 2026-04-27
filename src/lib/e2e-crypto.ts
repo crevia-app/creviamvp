@@ -287,6 +287,16 @@ export async function getCachedRoomKey(roomId: string): Promise<CryptoKey | null
   return getRoomKeyFromCache(roomId);
 }
 
+export async function clearRoomKeyCache(roomId: string): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    tx.objectStore(STORE_NAME).delete(`room-${roomId}`);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 // ========================
 // Private Key Cloud Backup (cross-device sync)
 // ========================
@@ -302,7 +312,7 @@ async function deriveWrappingKey(userId: string, salt: Uint8Array): Promise<Cryp
     ["deriveKey"]
   );
   return crypto.subtle.deriveKey(
-    { name: "PBKDF2", salt, iterations: 100_000, hash: "SHA-256" },
+    { name: "PBKDF2", salt: salt.buffer.slice(salt.byteOffset, salt.byteOffset + salt.byteLength) as ArrayBuffer, iterations: 100_000, hash: "SHA-256" },
     keyMaterial,
     { name: "AES-GCM", length: 256 },
     false,

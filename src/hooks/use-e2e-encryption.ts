@@ -10,6 +10,7 @@ import {
   decryptMessage,
   cacheRoomKey,
   getCachedRoomKey,
+  clearRoomKeyCache,
   isEncryptedContent,
   backupPrivateKey,
   restorePrivateKey,
@@ -200,7 +201,15 @@ export function useE2EEncryption(currentUserId: string) {
     if (!isEncryptedContent(ciphertext)) return ciphertext;
     const roomKey = await getRoomKey(roomId);
     if (!roomKey) return "[Encryption key unavailable]";
-    return decryptMessage(ciphertext, roomKey);
+    const result = await decryptMessage(ciphertext, roomKey);
+    if (result === "[Unable to decrypt message]") {
+      // Stale cached room key — clear it, fetch fresh from Supabase, retry once
+      await clearRoomKeyCache(roomId);
+      const freshKey = await getRoomKey(roomId);
+      if (!freshKey) return "[Encryption key unavailable]";
+      return decryptMessage(ciphertext, freshKey);
+    }
+    return result;
   }, [getRoomKey]);
 
   const decryptMessages = useCallback(async (
@@ -226,7 +235,15 @@ export function useE2EEncryption(currentUserId: string) {
         }
 
         if (isEncryptedContent(msg.content)) {
-          const decrypted = await decryptMessage(msg.content, roomKey);
+          let decrypted = await decryptMessage(msg.content, roomKey);
+          if (decrypted === "[Unable to decrypt message]") {
+            await clearRoomKeyCache(msg.room_id);
+            const freshKey = await getRoomKey(msg.room_id);
+            if (freshKey) {
+              decrypted = await decryptMessage(msg.content, freshKey);
+              roomKeys.set(msg.room_id, freshKey);
+            }
+          }
           return { ...msg, content: decrypted };
         }
         return msg;
