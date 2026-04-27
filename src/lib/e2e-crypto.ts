@@ -1,196 +1,93 @@
 /**
  * End-to-End Encryption for Crevia Chat
- * Uses Web Crypto API with ECDH key exchange + AES-256-GCM
- * 
+ * RSA-OAEP-2048 / SHA-256 for key exchange, AES-256-GCM for messages.
+ *
  * Flow:
- * 1. Each user generates an ECDH key pair on first use
- * 2. Public keys are stored in the database
- * 3. Private keys are stored in IndexedDB (never leaves device)
- * 4. Per-room: a random AES-256-GCM key is generated
- * 5. The room key is encrypted (wrapped) with each member's derived ECDH shared secret
- * 6. Messages are encrypted/decrypted with the room's AES key
+ * 1. Each user generates an RSA-OAEP key pair on first use.
+ * 2. Public keys are stored in Supabase (user_encryption_keys).
+ * 3. Private keys are stored in IndexedDB as native CryptoKey objects.
+ * 4. Per-room: a random AES-256-GCM key is generated.
+ * 5. The room key is wrapped with each member's RSA public key via wrapKey.
+ * 6. Messages are encrypted/decrypted with the room's AES key.
  */
 
-const DB_NAME = "crevia-e2ee";
-const STORE_NAME = "keys";
-const DB_VERSION = 1;
+import {
+  idbStorePrivateKey,
+  idbGetPrivateKey,
+  idbStorePublicKeyJwk,
+  idbGetPublicKeyJwk,
+  idbStoreRoomKey,
+  idbGetRoomKey,
+  idbClearRoomKey,
+} from "./indexeddb-crypto";
 
-// ========================
-// IndexedDB for private keys
-// ========================
-
-function openDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: "id" });
-      }
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-async function storePrivateKey(userId: string, privateKey: CryptoKey): Promise<void> {
-  const exported = await crypto.subtle.exportKey("jwk", privateKey);
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    tx.objectStore(STORE_NAME).put({ id: `private-${userId}`, key: exported });
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-async function getPrivateKey(userId: string): Promise<CryptoKey | null> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readonly");
-    const req = tx.objectStore(STORE_NAME).get(`private-${userId}`);
-    req.onsuccess = async () => {
-      if (!req.result) return resolve(null);
-      try {
-        const key = await crypto.subtle.importKey(
-          "jwk",
-          req.result.key,
-          { name: "ECDH", namedCurve: "P-256" },
-          false,
-          ["deriveBits"]
-        );
-        resolve(key);
-      } catch {
-        resolve(null);
-      }
-    };
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function storeRoomKey(roomId: string, aesKey: CryptoKey): Promise<void> {
-  const exported = await crypto.subtle.exportKey("jwk", aesKey);
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    tx.objectStore(STORE_NAME).put({ id: `room-${roomId}`, key: exported });
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-async function getRoomKeyFromCache(roomId: string): Promise<CryptoKey | null> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readonly");
-    const req = tx.objectStore(STORE_NAME).get(`room-${roomId}`);
-    req.onsuccess = async () => {
-      if (!req.result) return resolve(null);
-      try {
-        const key = await crypto.subtle.importKey(
-          "jwk",
-          req.result.key,
-          { name: "AES-GCM", length: 256 },
-          true,
-          ["encrypt", "decrypt"]
-        );
-        resolve(key);
-      } catch {
-        resolve(null);
-      }
-    };
-    req.onerror = () => reject(req.error);
-  });
-}
+const RSA_PARAMS = {
+  name: "RSA-OAEP",
+  modulusLength: 2048,
+  publicExponent: new Uint8Array([0x01, 0x00, 0x01]), // 65537
+  hash: "SHA-256",
+} as const;
 
 // ========================
 // Key Generation
 // ========================
 
-export async function generateUserKeyPair(): Promise<{ publicKeyJwk: JsonWebKey; privateKey: CryptoKey }> {
+export async function generateUserKeyPair(): Promise<{
+  publicKeyJwk: JsonWebKey;
+  privateKey: CryptoKey;
+}> {
   const keyPair = await crypto.subtle.generateKey(
-    { name: "ECDH", namedCurve: "P-256" },
-    true,
-    ["deriveBits"]
+    RSA_PARAMS,
+    true, // extractable: true — required for JWK export and encrypted cloud backup
+    ["wrapKey", "unwrapKey"]
   );
   const publicKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
   return { publicKeyJwk, privateKey: keyPair.privateKey };
 }
 
 export async function generateRoomKey(): Promise<CryptoKey> {
-  return crypto.subtle.generateKey(
-    { name: "AES-GCM", length: 256 },
-    true,
-    ["encrypt", "decrypt"]
-  );
+  return crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, [
+    "encrypt",
+    "decrypt",
+  ]);
 }
 
 // ========================
-// ECDH Shared Secret Derivation
+// Room Key Wrapping — RSA-OAEP direct wrap (no ECDH derivation step)
 // ========================
 
-async function deriveSharedKey(privateKey: CryptoKey, publicKeyJwk: JsonWebKey): Promise<CryptoKey> {
-  const publicKey = await crypto.subtle.importKey(
-    "jwk",
-    publicKeyJwk,
-    { name: "ECDH", namedCurve: "P-256" },
-    false,
-    []
-  );
-
-  const sharedBits = await crypto.subtle.deriveBits(
-    { name: "ECDH", public: publicKey },
-    privateKey,
-    256
-  );
-
-  return crypto.subtle.importKey(
-    "raw",
-    sharedBits,
-    { name: "AES-GCM", length: 256 },
-    false,
-    ["wrapKey", "unwrapKey"]
-  );
-}
-
-// ========================
-// Room Key Wrapping (encrypt room key for a member)
-// ========================
-
+// Encrypts an AES room key for a specific recipient using their RSA public key.
+// RSA-OAEP can wrap up to 190 bytes with 2048-bit / SHA-256; AES-256 raw = 32 bytes ✓
 export async function wrapRoomKey(
   roomKey: CryptoKey,
-  myPrivateKey: CryptoKey,
+  _myPrivateKey: CryptoKey, // unused — kept for call-site compatibility
   theirPublicKeyJwk: JsonWebKey
 ): Promise<string> {
-  const sharedKey = await deriveSharedKey(myPrivateKey, theirPublicKeyJwk);
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const wrapped = await crypto.subtle.wrapKey("raw", roomKey, sharedKey, {
-    name: "AES-GCM",
-    iv,
+  const recipientPublicKey = await crypto.subtle.importKey(
+    "jwk",
+    theirPublicKeyJwk,
+    { name: "RSA-OAEP", hash: "SHA-256" },
+    false,
+    ["wrapKey"]
+  );
+  const wrapped = await crypto.subtle.wrapKey("raw", roomKey, recipientPublicKey, {
+    name: "RSA-OAEP",
   });
-
-  // Combine iv + wrapped key, encode as base64
-  const combined = new Uint8Array(iv.length + wrapped.byteLength);
-  combined.set(iv);
-  combined.set(new Uint8Array(wrapped), iv.length);
-  return btoa(String.fromCharCode(...combined));
+  return btoa(String.fromCharCode(...new Uint8Array(wrapped)));
 }
 
+// Decrypts a wrapped room key using the current user's RSA private key.
 export async function unwrapRoomKey(
   wrappedKeyBase64: string,
   myPrivateKey: CryptoKey,
-  theirPublicKeyJwk: JsonWebKey
+  _theirPublicKeyJwk: JsonWebKey // unused — kept for call-site compatibility
 ): Promise<CryptoKey> {
-  const combined = Uint8Array.from(atob(wrappedKeyBase64), (c) => c.charCodeAt(0));
-  const iv = combined.slice(0, 12);
-  const wrappedKey = combined.slice(12);
-
-  const sharedKey = await deriveSharedKey(myPrivateKey, theirPublicKeyJwk);
+  const wrapped = Uint8Array.from(atob(wrappedKeyBase64), (c) => c.charCodeAt(0));
   return crypto.subtle.unwrapKey(
     "raw",
-    wrappedKey,
-    sharedKey,
-    { name: "AES-GCM", iv },
+    wrapped,
+    myPrivateKey,
+    { name: "RSA-OAEP" },
     { name: "AES-GCM", length: 256 },
     true,
     ["encrypt", "decrypt"]
@@ -198,113 +95,89 @@ export async function unwrapRoomKey(
 }
 
 // ========================
-// Message Encryption/Decryption
+// Message Encryption / Decryption
 // ========================
 
 export async function encryptMessage(plaintext: string, roomKey: CryptoKey): Promise<string> {
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const encoded = new TextEncoder().encode(plaintext);
   const ciphertext = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
     roomKey,
-    encoded
+    new TextEncoder().encode(plaintext)
   );
-
   const combined = new Uint8Array(iv.length + ciphertext.byteLength);
   combined.set(iv);
   combined.set(new Uint8Array(ciphertext), iv.length);
   return btoa(String.fromCharCode(...combined));
 }
 
-export async function decryptMessage(ciphertextBase64: string, roomKey: CryptoKey): Promise<string> {
+export async function decryptMessage(
+  ciphertextBase64: string,
+  roomKey: CryptoKey
+): Promise<string> {
   try {
     const combined = Uint8Array.from(atob(ciphertextBase64), (c) => c.charCodeAt(0));
     if (combined.length < 13) return "[Unable to decrypt message]";
     const iv = combined.slice(0, 12);
-    const ciphertext = combined.slice(12);
     const decrypted = await crypto.subtle.decrypt(
       { name: "AES-GCM", iv },
       roomKey,
-      ciphertext
+      combined.slice(12)
     );
     return new TextDecoder().decode(decrypted);
-  } catch (err) {
-    console.warn("Decryption failed:", err);
+  } catch {
     return "[Unable to decrypt message]";
   }
 }
 
 // ========================
-// High-level helpers (manage local storage)
+// Local key management (IndexedDB)
 // ========================
 
-export async function initUserKeys(userId: string): Promise<{ publicKeyJwk: JsonWebKey; isNew: boolean }> {
-  const existing = await getPrivateKey(userId);
-  if (existing) {
-    // Retrieve stored public key from IndexedDB
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, "readonly");
-      const req = tx.objectStore(STORE_NAME).get(`public-${userId}`);
-      req.onsuccess = () => {
-        if (req.result) {
-          resolve({ publicKeyJwk: req.result.key, isNew: false });
-        } else {
-          // Shouldn't happen, regenerate
-          generateAndStore(userId).then((r) => resolve({ ...r, isNew: true }));
-        }
-      };
-      req.onerror = () => reject(req.error);
-    });
+export async function initUserKeys(userId: string): Promise<{
+  publicKeyJwk: JsonWebKey;
+  isNew: boolean;
+}> {
+  const existingPrivateKey = await idbGetPrivateKey(userId);
+  if (existingPrivateKey) {
+    const storedPublicKeyJwk = await idbGetPublicKeyJwk(userId);
+    if (storedPublicKeyJwk) {
+      return { publicKeyJwk: storedPublicKeyJwk, isNew: false };
+    }
   }
-  const result = await generateAndStore(userId);
-  return { ...result, isNew: true };
-}
-
-async function generateAndStore(userId: string): Promise<{ publicKeyJwk: JsonWebKey }> {
   const { publicKeyJwk, privateKey } = await generateUserKeyPair();
-  await storePrivateKey(userId, privateKey);
-  // Also store public key locally for retrieval
-  const db = await openDB();
-  await new Promise<void>((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    tx.objectStore(STORE_NAME).put({ id: `public-${userId}`, key: publicKeyJwk });
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-  return { publicKeyJwk };
+  await idbStorePrivateKey(userId, privateKey);
+  await idbStorePublicKeyJwk(userId, publicKeyJwk);
+  return { publicKeyJwk, isNew: true };
 }
 
 export async function getUserPrivateKey(userId: string): Promise<CryptoKey | null> {
-  return getPrivateKey(userId);
+  return idbGetPrivateKey(userId);
 }
 
 export async function cacheRoomKey(roomId: string, roomKey: CryptoKey): Promise<void> {
-  return storeRoomKey(roomId, roomKey);
+  return idbStoreRoomKey(roomId, roomKey);
 }
 
 export async function getCachedRoomKey(roomId: string): Promise<CryptoKey | null> {
-  return getRoomKeyFromCache(roomId);
+  return idbGetRoomKey(roomId);
 }
 
 export async function clearRoomKeyCache(roomId: string): Promise<void> {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    tx.objectStore(STORE_NAME).delete(`room-${roomId}`);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
+  return idbClearRoomKey(roomId);
 }
 
 // ========================
-// Private Key Cloud Backup (cross-device sync)
+// Private Key Cloud Backup — cross-device sync
+//
+// Security model: PBKDF2(userId, randomSalt) → AES-GCM wrapping key.
+// The salt is stored alongside the ciphertext in Supabase; RLS prevents
+// any other user from reading it. The plaintext private key never leaves
+// the device.
 // ========================
 
-// Derives a wrapping key from userId + random salt via PBKDF2.
-// The salt is stored per-user in Supabase; only the user's UUID is needed to derive the key.
 async function deriveWrappingKey(userId: string, salt: Uint8Array): Promise<CryptoKey> {
-  const keyMaterial = await crypto.subtle.importKey(
+  const material = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(userId),
     { name: "PBKDF2" },
@@ -312,26 +185,36 @@ async function deriveWrappingKey(userId: string, salt: Uint8Array): Promise<Cryp
     ["deriveKey"]
   );
   return crypto.subtle.deriveKey(
-    { name: "PBKDF2", salt: salt.buffer.slice(salt.byteOffset, salt.byteOffset + salt.byteLength) as ArrayBuffer, iterations: 100_000, hash: "SHA-256" },
-    keyMaterial,
+    {
+      name: "PBKDF2",
+      salt: salt.buffer.slice(
+        salt.byteOffset,
+        salt.byteOffset + salt.byteLength
+      ) as ArrayBuffer,
+      iterations: 100_000,
+      hash: "SHA-256",
+    },
+    material,
     { name: "AES-GCM", length: 256 },
     false,
     ["encrypt", "decrypt"]
   );
 }
 
-// Encrypts the private key for cloud storage. Returns base64-encoded ciphertext and salt.
-// The private key is exported as JWK, encrypted with AES-256-GCM using the wrapping key.
 export async function backupPrivateKey(
   userId: string,
   privateKey: CryptoKey
 ): Promise<{ encryptedKey: string; saltBase64: string }> {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const wrappingKey = await deriveWrappingKey(userId, salt);
-  const exported = await crypto.subtle.exportKey("jwk", privateKey);
-  const encoded = new TextEncoder().encode(JSON.stringify(exported));
+  const jwk = await crypto.subtle.exportKey("jwk", privateKey);
+  const encoded = new TextEncoder().encode(JSON.stringify(jwk));
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, wrappingKey, encoded);
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    wrappingKey,
+    encoded
+  );
   const combined = new Uint8Array(iv.length + ciphertext.byteLength);
   combined.set(iv);
   combined.set(new Uint8Array(ciphertext), iv.length);
@@ -341,7 +224,7 @@ export async function backupPrivateKey(
   };
 }
 
-// Decrypts the private key from cloud storage and caches it in IndexedDB.
+// Decrypts the private key from Supabase backup and caches it in IndexedDB.
 // Called on a new device where IndexedDB has no key yet.
 export async function restorePrivateKey(
   userId: string,
@@ -352,28 +235,33 @@ export async function restorePrivateKey(
   const wrappingKey = await deriveWrappingKey(userId, salt);
   const combined = Uint8Array.from(atob(encryptedKey), (c) => c.charCodeAt(0));
   const iv = combined.slice(0, 12);
-  const ciphertext = combined.slice(12);
-  const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, wrappingKey, ciphertext);
+  const decrypted = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    wrappingKey,
+    combined.slice(12)
+  );
   const jwk = JSON.parse(new TextDecoder().decode(decrypted)) as JsonWebKey;
   const privateKey = await crypto.subtle.importKey(
     "jwk",
     jwk,
-    { name: "ECDH", namedCurve: "P-256" },
-    false,
-    ["deriveBits"]
+    { name: "RSA-OAEP", hash: "SHA-256" },
+    true, // extractable: true so the key can be re-backed-up if needed
+    ["unwrapKey"]
   );
-  await storePrivateKey(userId, privateKey);
+  await idbStorePrivateKey(userId, privateKey);
   return privateKey;
 }
 
-// Check if a string looks like it's E2EE encrypted (base64 with sufficient length)
+// ========================
+// Helpers
+// ========================
+
+// Returns true if the string looks like a base64-encoded encrypted payload
+// (IV prefix = 12 bytes → at least 16 base64 chars of meaningful content).
 export function isEncryptedContent(content: string | null): boolean {
-  if (!content) return false;
-  // Encrypted messages are base64 and at least ~30 chars (12 byte IV + some ciphertext)
+  if (!content || content.length < 20) return false;
   try {
-    if (content.length < 20) return false;
-    const decoded = atob(content);
-    return decoded.length >= 13; // At least IV (12) + 1 byte
+    return atob(content).length >= 13;
   } catch {
     return false;
   }

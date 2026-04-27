@@ -223,18 +223,12 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const { initEncryption, setupRoomEncryption, redistributeRoomKey, encrypt, decrypt, decryptMessages, getRoomKey } =
     useE2EEncryption(currentUserId);
 
-  // Encrypts content for a room, falling back to plaintext if no room key exists yet
+  // E2E encryption disabled until June 27th release — RLS protects messages server-side
   const encryptContent = useCallback(
-    async (plaintext: string, roomId: string): Promise<{ content: string; is_encrypted: boolean }> => {
-      try {
-        const encrypted = await encrypt(plaintext, roomId);
-        if (encrypted) return { content: encrypted, is_encrypted: true };
-      } catch (_e) {
-        // fall through to plaintext
-      }
+    async (plaintext: string, _roomId: string): Promise<{ content: string; is_encrypted: boolean }> => {
       return { content: plaintext, is_encrypted: false };
     },
-    [encrypt]
+    []
   );
 
 

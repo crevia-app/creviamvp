@@ -50,7 +50,7 @@ export function useE2EEncryption(currentUserId: string) {
             .from("user_encryption_keys" as any)
             .select("id, encrypted_private_key")
             .eq("user_id", currentUserId)
-            .single() as any;
+            .maybeSingle() as any;
 
           if (!existing) {
             // First time in DB — save public key + backup
@@ -102,7 +102,7 @@ export function useE2EEncryption(currentUserId: string) {
       .from("user_encryption_keys" as any)
       .select("encrypted_private_key, key_salt")
       .eq("user_id", currentUserId)
-      .single() as any;
+      .maybeSingle() as any;
 
     if (!data?.encrypted_private_key || !data?.key_salt) return null;
 
@@ -119,7 +119,7 @@ export function useE2EEncryption(currentUserId: string) {
       .from("user_encryption_keys" as any)
       .select("public_key")
       .eq("user_id", userId)
-      .single() as any;
+      .maybeSingle() as any;
 
     if (data?.public_key) {
       return JSON.parse(data.public_key);
@@ -170,7 +170,7 @@ export function useE2EEncryption(currentUserId: string) {
       .select("encrypted_key, encrypted_by")
       .eq("room_id", roomId)
       .eq("user_id", currentUserId)
-      .single() as any;
+      .maybeSingle() as any;
 
     if (!keyRecord?.encrypted_key) return null;
 
@@ -200,14 +200,14 @@ export function useE2EEncryption(currentUserId: string) {
   const decrypt = useCallback(async (ciphertext: string, roomId: string): Promise<string> => {
     if (!isEncryptedContent(ciphertext)) return ciphertext;
     const roomKey = await getRoomKey(roomId);
-    if (!roomKey) return "[Encryption key unavailable]";
+    if (!roomKey) return "🔒 Encrypted message";
     const result = await decryptMessage(ciphertext, roomKey);
     if (result === "[Unable to decrypt message]") {
-      // Stale cached room key — clear it, fetch fresh from Supabase, retry once
       await clearRoomKeyCache(roomId);
       const freshKey = await getRoomKey(roomId);
-      if (!freshKey) return "[Encryption key unavailable]";
-      return decryptMessage(ciphertext, freshKey);
+      if (!freshKey) return "🔒 Encrypted message";
+      const retry = await decryptMessage(ciphertext, freshKey);
+      return retry === "[Unable to decrypt message]" ? "🔒 Encrypted message" : retry;
     }
     return result;
   }, [getRoomKey]);
@@ -240,8 +240,11 @@ export function useE2EEncryption(currentUserId: string) {
             await clearRoomKeyCache(msg.room_id);
             const freshKey = await getRoomKey(msg.room_id);
             if (freshKey) {
-              decrypted = await decryptMessage(msg.content, freshKey);
+              const retry = await decryptMessage(msg.content, freshKey);
+              decrypted = retry === "[Unable to decrypt message]" ? "🔒 Encrypted message" : retry;
               roomKeys.set(msg.room_id, freshKey);
+            } else {
+              decrypted = "🔒 Encrypted message";
             }
           }
           return { ...msg, content: decrypted };
