@@ -11,13 +11,23 @@ export interface UseInitializeE2EEResult {
   retry: () => void;
 }
 
+const TAG = "[E2EE Init]";
+
 export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
+  // This line fires on every render — if you see it with an empty userId, the
+  // auth state hasn't resolved yet. Once userId is set, the effect below runs.
+  console.log(`${TAG} hook called — userId: "${userId || "(not set yet)"}"`);
+
   const [status, setStatus] = useState<E2EEStatus>("idle");
   const [error, setError] = useState<Error | null>(null);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      console.log(`${TAG} useEffect skipped — no userId yet`);
+      return;
+    }
+    console.log(`${TAG} useEffect fired — starting init for userId: ${userId}`);
 
     let cancelled = false;
 
@@ -26,11 +36,13 @@ export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
       setError(null);
 
       try {
-        // ── Step 1: Check for an existing private key in IndexedDB ──────────
+        // ── Step 1: Check IndexedDB ───────────────────────────────────────────
+        console.log(`${TAG} Checking IndexedDB for existing private key...`);
         const cachedPrivateKey = await idbGetPrivateKey(userId);
+        console.log(`${TAG} IndexedDB result:`, cachedPrivateKey ? "✅ Private key found" : "❌ No private key");
 
-        // ── Step 2: Fetch the Supabase record ────────────────────────────────
-        // Use maybeSingle() so that a missing row returns null instead of 406.
+        // ── Step 2: Check Supabase ────────────────────────────────────────────
+        console.log(`${TAG} Syncing with Supabase — fetching key record...`);
         const { data, error: fetchError } = await (supabase
           .from("user_encryption_keys" as any)
           .select("public_key, encrypted_private_key, key_salt")
@@ -39,23 +51,26 @@ export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
 
         if (cancelled) return;
 
-        // PostgREST error codes: PGRST116 = "single row expected, 0 found"
-        // We treat any fetch error other than network errors as "no record".
-        const isNetworkError =
-          fetchError && !fetchError.code && !fetchError.status;
-        if (isNetworkError) {
-          throw new Error(`Network error fetching encryption keys: ${fetchError.message}`);
+        if (fetchError) {
+          // Hard network errors (no code/status) are unrecoverable at this point.
+          const isNetworkError = !fetchError.code && !fetchError.status;
+          if (isNetworkError) {
+            throw new Error(`Network error fetching encryption keys: ${fetchError.message}`);
+          }
+          console.warn(`${TAG} Supabase fetch warning (non-fatal):`, fetchError.message);
         }
 
         const hasSupabaseRecord = !!data && !fetchError;
+        console.log(`${TAG} Supabase record:`, hasSupabaseRecord ? "✅ Found" : "❌ Not found");
 
-        // ── Happy path: local key + remote record both present ───────────────
+        // ── Happy path: IDB + Supabase both have data ─────────────────────────
         if (hasSupabaseRecord && cachedPrivateKey) {
+          console.log(`${TAG} ✅ Already initialised — private key in IDB, public key in Supabase`);
           if (!cancelled) setStatus("ready");
           return;
         }
 
-        // ── Cross-device recovery: remote backup exists, IDB is empty ────────
+        // ── Cross-device recovery: Supabase has backup, IDB is empty ─────────
         if (hasSupabaseRecord && !cachedPrivateKey) {
           const { encrypted_private_key, key_salt } = data as {
             encrypted_private_key: string | null;
@@ -63,24 +78,32 @@ export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
           };
 
           if (encrypted_private_key && key_salt) {
-            // Decrypt and cache the private key locally — no new keypair needed
+            console.log(`${TAG} 🔄 Cross-device recovery — restoring private key from Supabase backup...`);
             await restorePrivateKey(userId, encrypted_private_key, key_salt);
+            console.log(`${TAG} ✅ Private key restored to IndexedDB`);
             if (!cancelled) setStatus("ready");
             return;
           }
-          // Remote record exists but has no backup (legacy row) — fall through
-          // to regenerate and overwrite via upsert below.
+
+          // Remote record exists but backup columns are empty (legacy row).
+          // Fall through to regenerate and overwrite via upsert.
+          console.log(`${TAG} ⚠️ Remote record has no private key backup — regenerating...`);
         }
 
-        // ── Key generation: no usable keys found anywhere ────────────────────
+        // ── Key generation: no usable keys found anywhere ─────────────────────
+        console.log(`${TAG} 🔑 Generating new RSA-OAEP key pair (extractable: true)...`);
         const { publicKeyJwk, privateKey } = await generateUserKeyPair();
+        console.log(`${TAG} ✅ Key pair generated`);
 
-        // Store private key locally first — local is authoritative
+        console.log(`${TAG} 💾 Storing private key in IndexedDB...`);
         await idbStorePrivateKey(userId, privateKey);
+        console.log(`${TAG} ✅ Private key stored in IndexedDB`);
 
-        // Encrypt the private key for Supabase backup (client-side, AES-256-GCM)
+        console.log(`${TAG} 🔒 Encrypting private key backup (PBKDF2 + AES-256-GCM)...`);
         const { encryptedKey, saltBase64 } = await backupPrivateKey(userId, privateKey);
+        console.log(`${TAG} ✅ Private key encrypted for cloud backup`);
 
+        console.log(`${TAG} ☁️  Syncing public key + encrypted backup to Supabase...`);
         const { error: upsertError } = await (supabase
           .from("user_encryption_keys" as any)
           .upsert(
@@ -98,17 +121,21 @@ export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
           throw new Error(`Failed to save encryption keys: ${upsertError.message}`);
         }
 
+        console.log(`${TAG} ✅ E2EE initialisation complete — keys synced to Supabase`);
         if (!cancelled) setStatus("ready");
       } catch (err) {
         if (cancelled) return;
 
+        console.error(`${TAG} ❌ Initialisation failed:`, err);
+
         // IDB InvalidStateError / UnknownError = corrupted browser database.
-        // The only safe recovery is to wipe local state and force a fresh login.
+        // The only safe recovery is to wipe all local state and redirect to login.
         const isCorruptedState =
           err instanceof DOMException &&
           (err.name === "InvalidStateError" || err.name === "UnknownError");
 
         if (isCorruptedState) {
+          console.error(`${TAG} 💥 Corrupted IDB state — clearing local storage and redirecting to login`);
           try {
             localStorage.clear();
             sessionStorage.clear();

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { supabase } from "@/integrations/supabase/client";
 import MainSidebar from "./MainSidebar";
@@ -12,7 +12,6 @@ interface AppLayoutProps {
 }
 
 const AppLayout = ({ children }: AppLayoutProps) => {
-  const navigate = useNavigate();
   const location = useLocation();
   const { setTheme } = useTheme();
   const [userType, setUserType] = useState<"creator" | "brand" | null>(null);
@@ -34,7 +33,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
   const loadProfile = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (session) {
       const { data: profileData } = await supabase
         .from("profiles")
@@ -45,7 +44,6 @@ const AppLayout = ({ children }: AppLayoutProps) => {
       setProfile(profileData);
       setUserType(profileData?.user_type || null);
     } else {
-      // Allow access without auth with defaults
       setUserType("creator");
       setProfile({ display_name: "Guest", email: "" });
     }
@@ -64,23 +62,23 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     return null;
   }
 
-  const isCrevidAI = location.pathname === '/crevia-ai';
+  const isCrevidAI = location.pathname === "/crevia-ai";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <TopBar 
-        profile={profile} 
-        onProfileClick={() => setProfileDrawerOpen(true)} 
+      <TopBar
+        profile={profile}
+        onProfileClick={() => setProfileDrawerOpen(true)}
         hideRightElements={isCrevidAI}
       />
-      
+
       <div className="flex flex-1 overflow-hidden">
-        <MainSidebar 
-          userType={userType} 
+        <MainSidebar
+          userType={userType}
           profile={profile}
           onProfileClick={() => setProfileDrawerOpen(true)}
         />
-        
+
         <main className="flex-1 overflow-auto pb-16 md:pb-0 md:ml-[100px]">
           {children}
         </main>

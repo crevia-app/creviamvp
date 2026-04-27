@@ -289,5 +289,6 @@ export function useE2EEncryption(currentUserId: string) {
     decrypt,
     decryptMessages,
     getRoomKey,
+    getPublicKey,
   };
 }

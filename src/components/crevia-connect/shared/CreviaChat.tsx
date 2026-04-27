@@ -220,15 +220,43 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const presenceChannelRef = useRef<any>(null);
   const selectedExternalRef = useRef<string>("");
 
-  const { initEncryption, setupRoomEncryption, redistributeRoomKey, encrypt, decrypt, decryptMessages, getRoomKey } =
+  const { initEncryption, setupRoomEncryption, redistributeRoomKey, encrypt, decrypt, decryptMessages, getRoomKey, getPublicKey } =
     useE2EEncryption(currentUserId);
 
-  // E2E encryption disabled until June 27th release — RLS protects messages server-side
   const encryptContent = useCallback(
-    async (plaintext: string, _roomId: string): Promise<{ content: string; is_encrypted: boolean }> => {
-      return { content: plaintext, is_encrypted: false };
+    async (plaintext: string, roomId: string): Promise<{ content: string; is_encrypted: boolean }> => {
+      const members = selectedRoom?.members ?? [];
+      const memberIds = members.map((m) => m.user_id);
+
+      // Verify every room member has a registered public key before encrypting.
+      for (const memberId of memberIds) {
+        const key = await getPublicKey(memberId);
+        if (!key) {
+          if (memberId === currentUserId) {
+            // Own key is missing — re-run initialisation and block this send.
+            initEncryption();
+            throw new Error("Your encryption keys are being set up. Please try again in a moment.");
+          }
+          const profile = members.find((m) => m.user_id === memberId)?.profile;
+          const name = profile?.display_name || profile?.handle || "A participant";
+          throw new Error(`${name} hasn't set up encryption yet. Message not sent.`);
+        }
+      }
+
+      // Attempt encryption; if no room key exists yet, establish it first.
+      let encrypted = await encrypt(plaintext, roomId);
+      if (!encrypted) {
+        await setupRoomEncryption(roomId, memberIds);
+        encrypted = await encrypt(plaintext, roomId);
+      }
+
+      if (!encrypted) {
+        throw new Error("Encryption failed. Please try again.");
+      }
+
+      return { content: encrypted, is_encrypted: true };
     },
-    []
+    [currentUserId, selectedRoom, encrypt, getPublicKey, initEncryption, setupRoomEncryption]
   );
 
 
@@ -748,6 +776,11 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
       const plainContent = newMessage || (fileData ? `Sent a file: ${fileData.name}` : "");
       const { content: finalContent, is_encrypted } = await encryptContent(plainContent, selectedRoom.id);
 
+      // Privacy by Default — never allow a plaintext message to reach the DB.
+      if (!is_encrypted) {
+        throw new Error("Encryption is required. Message not sent.");
+      }
+
       const messageData: any = {
         room_id: selectedRoom.id,
         sender_id: currentUserId,
@@ -778,7 +811,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
       broadcastTyping(false);
     } catch (error) {
       console.error("Send error:", error);
-      toast.error("Failed to send message");
+      toast.error(error instanceof Error ? error.message : "Failed to send message");
     } finally {
       setUploadingFile(false);
     }
