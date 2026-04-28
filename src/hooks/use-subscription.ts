@@ -87,14 +87,14 @@ export const useSubscription = (): SubscriptionState => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("subscription_plan, subscription_status, kira_actions_today, kira_actions_limit")
+      .select("subscription_plan, subscription_status, kira_actions_used, kira_actions_limit")
       .eq("id", user.id)
       .single();
 
     if (profile) {
       setPlan((profile.subscription_plan as SubscriptionPlan) || "free");
       setStatus(profile.subscription_status || "inactive");
-      setKiraActionsToday(profile.kira_actions_today || 0);
+      setKiraActionsToday(profile.kira_actions_used || 0);
       setKiraActionsLimit(profile.kira_actions_limit || 10);
     }
 

@@ -110,17 +110,27 @@ serve(async (req) => {
       }
     }
 
-    // ✅ Handle subscription renewal/if renewal succeeds keep subscription active, if it fails mark subscription as expired(cuts off premium access automatically if payment fails)
-    if (event.event === 'subscription.create' || event.event === 'invoice.payment_failed') {
+    // ✅ Recurring renewal — extend expiry by one month and keep active
+    if (event.event === 'subscription.create') {
       const { customer } = event.data;
-      const userEmail = customer.email;
+      const expiresAt = new Date();
+      expiresAt.setMonth(expiresAt.getMonth() + 1);
+      await supabase
+        .from('profiles')
+        .update({
+          subscription_status: 'active',
+          subscription_expires_at: expiresAt.toISOString(),
+        })
+        .eq('email', customer.email);
+    }
 
-      if (event.event === 'invoice.payment_failed') {
-        await supabase
-          .from('profiles')
-          .update({ subscription_status: 'expired' })
-          .eq('email', userEmail);
-      }
+    // ✅ Payment failed — cut off premium access automatically
+    if (event.event === 'invoice.payment_failed') {
+      const { customer } = event.data;
+      await supabase
+        .from('profiles')
+        .update({ subscription_status: 'expired' })
+        .eq('email', customer.email);
     }
     //we always tell paystack that the webhook has been received if not paystack will keep retrying the webhook
     return new Response(JSON.stringify({ received: true }), {

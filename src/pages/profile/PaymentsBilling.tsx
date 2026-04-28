@@ -90,8 +90,8 @@ const handleUpgrade = async () => {
   const handler = w.PaystackPop.setup({
     key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
     email,
-    amount: amount * 100, // Paystack expects smallest unit: KES 799 → 79900
-    currency: 'KES',
+    amount, // already in cents: 799 = $7.99, 2900 = $29.00
+    currency: 'USD',
     metadata: { plan },
     callback: (_response: { reference: string }) => {
       // subscription state updates via realtime listener when webhook fires
@@ -122,20 +122,29 @@ const handleUpgrade = async () => {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                <h2 className="font-vollkorn text-xl font-bold">
-                  {subscription === 'free' ? 'Free Plan' : 
-                    subscription === 'creative_pro' ? 'Creative Pro' : 
-                     'Brand Workspace'}
-                </h2>                  <Badge variant="outline" className="text-bronze border-bronze/40">Active</Badge>
+                  <h2 className="font-vollkorn text-xl font-bold">
+                    {subscription === 'free' ? 'Free Plan' :
+                      subscription === 'creative_pro' ? 'Creative Pro' :
+                      'Brand Workspace'}
+                  </h2>
+                  <Badge variant="outline" className="text-bronze border-bronze/40">
+                    {subscription === 'free' ? 'Free' : 'Active'}
+                  </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground">Free — no billing required</p>
+                <p className="text-sm text-muted-foreground">
+                  {subscription === 'free'
+                    ? 'Free — no billing required'
+                    : `${subscription === 'creative_pro' ? '$7.99' : '$29.00'} / month`}
+                </p>
               </div>
             </div>
-            <Link to="/pricing">
-              <Button className="bg-bronze hover:bg-bronze/90 text-white">
-                Upgrade to Pro <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </Link>
+            {subscription === 'free' && (
+              <Link to="/pricing">
+                <Button className="bg-bronze hover:bg-bronze/90 text-white">
+                  Upgrade to Pro <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
+              </Link>
+            )}
           </div>
         </Card>
 
