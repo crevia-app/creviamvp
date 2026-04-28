@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowRight, Sparkles } from "lucide-react";
 import HeroPattern from "@/components/HeroPattern";
@@ -7,16 +7,61 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 const Pricing = () => {
+  const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState<"creative" | "brand">("creative");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userType, setUserType] = useState<string | null>(null);
+  const [isPaystackLoading, setIsPaystackLoading] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return;
+      setIsLoggedIn(true);
+      supabase.from("profiles").select("user_type").eq("id", session.user.id).single()
+        .then(({ data }) => setUserType(data?.user_type || null));
+    });
+  }, []);
+
+  const handleUpgrade = async (planType: "creative" | "brand") => {
+    if (!isLoggedIn) { navigate("/auth"); return; }
+    setIsPaystackLoading(true);
+
+    const plan = planType === "brand" ? "brand_workspace" : "creative_pro";
+    const monthlyAmount = planType === "brand" ? 2900 : 799;
+    const yearlyAmount = planType === "brand" ? 29000 : 7990;
+    const amount = billingCycle === "yearly" ? yearlyAmount : monthlyAmount;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const email = user?.email;
+    if (!email) { setIsPaystackLoading(false); return; }
+
+    const w = window as unknown as {
+      PaystackPop: { setup: (opts: Record<string, unknown>) => { openIframe: () => void } }
+    };
+    const handler = w.PaystackPop.setup({
+      key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+      email,
+      amount: amount * 100, // Paystack KES uses kobo: KES 799 → 79900
+      currency: "KES",
+      metadata: { plan, billing_cycle: billingCycle },
+      callback: (_response: { reference: string }) => {
+        navigate("/profile/payments-billing");
+        setIsPaystackLoading(false);
+      },
+      onClose: () => setIsPaystackLoading(false),
+    });
+    handler.openIframe();
+  };
 
   const creativePlans = [
     {
       name: "Free",
-      priceMonthly: "$0",
-      priceYearly: "$0",
+      priceMonthly: "KES 0",
+      priceYearly: "KES 0",
       period: "",
       description: "Everything you need to get started as a creative.",
       features: [
@@ -31,11 +76,12 @@ const Pricing = () => {
       cta: "Start Free",
       highlighted: false,
       badge: null,
+      planType: null,
     },
     {
       name: "Creative Pro",
-      priceMonthly: "$7.99",
-      priceYearly: "$79.00",
+      priceMonthly: "KES 799",
+      priceYearly: "KES 7,990",
       period: billingCycle === "monthly" ? "/mo" : "/yr",
       description: "For creatives who are ready to scale in their business.",
       features: [
@@ -43,7 +89,7 @@ const Pricing = () => {
         "40 Kira AI actions per day",
         "Crevia Link - all premium themes",
         "Full visitor analytics",
-        "Unlimited invoices & tracking ",
+        "Unlimited invoices & tracking",
         "Unlimited AI contract generation",
         "E-Signatures inside the app",
         "Client Portal access",
@@ -52,17 +98,16 @@ const Pricing = () => {
       cta: "Go Pro",
       highlighted: true,
       badge: billingCycle === "yearly" ? "2 Months Free" : "Most Popular",
-
+      planType: "creative" as const,
     },
   ];
 
   const brandPlans = [
     {
       name: "Free",
-      priceMonthly: "$0",
-      priceYearly: "$0",
+      priceMonthly: "KES 0",
+      priceYearly: "KES 0",
       period: "",
-      // seats: "1 seat",
       description: "Start discovering and working with creatives.",
       features: [
         "Basic access to creatives",
@@ -74,17 +119,17 @@ const Pricing = () => {
       cta: "Start Free",
       highlighted: false,
       badge: null,
+      planType: null,
     },
     {
       name: "Brand Workspace",
-      priceMonthly: "$29.00",
-      priceYearly: "$290.00",
+      priceMonthly: "KES 2,900",
+      priceYearly: "KES 29,000",
       period: billingCycle === "monthly" ? "/mo" : "/yr",
-      // seats: "3 seats",
       description: "For brands scaling creative operations.",
       features: [
         "3 admin seats included",
-        "$9.99 per extra seat",
+        "KES 999 per extra seat",
         "Verified badge on your profile",
         "40 Kira AI actions per day",
         "Unlimited talent roster tracking",
@@ -97,16 +142,16 @@ const Pricing = () => {
       cta: "Get Workspace",
       highlighted: true,
       badge: billingCycle === "yearly" ? "2 Months Free" : "Most Popular",
+      planType: "brand" as const,
     },
   ];
 
   const plans = selectedType === "creative" ? creativePlans : brandPlans;
 
- 
   return (
     <div className="min-h-screen bg-background">
       <Header />
- 
+
       {/* Hero */}
       <section className="relative pt-28 md:pt-36 pb-8 md:pb-12 px-4 md:px-6 overflow-hidden">
         <HeroPattern />
@@ -127,7 +172,7 @@ const Pricing = () => {
               Start free. Upgrade when your business is ready for more power.
             </p>
           </ScrollReveal>
- 
+
           {/* Creative / Brand Toggle */}
           <ScrollReveal delay={0.24}>
             <div className="inline-flex items-center p-1 bg-secondary rounded-full mb-6">
@@ -152,7 +197,7 @@ const Pricing = () => {
                 For Brands
               </button>
             </div>
- 
+
             {/* Monthly / Yearly Toggle */}
             <div className="block">
               <div className="inline-flex items-center p-1 bg-secondary rounded-full">
@@ -186,7 +231,7 @@ const Pricing = () => {
           </ScrollReveal>
         </div>
       </section>
- 
+
       {/* Cards */}
       <section className="pb-20 md:pb-28 px-4 md:px-6">
         <div className="container mx-auto max-w-4xl">
@@ -217,14 +262,14 @@ const Pricing = () => {
                       {plan.badge}
                     </span>
                   )}
- 
+
                   <h3 className="font-vollkorn text-2xl md:text-3xl font-bold mb-2">
                     {plan.name}
                   </h3>
                   <p className="text-muted-foreground text-sm mb-6">
                     {plan.description}
                   </p>
- 
+
                   <div className="flex items-baseline gap-1 mb-2">
                     <span className="font-vollkorn text-5xl md:text-6xl font-bold">
                       {billingCycle === "monthly" ? plan.priceMonthly : plan.priceYearly}
@@ -233,11 +278,11 @@ const Pricing = () => {
                       <span className="text-muted-foreground text-lg">{plan.period}</span>
                     )}
                   </div>
- 
+
                   {/* Yearly savings note */}
                   {plan.highlighted && billingCycle === "yearly" && (
                     <p className="text-xs text-bronze font-poppins mb-6">
-                      {selectedType === "creative" ? "Saves ~$16 vs monthly" : "Saves ~$58 vs monthly"}
+                      {selectedType === "creative" ? "Saves ~KES 1,598 vs monthly" : "Saves ~KES 5,800 vs monthly"}
                     </p>
                   )}
                   {plan.highlighted && billingCycle === "monthly" && (
@@ -246,7 +291,7 @@ const Pricing = () => {
                     </p>
                   )}
                   {!plan.highlighted && <div className="mb-6" />}
- 
+
                   <ul className="space-y-3.5 mb-10">
                     {plan.features.map((feature, fi) => (
                       <motion.li
@@ -261,9 +306,11 @@ const Pricing = () => {
                       </motion.li>
                     ))}
                   </ul>
- 
-                  <Link to="/auth">
+
+                  {plan.planType ? (
                     <Button
+                      onClick={() => handleUpgrade(plan.planType!)}
+                      disabled={isPaystackLoading}
                       className={`w-full font-poppins font-semibold ${
                         plan.highlighted
                           ? "bg-bronze hover:bg-bronze-dark"
@@ -271,16 +318,30 @@ const Pricing = () => {
                       }`}
                       size="lg"
                     >
-                      {plan.cta} <ArrowRight className="ml-2 w-4 h-4" />
+                      {isPaystackLoading ? "Processing..." : plan.cta}
+                      {!isPaystackLoading && <ArrowRight className="ml-2 w-4 h-4" />}
                     </Button>
-                  </Link>
+                  ) : (
+                    <Link to="/auth">
+                      <Button
+                        className={`w-full font-poppins font-semibold ${
+                          plan.highlighted
+                            ? "bg-bronze hover:bg-bronze-dark"
+                            : "bg-secondary hover:bg-secondary/80 text-foreground"
+                        }`}
+                        size="lg"
+                      >
+                        {plan.cta} <ArrowRight className="ml-2 w-4 h-4" />
+                      </Button>
+                    </Link>
+                  )}
                 </motion.div>
               ))}
             </motion.div>
           </AnimatePresence>
         </div>
       </section>
- 
+
       {/* FAQ */}
       <section className="py-16 md:py-24 px-4 md:px-6 bg-secondary/30">
         <div className="container mx-auto max-w-3xl">
@@ -304,19 +365,15 @@ const Pricing = () => {
                 q: "What payment methods do you accept?",
                 a: "All major credit/debit cards and M-Pesa for African creatives and brands.",
               },
-              // {
-              //   q: "Is there a free trial for Pro?",
-              //   a: "Yes — 14-day free trial on all Pro plans. No commitment.",
-              // },
               {
                 q: "What is the Client Portal?",
                 a: "A professional branded room link you can send to clients for a premium experience. Available on Pro and Brand Workspace plans.",
               },
-               {
+              {
                 q: "How does the Brand Workspace extra seat pricing work?",
-                a: "The Brand Workspace includes 3 admin seats. You can add more team members at $9.99 per extra seat per month.",
+                a: "The Brand Workspace includes 3 admin seats. You can add more team members at KES 999 per extra seat per month.",
               },
-               {
+              {
                 q: "What happens to my data if I downgrade?",
                 a: "Your data is safe. You keep access to everything you created but new creations will be limited to free plan limits.",
               },

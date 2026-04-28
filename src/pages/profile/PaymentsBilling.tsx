@@ -59,7 +59,7 @@ const PaymentsBilling = () => {
 
   const proFeatures = userType === "brand" ? [
   "3 admin seats included",
-  "$9.99 per extra seat",
+  "KES 999 per extra seat",
   "Verified badge",
   "40 Kira AI actions per day",
   "Unlimited talent roster",
