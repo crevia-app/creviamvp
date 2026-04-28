@@ -90,8 +90,8 @@ const handleUpgrade = async () => {
   const handler = w.PaystackPop.setup({
     key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
     email,
-    amount, // already in cents: 799 = $7.99, 2900 = $29.00
-    currency: 'USD',
+    amount: amount * 100, // Paystack KES uses kobo: KES 799 → 79900
+    currency: 'KES',
     metadata: { plan },
     callback: (_response: { reference: string }) => {
       // subscription state updates via realtime listener when webhook fires
@@ -134,7 +134,7 @@ const handleUpgrade = async () => {
                 <p className="text-sm text-muted-foreground">
                   {subscription === 'free'
                     ? 'Free — no billing required'
-                    : `${subscription === 'creative_pro' ? '$7.99' : '$29.00'} / month`}
+                    : `${subscription === 'creative_pro' ? 'KES 799' : 'KES 2,900'} / month`}
                 </p>
               </div>
             </div>
@@ -170,7 +170,7 @@ const handleUpgrade = async () => {
           <Card className="p-6 border-border/40">
             <h3 className="font-vollkorn text-xl font-bold mb-1">Starter</h3>
             <div className="flex items-baseline gap-1 mb-5">
-              <span className="text-3xl font-bold">$0</span>
+              <span className="text-3xl font-bold">KES 0</span>
               <span className="text-muted-foreground text-sm">/month</span>
             </div>
             <ul className="space-y-3 mb-6">
@@ -191,7 +191,7 @@ const handleUpgrade = async () => {
             </div>
             <h3 className="font-vollkorn text-xl font-bold mb-1">Pro</h3>
             <div className="flex items-baseline gap-1 mb-5">
-              <span className="text-3xl font-bold">{userType === "brand" ? "$29.00" : "$7.99"}</span>
+              <span className="text-3xl font-bold">{userType === "brand" ? "KES 2,900" : "KES 799"}</span>
               <span className="text-muted-foreground text-sm">/month</span>
             </div>
             <ul className="space-y-3 mb-6">
