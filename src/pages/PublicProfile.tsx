@@ -29,26 +29,19 @@ const PublicProfile = () => {
     if (linkProfile) {
       setProfile(linkProfile);
 
-      await supabase
-        .from("link_profiles")
-        .update({ total_visits: (linkProfile.total_visits || 0) + 1 })
-        .eq("id", linkProfile.id);
+      // Only count visits from non-owners (skip self-views)
+      const { data: { session } } = await supabase.auth.getSession();
+      const isOwner = session?.user?.id === linkProfile.user_id;
+      if (!isOwner) {
+        await supabase.rpc("increment_link_visit", { profile_id: linkProfile.id });
+      }
 
-      const { data: buttonData } = await supabase
-        .from("link_buttons")
-        .select("*")
-        .eq("profile_id", linkProfile.id)
-        .eq("visible", true)
-        .order("order_index");
+      const [{ data: buttonData }, { data: socialData }] = await Promise.all([
+        supabase.from("link_buttons").select("*").eq("profile_id", linkProfile.id).eq("visible", true).order("order_index"),
+        supabase.from("link_social_icons").select("*").eq("profile_id", linkProfile.id).order("order_index"),
+      ]);
 
       setButtons(buttonData || []);
-
-      const { data: socialData } = await supabase
-        .from("link_social_icons")
-        .select("*")
-        .eq("profile_id", linkProfile.id)
-        .order("order_index");
-
       setSocialIcons(socialData || []);
     }
 
@@ -56,11 +49,10 @@ const PublicProfile = () => {
   };
 
   const handleButtonClick = async (buttonId: string, url: string) => {
-    await supabase
-      .from("link_buttons")
-      .update({ clicks: buttons.find(b => b.id === buttonId)?.clicks + 1 || 1 })
-      .eq("id", buttonId);
-
+    // Atomic increment via RPC — works for anonymous visitors, no race condition
+    await supabase.rpc("increment_button_click", { button_id: buttonId });
+    // Update local state so the click is reflected if owner is viewing
+    setButtons(prev => prev.map(b => b.id === buttonId ? { ...b, clicks: (b.clicks || 0) + 1 } : b));
     window.open(url, "_blank");
   };
 

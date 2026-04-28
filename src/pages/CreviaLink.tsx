@@ -367,12 +367,29 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     }
   };
 
+  // Refresh analytics from DB when the analytics tab is opened
+  useEffect(() => {
+    const isAnalyticsTab = currentTab === "analytics" ||
+      new URLSearchParams(location.search).get("section") === "analytics";
+    if (!isAnalyticsTab || !linkProfile?.id) return;
+
+    const refresh = async () => {
+      const [{ data: freshProfile }, { data: freshButtons }] = await Promise.all([
+        supabase.from("link_profiles").select("*").eq("id", linkProfile.id).single(),
+        supabase.from("link_buttons").select("*").eq("profile_id", linkProfile.id).order("order_index"),
+      ]);
+      if (freshProfile) setLinkProfile(freshProfile);
+      if (freshButtons) setButtons(freshButtons);
+    };
+    refresh();
+  }, [currentTab, location.search, linkProfile?.id]);
+
   // Computed analytics
   const totalClicks = buttons.reduce((sum, btn) => sum + (btn.clicks || 0), 0);
   const totalViews = linkProfile?.total_visits || 0;
   const clickRate = totalViews > 0 ? ((totalClicks / totalViews) * 100).toFixed(1) : "0.0";
-  const topLink = buttons.length > 0 
-    ? [...buttons].sort((a, b) => (b.clicks || 0) - (a.clicks || 0))[0] 
+  const topLink = buttons.length > 0
+    ? [...buttons].sort((a, b) => (b.clicks || 0) - (a.clicks || 0))[0]
     : null;
   const activeLinks = buttons.filter(b => b.visible !== false).length;
 
