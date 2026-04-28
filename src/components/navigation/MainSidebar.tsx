@@ -1,5 +1,13 @@
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Sparkles, MoreHorizontal, MessageSquare, Briefcase } from "lucide-react";
+import { 
+  Home, 
+  Sparkles, 
+  MoreHorizontal,
+  MessageSquare,
+  Briefcase
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import {
@@ -11,11 +19,12 @@ import {
 import { useLanguage } from "@/i18n/LanguageContext";
 
 interface MainSidebarProps {
+  userType: "creator" | "brand";
   profile: any;
   onProfileClick: () => void;
 }
 
-const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
+const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) => {
   const location = useLocation();
   const { t } = useLanguage();
 
@@ -76,6 +85,11 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 bg-black border-white/10">
+            <DropdownMenuItem asChild className="hover:bg-transparent focus:bg-transparent">
+              <Link to="/app/about" className="text-white/80 hover:text-bronze focus:text-bronze">
+                {t("nav.about")}
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem asChild className="hover:bg-transparent focus:bg-transparent">
               <Link to="/profile/help" className="text-white/80 hover:text-bronze focus:text-bronze">
                 {t("nav.helpSupport")}

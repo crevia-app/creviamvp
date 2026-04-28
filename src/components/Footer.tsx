@@ -37,9 +37,9 @@ const Footer = () => {
           <div>
             <h4 className="font-poppins font-semibold text-sm md:text-base mb-3 md:mb-4">Quick Links</h4>
             <ul className="space-y-1.5 md:space-y-2">
-              <li><Link to="/" className="text-sm text-muted-foreground hover:text-bronze transition-colors" onClick={() => window.scrollTo({ top: 0, behavior: "instant" })}>Home</Link></li>
-              <li><Link to="/pricing" className="text-sm text-muted-foreground hover:text-bronze transition-colors" onClick={() => window.scrollTo({ top: 0, behavior: "instant" })}>Pricing</Link></li>
-              <li><Link to="/about" className="text-sm text-muted-foreground hover:text-bronze transition-colors" onClick={() => window.scrollTo({ top: 0, behavior: "instant" })}>About</Link></li>
+              <li><Link to="/" className="text-sm text-muted-foreground hover:text-bronze transition-colors">Home</Link></li>
+              <li><Link to="/about" className="text-sm text-muted-foreground hover:text-bronze transition-colors">About</Link></li>
+              <li><Link to="/pricing" className="text-sm text-muted-foreground hover:text-bronze transition-colors">Pricing</Link></li>
             </ul>
           </div>
 

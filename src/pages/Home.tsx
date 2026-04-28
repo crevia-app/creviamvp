@@ -224,6 +224,30 @@ const Home = () => {
         </div>
       </section>
 
+      {/* ═══════════════ DEMO VIDEO ═══════════════ */}
+      <section className="py-16 md:py-24 px-4 md:px-6 bg-secondary/20">
+        <div className="container mx-auto max-w-5xl">
+          <ScrollReveal className="text-center mb-10">
+            <h2 className="font-vollkorn text-3xl sm:text-4xl font-bold mb-4">
+              See Crevia in <span className="text-gradient-bronze">action</span>
+            </h2>
+          </ScrollReveal>
+          <ScrollReveal variant="scale" delay={0.15}>
+            <div className="rounded-2xl overflow-hidden shadow-2xl border border-bronze/20">
+              <div className="aspect-video">
+                <iframe
+                  className="w-full h-full"
+                  src="https://www.youtube.com/embed/-20xdAqoBfo"
+                  title="Crevia Platform Demo"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* ═══════════════ FINAL CTA ═══════════════ */}
       <section className="relative py-20 md:py-32 px-4 md:px-6 overflow-hidden">
         <HeroPattern />

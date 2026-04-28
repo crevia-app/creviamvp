@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Sparkles, MoreHorizontal, Plug, Briefcase } from "lucide-react";
+import { Home, Sparkles, MoreHorizontal, Plug, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -176,6 +176,13 @@ const MobileBottomNav = () => {
                     onClick={() => handleNavigation("/profile/help")}
                   >
                     {t("nav.helpSupport")}
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-11 text-sm font-medium rounded-xl"
+                    onClick={() => handleNavigation("/app/about")}
+                  >
+                    {t("nav.aboutCrevia")}
                   </Button>
                 </div>
 
