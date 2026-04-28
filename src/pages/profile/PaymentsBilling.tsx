@@ -10,21 +10,38 @@ import { useLanguage } from "@/i18n/LanguageContext";
 const PaymentsBilling = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const [userId, setUserId] = useState<string | null>(null);
   const [userType, setUserType] = useState<string | null>(null);
-  //added subscription state
   const [subscription, setSubscription] = useState<string>('free');
   const [isPaystackLoading, setIsPaystackLoading] = useState(false);
 
   useEffect(() => { checkAuth(); }, []);
 
+  // Refresh subscription in real-time when the webhook updates the profile row
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel('profile-subscription')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'profiles',
+        filter: `id=eq.${userId}`,
+      }, (payload) => {
+        const updated = payload.new as { subscription_plan?: string };
+        setSubscription(updated.subscription_plan || 'free');
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [userId]);
+
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { navigate("/auth"); return; }
-    const { data: profile } = await supabase.from("profiles").select("user_type").eq("id", session.user.id).single();
+    setUserId(session.user.id);
+    const { data: profile } = await supabase.from("profiles").select("user_type, subscription_plan").eq("id", session.user.id).single();
     setUserType(profile?.user_type || null);
-    //updated check auth to fetch supscription
     setSubscription(profile?.subscription_plan || 'free');
-
   };
 
   const starterFeatures = [
@@ -60,21 +77,24 @@ const PaymentsBilling = () => {
   "Priority support",
 ];
 
-const handleUpgrade = () => {
+const handleUpgrade = async () => {
   setIsPaystackLoading(true);
   const plan = userType === 'brand' ? 'brand_workspace' : 'creative_pro';
-  const amount = userType === 'brand' ? 2900 : 799; // in cents
-  
-  // Initialize Paystack payment
-  const handler = (window as any).PaystackPop.setup({
+  const amount = userType === 'brand' ? 2900 : 799;
+
+  const { data: { user } } = await supabase.auth.getUser();
+  const email = user?.email;
+  if (!email) { setIsPaystackLoading(false); return; }
+
+  const w = window as unknown as { PaystackPop: { setup: (opts: Record<string, unknown>) => { openIframe: () => void } } };
+  const handler = w.PaystackPop.setup({
     key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-    email: supabase.auth.getUser().then(({ data }) => data.user?.email),
-    amount: amount * 100, // Paystack uses kobo/pesewas
-    currency: 'USD',
+    email,
+    amount: amount * 100, // Paystack expects smallest unit: KES 799 → 79900
+    currency: 'KES',
     metadata: { plan },
-    callback: (response: any) => {
-      console.log('Payment successful:', response.reference);
-      setSubscription(plan);
+    callback: (_response: { reference: string }) => {
+      // subscription state updates via realtime listener when webhook fires
       setIsPaystackLoading(false);
     },
     onClose: () => {

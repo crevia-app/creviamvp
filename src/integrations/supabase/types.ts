@@ -1596,6 +1596,15 @@ export type Database = {
           handle: string
           id: string
           is_verified: boolean | null
+          kira_actions_limit: number | null
+          kira_actions_used: number | null
+          kira_tokens_limit: number | null
+          kira_tokens_used: number | null
+          kira_usage_month: string | null
+          paystack_customer_code: string | null
+          subscription_expires_at: string | null
+          subscription_plan: string | null
+          subscription_status: string | null
           updated_at: string | null
           user_type: Database["public"]["Enums"]["user_type"]
           verification_method:
@@ -1614,6 +1623,15 @@ export type Database = {
           handle: string
           id: string
           is_verified?: boolean | null
+          kira_actions_limit?: number | null
+          kira_actions_used?: number | null
+          kira_tokens_limit?: number | null
+          kira_tokens_used?: number | null
+          kira_usage_month?: string | null
+          paystack_customer_code?: string | null
+          subscription_expires_at?: string | null
+          subscription_plan?: string | null
+          subscription_status?: string | null
           updated_at?: string | null
           user_type: Database["public"]["Enums"]["user_type"]
           verification_method?:
@@ -1632,6 +1650,15 @@ export type Database = {
           handle?: string
           id?: string
           is_verified?: boolean | null
+          kira_actions_limit?: number | null
+          kira_actions_used?: number | null
+          kira_tokens_limit?: number | null
+          kira_tokens_used?: number | null
+          kira_usage_month?: string | null
+          paystack_customer_code?: string | null
+          subscription_expires_at?: string | null
+          subscription_plan?: string | null
+          subscription_status?: string | null
           updated_at?: string | null
           user_type?: Database["public"]["Enums"]["user_type"]
           verification_method?:
