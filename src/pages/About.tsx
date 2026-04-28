@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Calendar } from "lucide-react";
+import { ArrowRight, Calendar } from "lucide-react";
 import HeroPattern from "@/components/HeroPattern";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
@@ -13,7 +13,6 @@ import gallery4 from "@/assets/about-gallery-4.jpg";
 import creviaLogo from "@/assets/crevia-logo-full.png";
 import founderPhoto from "@/assets/founder-photo.jpg";
 import creviaSummit2026 from "@/assets/crevia-summit-2026.png";
-import { useRef } from "react";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 
 const galleryImages = [gallery1, gallery2, gallery3, gallery4];
@@ -21,7 +20,6 @@ const galleryImages = [gallery1, gallery2, gallery3, gallery4];
 const About = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [eventsTab, setEventsTab] = useState<"previous" | "upcoming">("upcoming");
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const check = async () => {
@@ -59,43 +57,40 @@ const About = () => {
         </div>
       </section>
 
-      {/* ═══════════════ SCROLLING GALLERY ═══════════════ */}
-      <section className="relative w-full py-4">
-        <div className="hidden md:flex absolute top-1/2 -translate-y-1/2 left-2 z-10">
-          <Button
-            variant="outline"
-            size="icon"
-            className="rounded-full border-border bg-card/80 backdrop-blur-sm shadow-lg"
-            onClick={() => scrollRef.current?.scrollBy({ left: -320, behavior: "smooth" })}
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-        </div>
-        <div className="hidden md:flex absolute top-1/2 -translate-y-1/2 right-2 z-10">
-          <Button
-            variant="outline"
-            size="icon"
-            className="rounded-full border-border bg-card/80 backdrop-blur-sm shadow-lg"
-            onClick={() => scrollRef.current?.scrollBy({ left: 320, behavior: "smooth" })}
-          >
-            <ArrowRight className="w-4 h-4" />
-          </Button>
-        </div>
-
+      {/* ═══════════════ INFINITE SCROLLING GALLERY ═══════════════ */}
+      <section className="relative w-full py-8 overflow-hidden">
+        {/* Left fade — bleeds into background for seamless edge */}
         <div
-          ref={scrollRef}
-          className="flex gap-4 md:gap-6 px-6 overflow-x-auto snap-x snap-mandatory scrollbar-hide"
-          style={{ WebkitOverflowScrolling: "touch" }}
+          className="absolute inset-y-0 left-0 w-28 md:w-40 z-10 pointer-events-none"
+          style={{ background: "linear-gradient(to right, hsl(var(--background)) 0%, transparent 100%)" }}
+        />
+        {/* Right fade */}
+        <div
+          className="absolute inset-y-0 right-0 w-28 md:w-40 z-10 pointer-events-none"
+          style={{ background: "linear-gradient(to left, hsl(var(--background)) 0%, transparent 100%)" }}
+        />
+
+        {/* Marquee track — images duplicated for seamless infinite loop */}
+        <div
+          className="flex animate-scroll-left"
+          style={{ width: "max-content", gap: "20px" }}
         >
-          {galleryImages.map((src, i) => (
-            <ScrollReveal key={i} delay={i * 0.1} variant="scale" className="flex-shrink-0">
-              <div
-                className="w-64 h-48 md:w-80 md:h-60 rounded-2xl overflow-hidden shadow-xl snap-center"
-                style={{ transform: `rotate(${i % 2 === 0 ? -2 : 2}deg)` }}
-              >
-                <img src={src} alt="Crevia community" className="w-full h-full object-cover" />
-              </div>
-            </ScrollReveal>
+          {[...galleryImages, ...galleryImages, ...galleryImages].map((src, i) => (
+            <div
+              key={i}
+              className="flex-shrink-0 w-64 h-48 md:w-80 md:h-60 rounded-2xl overflow-hidden shadow-2xl"
+              style={{
+                transform: `rotate(${i % 3 === 0 ? -1.8 : i % 3 === 1 ? 1.2 : -0.6}deg)`,
+                transition: "transform 0.4s ease",
+              }}
+            >
+              <img
+                src={src}
+                alt="Crevia community"
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                draggable={false}
+              />
+            </div>
           ))}
         </div>
       </section>

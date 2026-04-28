@@ -59,22 +59,22 @@ All colors MUST be HSL.
 
   .dark {
     --background: 240 8% 10%; /* Softened charcoal - not too dark */
-    --foreground: 0 0% 98%;
+    --foreground: 32 18% 97%; /* Warm white — cuts through the cool bg, feels premium not harsh */
 
     --card: 240 8% 13%; /* Slightly elevated surface */
-    --card-foreground: 0 0% 98%;
+    --card-foreground: 32 18% 97%;
 
     --popover: 240 10% 9%;
-    --popover-foreground: 0 0% 98%;
+    --popover-foreground: 32 18% 97%;
 
     --primary: 23 87% 56%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 240 6% 14%;
+    --secondary-foreground: 32 12% 96%;
 
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 85%;
+    --muted: 240 6% 14%;
+    --muted-foreground: 32 10% 82%; /* Was 0 0% 85% — brighter + warm undertone, clear hierarchy */
 
     --accent: 23 87% 56%;
     --accent-foreground: 0 0% 100%;
@@ -82,8 +82,8 @@ All colors MUST be HSL.
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
+    --border: 240 5% 24%; /* Slightly more visible borders */
+    --input: 240 5% 22%;
     --ring: 23 87% 56%;
   }
 }
@@ -247,14 +247,14 @@ All colors MUST be HSL.
       transform: translateX(0);
     }
     100% {
-      transform: translateX(-50%);
+      transform: translateX(-33.333%);
     }
   }
-  
+
   .animate-scroll-left {
-    animation: scroll-left 30s linear infinite;
+    animation: scroll-left 28s linear infinite;
   }
-  
+
   .animate-scroll-left:hover {
     animation-play-state: paused;
   }
