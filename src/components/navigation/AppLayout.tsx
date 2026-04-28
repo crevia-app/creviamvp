@@ -74,7 +74,6 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
       <div className="flex flex-1 overflow-hidden">
         <MainSidebar
-          userType={userType}
           profile={profile}
           onProfileClick={() => setProfileDrawerOpen(true)}
         />

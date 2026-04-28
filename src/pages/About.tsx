@@ -31,10 +31,10 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      {!isLoggedIn && <Header />}
 
       {/* ═══════════════ HERO ═══════════════ */}
-      <section className="relative pt-28 md:pt-36 pb-16 md:pb-20 px-4 md:px-6 overflow-hidden">
+      <section className={`relative ${isLoggedIn ? "pt-8 md:pt-12" : "pt-28 md:pt-36"} pb-16 md:pb-20 px-4 md:px-6 overflow-hidden`}>
         <HeroPattern />
         <div className="container mx-auto max-w-4xl text-center relative z-10">
           <ScrollReveal>
@@ -288,27 +288,35 @@ const About = () => {
               Own your <span className="text-gradient-bronze">story.</span>
             </h2>
             <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
-              Join the movement. Build your business on Crevia.
+              {isLoggedIn ? "Everything you need is right here." : "Join the movement. Build your business on Crevia."}
             </p>
           </ScrollReveal>
           <ScrollReveal delay={0.15} variant="scale">
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/auth">
+            {isLoggedIn ? (
+              <Link to="/kira">
                 <Button size="lg" className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold px-10 py-7 text-lg shadow-lg hover-scale">
-                  Start Your Story <ArrowRight className="ml-2 w-5 h-5" />
+                  Open Kira <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Link to="/pricing">
-                <Button size="lg" variant="outline" className="font-poppins font-semibold px-10 py-7 text-lg border-2 border-bronze/30 hover:border-bronze hover:bg-bronze/10">
-                  See Pricing
-                </Button>
-              </Link>
-            </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/auth">
+                  <Button size="lg" className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold px-10 py-7 text-lg shadow-lg hover-scale">
+                    Start Your Story <ArrowRight className="ml-2 w-5 h-5" />
+                  </Button>
+                </Link>
+                <Link to="/pricing">
+                  <Button size="lg" variant="outline" className="font-poppins font-semibold px-10 py-7 text-lg border-2 border-bronze/30 hover:border-bronze hover:bg-bronze/10">
+                    See Pricing
+                  </Button>
+                </Link>
+              </div>
+            )}
           </ScrollReveal>
         </div>
       </section>
 
-      <Footer />
+      {!isLoggedIn && <Footer />}
     </div>
   );
 };

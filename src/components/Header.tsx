@@ -26,10 +26,14 @@ const Header = () => {
         </Link>
         
         <div className="hidden lg:flex items-center gap-6 xl:gap-8">
+          <Link to="/" className="text-sm font-medium hover:text-bronze transition-all duration-300 bronze-underline">
+            Home
+          </Link>
+
           <Link to="/pricing" className="text-sm font-medium hover:text-bronze transition-all duration-300 bronze-underline">
             Pricing
           </Link>
-          
+
           <Link to="/about" className="text-sm font-medium hover:text-bronze transition-all duration-300 bronze-underline">
             About
           </Link>
@@ -46,8 +50,16 @@ const Header = () => {
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] sm:w-[320px] bg-background">
               <nav className="flex flex-col gap-6 mt-8">
-                <Link 
-                  to="/pricing" 
+                <Link
+                  to="/"
+                  className="text-base font-medium hover:text-bronze transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Home
+                </Link>
+
+                <Link
+                  to="/pricing"
                   className="text-base font-medium hover:text-bronze transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
