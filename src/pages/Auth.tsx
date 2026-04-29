@@ -73,6 +73,15 @@ const Auth = () => {
   }, [navigate]);
 
   const handleGoogleSignIn = async () => {
+    if (isSignup && !termsAccepted) {
+      toast({
+        title: "Please agree first",
+        description: "Tick the Terms of Use and Privacy Policy checkbox before continuing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsGoogleLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -87,19 +96,19 @@ const Auth = () => {
       });
 
       if (error) {
-        toast({ 
-          title: "Google sign-in failed 😅", 
-          description: error.message, 
-          variant: "destructive" 
+        toast({
+          title: "Google sign-in failed",
+          description: error.message,
+          variant: "destructive"
         });
         setIsGoogleLoading(false);
       }
     } catch (err) {
       console.error("Google auth error:", err);
-      toast({ 
-        title: "Connection hiccup! 📡", 
-        description: "Unable to connect to Google. Please try again.", 
-        variant: "destructive" 
+      toast({
+        title: "Connection error",
+        description: "Unable to connect to Google. Please check your internet and try again.",
+        variant: "destructive"
       });
       setIsGoogleLoading(false);
     }
@@ -161,15 +170,36 @@ const Auth = () => {
         });
 
         if (error) {
-          toast({ title: "Oops! 😅", description: error.message, variant: "destructive" });
+          const msg = error.message.toLowerCase();
+          if (msg.includes("already registered") || msg.includes("already exists")) {
+            toast({
+              title: "Account already exists",
+              description: "An account with this email already exists. Try logging in instead.",
+              variant: "destructive",
+            });
+            setIsSignup(false);
+          } else if (msg.includes("rate limit") || msg.includes("email rate")) {
+            toast({
+              title: "Too many attempts",
+              description: "Please wait a few minutes before trying again.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Sign up failed",
+              description: "Something went wrong on our end. Please try again in a moment.",
+              variant: "destructive",
+            });
+            console.error("Signup error:", error.message);
+          }
         } else {
-          toast({ title: "You're in! 🎉 Please check your email to confirm your account." });
+          toast({ title: "Check your email", description: "We sent you a confirmation link to activate your account." });
           const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-        if (aalData?.nextLevel === "aal2" && aalData?.nextLevel !== aalData?.currentLevel) {
-          navigate("/mfa-verify", { replace: true });
-        } else {
-          navigate("/kira", { replace: true });
-        }
+          if (aalData?.nextLevel === "aal2" && aalData?.nextLevel !== aalData?.currentLevel) {
+            navigate("/mfa-verify", { replace: true });
+          } else {
+            navigate("/kira", { replace: true });
+          }
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -178,12 +208,16 @@ const Auth = () => {
         });
 
         if (error) {
-          toast({ title: "Hmm... 🤔", description: error.message, variant: "destructive" });
+          const msg = error.message.toLowerCase();
+          if (msg.includes("invalid login") || msg.includes("invalid credentials") || msg.includes("wrong password")) {
+            toast({ title: "Incorrect email or password", description: "Please check your details and try again.", variant: "destructive" });
+          } else if (msg.includes("email not confirmed")) {
+            toast({ title: "Email not confirmed", description: "Please check your inbox and click the confirmation link we sent you.", variant: "destructive" });
+          } else {
+            toast({ title: "Sign in failed", description: error.message, variant: "destructive" });
+          }
         } else if (data.user) {
-          toast({ 
-            title: "Welcome back! 👋", 
-            description: "Great to see you! 🌟" 
-          });
+          toast({ title: "Welcome back!", description: "Good to see you." });
           const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
         if (aalData?.nextLevel === "aal2" && aalData?.nextLevel !== aalData?.currentLevel) {
           navigate("/mfa-verify", { replace: true });
