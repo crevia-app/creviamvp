@@ -1,33 +1,50 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { generateUserKeyPair, backupPrivateKey, restorePrivateKey } from "@/lib/e2e-crypto";
+import {
+  generateUserKeyPair,
+  backupPrivateKeyV1,
+  restorePrivateKey,
+  restorePrivateKeyV1,
+  isV2Key,
+} from "@/lib/e2e-crypto";
 import { idbGetPrivateKey, idbStorePrivateKey, idbStorePublicKeyJwk, idbClear } from "@/lib/indexeddb-crypto";
 
-export type E2EEStatus = "idle" | "initializing" | "ready" | "error";
+export type E2EEStatus = "idle" | "initializing" | "ready" | "needs_recovery_password" | "error";
 
 export interface UseInitializeE2EEResult {
   status: E2EEStatus;
   error: Error | null;
   retry: () => void;
+  // Raised when the user is on a NEW device and has a v2 (password-protected) backup.
+  // Show a recovery password modal and call provideRecoveryPassword() with the input.
+  needsRecoveryPassword: boolean;
+  // Raised when the user's backup was silently auto-restored from the legacy v1 scheme
+  // (userId-wrapped). Show a migration prompt so they can set a real recovery password.
+  needsMigration: boolean;
+  // Call this from the recovery password modal when the user submits their password.
+  provideRecoveryPassword: (password: string) => Promise<void>;
+  // Call this after the user completes migration (sets a recovery password via key-migration.ts).
+  clearMigrationFlag: () => void;
 }
 
 const TAG = "[E2EE Init]";
 
 export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
-  // This line fires on every render — if you see it with an empty userId, the
-  // auth state hasn't resolved yet. Once userId is set, the effect below runs.
-  console.log(`${TAG} hook called — userId: "${userId || "(not set yet)"}"`);
-
   const [status, setStatus] = useState<E2EEStatus>("idle");
   const [error, setError] = useState<Error | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const [needsRecoveryPassword, setNeedsRecoveryPassword] = useState(false);
+  const [needsMigration, setNeedsMigration] = useState(false);
+
+  // Holds Supabase backup data while we wait for the user to type their password.
+  const pendingRecoveryRef = useRef<{
+    encryptedPrivateKey: string;
+    keySalt: string;
+    publicKey: string | null;
+  } | null>(null);
 
   useEffect(() => {
-    if (!userId) {
-      console.log(`${TAG} useEffect skipped — no userId yet`);
-      return;
-    }
-    console.log(`${TAG} useEffect fired — starting init for userId: ${userId}`);
+    if (!userId) return;
 
     let cancelled = false;
 
@@ -37,12 +54,9 @@ export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
 
       try {
         // ── Step 1: Check IndexedDB ───────────────────────────────────────────
-        console.log(`${TAG} Checking IndexedDB for existing private key...`);
         const cachedPrivateKey = await idbGetPrivateKey(userId);
-        console.log(`${TAG} IndexedDB result:`, cachedPrivateKey ? "✅ Private key found" : "❌ No private key");
 
         // ── Step 2: Check Supabase ────────────────────────────────────────────
-        console.log(`${TAG} Syncing with Supabase — fetching key record...`);
         const { data, error: fetchError } = await supabase
           .from("user_encryption_keys")
           .select("public_key, encrypted_private_key, key_salt")
@@ -52,7 +66,6 @@ export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
         if (cancelled) return;
 
         if (fetchError) {
-          // Hard network errors (no code/status) are unrecoverable at this point.
           const isNetworkError = !fetchError.code && !fetchError.status;
           if (isNetworkError) {
             throw new Error(`Network error fetching encryption keys: ${fetchError.message}`);
@@ -61,11 +74,10 @@ export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
         }
 
         const hasSupabaseRecord = !!data && !fetchError;
-        console.log(`${TAG} Supabase record:`, hasSupabaseRecord ? "✅ Found" : "❌ Not found");
 
         // ── Happy path: IDB + Supabase both have data ─────────────────────────
         if (hasSupabaseRecord && cachedPrivateKey) {
-          console.log(`${TAG} ✅ Already initialised — private key in IDB, public key in Supabase`);
+          console.log(`${TAG} ✅ Already initialised`);
           if (!cancelled) setStatus("ready");
           return;
         }
@@ -75,42 +87,56 @@ export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
           const { public_key, encrypted_private_key, key_salt } = data!;
 
           if (encrypted_private_key && key_salt) {
-            console.log(`${TAG} 🔄 Cross-device recovery — restoring private key from Supabase backup...`);
-            await restorePrivateKey(userId, encrypted_private_key, key_salt);
-            // Cache the public JWK locally so initUserKeys (called from chat) won't
-            // treat the missing public-userId IDB entry as a signal to regenerate keys.
-            if (public_key) {
-              try {
-                await idbStorePublicKeyJwk(userId, JSON.parse(public_key));
-              } catch {
-                // non-fatal — initUserKeys still works via the private key
+            if (isV2Key(encrypted_private_key)) {
+              // v2 key: cannot restore without the user's recovery password.
+              // Park the data in a ref, update status, and wait for UI input.
+              console.log(`${TAG} 🔐 v2 backup detected — recovery password required`);
+              pendingRecoveryRef.current = {
+                encryptedPrivateKey: encrypted_private_key,
+                keySalt: key_salt,
+                publicKey: public_key ?? null,
+              };
+              if (!cancelled) {
+                setNeedsRecoveryPassword(true);
+                setStatus("needs_recovery_password");
               }
+              return;
+            } else {
+              // v1 key: auto-restore using userId as the PBKDF2 input (backward compat).
+              // Flag for migration immediately after — the user needs to set a real password.
+              console.log(`${TAG} 🔄 v1 backup detected — auto-restoring, migration required`);
+              await restorePrivateKeyV1(userId, encrypted_private_key, key_salt);
+              if (public_key) {
+                try { await idbStorePublicKeyJwk(userId, JSON.parse(public_key)); } catch { /* non-fatal */ }
+              }
+              console.log(`${TAG} ✅ v1 key restored — flagging for migration`);
+              if (!cancelled) {
+                setStatus("ready");
+                setNeedsMigration(true);
+              }
+              return;
             }
-            console.log(`${TAG} ✅ Private key restored to IndexedDB`);
-            if (!cancelled) setStatus("ready");
-            return;
           }
 
-          // Remote record exists but backup columns are empty (legacy row).
-          // Fall through to regenerate and overwrite via upsert.
+          // Remote record exists but backup columns are empty (legacy row with no backup).
+          // Fall through to regenerate.
           console.log(`${TAG} ⚠️ Remote record has no private key backup — regenerating...`);
         }
 
         // ── Key generation: no usable keys found anywhere ─────────────────────
-        console.log(`${TAG} 🔑 Generating new RSA-OAEP key pair (extractable: true)...`);
+        // This only runs for brand-new users (no Supabase record at all).
+        // Existing users will always hit one of the paths above.
+        console.log(`${TAG} 🔑 Generating new RSA-OAEP key pair...`);
         const { publicKeyJwk, privateKey } = await generateUserKeyPair();
-        console.log(`${TAG} ✅ Key pair generated`);
 
-        console.log(`${TAG} 💾 Storing private key in IndexedDB...`);
         await idbStorePrivateKey(userId, privateKey);
         await idbStorePublicKeyJwk(userId, publicKeyJwk);
-        console.log(`${TAG} ✅ Private key stored in IndexedDB`);
 
-        console.log(`${TAG} 🔒 Encrypting private key backup (PBKDF2 + AES-256-GCM)...`);
-        const { encryptedKey, saltBase64 } = await backupPrivateKey(userId, privateKey);
-        console.log(`${TAG} ✅ Private key encrypted for cloud backup`);
+        // New users: use a v1 backup (userId-keyed, no v2: prefix) so the key is
+        // auto-restorable on a new device before they set a recovery password.
+        // The migration prompt (needsMigration: true) will upgrade them to v2.
+        const { encryptedKey, saltBase64 } = await backupPrivateKeyV1(userId, privateKey);
 
-        console.log(`${TAG} ☁️  Syncing public key + encrypted backup to Supabase...`);
         const { error: upsertError } = await supabase
           .from("user_encryption_keys")
           .upsert(
@@ -128,28 +154,26 @@ export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
           throw new Error(`Failed to save encryption keys: ${upsertError.message}`);
         }
 
-        console.log(`${TAG} ✅ E2EE initialisation complete — keys synced to Supabase`);
-        if (!cancelled) setStatus("ready");
+        console.log(`${TAG} ✅ New key pair generated and synced`);
+        if (!cancelled) {
+          setStatus("ready");
+          setNeedsMigration(true); // prompt them to set a recovery password immediately
+        }
       } catch (err) {
         if (cancelled) return;
-
         console.error(`${TAG} ❌ Initialisation failed:`, err);
 
-        // IDB InvalidStateError / UnknownError = corrupted browser database.
-        // The only safe recovery is to wipe all local state and redirect to login.
         const isCorruptedState =
           err instanceof DOMException &&
           (err.name === "InvalidStateError" || err.name === "UnknownError");
 
         if (isCorruptedState) {
-          console.error(`${TAG} 💥 Corrupted IDB state — clearing local storage and redirecting to login`);
+          console.error(`${TAG} 💥 Corrupted IDB state — clearing and redirecting`);
           try {
             localStorage.clear();
             sessionStorage.clear();
             await idbClear();
-          } catch {
-            // best-effort cleanup
-          }
+          } catch { /* best-effort */ }
           window.location.replace("/auth");
           return;
         }
@@ -161,12 +185,64 @@ export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
     };
 
     run();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [userId, attempt]);
+
+  // Called from the recovery password modal on a new device with a v2 backup.
+  const provideRecoveryPassword = useCallback(async (password: string) => {
+    const pending = pendingRecoveryRef.current;
+    if (!pending) {
+      console.error(`${TAG} provideRecoveryPassword called with no pending recovery data`);
+      return;
+    }
+
+    setError(null);
+    setStatus("initializing");
+
+    try {
+      await restorePrivateKey(
+        userId,
+        password,
+        pending.encryptedPrivateKey,
+        pending.keySalt
+      );
+
+      if (pending.publicKey) {
+        try { await idbStorePublicKeyJwk(userId, JSON.parse(pending.publicKey)); } catch { /* non-fatal */ }
+      }
+
+      pendingRecoveryRef.current = null;
+      setNeedsRecoveryPassword(false);
+      setStatus("ready");
+      console.log(`${TAG} ✅ v2 key restored with recovery password`);
+    } catch (err) {
+      // A DOMException (OperationError) from crypto.subtle.decrypt means wrong password.
+      const isWrongPassword =
+        err instanceof DOMException ||
+        (err instanceof Error && err.name === "OperationError");
+
+      setError(
+        new Error(isWrongPassword
+          ? "Incorrect recovery password. Please try again."
+          : `Restore failed: ${err instanceof Error ? err.message : String(err)}`
+        )
+      );
+      // Keep status at needs_recovery_password so the modal stays open.
+      setStatus("needs_recovery_password");
+    }
+  }, [userId]);
+
+  const clearMigrationFlag = useCallback(() => setNeedsMigration(false), []);
 
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
-  return { status, error, retry };
+  return {
+    status,
+    error,
+    retry,
+    needsRecoveryPassword,
+    needsMigration,
+    provideRecoveryPassword,
+    clearMigrationFlag,
+  };
 }
