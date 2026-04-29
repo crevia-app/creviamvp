@@ -38,6 +38,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import AppLayout from "./components/navigation/AppLayout";
 import PublicPageWrapper from "./components/PublicPageWrapper";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -119,18 +120,18 @@ function AppContent() {
 
         {/* Protected routes */}
         <Route path="/dashboard" element={<Navigate to="/kira" replace />} />
-        <Route path="/kira" element={<AppLayout><Kira /></AppLayout>} />
-        <Route path="/crevia-link" element={<AppLayout><CreviaLink /></AppLayout>} />
-        <Route path="/crevia-studio" element={<AppLayout><CreviaStudio /></AppLayout>} />
+        <Route path="/kira" element={<ProtectedRoute><AppLayout><Kira /></AppLayout></ProtectedRoute>} />
+        <Route path="/crevia-link" element={<ProtectedRoute><AppLayout><CreviaLink /></AppLayout></ProtectedRoute>} />
+        <Route path="/crevia-studio" element={<ProtectedRoute><AppLayout><CreviaStudio /></AppLayout></ProtectedRoute>} />
         <Route path="/mfa-verify" element={<MFAVerify />} />
-        <Route path="/crevia-workspace" element={<AppLayout><WorkspacesList /></AppLayout>} />
-        <Route path="/crevia-workspace/:id" element={<AppLayout><WorkspacePage /></AppLayout>} />
-        <Route path="/profile/payments-billing" element={<AppLayout><PaymentsBilling /></AppLayout>} />
-        <Route path="/profile/notifications" element={<AppLayout><Notifications /></AppLayout>} />
-        <Route path="/profile/verification" element={<AppLayout><Verification /></AppLayout>} />
-        <Route path="/profile/settings" element={<AppLayout><Settings /></AppLayout>} />
-        <Route path="/profile/help" element={<AppLayout><Help /></AppLayout>} />
-        <Route path="/profile/feedback" element={<AppLayout><Feedback /></AppLayout>} />
+        <Route path="/crevia-workspace" element={<ProtectedRoute><AppLayout><WorkspacesList /></AppLayout></ProtectedRoute>} />
+        <Route path="/crevia-workspace/:id" element={<ProtectedRoute><AppLayout><WorkspacePage /></AppLayout></ProtectedRoute>} />
+        <Route path="/profile/payments-billing" element={<ProtectedRoute><AppLayout><PaymentsBilling /></AppLayout></ProtectedRoute>} />
+        <Route path="/profile/notifications" element={<ProtectedRoute><AppLayout><Notifications /></AppLayout></ProtectedRoute>} />
+        <Route path="/profile/verification" element={<ProtectedRoute><AppLayout><Verification /></AppLayout></ProtectedRoute>} />
+        <Route path="/profile/settings" element={<ProtectedRoute><AppLayout><Settings /></AppLayout></ProtectedRoute>} />
+        <Route path="/profile/help" element={<ProtectedRoute><AppLayout><Help /></AppLayout></ProtectedRoute>} />
+        <Route path="/profile/feedback" element={<ProtectedRoute><AppLayout><Feedback /></AppLayout></ProtectedRoute>} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>
