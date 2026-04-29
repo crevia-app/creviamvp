@@ -11,6 +11,11 @@ import { Eye, EyeOff, Loader2, User, Building2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
+const hasOAuthCallback = () => {
+  const params = new URLSearchParams(window.location.search);
+  return params.has("code") || window.location.hash.includes("access_token=");
+};
+
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -28,6 +33,8 @@ const Auth = () => {
   const [userType, setUserType] = useState<"creator" | "brand">("creator");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  // True when we landed here from a Google OAuth redirect — hide the form while Supabase exchanges the code.
+  const [isProcessingOAuth, setIsProcessingOAuth] = useState(hasOAuthCallback);
 
   const validatePassword = (pwd: string): string[] => {
     const errors: string[] = [];
@@ -66,6 +73,9 @@ const Auth = () => {
         } else {
           navigate("/kira", { replace: true });
         }
+      } else if (isProcessingOAuth) {
+        // Exchange failed or no session — fall back to showing the login form.
+        setIsProcessingOAuth(false);
       }
     });
 
@@ -263,6 +273,17 @@ const Auth = () => {
       setResetEmail("");
     }
   };
+
+  if (isProcessingOAuth) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <Loader2 className="w-10 h-10 animate-spin text-bronze" />
+          <p className="font-poppins text-muted-foreground">Signing you in…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center p-4 md:p-6">

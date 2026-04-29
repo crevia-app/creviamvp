@@ -29,6 +29,16 @@ const AppLayout = ({ children }: AppLayoutProps) => {
       localStorage.setItem("theme", "light");
     }
     loadProfile();
+
+    // Re-load profile when the session is established after a PKCE OAuth exchange
+    // (getSession() above may return null if the code is still being exchanged).
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN") {
+        loadProfile();
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const loadProfile = async () => {
