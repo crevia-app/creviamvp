@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   generateUserKeyPair,
-  backupPrivateKey,
+  backupPrivateKeyV1,
   restorePrivateKey,
   restorePrivateKeyV1,
   isV2Key,
@@ -132,10 +132,10 @@ export function useInitializeE2EE(userId: string): UseInitializeE2EEResult {
         await idbStorePrivateKey(userId, privateKey);
         await idbStorePublicKeyJwk(userId, publicKeyJwk);
 
-        // New users: use a temporary userId-based backup so the key is never
-        // unprotected in the cloud. The migration prompt (needsMigration: true)
-        // will guide them to set a real password on first use.
-        const { encryptedKey, saltBase64 } = await backupPrivateKey(userId, privateKey);
+        // New users: use a v1 backup (userId-keyed, no v2: prefix) so the key is
+        // auto-restorable on a new device before they set a recovery password.
+        // The migration prompt (needsMigration: true) will upgrade them to v2.
+        const { encryptedKey, saltBase64 } = await backupPrivateKeyV1(userId, privateKey);
 
         const { error: upsertError } = await supabase
           .from("user_encryption_keys")

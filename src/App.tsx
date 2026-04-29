@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +9,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useInitializeE2EE } from "@/hooks/use-initialize-e2ee";
+import { RecoveryPasswordModal } from "@/components/auth/RecoveryPasswordModal";
+import { SetRecoveryPasswordDialog } from "@/components/auth/SetRecoveryPasswordDialog";
 import ScrollToTop from "./components/ScrollToTop";
 
 import Home from "./pages/Home";
@@ -49,7 +52,20 @@ function AppContent() {
 
   // MUST be called before any early returns.
   // Receives "" until the auth state resolves, then fires the full init flow.
-  useInitializeE2EE(userId);
+  const {
+    error: e2eeError,
+    needsRecoveryPassword,
+    needsMigration,
+    provideRecoveryPassword,
+    clearMigrationFlag,
+  } = useInitializeE2EE(userId);
+
+  const [migrationDialogOpen, setMigrationDialogOpen] = useState(false);
+
+  // Open the migration dialog as soon as the flag is raised, but only once per session.
+  useEffect(() => {
+    if (needsMigration) setMigrationDialogOpen(true);
+  }, [needsMigration]);
 
   useEffect(() => {
     // onAuthStateChange fires immediately with the current session
@@ -70,6 +86,22 @@ function AppContent() {
   return (
     <>
       <ScrollToTop />
+
+      {/* Non-dismissible: shown on a new device when a v2 backup exists */}
+      <RecoveryPasswordModal
+        open={needsRecoveryPassword}
+        error={e2eeError}
+        onSubmit={provideRecoveryPassword}
+      />
+
+      {/* Dismissible: nudges v1 users and new users to set a recovery password */}
+      <SetRecoveryPasswordDialog
+        open={migrationDialogOpen}
+        userId={userId}
+        onOpenChange={setMigrationDialogOpen}
+        onComplete={clearMigrationFlag}
+      />
+
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<PublicPageWrapper><Home /></PublicPageWrapper>} />

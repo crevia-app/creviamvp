@@ -274,7 +274,29 @@ export async function restorePrivateKey(
   return privateKey;
 }
 
-// ── v1: legacy restore (userId as password) — used only during migration ──────
+// ── v1: legacy scheme — used for new user generation until they set a password ─
+
+// Creates a v1 backup (no v2: prefix) keyed by userId. Used ONLY during initial
+// key generation for brand-new users who have not yet set a recovery password.
+// The migration prompt (needsMigration: true) will upgrade them to v2 immediately.
+export async function backupPrivateKeyV1(
+  userId: string,
+  privateKey: CryptoKey
+): Promise<{ encryptedKey: string; saltBase64: string }> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const wrappingKey = await deriveWrappingKey(userId, salt, PBKDF2_ITERATIONS_V1);
+  const jwk = await crypto.subtle.exportKey("jwk", privateKey);
+  const encoded = new TextEncoder().encode(JSON.stringify(jwk));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, wrappingKey, encoded);
+  const combined = new Uint8Array(iv.length + ciphertext.byteLength);
+  combined.set(iv);
+  combined.set(new Uint8Array(ciphertext), iv.length);
+  return {
+    encryptedKey: btoa(String.fromCharCode(...combined)), // deliberately no v2: prefix
+    saltBase64: btoa(String.fromCharCode(...salt)),
+  };
+}
 
 // Auto-restores a v1 backup using the userId as the PBKDF2 input.
 // Call this ONLY when migrating an existing user; immediately call
