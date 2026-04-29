@@ -168,11 +168,11 @@ const Auth = () => {
           setIsLoading(false);
           return;
         }
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/user-type-selection`,
+            emailRedirectTo: `${window.location.origin}/kira`,
             data: {
               user_type: userType,
             },
@@ -202,14 +202,17 @@ const Auth = () => {
             });
             console.error("Signup error:", error.message);
           }
-        } else {
-          toast({ title: "Check your email", description: "We sent you a confirmation link to activate your account." });
+        } else if (signUpData.session) {
+          // User is immediately signed in (email confirmation disabled)
           const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
           if (aalData?.nextLevel === "aal2" && aalData?.nextLevel !== aalData?.currentLevel) {
             navigate("/mfa-verify", { replace: true });
           } else {
             navigate("/kira", { replace: true });
           }
+        } else {
+          // Email confirmation required — stay on page
+          toast({ title: "Check your email", description: "We sent you a confirmation link to activate your account." });
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
