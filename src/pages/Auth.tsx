@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2, User, Building2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
 const Auth = () => {
@@ -25,6 +26,7 @@ const Auth = () => {
   // const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [userType, setUserType] = useState<"creator" | "brand">("creator");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
 
   const validatePassword = (pwd: string): string[] => {
@@ -326,7 +328,7 @@ const Auth = () => {
             <div className="w-full border-t border-border"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-card px-2 text-muted-foreground">Or sign in with email</span>
+            <span className="bg-card px-2 text-muted-foreground">{isSignup ? "Or sign up with email" : "Or sign in with email"}</span>
           </div>
         </div>
 
@@ -400,22 +402,41 @@ const Auth = () => {
           )}
 
           {isSignup && (
-            <p className="text-xs text-muted-foreground text-center">
-              By signing up, you agree to the{" "}
-              <Link to="/terms" className="text-bronze hover:text-bronze-dark underline">
-                Terms of Use
-              </Link>{" "}
-              and{" "}
-              <Link to="/privacy" className="text-bronze hover:text-bronze-dark underline">
-                Privacy Policy
-              </Link>
-              .
-            </p>
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="terms"
+                checked={termsAccepted}
+                onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                className="mt-0.5 shrink-0"
+              />
+              <label
+                htmlFor="terms"
+                className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none"
+              >
+                By signing up, you agree to the{" "}
+                <Link
+                  to="/terms-of-service"
+                  className="text-bronze hover:text-bronze-dark underline underline-offset-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Terms of Use
+                </Link>{" "}
+                and{" "}
+                <Link
+                  to="/privacy-policy"
+                  className="text-bronze hover:text-bronze-dark underline underline-offset-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Privacy Policy
+                </Link>
+                .
+              </label>
+            </div>
           )}
 
-          <Button 
-            type="submit" 
-            disabled={isLoading}
+          <Button
+            type="submit"
+            disabled={isLoading || (isSignup && !termsAccepted)}
             className="w-full h-12 bg-bronze hover:bg-bronze-dark font-semibold"
           >
             {isLoading ? "Please wait..." : (isSignup ? "Create Account" : "Log In")}
@@ -424,8 +445,8 @@ const Auth = () => {
 
         <p className="text-center mt-6 text-sm text-muted-foreground">
           {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
-          <button 
-            onClick={() => setIsSignup(!isSignup)}
+          <button
+            onClick={() => { setIsSignup((v) => !v); setTermsAccepted(false); }}
             className="text-bronze hover:text-bronze-dark font-semibold bronze-underline"
           >
             {isSignup ? "Log In" : "Sign Up"}
