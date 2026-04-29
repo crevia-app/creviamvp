@@ -170,16 +170,31 @@ export async function clearRoomKeyCache(roomId: string): Promise<void> {
 // ========================
 // Private Key Cloud Backup — cross-device sync
 //
-// Security model: PBKDF2(userId, randomSalt) → AES-GCM wrapping key.
-// The salt is stored alongside the ciphertext in Supabase; RLS prevents
-// any other user from reading it. The plaintext private key never leaves
-// the device.
+// Security model (v2): PBKDF2(userRecoveryPassword, randomSalt, 210k) → AES-GCM wrapping key.
+// The salt is stored alongside the ciphertext in Supabase; RLS prevents any other user
+// from reading it. The plaintext private key never leaves the device.
+//
+// v1 (legacy, read-only): PBKDF2(userId, randomSalt, 100k) — userId is not a secret.
+// Any v1 backup is auto-restored on first login then immediately migrated to v2.
 // ========================
 
-async function deriveWrappingKey(userId: string, salt: Uint8Array): Promise<CryptoKey> {
+const PBKDF2_ITERATIONS_V1 = 100_000; // legacy scheme — do not use for new keys
+const PBKDF2_ITERATIONS_V2 = 210_000; // OWASP 2024 recommendation
+const V2_PREFIX = "v2:";
+
+// Returns true when the stored blob was produced by the v2 (password-based) scheme.
+export function isV2Key(encryptedKey: string): boolean {
+  return encryptedKey.startsWith(V2_PREFIX);
+}
+
+async function deriveWrappingKey(
+  secret: string,
+  salt: Uint8Array,
+  iterations: number
+): Promise<CryptoKey> {
   const material = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(userId),
+    new TextEncoder().encode(secret),
     { name: "PBKDF2" },
     false,
     ["deriveKey"]
@@ -191,7 +206,7 @@ async function deriveWrappingKey(userId: string, salt: Uint8Array): Promise<Cryp
         salt.byteOffset,
         salt.byteOffset + salt.byteLength
       ) as ArrayBuffer,
-      iterations: 100_000,
+      iterations,
       hash: "SHA-256",
     },
     material,
@@ -201,12 +216,14 @@ async function deriveWrappingKey(userId: string, salt: Uint8Array): Promise<Cryp
   );
 }
 
+// ── v2: password-based backup (use this for all new backups) ──────────────────
+
 export async function backupPrivateKey(
-  userId: string,
+  password: string, // user-defined recovery password — never sent to server
   privateKey: CryptoKey
 ): Promise<{ encryptedKey: string; saltBase64: string }> {
   const salt = crypto.getRandomValues(new Uint8Array(16));
-  const wrappingKey = await deriveWrappingKey(userId, salt);
+  const wrappingKey = await deriveWrappingKey(password, salt, PBKDF2_ITERATIONS_V2);
   const jwk = await crypto.subtle.exportKey("jwk", privateKey);
   const encoded = new TextEncoder().encode(JSON.stringify(jwk));
   const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -219,21 +236,26 @@ export async function backupPrivateKey(
   combined.set(iv);
   combined.set(new Uint8Array(ciphertext), iv.length);
   return {
-    encryptedKey: btoa(String.fromCharCode(...combined)),
+    encryptedKey: V2_PREFIX + btoa(String.fromCharCode(...combined)),
     saltBase64: btoa(String.fromCharCode(...salt)),
   };
 }
 
-// Decrypts the private key from Supabase backup and caches it in IndexedDB.
-// Called on a new device where IndexedDB has no key yet.
+// Decrypts a v2 backup using the user's recovery password and caches it in IndexedDB.
+// Throws a DOMException if the password is wrong — callers should catch and surface
+// a "Incorrect recovery password" message rather than a generic error.
 export async function restorePrivateKey(
-  userId: string,
+  userId: string,   // used only for IDB key name — not for crypto
+  password: string, // the user's recovery password
   encryptedKey: string,
   saltBase64: string
 ): Promise<CryptoKey> {
+  const rawBase64 = encryptedKey.startsWith(V2_PREFIX)
+    ? encryptedKey.slice(V2_PREFIX.length)
+    : encryptedKey;
   const salt = Uint8Array.from(atob(saltBase64), (c) => c.charCodeAt(0));
-  const wrappingKey = await deriveWrappingKey(userId, salt);
-  const combined = Uint8Array.from(atob(encryptedKey), (c) => c.charCodeAt(0));
+  const wrappingKey = await deriveWrappingKey(password, salt, PBKDF2_ITERATIONS_V2);
+  const combined = Uint8Array.from(atob(rawBase64), (c) => c.charCodeAt(0));
   const iv = combined.slice(0, 12);
   const decrypted = await crypto.subtle.decrypt(
     { name: "AES-GCM", iv },
@@ -246,6 +268,37 @@ export async function restorePrivateKey(
     jwk,
     { name: "RSA-OAEP", hash: "SHA-256" },
     true, // extractable: true so the key can be re-backed-up if needed
+    ["unwrapKey"]
+  );
+  await idbStorePrivateKey(userId, privateKey);
+  return privateKey;
+}
+
+// ── v1: legacy restore (userId as password) — used only during migration ──────
+
+// Auto-restores a v1 backup using the userId as the PBKDF2 input.
+// Call this ONLY when migrating an existing user; immediately call
+// migrateToPasswordScheme() afterward to re-encrypt under a real password.
+export async function restorePrivateKeyV1(
+  userId: string, // used as both IDB key name and PBKDF2 password (v1 behaviour)
+  encryptedKey: string,
+  saltBase64: string
+): Promise<CryptoKey> {
+  const salt = Uint8Array.from(atob(saltBase64), (c) => c.charCodeAt(0));
+  const wrappingKey = await deriveWrappingKey(userId, salt, PBKDF2_ITERATIONS_V1);
+  const combined = Uint8Array.from(atob(encryptedKey), (c) => c.charCodeAt(0));
+  const iv = combined.slice(0, 12);
+  const decrypted = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    wrappingKey,
+    combined.slice(12)
+  );
+  const jwk = JSON.parse(new TextDecoder().decode(decrypted)) as JsonWebKey;
+  const privateKey = await crypto.subtle.importKey(
+    "jwk",
+    jwk,
+    { name: "RSA-OAEP", hash: "SHA-256" },
+    true,
     ["unwrapKey"]
   );
   await idbStorePrivateKey(userId, privateKey);

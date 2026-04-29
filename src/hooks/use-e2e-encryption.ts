@@ -12,7 +12,8 @@ import {
   getCachedRoomKey,
   clearRoomKeyCache,
   isEncryptedContent,
-  restorePrivateKey,
+  restorePrivateKeyV1,
+  isV2Key,
 } from "@/lib/e2e-crypto";
 
 export function useE2EEncryption(currentUserId: string) {
@@ -56,8 +57,17 @@ export function useE2EEncryption(currentUserId: string) {
 
     if (!data?.encrypted_private_key || !data?.key_salt) return null;
 
+    // v2 keys require a recovery password that this hook doesn't have access to.
+    // useInitializeE2EE in App.tsx owns that restore flow. If we land here with a
+    // v2 key, the user hasn't completed recovery yet — return null so the send path
+    // fails loudly rather than silently dropping their message.
+    if (isV2Key(data.encrypted_private_key)) {
+      console.warn("getOrRestorePrivateKey: v2 key requires recovery password — use useInitializeE2EE");
+      return null;
+    }
+
     try {
-      return await restorePrivateKey(currentUserId, data.encrypted_private_key, data.key_salt);
+      return await restorePrivateKeyV1(currentUserId, data.encrypted_private_key, data.key_salt);
     } catch (err) {
       console.error("Failed to restore private key from backup:", err);
       return null;

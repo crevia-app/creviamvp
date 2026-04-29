@@ -67,6 +67,9 @@ const PLAN_LIMITS: Record<SubscriptionPlan, SubscriptionLimits> = {
   },
 };
 
+// A plan only grants Pro/Workspace features when the subscription is active or trialing.
+const ACTIVE_STATUSES = new Set(["active", "trialing"]);
+
 export const useSubscription = (): SubscriptionState => {
   const [plan, setPlan] = useState<SubscriptionPlan>("free");
   const [status, setStatus] = useState("inactive");
@@ -74,43 +77,68 @@ export const useSubscription = (): SubscriptionState => {
   const [kiraActionsToday, setKiraActionsToday] = useState(0);
   const [kiraActionsLimit, setKiraActionsLimit] = useState(10);
 
-  useEffect(() => {
-    fetchSubscription();
-  }, []);
-
-  const fetchSubscription = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setIsLoading(false);
-      return;
-    }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("subscription_plan, subscription_status, kira_actions_used, kira_actions_limit")
-      .eq("id", user.id)
-      .single();
-
-    if (profile) {
-      setPlan((profile.subscription_plan as SubscriptionPlan) || "free");
-      setStatus(profile.subscription_status || "inactive");
-      setKiraActionsToday(profile.kira_actions_used || 0);
-      setKiraActionsLimit(profile.kira_actions_limit || 10);
-    }
-
-    setIsLoading(false);
+  const applyProfile = (profile: Record<string, unknown>) => {
+    setPlan((profile.subscription_plan as SubscriptionPlan) || "free");
+    setStatus((profile.subscription_status as string) || "inactive");
+    setKiraActionsToday((profile.kira_actions_used as number) || 0);
+    setKiraActionsLimit((profile.kira_actions_limit as number) || 10);
   };
+
+  useEffect(() => {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    const setup = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("subscription_plan, subscription_status, kira_actions_used, kira_actions_limit")
+        .eq("id", user.id)
+        .single();
+
+      if (profile) applyProfile(profile as Record<string, unknown>);
+      setIsLoading(false);
+
+      // Real-time listener: fires the moment the Paystack webhook updates the profile row.
+      channel = supabase
+        .channel(`subscription:${user.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "profiles",
+            filter: `id=eq.${user.id}`,
+          },
+          (payload) => {
+            applyProfile(payload.new as Record<string, unknown>);
+          }
+        )
+        .subscribe();
+    };
+
+    setup();
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, []);
 
   const currentPlan = plan || "free";
   const limits = PLAN_LIMITS[currentPlan];
+  const isActiveStatus = ACTIVE_STATUSES.has(status);
 
   return {
     plan: currentPlan,
     status,
     isLoading,
-    isPro: currentPlan === "creative_pro",
-    isBrandWorkspace: currentPlan === "brand_workspace",
-    isFree: currentPlan === "free",
+    isPro: currentPlan === "creative_pro" && isActiveStatus,
+    isBrandWorkspace: currentPlan === "brand_workspace" && isActiveStatus,
+    isFree: currentPlan === "free" || !isActiveStatus,
     limits,
     kiraActionsToday,
     kiraActionsLimit,
