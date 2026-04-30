@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 const hasOAuthCallback = () => {
   const params = new URLSearchParams(window.location.search);
-  return params.has("code") || window.location.hash.includes("access_token=");
+  return params.has("code") || params.has("token_hash") || window.location.hash.includes("access_token=");
 };
 
 const Auth = () => {
@@ -231,12 +231,7 @@ const Auth = () => {
           }
         } else if (data.user) {
           toast({ title: "Welcome back!", description: "Good to see you." });
-          const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-        if (aalData?.nextLevel === "aal2" && aalData?.nextLevel !== aalData?.currentLevel) {
-          navigate("/mfa-verify", { replace: true });
-        } else {
-          navigate("/kira", { replace: true });
-        }
+          // navigation is handled by the onAuthStateChange SIGNED_IN listener above
         }
       }
     } catch (err) {
