@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 const hasOAuthCallback = () => {
   const params = new URLSearchParams(window.location.search);
-  return params.has("code") || params.has("token_hash") || window.location.hash.includes("access_token=");
+  return params.has("code") || params.has("token_hash") || window.location.hash.includes("access_token");
 };
 
 const Auth = () => {
