@@ -172,7 +172,7 @@ const Auth = () => {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/kira`,
+            emailRedirectTo: `${window.location.origin}/auth`,
             data: {
               user_type: userType,
             },

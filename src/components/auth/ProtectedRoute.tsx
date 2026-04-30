@@ -10,10 +10,8 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const [status, setStatus] = useState<"loading" | "auth" | "unauth">("loading");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setStatus(session ? "auth" : "unauth");
-    });
-
+    // onAuthStateChange fires with INITIAL_SESSION first — use it as the
+    // authoritative signal so we never redirect while a token is being exchanged.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setStatus(session ? "auth" : "unauth");
     });
