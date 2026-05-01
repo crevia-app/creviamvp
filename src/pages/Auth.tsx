@@ -33,6 +33,8 @@ const Auth = () => {
   const [userType, setUserType] = useState<"creator" | "brand">("creator");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  const [emailConfirmPending, setEmailConfirmPending] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState("");
   // True when we landed here from a Google OAuth redirect — hide the form while Supabase exchanges the code.
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(hasOAuthCallback);
 
@@ -211,8 +213,9 @@ const Auth = () => {
             navigate("/kira", { replace: true });
           }
         } else {
-          // Email confirmation required — stay on page
-          toast({ title: "Check your email", description: "We sent you a confirmation link to activate your account." });
+          // Email confirmation required — show dedicated screen
+          setPendingEmail(email);
+          setEmailConfirmPending(true);
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -279,6 +282,33 @@ const Auth = () => {
           <Loader2 className="w-10 h-10 animate-spin text-bronze" />
           <p className="font-poppins text-muted-foreground">Signing you in…</p>
         </div>
+      </div>
+    );
+  }
+
+  if (emailConfirmPending) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center p-4 md:p-6">
+        <Card className="w-full max-w-md p-6 md:p-8 mx-4 animate-fade-in text-center">
+          <div className="mb-6">
+            <img src="/crevia-logo.png" alt="Crevia Logo" className="w-10 h-10 mx-auto mb-4" />
+            <h1 className="font-vollkorn text-2xl font-bold mb-2">Check your inbox</h1>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              We sent a confirmation link to<br />
+              <span className="font-semibold text-foreground">{pendingEmail}</span>
+            </p>
+          </div>
+          <p className="text-sm text-muted-foreground mb-6">
+            Click the link in your email to activate your account and access Kira. Check your spam folder if you don't see it.
+          </p>
+          <Button
+            variant="outline"
+            className="w-full h-12"
+            onClick={() => { setEmailConfirmPending(false); setIsSignup(false); }}
+          >
+            Back to sign in
+          </Button>
+        </Card>
       </div>
     );
   }

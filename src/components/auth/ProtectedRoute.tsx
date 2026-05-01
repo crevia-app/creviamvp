@@ -10,14 +10,20 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const [status, setStatus] = useState<"loading" | "auth" | "unauth">("loading");
 
   useEffect(() => {
-    // getSession() reads from localStorage immediately — fastest path for already-authed users.
+    // getSession() is the single authoritative initial check.
+    // It handles token refresh internally and returns the true current state.
     supabase.auth.getSession().then(({ data: { session } }) => {
       setStatus(session ? "auth" : "unauth");
     });
 
-    // onAuthStateChange keeps the status live (sign-out, token refresh, etc.).
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setStatus(session ? "auth" : "unauth");
+    // onAuthStateChange handles live transitions only.
+    // INITIAL_SESSION is intentionally ignored to avoid racing with getSession().
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        setStatus("auth");
+      } else if (event === "SIGNED_OUT") {
+        setStatus("unauth");
+      }
     });
 
     return () => subscription.unsubscribe();

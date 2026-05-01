@@ -48,9 +48,6 @@ const queryClient = new QueryClient();
 function AppContent() {
   const [userId, setUserId] = useState("");
 
-  // Log on every render so you can confirm the hook is alive in the console.
-  console.log("[E2EE] AppContent render — userId:", userId || "(not yet set)");
-
   // MUST be called before any early returns.
   // Receives "" until the auth state resolves, then fires the full init flow.
   const {
@@ -76,9 +73,7 @@ function AppContent() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      const uid = session?.user?.id ?? "";
-      console.log("[E2EE] Auth state changed — userId:", uid || "(signed out)");
-      setUserId(uid);
+      setUserId(session?.user?.id ?? "");
     });
 
     return () => subscription.unsubscribe();
