@@ -1433,6 +1433,10 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                     >
                       <ArrowLeft className="h-5 w-5" />
                     </Button>
+                    <button
+                      onClick={() => setShowRoomInfo(true)}
+                      className="flex items-center gap-3 min-w-0 hover:opacity-75 transition-opacity"
+                    >
                     <div className="h-9 w-9 rounded-full bg-bronze/20 flex items-center justify-center text-sm font-semibold text-bronze overflow-hidden flex-shrink-0">
                       {selectedRoom.is_group ? (
                         <Users className="h-4 w-4" />
@@ -1464,6 +1468,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                         )}
                       </div>
                     </div>
+                    </button>
                   </div>
                   <div className="flex flex-shrink-0 items-center gap-1">
                     <Button

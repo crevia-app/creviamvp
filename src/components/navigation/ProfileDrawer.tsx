@@ -7,12 +7,13 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  CreditCard, 
-  Bell, 
-  ShieldCheck, 
-  Settings, 
+import {
+  CreditCard,
+  Bell,
+  ShieldCheck,
+  Settings,
   LogOut,
   Crown
 } from "lucide-react";
@@ -56,14 +57,21 @@ const ProfileDrawer = ({ isOpen, onClose, profile, userType }: ProfileDrawerProp
               {profile?.display_name?.charAt(0) || profile?.email?.charAt(0) || "U"}
             </AvatarFallback>
           </Avatar>
-          <div className="flex-1">
-            <p className="font-poppins text-sm font-semibold text-white">
+          <div className="flex-1 min-w-0">
+            <p className="font-poppins text-sm font-semibold text-white truncate">
               {profile?.display_name || "User"}
             </p>
             <p className="text-xs text-white/50 truncate">{profile?.email}</p>
-            <p className="text-xs text-bronze capitalize mt-1">
-              {userType === "creator" ? t("profile.creatorAccount") : t("profile.brandAccount")}
-            </p>
+            <Badge
+              variant="outline"
+              className={
+                userType === "creator"
+                  ? "mt-1.5 text-[10px] font-semibold border-bronze text-bronze bg-bronze/15 px-2 py-0.5"
+                  : "mt-1.5 text-[10px] font-semibold border-blue-400 text-blue-400 bg-blue-400/15 px-2 py-0.5"
+              }
+            >
+              {userType === "creator" ? "Creator" : "Brand"}
+            </Badge>
           </div>
         </div>
 

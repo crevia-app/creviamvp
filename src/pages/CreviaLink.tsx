@@ -926,34 +926,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                   </div>
                 </Card>
 
-                {/* SEO Settings */}
-                <Card className="min-w-0 p-6 border-border/50">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Shield className="w-6 h-6 text-bronze" />
-                    <h3 className="font-vollkorn text-2xl font-bold">SEO & Sharing</h3>
-                  </div>
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-sm font-medium mb-2 block">Page Title</Label>
-                      <Input
-                        value={linkProfile?.seo_title || ""}
-                        onChange={(e) => setLinkProfile({ ...linkProfile, seo_title: e.target.value })}
-                        placeholder="Custom title for search engines"
-                        className="h-11"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium mb-2 block">Meta Description</Label>
-                      <Textarea
-                        value={linkProfile?.seo_description || ""}
-                        onChange={(e) => setLinkProfile({ ...linkProfile, seo_description: e.target.value })}
-                        placeholder="Description for search results..."
-                        className="min-h-[80px] resize-none"
-                      />
-                    </div>
-                  </div>
-                </Card>
-
                 <Button onClick={handleSave} disabled={saving} className="w-full bg-bronze hover:bg-bronze-dark h-12">
                   {saving ? "Saving..." : "Save Settings"}
                 </Button>
@@ -1551,34 +1523,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                     <Switch
                       checked={linkProfile?.show_crevia_branding !== false}
                       onCheckedChange={(checked) => setLinkProfile({ ...linkProfile, show_crevia_branding: checked })}
-                    />
-                  </div>
-                </div>
-              </Card>
-
-              {/* SEO & Sharing */}
-              <Card className="p-6 md:p-8 border-border/50">
-                <div className="flex items-center gap-3 mb-6">
-                  <Shield className="w-6 h-6 text-bronze" />
-                  <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">SEO & Sharing</h3>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">Page Title</Label>
-                    <Input
-                      value={linkProfile?.seo_title || ""}
-                      onChange={(e) => setLinkProfile({ ...linkProfile, seo_title: e.target.value })}
-                      placeholder="Custom title for search engines"
-                      className="h-11"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">Meta Description</Label>
-                    <Textarea
-                      value={linkProfile?.seo_description || ""}
-                      onChange={(e) => setLinkProfile({ ...linkProfile, seo_description: e.target.value })}
-                      placeholder="Description for search results..."
-                      className="min-h-[80px] resize-none"
                     />
                   </div>
                 </div>

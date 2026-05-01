@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Sparkles, MoreHorizontal, Plug, Briefcase } from "lucide-react";
+import { Home, Sparkles, MoreHorizontal, Plug, Briefcase, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -121,6 +121,16 @@ const MobileBottomNav = () => {
               )}
               
               <div className="space-y-4 pb-8">
+
+                {/* Upgrade to Pro — always visible */}
+                <Link
+                  to="/pricing"
+                  onClick={() => setSheetOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-gradient-to-r from-bronze to-bronze-dark text-white hover:opacity-90 transition-all w-full"
+                >
+                  <Crown className="h-5 w-5 flex-shrink-0" />
+                  <span className="font-poppins text-sm font-semibold">Upgrade to Pro</span>
+                </Link>
 
                 <Separator className="bg-white/10" />
 

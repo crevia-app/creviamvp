@@ -513,45 +513,69 @@ const WorkspaceInboxList = ({
                     const name = room.dmPartnerName ?? "Unknown user";
                     const initial = room.dmPartnerInitial ?? name[0].toUpperCase();
                     return (
-                      <button
+                      <div
                         key={room.id}
-                        onClick={() => onSelectRoom(room, "dm")}
                         className={cn(
-                          "w-full text-left p-2.5 rounded-xl transition-all duration-150 border",
+                          "relative flex items-center rounded-xl transition-all duration-150 group border",
                           isSelected
                             ? "bg-accent border-border"
                             : "hover:bg-gray-50 dark:hover:bg-accent/50 border-transparent"
                         )}
                       >
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
-                            {room.dmPartnerAvatar ? (
-                              <img
-                                src={room.dmPartnerAvatar}
-                                alt={name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <span className="text-[13px] font-semibold text-muted-foreground/70">
-                                {initial}
-                              </span>
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-1 mb-0.5">
-                              <p className="text-[12px] font-semibold truncate text-foreground/85">
-                                {name}
-                              </p>
-                              <span className="text-[9px] text-muted-foreground/50 whitespace-nowrap flex-shrink-0">
-                                {timeAgo(room.updated_at)}
-                              </span>
+                        <button
+                          onClick={() => onSelectRoom(room, "dm")}
+                          className="flex-1 text-left p-2.5 min-w-0"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                              {room.dmPartnerAvatar ? (
+                                <img
+                                  src={room.dmPartnerAvatar}
+                                  alt={name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-[13px] font-semibold text-muted-foreground/70">
+                                  {initial}
+                                </span>
+                              )}
                             </div>
-                            <p className="text-[10px] text-muted-foreground/50">
-                              Direct message
-                            </p>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center justify-between gap-1 mb-0.5">
+                                <p className="text-[12px] font-semibold truncate text-foreground/85">
+                                  {name}
+                                </p>
+                                <span className="text-[9px] text-muted-foreground/50 whitespace-nowrap flex-shrink-0">
+                                  {timeAgo(room.updated_at)}
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground/50">
+                                Direct message
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </button>
+                        </button>
+
+                        {/* ⋮ context menu for DMs */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              onClick={(e) => e.stopPropagation()}
+                              className="mr-1.5 w-6 h-6 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted text-muted-foreground/60 hover:text-foreground flex-shrink-0"
+                            >
+                              <MoreHorizontal className="w-3.5 h-3.5" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-36">
+                            <DropdownMenuItem
+                              onClick={(e) => { e.stopPropagation(); setDeleteConfirm(room); }}
+                              className="text-xs gap-2 text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" /> Delete Chat
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     );
                   })}
                 </div>
@@ -617,9 +641,13 @@ const WorkspaceInboxList = ({
       <AlertDialog open={!!deleteConfirm} onOpenChange={(o) => { if (!o) setDeleteConfirm(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-sm font-semibold">Delete Workspace</AlertDialogTitle>
+            <AlertDialogTitle className="text-sm font-semibold">
+              {deleteConfirm?.name ? "Delete Workspace" : "Delete Chat"}
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-xs">
-              Permanently delete <strong>{deleteConfirm?.name}</strong> and all its messages? This cannot be undone.
+              Permanently delete{" "}
+              <strong>{deleteConfirm?.name ?? deleteConfirm?.dmPartnerName ?? "this conversation"}</strong>{" "}
+              and all its messages? This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -23,10 +23,6 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     const appTheme = localStorage.getItem("app-theme");
     if (appTheme) {
       setTheme(appTheme);
-    } else {
-      setTheme("light");
-      localStorage.setItem("app-theme", "light");
-      localStorage.setItem("theme", "light");
     }
     loadProfile();
 

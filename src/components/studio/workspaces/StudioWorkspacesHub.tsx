@@ -246,12 +246,17 @@ const StudioWorkspacesHub = () => {
         )}
       </div>
 
-      {/* ── PANE 2: Center ── */}
+      {/* ── PANE 2 + 3 wrapper: flex-col-reverse on mobile so vault is on top ── */}
       <div
         className={cn(
-          "flex flex-col min-h-0 min-w-0 overflow-hidden",
+          "flex min-h-0 overflow-hidden flex-col-reverse md:flex-row",
           showMobileChat ? "flex-1" : "hidden md:flex md:flex-1"
         )}
+      >
+
+      {/* ── PANE 2: Center ── */}
+      <div
+        className="flex flex-col min-h-0 min-w-0 overflow-hidden flex-1"
       >
         {/* Mobile back */}
         <div className="md:hidden flex-shrink-0 px-3 py-2 border-b border-gray-100 dark:border-border/50">
@@ -282,7 +287,7 @@ const StudioWorkspacesHub = () => {
                 size="sm"
                 variant="outline"
                 onClick={() => { setProposeName(""); setProposeDialogOpen(true); }}
-                className="h-7 text-xs gap-1.5 border-bronze/30 text-bronze hover:bg-bronze/8 font-medium"
+                className="h-7 text-xs gap-1.5 border-bronze/30 text-bronze hover:bg-primary hover:text-primary-foreground font-medium"
               >
                 <Sparkles className="w-3 h-3" />
                 Propose Workspace
@@ -515,6 +520,30 @@ const StudioWorkspacesHub = () => {
         </div>
       </div>
 
+      {/* ── PANE 3: Action Vault (mobile: top via col-reverse, desktop: right) ── */}
+      <AnimatePresence>
+        {isWorkspace && selectedRoom && (
+          <motion.div
+            key="action-vault-mobile"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="flex md:hidden"
+          >
+            <WorkspaceActionVault
+              contracts={contracts}
+              invoices={invoices}
+              userId={userId}
+              roomId={selectedRoom?.id ?? ""}
+              onRefresh={() => selectedRoom && handleSelectRoom(selectedRoom, selectedRoom.type)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      </div>{/* end pane 2+3 wrapper */}
+
       {/* Propose Workspace Dialog */}
       <Dialog open={proposeDialogOpen} onOpenChange={(o) => { if (!o) setProposeDialogOpen(false); }}>
         <DialogContent className="max-w-sm">
@@ -558,7 +587,7 @@ const StudioWorkspacesHub = () => {
         </DialogContent>
       </Dialog>
 
-      {/* ── PANE 3: Action Vault (desktop, workspaces only) ── */}
+      {/* ── PANE 3: Action Vault (desktop only, right panel) ── */}
       <AnimatePresence>
         {isWorkspace && selectedRoom && (
           <motion.div
@@ -567,7 +596,7 @@ const StudioWorkspacesHub = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 16 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="hidden lg:flex"
+            className="hidden md:flex"
           >
             <WorkspaceActionVault
               contracts={contracts}

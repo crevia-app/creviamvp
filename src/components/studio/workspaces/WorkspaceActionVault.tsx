@@ -190,7 +190,7 @@ const WorkspaceActionVault = ({
 
   return (
     <>
-      <div className="flex flex-col w-60 xl:w-[268px] flex-shrink-0 border-l border-gray-100 dark:border-border/60 bg-gray-50/50 dark:bg-background/60 overflow-hidden">
+      <div className="flex flex-col w-full md:w-60 xl:w-[268px] flex-shrink-0 border-l border-gray-100 dark:border-border/60 bg-gray-50/50 dark:bg-background/60 overflow-hidden max-h-52 md:max-h-none">
         {/* Header */}
         <div className="px-4 py-3 border-b border-gray-100 dark:border-border/50 flex-shrink-0">
           <div className="flex items-center justify-between">

@@ -1,12 +1,21 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Brain, FileText, Link2, MessageCircle, Receipt, Shield } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HeroPattern from "@/components/HeroPattern";
 import ScrollReveal from "@/components/ui/ScrollReveal";
+import { supabase } from "@/integrations/supabase/client";
 
 const Home = () => {
+  const navigate = useNavigate();
+
+  const handleAuthGatedClick = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/auth?mode=signup");
+    }
+  };
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -155,10 +164,13 @@ const Home = () => {
                     { icon: Shield, label: "Contracts" },
                   ].map(({ icon: Icon, label }, i) => (
                     <ScrollReveal key={label} delay={0.06 * i} variant="scale">
-                      <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:border-bronze/30 transition-colors">
+                      <button
+                        onClick={handleAuthGatedClick}
+                        className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:border-bronze/30 hover:bg-bronze/5 transition-colors text-left cursor-pointer"
+                      >
                         <Icon className="w-5 h-5 text-bronze flex-shrink-0" />
                         <span className="font-poppins text-sm font-medium">{label}</span>
-                      </div>
+                      </button>
                     </ScrollReveal>
                   ))}
                 </div>

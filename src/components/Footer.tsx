@@ -8,18 +8,21 @@ const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mb-6 md:mb-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2 mb-3 md:mb-4">
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="flex items-center gap-2 mb-3 md:mb-4 cursor-pointer hover:opacity-80 transition-opacity"
+            >
               <div className="w-7 h-7 md:w-8 md:h-8 bg-bronze rounded-lg"></div>
               <span className="font-vollkorn text-lg md:text-xl font-bold">Crevia</span>
-            </div>
+            </button>
             <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
               Own Your Story
             </p>
             <div className="flex gap-2 md:gap-3">
-              <a href="https://www.instagram.com/crevia.app" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-bronze hover:text-white transition-colors">
+              <a href="https://www.instagram.com/creviahq" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-bronze hover:text-white transition-colors">
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="https://youtube.com/@crevi.a" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-bronze hover:text-white transition-colors">
+              <a href="https://youtube.com/@creviahq" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-bronze hover:text-white transition-colors">
                 <Youtube className="w-5 h-5" />
               </a>
               <a href="https://www.tiktok.com/@crevia.app" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-bronze hover:text-white transition-colors">
@@ -64,7 +67,7 @@ const Footer = () => {
 
         <div className="pt-6 md:pt-8 border-t border-border text-center">
           <p className="text-xs md:text-sm text-muted-foreground">
-            © 2024 Crevia • All rights reserved
+            © 2026 Crevia • All rights reserved
           </p>
         </div>
       </div>
