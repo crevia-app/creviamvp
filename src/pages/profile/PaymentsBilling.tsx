@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +8,6 @@ import { CreditCard, ArrowRight, Check, Sparkles, Receipt, Calendar } from "luci
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const PaymentsBilling = () => {
-  const navigate = useNavigate();
   const { t } = useLanguage();
   const [userId, setUserId] = useState<string | null>(null);
   const [userType, setUserType] = useState<string | null>(null);
@@ -37,7 +36,7 @@ const PaymentsBilling = () => {
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { navigate("/auth"); return; }
+    if (!session) return;
     setUserId(session.user.id);
     const { data: profile } = await supabase.from("profiles").select("user_type, subscription_plan").eq("id", session.user.id).single();
     setUserType(profile?.user_type || null);

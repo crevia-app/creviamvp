@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +6,6 @@ import { Shield, CheckCircle, Upload } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const Verification = () => {
-  const navigate = useNavigate();
   const { t } = useLanguage();
   const [userType, setUserType] = useState<string | null>(null);
   const [profile, setProfile] = useState<any>(null);
@@ -15,7 +13,7 @@ const Verification = () => {
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { navigate("/auth"); return; }
+      if (!session) return;
       const { data: profileData } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
       setProfile(profileData);
       setUserType(profileData?.user_type || null);

@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +22,6 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const Settings = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { language, setLanguage, t } = useLanguage();
   const [profile, setProfile] = useState<any>(null);
@@ -44,10 +42,7 @@ const Settings = () => {
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth");
-      return;
-    }
+    if (!session) return;
 
     const { data: profileData } = await supabase
       .from("profiles")

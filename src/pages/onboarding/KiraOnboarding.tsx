@@ -180,10 +180,7 @@ const KiraOnboarding = () => {
     const initUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
+      if (!session) return;
 
       setUserId(session.user.id);
       
