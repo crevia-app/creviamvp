@@ -12,7 +12,6 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   CreditCard,
   Bell,
-  ShieldCheck,
   Settings,
   LogOut,
   Crown
@@ -39,7 +38,6 @@ const ProfileDrawer = ({ isOpen, onClose, profile, userType }: ProfileDrawerProp
   const menuItems = [
     { icon: CreditCard, label: t("profile.paymentsBilling"), path: "/profile/payments-billing" },
     { icon: Bell, label: t("profile.notifications"), path: "/profile/notifications" },
-    { icon: ShieldCheck, label: t("profile.verification"), path: "/profile/verification" },
     { icon: Settings, label: t("profile.settings"), path: "/profile/settings" },
   ];
 

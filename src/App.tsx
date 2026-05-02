@@ -21,6 +21,8 @@ import BrandSignup from "./pages/BrandSignup";
 import Kira from "./pages/Kira";
 import CreviaLink from "./pages/CreviaLink";
 import CreviaStudio from "./pages/CreviaStudio";
+import CreviaInvoice from "./pages/CreviaInvoice";
+import CreviaContracts from "./pages/CreviaContracts";
 import WorkspacesList from "./pages/WorkspacesList";
 import MFAVerify from "./components/auth/MFAVerify";
 import WorkspacePage from "./pages/WorkspacePage";
@@ -118,6 +120,8 @@ function AppContent() {
         <Route path="/kira" element={<ProtectedRoute><AppLayout><Kira /></AppLayout></ProtectedRoute>} />
         <Route path="/crevia-link" element={<ProtectedRoute><AppLayout><CreviaLink /></AppLayout></ProtectedRoute>} />
         <Route path="/crevia-studio" element={<ProtectedRoute><AppLayout><CreviaStudio /></AppLayout></ProtectedRoute>} />
+        <Route path="/crevia-invoice" element={<ProtectedRoute><AppLayout><CreviaInvoice /></AppLayout></ProtectedRoute>} />
+        <Route path="/crevia-contracts" element={<ProtectedRoute><AppLayout><CreviaContracts /></AppLayout></ProtectedRoute>} />
         <Route path="/mfa-verify" element={<MFAVerify />} />
         <Route path="/crevia-workspace" element={<ProtectedRoute><AppLayout><WorkspacesList /></AppLayout></ProtectedRoute>} />
         <Route path="/crevia-workspace/:id" element={<ProtectedRoute><AppLayout><WorkspacePage /></AppLayout></ProtectedRoute>} />

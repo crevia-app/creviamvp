@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  CheckCircle2,
-  Clock,
   MessageSquare,
   ArrowLeft,
   Sparkles,
@@ -23,14 +21,6 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import CreviaChat from "@/components/crevia-connect/shared/CreviaChat";
 import WorkspaceInboxList from "./WorkspaceInboxList";
-import WorkspaceActionVault from "./WorkspaceActionVault";
-
-const DEAL_STAGES = [
-  { id: "negotiating", label: "Negotiating" },
-  { id: "contract_signed", label: "Contract Signed" },
-  { id: "invoice_paid", label: "Invoice Paid" },
-  { id: "complete", label: "Complete" },
-];
 
 interface SelectedRoom {
   id: string;
@@ -52,12 +42,9 @@ interface WorkspaceMember {
 const StudioWorkspacesHub = () => {
   const [userId, setUserId] = useState("");
   const [selectedRoom, setSelectedRoom] = useState<SelectedRoom | null>(null);
-  const [contracts, setContracts] = useState<any[]>([]);
-  const [invoices, setInvoices] = useState<any[]>([]);
-  const [activeStage, setActiveStage] = useState("negotiating");
   const [showMobileChat, setShowMobileChat] = useState(false);
 
-  // Workspace members for the center pane
+  // Workspace members for the centre pane
   const [workspaceMembers, setWorkspaceMembers] = useState<WorkspaceMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
 
@@ -65,11 +52,10 @@ const StudioWorkspacesHub = () => {
   const [activeDm, setActiveDm] = useState<{ roomId: string; name: string } | null>(null);
   const [openingDm, setOpeningDm] = useState<string | null>(null);
 
-  // Propose workspace state
+  // Propose workspace dialog
   const [proposeDialogOpen, setProposeDialogOpen] = useState(false);
   const [proposeName, setProposeName] = useState("");
   const [proposeSending, setProposeSending] = useState(false);
-
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -86,7 +72,6 @@ const StudioWorkspacesHub = () => {
     setShowMobileChat(true);
 
     if (type === "workspace") {
-      // Fetch workspace members (excluding self)
       setLoadingMembers(true);
       const { data: memberRows } = await supabase
         .from("chat_room_members")
@@ -102,7 +87,9 @@ const StudioWorkspacesHub = () => {
           .select("id, display_name, handle, avatar_url, user_type")
           .in("id", otherIds);
 
-        const profileMap = Object.fromEntries((profiles || []).map((p: any) => [p.id, p]));
+        const profileMap = Object.fromEntries(
+          (profiles || []).map((p: any) => [p.id, p])
+        );
 
         setWorkspaceMembers(
           others.map((m: any) => ({
@@ -115,44 +102,8 @@ const StudioWorkspacesHub = () => {
         setWorkspaceMembers([]);
       }
       setLoadingMembers(false);
-
-      // Fetch workspace contracts/invoices
-      const { data: msgs } = await supabase
-        .from("chat_messages")
-        .select("contract_id, invoice_id")
-        .eq("room_id", room.id)
-        .or("contract_id.not.is.null,invoice_id.not.is.null");
-
-      const contractIds = [...new Set((msgs || []).filter(m => m.contract_id).map(m => m.contract_id))];
-      const invoiceIds  = [...new Set((msgs || []).filter(m => m.invoice_id).map(m => m.invoice_id))];
-
-      const [contractRes, invoiceRes] = await Promise.all([
-        contractIds.length > 0
-          ? supabase.from("contracts").select("*").in("id", contractIds).order("created_at", { ascending: false })
-          : Promise.resolve({ data: [] as any[] }),
-        invoiceIds.length > 0
-          ? supabase.from("invoices").select("*").in("id", invoiceIds).order("created_at", { ascending: false })
-          : Promise.resolve({ data: [] as any[] }),
-      ]);
-
-      const contractsData = contractRes.data || [];
-      const invoicesData  = invoiceRes.data  || [];
-      setContracts(contractsData);
-      setInvoices(invoicesData);
-
-      if (invoicesData.some((i: any) => i.status === "paid")) {
-        setActiveStage("complete");
-      } else if (invoicesData.length > 0) {
-        setActiveStage("invoice_paid");
-      } else if (contractsData.some((con: any) => con.status === "signed")) {
-        setActiveStage("contract_signed");
-      } else {
-        setActiveStage("negotiating");
-      }
     } else {
       setWorkspaceMembers([]);
-      setContracts([]);
-      setInvoices([]);
     }
   };
 
@@ -160,7 +111,6 @@ const StudioWorkspacesHub = () => {
     if (!userId) return;
     setOpeningDm(targetUserId);
 
-    // Find existing DM room shared by both users
     const { data: myRooms } = await supabase
       .from("chat_room_members")
       .select("room_id")
@@ -175,7 +125,9 @@ const StudioWorkspacesHub = () => {
         .eq("user_id", targetUserId)
         .in("room_id", myRoomIds);
 
-      const existing = (shared || []).find((r: any) => r.chat_rooms?.is_group === false);
+      const existing = (shared || []).find(
+        (r: any) => r.chat_rooms?.is_group === false
+      );
       if (existing) {
         setActiveDm({ roomId: existing.room_id, name: targetName });
         setOpeningDm(null);
@@ -183,7 +135,6 @@ const StudioWorkspacesHub = () => {
       }
     }
 
-    // Create a new DM room
     const { data: room, error } = await supabase
       .from("chat_rooms")
       .insert({ created_by: userId, is_group: false })
@@ -212,7 +163,10 @@ const StudioWorkspacesHub = () => {
       room_id: selectedRoom.id,
       sender_id: userId,
       message_type: "workspace_invite",
-      content: JSON.stringify({ status: "pending", workspace_name: proposeName.trim() }),
+      content: JSON.stringify({
+        status: "pending",
+        workspace_name: proposeName.trim(),
+      }),
       is_encrypted: false,
     });
     setProposeSending(false);
@@ -225,7 +179,6 @@ const StudioWorkspacesHub = () => {
     }
   };
 
-  const activeIndex = DEAL_STAGES.findIndex((s) => s.id === activeStage);
   const isWorkspace = selectedRoom?.type === "workspace";
 
   return (
@@ -246,19 +199,14 @@ const StudioWorkspacesHub = () => {
         )}
       </div>
 
-      {/* ── PANE 2 + 3 wrapper: flex-col-reverse on mobile so vault is on top ── */}
+      {/* ── PANE 2: Centre ── */}
       <div
         className={cn(
-          "flex min-h-0 overflow-hidden flex-col-reverse md:flex-row",
-          showMobileChat ? "flex-1" : "hidden md:flex md:flex-1"
+          "flex flex-col min-h-0 min-w-0 overflow-hidden flex-1",
+          showMobileChat ? "flex" : "hidden md:flex"
         )}
       >
-
-      {/* ── PANE 2: Center ── */}
-      <div
-        className="flex flex-col min-h-0 min-w-0 overflow-hidden flex-1"
-      >
-        {/* Mobile back */}
+        {/* Mobile back button */}
         <div className="md:hidden flex-shrink-0 px-3 py-2 border-b border-gray-100 dark:border-border/50">
           <button
             onClick={() => {
@@ -272,7 +220,7 @@ const StudioWorkspacesHub = () => {
           </button>
         </div>
 
-        {/* DM toolbar */}
+        {/* DM toolbar — Propose Workspace */}
         <AnimatePresence>
           {selectedRoom?.type === "dm" && !activeDm && (
             <motion.div
@@ -286,7 +234,10 @@ const StudioWorkspacesHub = () => {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => { setProposeName(""); setProposeDialogOpen(true); }}
+                onClick={() => {
+                  setProposeName("");
+                  setProposeDialogOpen(true);
+                }}
                 className="h-7 text-xs gap-1.5 border-bronze/30 text-bronze hover:bg-primary hover:text-primary-foreground font-medium"
               >
                 <Sparkles className="w-3 h-3" />
@@ -299,88 +250,10 @@ const StudioWorkspacesHub = () => {
           )}
         </AnimatePresence>
 
-        {/* Deal Tracker Banner */}
-        <AnimatePresence>
-          {isWorkspace && selectedRoom && !activeDm && (
-            <motion.div
-              key="deal-tracker"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.18, ease: "easeOut" }}
-              className="flex-shrink-0 border-b border-gray-100 dark:border-border/50 bg-card/40 px-4 py-3 overflow-hidden"
-            >
-              <div className="flex items-center justify-between mb-2.5">
-                <p className="text-[12px] font-semibold text-foreground/75 tracking-tight">
-                  {selectedRoom.name || "Workspace"}
-                </p>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-bronze/10 text-bronze font-semibold tracking-tight">
-                  {DEAL_STAGES[activeIndex]?.label}
-                </span>
-              </div>
-
-              <div className="flex items-center">
-                {DEAL_STAGES.map((stage, idx) => {
-                  const isCompleted = idx < activeIndex;
-                  const isActive = idx === activeIndex;
-                  return (
-                    <div key={stage.id} className="flex items-center flex-1 last:flex-none">
-                      <button
-                        onClick={() => setActiveStage(stage.id)}
-                        className="flex flex-col items-center gap-1"
-                      >
-                        <div
-                          className={cn(
-                            "w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200",
-                            isCompleted
-                              ? "bg-bronze text-background"
-                              : isActive
-                              ? "bg-bronze/15 border-2 border-bronze text-bronze"
-                              : "bg-gray-100 dark:bg-muted border-2 border-gray-200 dark:border-border text-muted-foreground"
-                          )}
-                        >
-                          {isCompleted ? (
-                            <CheckCircle2 className="w-3 h-3" />
-                          ) : isActive ? (
-                            <Clock className="w-2.5 h-2.5" />
-                          ) : (
-                            <div className="w-1 h-1 rounded-full bg-current" />
-                          )}
-                        </div>
-                        <span
-                          className={cn(
-                            "text-[9px] font-medium whitespace-nowrap hidden sm:block tracking-tight",
-                            isActive
-                              ? "text-bronze"
-                              : isCompleted
-                              ? "text-foreground/60"
-                              : "text-muted-foreground/60"
-                          )}
-                        >
-                          {stage.label}
-                        </span>
-                      </button>
-                      {idx < DEAL_STAGES.length - 1 && (
-                        <div
-                          className={cn(
-                            "flex-1 h-px mx-2 transition-all duration-300",
-                            idx < activeIndex ? "bg-bronze" : "bg-gray-200 dark:bg-border"
-                          )}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Center content */}
+        {/* Centre content */}
         <div className="flex-1 min-h-0 overflow-hidden">
           <AnimatePresence mode="wait">
-            {/* DM chat — standalone or from workspace member click */}
-            {(selectedRoom?.type === "dm" || activeDm) ? (
+            {selectedRoom?.type === "dm" || activeDm ? (
               <motion.div
                 key={activeDm?.roomId ?? selectedRoom?.id}
                 initial={{ opacity: 0 }}
@@ -389,7 +262,6 @@ const StudioWorkspacesHub = () => {
                 transition={{ duration: 0.15 }}
                 className="h-full flex flex-col"
               >
-                {/* Back to workspace banner when in member DM */}
                 {activeDm && (
                   <div className="flex-shrink-0 px-4 py-2 border-b border-gray-100 dark:border-border/50 flex items-center gap-2 bg-card/30">
                     <button
@@ -400,14 +272,18 @@ const StudioWorkspacesHub = () => {
                       Back to workspace
                     </button>
                     <span className="text-[10px] text-muted-foreground/40">·</span>
-                    <span className="text-xs font-medium text-foreground/70">{activeDm.name}</span>
+                    <span className="text-xs font-medium text-foreground/70">
+                      {activeDm.name}
+                    </span>
                   </div>
                 )}
                 <div className="flex-1 min-h-0">
                   <CreviaChat
                     externalRoomId={activeDm?.roomId ?? selectedRoom!.id}
                     hideRoomList
-                    onBack={() => activeDm ? setActiveDm(null) : setShowMobileChat(false)}
+                    onBack={() =>
+                      activeDm ? setActiveDm(null) : setShowMobileChat(false)
+                    }
                   />
                 </div>
               </motion.div>
@@ -438,14 +314,21 @@ const StudioWorkspacesHub = () => {
                       <div className="w-14 h-14 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-3">
                         <Users className="w-6 h-6 text-muted-foreground/30" />
                       </div>
-                      <p className="text-sm font-medium text-foreground/60 mb-1">No other members yet</p>
-                      <p className="text-xs text-muted-foreground/50">Add members from the Action Vault.</p>
+                      <p className="text-sm font-medium text-foreground/60 mb-1">
+                        No other members yet
+                      </p>
+                      <p className="text-xs text-muted-foreground/50">
+                        Invite someone via the Propose Workspace button in a DM.
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-2">
                       {workspaceMembers.map((member) => {
-                        const name = member.profile?.display_name ||
-                          (member.profile?.handle ? `@${member.profile.handle}` : "Unknown");
+                        const name =
+                          member.profile?.display_name ||
+                          (member.profile?.handle
+                            ? `@${member.profile.handle}`
+                            : "Unknown");
                         const initial = name[0].toUpperCase();
                         const isOpening = openingDm === member.user_id;
 
@@ -462,24 +345,32 @@ const StudioWorkspacesHub = () => {
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <span className="text-sm font-bold text-bronze/70">{initial}</span>
+                                <span className="text-sm font-bold text-bronze/70">
+                                  {initial}
+                                </span>
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
                               <p className="text-sm font-medium truncate">{name}</p>
                               <div className="flex items-center gap-1.5">
                                 {member.profile?.handle && (
-                                  <p className="text-xs text-muted-foreground truncate">@{member.profile.handle}</p>
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    @{member.profile.handle}
+                                  </p>
                                 )}
                                 {member.role === "admin" && (
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-bronze/10 text-bronze font-semibold">admin</span>
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-bronze/10 text-bronze font-semibold">
+                                    admin
+                                  </span>
                                 )}
                               </div>
                             </div>
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => openDmWithMember(member.user_id, name)}
+                              onClick={() =>
+                                openDmWithMember(member.user_id, name)
+                              }
                               disabled={isOpening}
                               className="flex-shrink-0 h-8 text-xs gap-1.5 border-bronze/25 text-bronze hover:bg-bronze/8 hover:border-bronze/50 font-medium"
                             >
@@ -512,7 +403,8 @@ const StudioWorkspacesHub = () => {
                   Select a conversation
                 </h3>
                 <p className="text-[12px] text-muted-foreground max-w-[240px] leading-relaxed">
-                  Choose a deal room or message from the list to open the collaboration thread.
+                  Choose a deal room or message from the list to open the
+                  collaboration thread.
                 </p>
               </motion.div>
             )}
@@ -520,43 +412,27 @@ const StudioWorkspacesHub = () => {
         </div>
       </div>
 
-      {/* ── PANE 3: Action Vault (mobile: top via col-reverse, desktop: right) ── */}
-      <AnimatePresence>
-        {isWorkspace && selectedRoom && (
-          <motion.div
-            key="action-vault-mobile"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="flex md:hidden"
-          >
-            <WorkspaceActionVault
-              contracts={contracts}
-              invoices={invoices}
-              userId={userId}
-              roomId={selectedRoom?.id ?? ""}
-              onRefresh={() => selectedRoom && handleSelectRoom(selectedRoom, selectedRoom.type)}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      </div>{/* end pane 2+3 wrapper */}
-
       {/* Propose Workspace Dialog */}
-      <Dialog open={proposeDialogOpen} onOpenChange={(o) => { if (!o) setProposeDialogOpen(false); }}>
+      <Dialog
+        open={proposeDialogOpen}
+        onOpenChange={(o) => {
+          if (!o) setProposeDialogOpen(false);
+        }}
+      >
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <div className="flex items-center gap-2 mb-1">
               <div className="p-1.5 rounded-lg bg-bronze/10">
                 <Sparkles className="w-4 h-4 text-bronze" />
               </div>
-              <DialogTitle className="text-sm font-semibold">Name the Workspace</DialogTitle>
+              <DialogTitle className="text-sm font-semibold">
+                Name the Workspace
+              </DialogTitle>
             </div>
           </DialogHeader>
           <p className="text-xs text-muted-foreground mb-3">
-            Give this deal room a name. The other person will see it when they accept.
+            Give this deal room a name. The other person will see it when they
+            accept.
           </p>
           <Input
             value={proposeName}
@@ -564,10 +440,17 @@ const StudioWorkspacesHub = () => {
             placeholder="e.g. Nike x Crevia Campaign"
             className="h-9 text-sm"
             autoFocus
-            onKeyDown={(e) => { if (e.key === "Enter" && !proposeSending) handleProposeWorkspace(); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !proposeSending) handleProposeWorkspace();
+            }}
           />
           <div className="flex gap-2 justify-end mt-2">
-            <Button variant="outline" size="sm" onClick={() => setProposeDialogOpen(false)} disabled={proposeSending}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setProposeDialogOpen(false)}
+              disabled={proposeSending}
+            >
               Cancel
             </Button>
             <Button
@@ -586,28 +469,6 @@ const StudioWorkspacesHub = () => {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* ── PANE 3: Action Vault (desktop only, right panel) ── */}
-      <AnimatePresence>
-        {isWorkspace && selectedRoom && (
-          <motion.div
-            key="action-vault"
-            initial={{ opacity: 0, x: 16 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 16 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="hidden md:flex"
-          >
-            <WorkspaceActionVault
-              contracts={contracts}
-              invoices={invoices}
-              userId={userId}
-              roomId={selectedRoom?.id ?? ""}
-              onRefresh={() => selectedRoom && handleSelectRoom(selectedRoom, selectedRoom.type)}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

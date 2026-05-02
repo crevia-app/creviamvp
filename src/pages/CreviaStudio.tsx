@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Link2, MessageSquare, Sparkles, Settings } from "lucide-react";
+import { Link2, MessageSquare, Sparkles, Settings, Receipt, FileSignature } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
-// Import tab content
+// Tab content
 import CreviaLink from "./CreviaLink";
 import SmartInvoicesTab from "@/components/studio/SmartInvoicesTab";
 import ContractsTab from "@/components/studio/ContractsTab";
@@ -15,9 +15,8 @@ import StudioWorkspacesHub from "@/components/studio/workspaces/StudioWorkspaces
 
 const CreviaStudio = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [userType, setUserType] = useState<"creator" | "brand">("creator");
   const [loading, setLoading] = useState(true);
-  
+
   const activeTab = searchParams.get("tab") || "link";
   const activeLinkSection = searchParams.get("section") || "profile";
   const activeWorkspace = searchParams.get("workspace") || undefined;
@@ -31,28 +30,27 @@ const CreviaStudio = () => {
           .select("user_type")
           .eq("id", session.user.id)
           .single();
-        
-        if (profile?.user_type) {
-          setUserType(profile.user_type);
-        }
       }
       setLoading(false);
     };
     checkUser();
   }, []);
 
+  // Strict order: Link → Workspace → Invoice → Contracts → Settings
   const studioTabs = [
-    { id: "link", label: "Crevia Link", icon: Link2 },
-    { id: "chat", label: "Workspaces", icon: MessageSquare },
-    { id: "settings", label: "Settings", icon: Settings },
+    { id: "link",      label: "Crevia Link", icon: Link2 },
+    { id: "chat",      label: "Workspace",   icon: MessageSquare },
+    { id: "invoices",  label: "Invoice",     icon: Receipt },
+    { id: "contracts", label: "Contracts",   icon: FileSignature },
+    { id: "settings",  label: "Settings",    icon: Settings },
   ];
 
   const linkSections = [
-    { id: "profile", label: "Profile" },
-    { id: "buttons", label: "Buttons" },
+    { id: "profile",    label: "Profile" },
+    { id: "buttons",    label: "Buttons" },
     { id: "appearance", label: "Appearance" },
-    { id: "settings", label: "Settings" },
-    { id: "analytics", label: "Analytics" },
+    { id: "settings",   label: "Settings" },
+    { id: "analytics",  label: "Analytics" },
   ];
 
   const handleTabChange = (tabId: string) => {
@@ -71,15 +69,20 @@ const CreviaStudio = () => {
     );
   }
 
+  const isChatTab = activeTab === "chat";
+
   return (
     <div className={cn(
       "bg-background",
-      activeTab === "chat"
+      isChatTab
         ? "h-[calc(100vh-128px)] md:h-[calc(100vh-64px)] flex flex-col overflow-hidden"
         : "min-h-screen overflow-x-hidden"
     )}>
       {/* Studio Header */}
-      <div className={cn("border-b border-border bg-background z-30 flex-shrink-0", activeTab !== "chat" && "md:sticky md:top-0")}>
+      <div className={cn(
+        "border-b border-border bg-background z-30 flex-shrink-0",
+        !isChatTab && "md:sticky md:top-0"
+      )}>
         <div className="mx-auto w-full max-w-7xl px-4 py-3 md:px-6 md:py-4">
           <div className="flex items-center gap-3 mb-3 md:mb-4">
             <div className="p-1.5 md:p-2 rounded-xl bg-bronze/10">
@@ -94,14 +97,13 @@ const CreviaStudio = () => {
               </p>
             </div>
           </div>
-          
-          {/* Tabs */}
+
+          {/* Tabs — strict order enforced by studioTabs array */}
           <ScrollArea className="w-full">
             <div className="flex items-center gap-1 pb-1 -mb-px">
               {studioTabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
-                
                 return (
                   <button
                     key={tab.id}
@@ -122,6 +124,7 @@ const CreviaStudio = () => {
             <ScrollBar orientation="horizontal" className="h-1.5" />
           </ScrollArea>
 
+          {/* Link sub-sections (mobile only) */}
           {activeTab === "link" && (
             <div className="md:hidden mt-3 border-t border-border/40 pt-3">
               <ScrollArea className="w-full">
@@ -150,7 +153,7 @@ const CreviaStudio = () => {
       </div>
 
       {/* Tab Content */}
-      {activeTab === "chat" ? (
+      {isChatTab ? (
         <div className="flex-1 min-h-0 overflow-hidden">
           <StudioWorkspacesHub />
         </div>
@@ -164,10 +167,10 @@ const CreviaStudio = () => {
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
             >
-              {activeTab === "link" && <CreviaLink isEmbedded />}
-              {activeTab === "invoices" && <SmartInvoicesTab workspaceId={activeWorkspace} />}
+              {activeTab === "link"      && <CreviaLink isEmbedded />}
+              {activeTab === "invoices"  && <SmartInvoicesTab workspaceId={activeWorkspace} />}
               {activeTab === "contracts" && <ContractsTab workspaceId={activeWorkspace} />}
-              {activeTab === "settings" && <StudioSettingsTab />}
+              {activeTab === "settings"  && <StudioSettingsTab />}
             </motion.div>
           </AnimatePresence>
         </div>
