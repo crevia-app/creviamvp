@@ -15,6 +15,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <header className="fixed top-0 w-full bg-background/95 backdrop-blur-md z-50 border-b border-border/50 animate-fade-in">
@@ -74,35 +85,39 @@ const Header = () => {
                   About
                 </Link>
 
-                <div className="flex flex-col gap-3 pt-4 border-t border-border">
-                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-                    <Button variant="outline" className="w-full font-poppins font-semibold">
-                      Log In
-                    </Button>
-                  </Link>
-                  <Link to="/auth?mode=signup" onClick={() => setMobileMenuOpen(false)}>
-                    <Button className="w-full bg-bronze hover:bg-bronze-dark font-poppins font-semibold">
-                      Get Started
-                    </Button>
-                  </Link>
-                </div>
+                {!isLoggedIn && (
+                  <div className="flex flex-col gap-3 pt-4 border-t border-border">
+                    <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full font-poppins font-semibold">
+                        Log In
+                      </Button>
+                    </Link>
+                    <Link to="/auth?mode=signup" onClick={() => setMobileMenuOpen(false)}>
+                      <Button className="w-full bg-bronze hover:bg-bronze-dark font-poppins font-semibold">
+                        Get Started
+                      </Button>
+                    </Link>
+                  </div>
+                )}
               </nav>
             </SheetContent>
           </Sheet>
 
           {/* Desktop User Actions (Unauthenticated Only) */}
-          <div className="hidden lg:flex items-center gap-2 xl:gap-3">
-            <Link to="/auth">
-              <Button variant="ghost" size="sm" className="font-poppins font-semibold transition-all duration-300 hover-scale text-sm">
-                Log In
-              </Button>
-            </Link>
-            <Link to="/auth?mode=signup">
-              <Button size="sm" className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold transition-all duration-300 hover-lift hover-glow text-sm">
-                Get Started
-              </Button>
-            </Link>
-          </div>
+          {!isLoggedIn && (
+            <div className="hidden lg:flex items-center gap-2 xl:gap-3">
+              <Link to="/auth">
+                <Button variant="ghost" size="sm" className="font-poppins font-semibold transition-all duration-300 hover-scale text-sm">
+                  Log In
+                </Button>
+              </Link>
+              <Link to="/auth?mode=signup">
+                <Button size="sm" className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold transition-all duration-300 hover-lift hover-glow text-sm">
+                  Get Started
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </nav>
     </header>
