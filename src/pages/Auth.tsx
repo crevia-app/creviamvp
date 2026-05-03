@@ -75,8 +75,8 @@ const Auth = () => {
         } else {
           navigate("/kira", { replace: true });
         }
-      } else if (isProcessingOAuth) {
-        // Exchange failed or no session — fall back to showing the login form.
+      } else if (event !== 'INITIAL_SESSION' && isProcessingOAuth) {
+        // Exchange failed — fall back to showing the login form.
         setIsProcessingOAuth(false);
       }
     });

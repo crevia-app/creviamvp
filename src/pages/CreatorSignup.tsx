@@ -16,6 +16,7 @@ const CreatorSignup = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
 
@@ -88,31 +89,39 @@ const CreatorSignup = () => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      toast({ title: "Oops! 😅", description: "Passwords do not match", variant: "destructive" });
+      toast({ title: "Passwords don't match", description: "Please re-enter your password.", variant: "destructive" });
       return;
     }
 
     if (!agreedToTerms) {
-      toast({ title: "One more thing! ☝️", description: "Please agree to the Terms and Conditions", variant: "destructive" });
+      toast({ title: "Agreement required", description: "Please agree to the Terms and Conditions.", variant: "destructive" });
       return;
     }
 
-    const { error } = await supabase.auth.signUp({
+    setIsLoading(true);
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
-        data: {
-          user_type: 'creator'
-        }
+        emailRedirectTo: `${window.location.origin}/auth`,
+        data: { user_type: 'creator' },
       },
     });
+    setIsLoading(false);
 
     if (error) {
-      toast({ title: "Oops! 😅", description: error.message, variant: "destructive" });
+      const msg = error.message.toLowerCase();
+      if (msg.includes("already registered") || msg.includes("already exists")) {
+        toast({ title: "Account already exists", description: "Try logging in instead.", variant: "destructive" });
+        navigate("/auth");
+      } else {
+        toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
+      }
+    } else if (data.session) {
+      navigate("/kira", { replace: true });
     } else {
-      toast({ title: "You're in! 🎉", description: "Welcome to Crevia!" });
-      navigate("/kira");
+      toast({ title: "Check your inbox", description: `We sent a confirmation link to ${email}. Click it to activate your account.` });
+      navigate("/auth");
     }
   };
 
@@ -239,12 +248,12 @@ const CreatorSignup = () => {
             </Label>
           </div>
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="w-full h-12 bg-bronze hover:bg-bronze-dark font-semibold"
-            disabled={!agreedToTerms}
+            disabled={!agreedToTerms || isLoading}
           >
-            Create Account
+            {isLoading ? "Creating account..." : "Create Account"}
           </Button>
         </form>
 
