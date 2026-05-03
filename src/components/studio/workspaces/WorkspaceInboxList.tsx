@@ -402,7 +402,7 @@ const WorkspaceInboxList = ({
                           "relative flex items-center rounded-xl transition-all duration-150 group",
                           isSelected
                             ? "bg-bronze/10 border border-bronze/20 shadow-sm"
-                            : "hover:bg-gray-50 dark:hover:bg-accent/50 border border-transparent"
+                            : "hover:bg-gray-50 dark:hover:bg-muted/50 border border-transparent"
                         )}
                       >
                         {/* Selectable area */}
@@ -487,7 +487,7 @@ const WorkspaceInboxList = ({
                 <button
                   onClick={openDmDialog}
                   title="New direct message"
-                  className="w-5 h-5 flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-accent transition-all duration-150"
+                  className="w-5 h-5 flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted transition-all duration-150"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
@@ -519,7 +519,7 @@ const WorkspaceInboxList = ({
                           "relative flex items-center rounded-xl transition-all duration-150 group border",
                           isSelected
                             ? "bg-accent border-border"
-                            : "hover:bg-gray-50 dark:hover:bg-accent/50 border-transparent"
+                            : "hover:bg-gray-50 dark:hover:bg-muted/50 border-transparent"
                         )}
                       >
                         <button
@@ -702,7 +702,7 @@ const WorkspaceInboxList = ({
                       key={user.id}
                       onClick={() => startDirectChat(user.id)}
                       disabled={!!startingDM}
-                      className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-accent transition-all duration-150 text-left disabled:opacity-60"
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted transition-all duration-150 text-left disabled:opacity-60"
                     >
                       <div className="w-9 h-9 rounded-full bg-bronze/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
                         {user.avatar_url ? (

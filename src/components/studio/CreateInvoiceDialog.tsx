@@ -18,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, Receipt } from "lucide-react";
+import { Plus, Trash2, Receipt, Building2, CheckCircle2, Settings } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 interface InvoiceItem {
@@ -29,6 +30,18 @@ interface InvoiceItem {
   total: number;
 }
 
+interface BusinessSettings {
+  business_name: string;
+  business_email: string;
+  business_phone: string;
+  business_address: string;
+  logo_url: string;
+  tax_id: string;
+  default_currency: string;
+  default_tax_rate: number;
+  default_payment_terms: string;
+}
+
 interface CreateInvoiceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -36,6 +49,7 @@ interface CreateInvoiceDialogProps {
   onSuccess: () => void;
   onCreated?: (id: string) => void;
   kiraContext?: Record<string, unknown> | null;
+  businessSettings?: BusinessSettings | null;
 }
 
 const currencies = [
@@ -74,8 +88,12 @@ const CreateInvoiceDialog = ({
   const [items, setItems] = useState<InvoiceItem[]>([
     { description: "", quantity: "", unit_price: "", total: 0 },
   ]);
+  const [loadedSettings, setLoadedSettings] = useState<BusinessSettings | null>(null);
+  const [settingsLoading, setSettingsLoading] = useState(false);
 
+  // Effect 1 — synchronous form reset the moment the dialog opens
   useEffect(() => {
+    if (!open) return;
     if (editingInvoice) {
       setInvoiceNumber(editingInvoice.invoice_number);
       setClientName(editingInvoice.client_name);
@@ -90,25 +108,90 @@ const CreateInvoiceDialog = ({
       setTerms(editingInvoice.terms || "");
       fetchItems(editingInvoice.id);
     } else {
+      // Immediate sync reset with defaults (settings will override below)
       generateInvoiceNumber();
-      resetForm();
-      // Prefill from Kira conversation context
+      setClientName(""); setClientEmail(""); setClientAddress("");
+      setIssueDate(new Date().toISOString().split("T")[0]);
+      setDueDate(""); setDiscountAmount(""); setNotes("");
+      setCurrency("KES");
+      setTaxRate("");
+      setTerms("Payment is due within 30 days of invoice date.");
+      setItems([{ description: "", quantity: "", unit_price: "", total: 0 }]);
+      setLoadedSettings(null);
+
+      // Kira context
       if (kiraContext) {
         if (kiraContext.client_name) setClientName(kiraContext.client_name as string);
         if (kiraContext.client_email) setClientEmail(kiraContext.client_email as string);
         if (kiraContext.currency) setCurrency(kiraContext.currency as string);
         if (kiraContext.notes) setNotes(kiraContext.notes as string);
         if (Array.isArray(kiraContext.items) && kiraContext.items.length > 0) {
-          setItems((kiraContext.items as Array<{description: string; quantity: number; unit_price: number}>).map(item => ({
-            description: item.description || "",
-            quantity: String(item.quantity || 1),
-            unit_price: String(item.unit_price || 0),
-            total: (item.quantity || 1) * (item.unit_price || 0),
-          })));
+          setItems(
+            (kiraContext.items as Array<{ description: string; quantity: number; unit_price: number }>).map(
+              (item) => ({
+                description: item.description || "",
+                quantity: String(item.quantity || 1),
+                unit_price: String(item.unit_price || 0),
+                total: (item.quantity || 1) * (item.unit_price || 0),
+              })
+            )
+          );
         }
       }
     }
-  }, [editingInvoice, kiraContext, open]);
+  }, [open, editingInvoice, kiraContext]);
+
+  // Effect 2 — async settings fetch, runs independently, overrides defaults when ready
+  useEffect(() => {
+    if (!open || editingInvoice) return;
+
+    let cancelled = false;
+    setSettingsLoading(true);
+
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (cancelled || !session) return;
+
+        const { data: bs } = await supabase
+          .from("business_settings")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (cancelled) return;
+
+        if (bs) {
+          setLoadedSettings(bs as BusinessSettings);
+          if (bs.default_currency)     setCurrency(bs.default_currency);
+          if (bs.default_tax_rate)     setTaxRate(String(bs.default_tax_rate));
+          if (bs.default_payment_terms) setTerms(bs.default_payment_terms);
+        } else {
+          // Fallback: show profile info in the FROM card
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("display_name, email, avatar_url")
+            .eq("id", session.user.id)
+            .single();
+          if (!cancelled && profile) {
+            setLoadedSettings({
+              business_name: profile.display_name || "",
+              business_email: profile.email || "",
+              business_phone: "", business_address: "",
+              logo_url: profile.avatar_url || "",
+              tax_id: "", default_currency: "KES",
+              default_tax_rate: 0,
+              default_payment_terms: "Payment is due within 30 days of invoice date.",
+            });
+          }
+        }
+      } finally {
+        if (!cancelled) setSettingsLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [open, editingInvoice]);
 
   const fetchItems = async (invoiceId: string) => {
     const { data } = await supabase
@@ -135,18 +218,84 @@ const CreateInvoiceDialog = ({
     setInvoiceNumber(`INV-${year}${month}-${random}`);
   };
 
-  const resetForm = () => {
+  const initNewInvoice = async () => {
+    generateInvoiceNumber();
+
+    // Fetch business_settings + profile fallback
+    let bs: BusinessSettings | null = null;
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (session) {
+      const { data, error } = await supabase
+        .from("business_settings")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .single();
+
+      if (data) {
+        bs = data as BusinessSettings;
+      } else {
+        // No saved business settings — fall back to profile data
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("display_name, email, avatar_url")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profile) {
+          bs = {
+            business_name: profile.display_name || "",
+            business_email: profile.email || "",
+            business_phone: "",
+            business_address: "",
+            logo_url: profile.avatar_url || "",
+            tax_id: "",
+            default_currency: "KES",
+            default_tax_rate: 0,
+            default_payment_terms: "Payment is due within 30 days of invoice date.",
+          };
+          toast.info("Using your profile info. Save your Studio Settings for full autofill.");
+        }
+      }
+    }
+
+    setLoadedSettings(bs);
+
+    const defaultCurrency = bs?.default_currency || "KES";
+    const defaultTaxRate  = bs?.default_tax_rate ? String(bs.default_tax_rate) : "";
+    const defaultTerms    = bs?.default_payment_terms || "Payment is due within 30 days of invoice date.";
+
     setClientName("");
     setClientEmail("");
     setClientAddress("");
     setIssueDate(new Date().toISOString().split("T")[0]);
     setDueDate("");
-    setCurrency("KES");
-    setTaxRate("");
+    setCurrency(defaultCurrency);
+    setTaxRate(defaultTaxRate);
     setDiscountAmount("");
     setNotes("");
-    setTerms("Payment is due within 30 days of invoice date.");
+    setTerms(defaultTerms);
     setItems([{ description: "", quantity: "", unit_price: "", total: 0 }]);
+
+    // Kira context layered on top of settings defaults
+    if (kiraContext) {
+      if (kiraContext.client_name) setClientName(kiraContext.client_name as string);
+      if (kiraContext.client_email) setClientEmail(kiraContext.client_email as string);
+      if (kiraContext.currency) setCurrency(kiraContext.currency as string);
+      if (kiraContext.notes) setNotes(kiraContext.notes as string);
+      if (Array.isArray(kiraContext.items) && kiraContext.items.length > 0) {
+        setItems(
+          (kiraContext.items as Array<{ description: string; quantity: number; unit_price: number }>).map(
+            (item) => ({
+              description: item.description || "",
+              quantity: String(item.quantity || 1),
+              unit_price: String(item.unit_price || 0),
+              total: (item.quantity || 1) * (item.unit_price || 0),
+            })
+          )
+        );
+      }
+    }
   };
 
   const updateItemTotal = (index: number, field: string, value: string) => {
@@ -344,6 +493,54 @@ const CreateInvoiceDialog = ({
                 className="mt-1"
               />
             </div>
+          </div>
+
+          {/* From — autofilled from Studio Settings */}
+          <div className="space-y-3 p-4 rounded-xl border border-border bg-muted/20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-bronze" />
+                <h3 className="font-semibold text-foreground text-sm">From (Your Business)</h3>
+              </div>
+              {loadedSettings?.business_name ? (
+                <span className="flex items-center gap-1 text-xs text-emerald-500 font-medium">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Auto-filled from Settings
+                </span>
+              ) : (
+                <Link
+                  to="/crevia-studio?tab=settings"
+                  onClick={() => onOpenChange(false)}
+                  className="flex items-center gap-1 text-xs text-bronze hover:underline font-medium"
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                  Complete your Studio Settings
+                </Link>
+              )}
+            </div>
+
+            {loadedSettings?.business_name ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="flex items-start gap-2.5">
+                  {loadedSettings.logo_url && (
+                    <img src={loadedSettings.logo_url} alt="logo" className="w-9 h-9 rounded-lg object-cover flex-shrink-0 border border-border" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm text-foreground truncate">{loadedSettings.business_name}</p>
+                    {loadedSettings.business_email && <p className="text-xs text-muted-foreground truncate">{loadedSettings.business_email}</p>}
+                    {loadedSettings.business_phone && <p className="text-xs text-muted-foreground">{loadedSettings.business_phone}</p>}
+                  </div>
+                </div>
+                <div className="text-xs text-muted-foreground space-y-0.5">
+                  {loadedSettings.business_address && <p className="whitespace-pre-line">{loadedSettings.business_address}</p>}
+                  {loadedSettings.tax_id && <p>Tax ID: {loadedSettings.tax_id}</p>}
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                No business info saved yet. Go to Studio → Settings to set up your business profile — it will auto-fill here on every invoice.
+              </p>
+            )}
           </div>
 
           {/* Client Details */}

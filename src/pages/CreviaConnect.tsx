@@ -96,7 +96,7 @@ const CreviaConnect = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              className="w-full sm:w-auto border-2 border-border text-foreground hover:bg-accent/50 font-medium px-8 md:px-10 py-5 md:py-6 text-base md:text-lg rounded-full transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full sm:w-auto border-2 border-border text-foreground hover:bg-muted/50 font-medium px-8 md:px-10 py-5 md:py-6 text-base md:text-lg rounded-full transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-[1.02] active:scale-[0.98]"
             >
               See How It Works
             </Button>

@@ -109,7 +109,7 @@ const NewConversationDialog = ({ currentUserId, currentUserType, onConversationC
                   <button
                     key={user.id}
                     onClick={() => startConversation(user)}
-                    className="w-full p-3 rounded-lg border hover:bg-accent transition-colors text-left"
+                    className="w-full p-3 rounded-lg border hover:bg-muted transition-colors text-left"
                   >
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-semibold">

@@ -1350,7 +1350,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                       className={`w-full text-left p-3 rounded-xl cursor-pointer transition-all ${
                         selectedRoom?.id === room.id
                           ? "bg-bronze/10 border border-bronze/20"
-                          : "hover:bg-accent/50"
+                          : "hover:bg-muted/50"
                       }`}
                       onClick={() => selectRoom(room)}
                     >
@@ -1537,7 +1537,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                       <button
                         key={msg.id}
                         onClick={() => scrollToMessage(msg.id)}
-                        className="w-full text-left px-2 py-1.5 hover:bg-accent/50 rounded text-xs flex items-center gap-2"
+                        className="w-full text-left px-2 py-1.5 hover:bg-muted/50 rounded text-xs flex items-center gap-2"
                       >
                         <span className="text-muted-foreground text-[10px] whitespace-nowrap">{format(new Date(msg.created_at), "MMM d, h:mm a")}</span>
                         <span className="truncate">{msg.content}</span>
@@ -2192,7 +2192,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                     <button
                       key={user.id}
                       onClick={() => startDirectChat(user.id)}
-                      className="w-full p-3 rounded-xl hover:bg-accent transition-colors text-left"
+                      className="w-full p-3 rounded-xl hover:bg-muted transition-colors text-left"
                     >
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-bronze/10 flex items-center justify-center text-sm font-semibold overflow-hidden">
@@ -2288,7 +2288,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                         }
                       }}
                       className={`w-full p-3 rounded-xl transition-colors text-left ${
-                        isSelected ? "bg-bronze/10 border border-bronze/20" : "hover:bg-accent"
+                        isSelected ? "bg-bronze/10 border border-bronze/20" : "hover:bg-muted"
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -2343,7 +2343,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                   <button
                     key={inv.id}
                     onClick={() => sendInvoiceAttachment(inv)}
-                    className="w-full p-4 rounded-xl border hover:border-bronze/30 hover:bg-accent/50 transition-all text-left"
+                    className="w-full p-4 rounded-xl border hover:border-bronze/30 hover:bg-muted/50 transition-all text-left"
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -2385,7 +2385,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                   <button
                     key={c.id}
                     onClick={() => sendContractAttachment(c)}
-                    className="w-full p-4 rounded-xl border hover:border-bronze/30 hover:bg-accent/50 transition-all text-left"
+                    className="w-full p-4 rounded-xl border hover:border-bronze/30 hover:bg-muted/50 transition-all text-left"
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -2493,7 +2493,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                     <button
                       key={room.id}
                       onClick={() => forwardMessageToRoom(room.id)}
-                      className="w-full p-3 rounded-xl hover:bg-accent transition-colors text-left"
+                      className="w-full p-3 rounded-xl hover:bg-muted transition-colors text-left"
                     >
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-bronze/10 flex items-center justify-center text-sm font-semibold overflow-hidden">

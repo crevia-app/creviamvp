@@ -709,7 +709,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                             <RadioGroupItem value={theme.value} id={`embedded-${theme.value}`} className="peer sr-only" />
                             <Label
                               htmlFor={`embedded-${theme.value}`}
-                               className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-card p-4 hover:bg-accent peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
+                               className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-card p-4 hover:bg-muted peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
                             >
                               <div 
                                 className={cn("w-full h-16 rounded-lg mb-3 shadow-sm", 
@@ -1233,7 +1233,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                           <RadioGroupItem value={theme.value} id={theme.value} className="peer sr-only" />
                           <Label
                             htmlFor={theme.value}
-                            className="flex flex-col items-center justify-between rounded-lg md:rounded-xl border-2 border-muted bg-card p-3 sm:p-4 md:p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
+                            className="flex flex-col items-center justify-between rounded-lg md:rounded-xl border-2 border-muted bg-card p-3 sm:p-4 md:p-6 hover:bg-muted hover:text-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
                           >
                             <div 
                               className={cn("w-full h-16 sm:h-20 md:h-28 rounded-md md:rounded-lg mb-2 sm:mb-3 md:mb-4 shadow-sm", 
@@ -1357,7 +1357,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                           <RadioGroupItem value={style.value} id={`standalone-btn-${style.value}`} className="peer sr-only" />
                           <Label
                             htmlFor={`standalone-btn-${style.value}`}
-                            className="flex flex-col items-center justify-center rounded-lg md:rounded-xl border-2 border-muted p-3 sm:p-4 md:p-6 hover:bg-accent peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
+                            className="flex flex-col items-center justify-center rounded-lg md:rounded-xl border-2 border-muted p-3 sm:p-4 md:p-6 hover:bg-muted peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
                           >
                             <div className={cn(
                               "w-full h-10 sm:h-12 md:h-16 mb-2 sm:mb-2.5 md:mb-3 shadow-sm",

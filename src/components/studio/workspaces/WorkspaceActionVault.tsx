@@ -450,7 +450,7 @@ const WorkspaceActionVault = ({
                       key={user.id}
                       onClick={() => handleAddMember(user.id)}
                       disabled={!!addingMember}
-                      className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-accent transition-all duration-150 text-left disabled:opacity-60"
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted transition-all duration-150 text-left disabled:opacity-60"
                     >
                       <div className="w-9 h-9 rounded-full bg-bronze/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
                         {user.avatar_url

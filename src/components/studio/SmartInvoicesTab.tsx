@@ -70,6 +70,17 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
   const [receiptInvoice, setReceiptInvoice] = useState<Invoice | null>(null);
+  const [businessSettings, setBusinessSettings] = useState<{
+    business_name: string;
+    business_email: string;
+    business_phone: string;
+    business_address: string;
+    logo_url: string;
+    tax_id: string;
+    default_currency: string;
+    default_tax_rate: number;
+    default_payment_terms: string;
+  } | null>(null);
 
   const fetchInvoices = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -117,7 +128,19 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
 
   useEffect(() => {
     fetchInvoices();
+    fetchBusinessSettings();
   }, [workspaceId]);
+
+  const fetchBusinessSettings = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    const { data } = await supabase
+      .from("business_settings")
+      .select("business_name, business_email, business_phone, business_address, logo_url, tax_id, default_currency, default_tax_rate, default_payment_terms")
+      .eq("user_id", session.user.id)
+      .single();
+    if (data) setBusinessSettings(data as any);
+  };
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("invoices").delete().eq("id", id);
@@ -563,6 +586,7 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
         }}
         editingInvoice={editingInvoice}
         onSuccess={fetchInvoices}
+        businessSettings={businessSettings}
       />
 
       <InvoicePreviewDialog

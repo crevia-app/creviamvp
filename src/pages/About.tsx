@@ -17,21 +17,23 @@ import ScrollReveal from "@/components/ui/ScrollReveal";
 
 const galleryImages = [gallery1, gallery2, gallery3, gallery4];
 
-const About = () => {
+const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [eventsTab, setEventsTab] = useState<"previous" | "upcoming">("upcoming");
 
   useEffect(() => {
-    const check = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setIsLoggedIn(!!session);
-    };
-    check();
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setIsLoggedIn(!!session);
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      {!isEmbedded && <Header />}
 
       {/* ═══════════════ HERO ═══════════════ */}
       <section className="relative pt-28 md:pt-36 pb-16 md:pb-20 px-4 md:px-6 overflow-hidden">
@@ -293,11 +295,13 @@ const About = () => {
           </ScrollReveal>
           <ScrollReveal delay={0.15} variant="scale">
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/auth">
-                <Button size="lg" className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold px-10 py-7 text-lg shadow-lg hover-scale">
-                  Start Your Story <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
+              {!isLoggedIn && (
+                <Link to="/auth">
+                  <Button size="lg" className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold px-10 py-7 text-lg shadow-lg hover-scale">
+                    Start Your Story <ArrowRight className="ml-2 w-5 h-5" />
+                  </Button>
+                </Link>
+              )}
               <Link to="/pricing">
                 <Button size="lg" variant="outline" className="font-poppins font-semibold px-10 py-7 text-lg border-2 border-bronze/30 hover:border-bronze hover:bg-bronze/10">
                   See Pricing
@@ -308,7 +312,7 @@ const About = () => {
         </div>
       </section>
 
-      <Footer />
+      {!isEmbedded && <Footer />}
     </div>
   );
 };

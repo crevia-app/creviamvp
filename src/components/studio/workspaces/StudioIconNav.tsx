@@ -31,7 +31,7 @@ const StudioIconNav = ({ activeTab, onNavigate }: StudioIconNavProps) => {
                   "w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-200 ease-out",
                   activeTab === id
                     ? "bg-bronze/15 text-bronze shadow-sm"
-                    : "text-muted-foreground/70 hover:bg-accent hover:text-foreground"
+                    : "text-muted-foreground/70 hover:bg-muted hover:text-foreground"
                 )}
               >
                 <Icon className="w-[17px] h-[17px]" />
