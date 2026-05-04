@@ -123,16 +123,22 @@ serve(async (req) => {
 
     const sanitizedPrompt = sanitizePrompt(prompt);
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('kira_tokens_used_today, kira_tokens_limit_daily')
-      .eq('id', user.id)
-      .single();
+    // Atomic server-side gate — checks limit and increments in one locked transaction.
+    // Returns false if the user has hit their daily cap. Cannot be bypassed from the client.
+    const { data: allowed, error: gateError } = await supabase
+      .rpc('consume_kira_action', { p_user_id: user.id });
 
-    if (profile && profile.kira_tokens_used_today >= profile.kira_tokens_limit_daily) {
+    if (gateError) {
+      console.error('Feature gate error:', gateError.message);
+      return new Response(JSON.stringify({ error: 'Something went wrong. Please try again.' }), {
+        status: 500, headers: cors
+      });
+    }
+
+    if (!allowed) {
       return new Response(JSON.stringify({
-        reply: "You have reached your daily Kira limit. Upgrade to Pro for 40 actions per day."
-      }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
+        error: 'Daily Kira limit reached. Upgrade to Pro for 40 actions per day.'
+      }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -156,17 +162,11 @@ serve(async (req) => {
     }
 
     const aiData = await response.json();
-    const tokensUsed = aiData.usage?.total_tokens || 0;
     const assistantContent = aiData.choices?.[0]?.message?.content;
 
     if (!assistantContent) {
       throw new Error('No response from AI');
     }
-
-    await supabase.rpc('increment_kira_tokens', {
-      user_id: user.id,
-      tokens_to_add: tokensUsed
-    });
 
     return new Response(JSON.stringify({ reply: assistantContent }), {
       headers: { ...cors, 'Content-Type': 'application/json' },
