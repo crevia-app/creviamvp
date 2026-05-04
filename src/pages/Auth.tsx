@@ -35,6 +35,7 @@ const Auth = () => {
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const [emailConfirmPending, setEmailConfirmPending] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
+  const [isResendingConfirm, setIsResendingConfirm] = useState(false);
   // True when we landed here from a Google OAuth redirect — hide the form while Supabase exchanges the code.
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(hasOAuthCallback);
 
@@ -83,6 +84,21 @@ const Auth = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const handleResendConfirmation = async () => {
+    setIsResendingConfirm(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: pendingEmail,
+      options: { emailRedirectTo: `${window.location.origin}/auth` },
+    });
+    setIsResendingConfirm(false);
+    if (error) {
+      toast({ title: "Couldn't resend", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Email resent", description: "A new confirmation link has been sent to your inbox." });
+    }
+  };
 
   const handleGoogleSignIn = async () => {
     if (isSignup && !termsAccepted) {
@@ -302,11 +318,11 @@ const Auth = () => {
             Kindly click the link in the email to confirm your account and get access to Kira. Check your spam folder if you don't see it.
           </p>
           <Button
-            variant="outline"
-            className="w-full h-12"
-            onClick={() => { setEmailConfirmPending(false); setIsSignup(false); }}
+            className="w-full h-12 bg-bronze hover:bg-bronze-dark font-semibold"
+            onClick={handleResendConfirmation}
+            disabled={isResendingConfirm}
           >
-            Back to sign in
+            {isResendingConfirm ? "Sending..." : "Resend confirmation link"}
           </Button>
         </Card>
       </div>
