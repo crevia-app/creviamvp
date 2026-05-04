@@ -40,6 +40,10 @@ interface BusinessSettings {
   default_currency: string;
   default_tax_rate: number;
   default_payment_terms: string;
+  bank_name?: string;
+  bank_account_name?: string;
+  bank_account_number?: string;
+  mpesa_till_number?: string;
 }
 
 interface CreateInvoiceDialogProps {
@@ -175,7 +179,7 @@ const CreateInvoiceDialog = ({
             .single();
           if (!cancelled && profile) {
             setLoadedSettings({
-              business_name: profile.display_name || "",
+              business_name: profile.display_name || profile.email || "",
               business_email: profile.email || "",
               business_phone: "", business_address: "",
               logo_url: profile.avatar_url || "",
@@ -502,7 +506,7 @@ const CreateInvoiceDialog = ({
                 <Building2 className="h-4 w-4 text-bronze" />
                 <h3 className="font-semibold text-foreground text-sm">From (Your Business)</h3>
               </div>
-              {loadedSettings?.business_name ? (
+              {(loadedSettings?.business_name || loadedSettings?.business_email) ? (
                 <span className="flex items-center gap-1 text-xs text-emerald-500 font-medium">
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   Auto-filled from Settings
@@ -519,22 +523,34 @@ const CreateInvoiceDialog = ({
               )}
             </div>
 
-            {loadedSettings?.business_name ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="flex items-start gap-2.5">
-                  {loadedSettings.logo_url && (
-                    <img src={loadedSettings.logo_url} alt="logo" className="w-9 h-9 rounded-lg object-cover flex-shrink-0 border border-border" />
-                  )}
-                  <div className="min-w-0">
-                    <p className="font-semibold text-sm text-foreground truncate">{loadedSettings.business_name}</p>
-                    {loadedSettings.business_email && <p className="text-xs text-muted-foreground truncate">{loadedSettings.business_email}</p>}
-                    {loadedSettings.business_phone && <p className="text-xs text-muted-foreground">{loadedSettings.business_phone}</p>}
+            {(loadedSettings?.business_name || loadedSettings?.business_email) ? (
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="flex items-start gap-2.5">
+                    {loadedSettings.logo_url && (
+                      <img src={loadedSettings.logo_url} alt="logo" className="w-9 h-9 rounded-lg object-cover flex-shrink-0 border border-border" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm text-foreground truncate">{loadedSettings.business_name}</p>
+                      {loadedSettings.business_email && <p className="text-xs text-muted-foreground truncate">{loadedSettings.business_email}</p>}
+                      {loadedSettings.business_phone && <p className="text-xs text-muted-foreground">{loadedSettings.business_phone}</p>}
+                    </div>
+                  </div>
+                  <div className="text-xs text-muted-foreground space-y-0.5">
+                    {loadedSettings.business_address && <p className="whitespace-pre-line">{loadedSettings.business_address}</p>}
+                    {loadedSettings.tax_id && <p>Tax ID: {loadedSettings.tax_id}</p>}
                   </div>
                 </div>
-                <div className="text-xs text-muted-foreground space-y-0.5">
-                  {loadedSettings.business_address && <p className="whitespace-pre-line">{loadedSettings.business_address}</p>}
-                  {loadedSettings.tax_id && <p>Tax ID: {loadedSettings.tax_id}</p>}
-                </div>
+                {(loadedSettings.bank_name || loadedSettings.mpesa_till_number) && (
+                  <div className="pt-1.5 border-t border-border/50 text-xs text-muted-foreground flex flex-wrap gap-x-4 gap-y-0.5">
+                    {loadedSettings.bank_name && (
+                      <span>{loadedSettings.bank_name}{loadedSettings.bank_account_number ? ` · ${loadedSettings.bank_account_number}` : ""}</span>
+                    )}
+                    {loadedSettings.mpesa_till_number && (
+                      <span>M-Pesa: {loadedSettings.mpesa_till_number}</span>
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               <p className="text-xs text-muted-foreground">

@@ -91,7 +91,8 @@ const StudioSettingsTab = () => {
         mpesa_till_number: data.mpesa_till_number || "",
       });
     } else {
-      // Pre-fill from profile
+      // Pre-fill from profile and auto-create the record so the invoice dialog
+      // can find it without the user needing to manually click Save.
       const { data: profile } = await supabase
         .from("profiles")
         .select("*")
@@ -99,12 +100,22 @@ const StudioSettingsTab = () => {
         .single();
 
       if (profile) {
-        setSettings((prev) => ({
-          ...prev,
+        const defaults = {
+          user_id: session.user.id,
           business_name: profile.display_name || "",
           business_email: profile.email || "",
           logo_url: profile.avatar_url || "",
-        }));
+          default_currency: "KES",
+          default_tax_rate: 0,
+          default_payment_terms: "Payment is due within 30 days of invoice date.",
+        };
+        setSettings((prev) => ({ ...prev, business_name: defaults.business_name, business_email: defaults.business_email, logo_url: defaults.logo_url }));
+        const { data: inserted } = await supabase
+          .from("business_settings")
+          .insert(defaults)
+          .select()
+          .single();
+        if (inserted) setSettingsId(inserted.id);
       }
     }
 
