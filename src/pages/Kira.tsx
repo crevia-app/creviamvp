@@ -292,11 +292,11 @@ const Kira = () => {
     // ── CHECK KIRA DAILY LIMIT ──
     const { data: profile } = await supabase
       .from('profiles')
-      .select('kira_actions_today, kira_actions_limit')
+      .select('kira_actions_used, kira_actions_limit')
       .eq('id', userId)
       .single();
 
-const actionsToday = profile?.kira_actions_today || 0;
+const actionsToday = profile?.kira_actions_used || 0;
 const actionsLimit = profile?.kira_actions_limit || 10;
 
 if (actionsToday >= actionsLimit) {
