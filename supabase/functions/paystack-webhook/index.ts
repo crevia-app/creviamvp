@@ -124,12 +124,21 @@ serve(async (req) => {
         .eq('email', customer.email);
     }
 
-    // ✅ Payment failed — cut off premium access automatically
+    // ✅ Payment failed — cut off premium access and reset Kira limit to free tier
     if (event.event === 'invoice.payment_failed') {
       const { customer } = event.data;
       await supabase
         .from('profiles')
-        .update({ subscription_status: 'expired' })
+        .update({ subscription_status: 'expired', kira_actions_limit: 10 })
+        .eq('email', customer.email);
+    }
+
+    // ✅ Subscription cancelled by user — same downgrade treatment
+    if (event.event === 'subscription.disable') {
+      const { customer } = event.data;
+      await supabase
+        .from('profiles')
+        .update({ subscription_status: 'cancelled', kira_actions_limit: 10 })
         .eq('email', customer.email);
     }
     //we always tell paystack that the webhook has been received if not paystack will keep retrying the webhook
