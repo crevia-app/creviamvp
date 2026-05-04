@@ -292,14 +292,14 @@ const Auth = () => {
         <Card className="w-full max-w-md p-6 md:p-8 mx-4 animate-fade-in text-center">
           <div className="mb-6">
             <img src="/crevia-logo.png" alt="Crevia Logo" className="w-10 h-10 mx-auto mb-4" />
-            <h1 className="font-vollkorn text-2xl font-bold mb-2">Check your inbox</h1>
+            <h1 className="font-vollkorn text-2xl font-bold mb-2">Confirm your email</h1>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              We sent a confirmation link to<br />
+              An email was sent to<br />
               <span className="font-semibold text-foreground">{pendingEmail}</span>
             </p>
           </div>
           <p className="text-sm text-muted-foreground mb-6">
-            Click the link in your email to activate your account and access Kira. Check your spam folder if you don't see it.
+            Kindly click the link in the email to confirm your account and get access to Kira. Check your spam folder if you don't see it.
           </p>
           <Button
             variant="outline"
