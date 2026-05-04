@@ -13,29 +13,32 @@ interface ScrollRevealProps {
   once?: boolean;
 }
 
+// Luxury easing: heavy start, smooth deceleration — Apple / Stripe tier
+const LUXURY_EASE = [0.16, 1, 0.3, 1] as const;
+
 const variants: Record<AnimationVariant, { hidden: any; visible: any }> = {
   "fade-up": {
-    hidden: { opacity: 0, y: 32, filter: "blur(4px)" },
+    hidden: { opacity: 0, y: 24, filter: "blur(3px)" },
     visible: { opacity: 1, y: 0, filter: "blur(0px)" },
   },
   "fade-down": {
-    hidden: { opacity: 0, y: -24 },
+    hidden: { opacity: 0, y: -20 },
     visible: { opacity: 1, y: 0 },
   },
   "fade-left": {
-    hidden: { opacity: 0, x: -32 },
+    hidden: { opacity: 0, x: -28 },
     visible: { opacity: 1, x: 0 },
   },
   "fade-right": {
-    hidden: { opacity: 0, x: 32 },
+    hidden: { opacity: 0, x: 28 },
     visible: { opacity: 1, x: 0 },
   },
   scale: {
-    hidden: { opacity: 0, scale: 0.92 },
+    hidden: { opacity: 0, scale: 0.94 },
     visible: { opacity: 1, scale: 1 },
   },
   blur: {
-    hidden: { opacity: 0, filter: "blur(12px)" },
+    hidden: { opacity: 0, filter: "blur(10px)" },
     visible: { opacity: 1, filter: "blur(0px)" },
   },
 };
@@ -44,7 +47,7 @@ const ScrollReveal = ({
   children,
   variant = "fade-up",
   delay = 0,
-  duration = 0.7,
+  duration = 0.65,
   className = "",
   once = true,
 }: ScrollRevealProps) => {
@@ -59,7 +62,7 @@ const ScrollReveal = ({
       transition={{
         duration,
         delay,
-        ease: [0.25, 0.46, 0.45, 0.94], // Apple easeOut
+        ease: LUXURY_EASE,
       }}
       className={className}
     >

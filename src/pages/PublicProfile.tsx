@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Instagram, Linkedin, Youtube, Mail, Globe, CheckCircle2, Sparkles } from "lucide-react";
+import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 
 const PublicProfile = () => {
   const { username } = useParams();
@@ -242,6 +243,10 @@ const PublicProfile = () => {
             </h1>
             {profile?.show_verified_badge && profile?.profiles?.is_verified && (
               <CheckCircle2 className="w-6 h-6 text-[#CF8150]" />
+            )}
+            {["creative_pro", "brand_workspace"].includes(profile?.profiles?.subscription_plan) &&
+              ["active", "trialing"].includes(profile?.profiles?.subscription_status) && (
+              <VerifiedBadge size="lg" />
             )}
           </div>
 

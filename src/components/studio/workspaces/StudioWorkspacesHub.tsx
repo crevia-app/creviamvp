@@ -39,7 +39,7 @@ interface WorkspaceMember {
   } | null;
 }
 
-const StudioWorkspacesHub = () => {
+const StudioWorkspacesHub = ({ initialRoomId }: { initialRoomId?: string } = {}) => {
   const [userId, setUserId] = useState("");
   const [selectedRoom, setSelectedRoom] = useState<SelectedRoom | null>(null);
   const [showMobileChat, setShowMobileChat] = useState(false);
@@ -62,6 +62,25 @@ const StudioWorkspacesHub = () => {
       if (user) setUserId(user.id);
     });
   }, []);
+
+  // Auto-select a room when navigated from a notification
+  useEffect(() => {
+    if (!initialRoomId || !userId) return;
+    supabase
+      .from("chat_rooms")
+      .select("id, name, is_group")
+      .eq("id", initialRoomId)
+      .single()
+      .then(({ data: room }) => {
+        if (room) {
+          handleSelectRoom(
+            { id: room.id, name: room.name },
+            room.is_group ? "workspace" : "dm"
+          );
+        }
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialRoomId, userId]);
 
   const handleSelectRoom = async (
     room: { id: string; name: string | null },

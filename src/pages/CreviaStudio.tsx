@@ -20,6 +20,7 @@ const CreviaStudio = () => {
   const activeTab = searchParams.get("tab") || "link";
   const activeLinkSection = searchParams.get("section") || "profile";
   const activeWorkspace = searchParams.get("workspace") || undefined;
+  const activeRoomId = searchParams.get("roomId") || undefined;
 
   useEffect(() => {
     const checkUser = async () => {
@@ -155,7 +156,7 @@ const CreviaStudio = () => {
       {/* Tab Content */}
       {isChatTab ? (
         <div className="flex-1 min-h-0 overflow-hidden">
-          <StudioWorkspacesHub />
+          <StudioWorkspacesHub initialRoomId={activeRoomId} />
         </div>
       ) : (
         <div className="flex-1 min-w-0 overflow-x-hidden">

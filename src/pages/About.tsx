@@ -32,7 +32,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       {!isEmbedded && <Header />}
 
       {/* ═══════════════ HERO ═══════════════ */}

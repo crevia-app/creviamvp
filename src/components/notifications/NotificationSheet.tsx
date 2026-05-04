@@ -51,8 +51,12 @@ export default function NotificationSheet({
   const handleClick = (n: AppNotification) => {
     if (!n.read) onMarkRead(n.id);
     const cfg = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.system;
-    if (cfg.nav) {
-      navigate(cfg.nav);
+    let nav = cfg.nav;
+    if (n.type === "message" && n.data?.room_id) {
+      nav = `/crevia-studio?tab=chat&roomId=${n.data.room_id}`;
+    }
+    if (nav) {
+      navigate(nav);
       onOpenChange(false);
     }
   };
@@ -117,7 +121,9 @@ export default function NotificationSheet({
                         )}
                       </div>
                       {n.body && (
-                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                          {n.body === "🔒 Encrypted message" ? "Tap to open conversation" : n.body}
+                        </p>
                       )}
                       <p className="text-[10px] text-muted-foreground/60 mt-1">{timeAgo(n.created_at)}</p>
                     </div>

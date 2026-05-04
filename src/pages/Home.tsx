@@ -17,12 +17,12 @@ const Home = () => {
     }
   };
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <Header />
 
       {/* ═══════════════ HERO ═══════════════ */}
       <section className="relative pt-28 md:pt-40 pb-20 md:pb-32 px-4 md:px-6 min-h-[90vh] flex items-center overflow-hidden">
-        <HeroPattern />
+        <HeroPattern spotlight />
         <div className="container mx-auto max-w-5xl relative z-10">
           <div className="max-w-3xl space-y-6 md:space-y-8">
             <ScrollReveal delay={0}>

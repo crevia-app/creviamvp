@@ -14,10 +14,13 @@ import {
   Bell,
   Settings,
   LogOut,
-  Crown
+  Crown,
+  Sparkles,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useSubscription } from "@/hooks/use-subscription";
+import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 
 interface ProfileDrawerProps {
   isOpen: boolean;
@@ -29,6 +32,7 @@ interface ProfileDrawerProps {
 const ProfileDrawer = ({ isOpen, onClose, profile, userType }: ProfileDrawerProps) => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const subscription = useSubscription();
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -56,9 +60,14 @@ const ProfileDrawer = ({ isOpen, onClose, profile, userType }: ProfileDrawerProp
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="font-poppins text-sm font-semibold text-white truncate">
-              {profile?.display_name || "User"}
-            </p>
+            <div className="flex items-center gap-1.5">
+              <p className="font-poppins text-sm font-semibold text-white truncate">
+                {profile?.display_name || "User"}
+              </p>
+              {subscription.limits.hasVerifiedBadge && (
+                <VerifiedBadge size="sm" />
+              )}
+            </div>
             <p className="text-xs text-white/50 truncate">{profile?.email}</p>
             <Badge
               variant="outline"
@@ -69,19 +78,31 @@ const ProfileDrawer = ({ isOpen, onClose, profile, userType }: ProfileDrawerProp
               }
             >
               {userType === "creator" ? "Creator" : "Brand"}
+              {!subscription.isFree && " · Pro"}
             </Badge>
           </div>
         </div>
 
-        {/* Upgrade to Pro */}
-        <Link
-          to="/pricing"
-          onClick={onClose}
-          className="flex items-center gap-3 px-4 py-3 mb-2 rounded-lg bg-gradient-to-r from-bronze to-bronze-dark text-white hover:opacity-90 transition-all"
-        >
-          <Crown className="h-5 w-5" />
-          <span className="font-poppins text-sm font-semibold">Upgrade to Pro</span>
-        </Link>
+        {/* Upgrade / Manage subscription */}
+        {subscription.isFree ? (
+          <Link
+            to="/pricing"
+            onClick={onClose}
+            className="flex items-center gap-3 px-4 py-3 mb-2 rounded-lg bg-gradient-to-r from-bronze to-bronze-dark text-white hover:opacity-90 transition-all"
+          >
+            <Crown className="h-5 w-5" />
+            <span className="font-poppins text-sm font-semibold">Upgrade to Pro</span>
+          </Link>
+        ) : (
+          <Link
+            to="/profile/payments-billing"
+            onClick={onClose}
+            className="flex items-center gap-3 px-4 py-3 mb-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500/20 transition-all"
+          >
+            <Sparkles className="h-5 w-5" />
+            <span className="font-poppins text-sm font-semibold">Manage Subscription</span>
+          </Link>
+        )}
 
         <Separator className="bg-white/10 mb-4" />
 
