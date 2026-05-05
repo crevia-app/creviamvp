@@ -329,7 +329,6 @@ All colors MUST be HSL.
       filter: blur(0);
     }
   }
-  }
 
   /* ============ Premium Card Hover ============ */
   .card-hover {
@@ -353,22 +352,6 @@ All colors MUST be HSL.
                 0 8px 24px -8px hsl(var(--foreground) / 0.1);
     transform: translateY(-2px);
   }
-}
-
-/* ============ Accessibility: respect reduced motion ============ */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-
-  .animate-scroll-left {
-    animation: none;
-  }
-}
 
   /* ============ Stagger Children ============ */
   .stagger-children > * {
@@ -386,6 +369,22 @@ All colors MUST be HSL.
     from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
+}
+
+/* ============ Accessibility: respect reduced motion ============ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .animate-scroll-left {
+    animation: none;
+  }
+}
 
 
 @layer utilities {
