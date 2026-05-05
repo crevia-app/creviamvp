@@ -823,6 +823,12 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
 
       await supabase.from("chat_messages").insert(messageData);
 
+      // Patch the notification body the trigger just created with the real plaintext preview.
+      supabase.rpc("update_message_notification_preview", {
+        p_room_id: selectedRoom.id,
+        p_preview: plainContent.slice(0, 120),
+      });
+
       await supabase
         .from("chat_rooms")
         .update({ updated_at: new Date().toISOString() })

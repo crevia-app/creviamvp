@@ -178,7 +178,7 @@ const Pricing = () => {
             <div className="inline-flex items-center p-1 bg-secondary rounded-full mb-6">
               <button
                 onClick={() => setSelectedType("creative")}
-                className={`px-6 md:px-8 py-2.5 rounded-full font-poppins font-semibold text-sm transition-all duration-300 ${
+                className={`px-4 sm:px-6 md:px-8 py-2.5 rounded-full font-poppins font-semibold text-xs sm:text-sm transition-all duration-300 ${
                   selectedType === "creative"
                     ? "bg-bronze text-white shadow-md"
                     : "text-muted-foreground hover:text-foreground"
@@ -188,7 +188,7 @@ const Pricing = () => {
               </button>
               <button
                 onClick={() => setSelectedType("brand")}
-                className={`px-6 md:px-8 py-2.5 rounded-full font-poppins font-semibold text-sm transition-all duration-300 ${
+                className={`px-4 sm:px-6 md:px-8 py-2.5 rounded-full font-poppins font-semibold text-xs sm:text-sm transition-all duration-300 ${
                   selectedType === "brand"
                     ? "bg-bronze text-white shadow-md"
                     : "text-muted-foreground hover:text-foreground"
@@ -203,7 +203,7 @@ const Pricing = () => {
               <div className="inline-flex items-center p-1 bg-secondary rounded-full">
                 <button
                   onClick={() => setBillingCycle("monthly")}
-                  className={`px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-xs transition-all duration-300 ${
+                  className={`px-3 sm:px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-[11px] sm:text-xs transition-all duration-300 ${
                     billingCycle === "monthly"
                       ? "bg-foreground text-background shadow-md"
                       : "text-muted-foreground hover:text-foreground"
@@ -213,7 +213,7 @@ const Pricing = () => {
                 </button>
                 <button
                   onClick={() => setBillingCycle("yearly")}
-                  className={`px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-xs transition-all duration-300 ${
+                  className={`px-3 sm:px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-[11px] sm:text-xs transition-all duration-300 ${
                     billingCycle === "yearly"
                       ? "bg-foreground text-background shadow-md"
                       : "text-muted-foreground hover:text-foreground"
@@ -242,7 +242,7 @@ const Pricing = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8"
+              className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6 lg:gap-8"
             >
               {plans.map((plan, i) => (
                 <motion.div
@@ -250,7 +250,7 @@ const Pricing = () => {
                   initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.1 * i, ease: [0.25, 0.46, 0.45, 0.94] }}
-                  className={`rounded-2xl p-8 md:p-10 transition-all duration-300 hover:shadow-xl ${
+                  className={`rounded-2xl p-5 sm:p-7 md:p-8 lg:p-10 transition-all duration-300 hover:shadow-xl ${
                     plan.highlighted
                       ? "border-2 border-bronze bg-gradient-to-br from-bronze/5 to-background shadow-lg"
                       : "border border-border bg-card"
@@ -271,7 +271,7 @@ const Pricing = () => {
                   </p>
 
                   <div className="flex items-baseline gap-1 mb-2">
-                    <span className="font-vollkorn text-5xl md:text-6xl font-bold">
+                    <span className="font-vollkorn text-4xl sm:text-5xl md:text-6xl font-bold">
                       {billingCycle === "monthly" ? plan.priceMonthly : plan.priceYearly}
                     </span>
                     {plan.period && (
@@ -292,14 +292,14 @@ const Pricing = () => {
                   )}
                   {!plan.highlighted && <div className="mb-6" />}
 
-                  <ul className="space-y-3.5 mb-10">
+                  <ul className="space-y-2 sm:space-y-3 md:space-y-3.5 mb-8 sm:mb-10">
                     {plan.features.map((feature, fi) => (
                       <motion.li
                         key={feature}
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.3, delay: 0.2 + fi * 0.04 }}
-                        className="flex items-start gap-3"
+                        className="flex items-start gap-2 sm:gap-3"
                       >
                         <Check className="w-5 h-5 text-bronze flex-shrink-0 mt-0.5" />
                         <span className="text-sm leading-relaxed">{feature}</span>
@@ -379,7 +379,7 @@ const Pricing = () => {
               },
             ].map(({ q, a }, i) => (
               <ScrollReveal key={q} delay={i * 0.06}>
-                <div className="p-6 md:p-8 rounded-xl border border-border bg-card">
+                <div className="p-4 sm:p-5 md:p-6 lg:p-8 rounded-xl border border-border bg-card">
                   <h3 className="font-vollkorn text-lg md:text-xl font-bold mb-2">{q}</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">{a}</p>
                 </div>

@@ -460,7 +460,7 @@ const CreateInvoiceDialog = ({
       onComplete={() => { setShowSuccess(false); onSuccess(); }}
     />
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100vw-16px)] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-vollkorn text-xl">
             <Receipt className="h-5 w-5 text-bronze" />
@@ -605,13 +605,13 @@ const CreateInvoiceDialog = ({
               </Button>
             </div>
 
-            {/* Column Headers */}
-            <div className="grid grid-cols-12 gap-2 mb-1">
+            {/* Column Headers — hidden on mobile, shown on sm+ */}
+            <div className="hidden sm:grid grid-cols-12 gap-2 mb-1">
               <div className="col-span-5">
                 <Label className="text-xs text-muted-foreground font-medium">Description</Label>
               </div>
               <div className="col-span-2">
-                <Label className="text-xs text-muted-foreground font-medium">Quantity</Label>
+                <Label className="text-xs text-muted-foreground font-medium">Qty</Label>
               </div>
               <div className="col-span-2">
                 <Label className="text-xs text-muted-foreground font-medium">Unit Price</Label>
@@ -624,40 +624,48 @@ const CreateInvoiceDialog = ({
 
             <div className="space-y-3">
               {items.map((item, index) => (
-                <div key={index} className="grid grid-cols-12 gap-2 items-start">
-                  <div className="col-span-5">
+                <div key={index} className="flex flex-col sm:grid sm:grid-cols-12 gap-2 p-3 sm:p-0 rounded-xl sm:rounded-none border sm:border-0 border-border bg-muted/20 sm:bg-transparent">
+                  {/* Description — full width on mobile, col-span-5 on desktop */}
+                  <div className="sm:col-span-5">
+                    <Label className="text-xs text-muted-foreground sm:hidden mb-1 block">Description</Label>
                     <Input
                       placeholder="Service or product name"
                       value={item.description}
                       onChange={(e) => updateItemTotal(index, "description", e.target.value)}
                     />
                   </div>
-                  <div className="col-span-2">
-                    <Input
-                      type="number"
-                      placeholder="1"
-                      value={item.quantity}
-                      onChange={(e) => updateItemTotal(index, "quantity", e.target.value)}
-                      min={1}
-                    />
+                  {/* Qty / Price / Total in a row on mobile */}
+                  <div className="grid grid-cols-3 gap-2 sm:contents">
+                    <div className="sm:col-span-2">
+                      <Label className="text-xs text-muted-foreground sm:hidden mb-1 block">Qty</Label>
+                      <Input
+                        type="number"
+                        placeholder="1"
+                        value={item.quantity}
+                        onChange={(e) => updateItemTotal(index, "quantity", e.target.value)}
+                        min={1}
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label className="text-xs text-muted-foreground sm:hidden mb-1 block">Unit Price</Label>
+                      <Input
+                        type="number"
+                        placeholder="0.00"
+                        value={item.unit_price}
+                        onChange={(e) => updateItemTotal(index, "unit_price", e.target.value)}
+                        min={0}
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label className="text-xs text-muted-foreground sm:hidden mb-1 block">Total</Label>
+                      <Input
+                        value={formatCurrency(item.total)}
+                        disabled
+                        className="bg-muted"
+                      />
+                    </div>
                   </div>
-                  <div className="col-span-2">
-                    <Input
-                      type="number"
-                      placeholder="0.00"
-                      value={item.unit_price}
-                      onChange={(e) => updateItemTotal(index, "unit_price", e.target.value)}
-                      min={0}
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Input
-                      value={formatCurrency(item.total)}
-                      disabled
-                      className="bg-muted"
-                    />
-                  </div>
-                  <div className="col-span-1">
+                  <div className="sm:col-span-1 flex sm:block justify-end">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -674,7 +682,7 @@ const CreateInvoiceDialog = ({
           </div>
 
           {/* Currency and Tax */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
             <div>
               <Label>Currency</Label>
               <Select value={currency} onValueChange={setCurrency}>
@@ -740,7 +748,7 @@ const CreateInvoiceDialog = ({
           </div>
 
           {/* Notes and Terms */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <Label>Notes</Label>
               <Textarea
@@ -764,14 +772,14 @@ const CreateInvoiceDialog = ({
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-border">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t border-border">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={loading}
-              className="bg-bronze hover:bg-bronze/90"
+              className="w-full sm:w-auto bg-bronze hover:bg-bronze/90"
             >
               {loading ? "Saving..." : editingInvoice ? "Update Invoice" : "Create Invoice"}
             </Button>

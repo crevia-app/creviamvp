@@ -99,8 +99,8 @@ const MobileBottomNav = () => {
             
             <ScrollArea className="flex-1 px-4">
               {profile && (
-                <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 mb-4">
-                  <Avatar className="h-12 w-12 ring-2 ring-bronze/30 flex-shrink-0">
+                <div className="flex items-center gap-3 p-3 sm:p-4 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 mb-4">
+                  <Avatar className="h-11 w-11 sm:h-12 sm:w-12 ring-2 ring-bronze/30 flex-shrink-0">
                     <AvatarImage src={profile?.avatar_url} />
                     <AvatarFallback className="bg-gradient-to-br from-bronze to-bronze-dark text-white font-semibold text-sm">
                       {profile?.display_name?.charAt(0) || profile?.email?.charAt(0) || "U"}
@@ -203,14 +203,14 @@ const MobileBottomNav = () => {
                   <div className="flex gap-2">
                     <Button 
                       variant="ghost" 
-                      className="flex-1 text-white/60 hover:text-bronze hover:bg-white/5 h-10 text-xs font-medium rounded-xl"
+                      className="flex-1 text-white/60 hover:text-bronze hover:bg-white/5 h-11 text-xs font-medium rounded-xl"
                       onClick={() => handleNavigation("/privacy-policy")}
                     >
                       {t("nav.privacy")}
                     </Button>
                     <Button 
                       variant="ghost" 
-                      className="flex-1 text-white/60 hover:text-bronze hover:bg-white/5 h-10 text-xs font-medium rounded-xl"
+                      className="flex-1 text-white/60 hover:text-bronze hover:bg-white/5 h-11 text-xs font-medium rounded-xl"
                       onClick={() => handleNavigation("/terms-of-service")}
                     >
                       {t("nav.terms")}

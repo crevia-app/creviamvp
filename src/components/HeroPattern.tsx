@@ -17,35 +17,45 @@ const HeroPattern = ({ spotlight = false }: HeroPatternProps) => {
     const el = containerRef.current;
     if (!el) return;
 
-    const onMove = (e: MouseEvent) => {
+    const setCoords = (x: number, y: number) => {
       const rect = el.getBoundingClientRect();
-      el.style.setProperty("--mx", `${e.clientX - rect.left}px`);
-      el.style.setProperty("--my", `${e.clientY - rect.top}px`);
+      el.style.setProperty("--mx", `${x - rect.left}px`);
+      el.style.setProperty("--my", `${y - rect.top}px`);
     };
 
-    const onLeave = () => {
+    const reset = () => {
       el.style.setProperty("--mx", "50%");
       el.style.setProperty("--my", "50%");
     };
 
-    el.addEventListener("mousemove", onMove);
-    el.addEventListener("mouseleave", onLeave);
+    const onMouseMove = (e: MouseEvent) => setCoords(e.clientX, e.clientY);
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches[0]) setCoords(e.touches[0].clientX, e.touches[0].clientY);
+    };
+
+    el.addEventListener("mousemove", onMouseMove);
+    el.addEventListener("mouseleave", reset);
+    el.addEventListener("touchmove", onTouchMove, { passive: true });
+    el.addEventListener("touchend", reset, { passive: true });
+
     return () => {
-      el.removeEventListener("mousemove", onMove);
-      el.removeEventListener("mouseleave", onLeave);
+      el.removeEventListener("mousemove", onMouseMove);
+      el.removeEventListener("mouseleave", reset);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", reset);
     };
   }, [spotlight]);
 
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 overflow-hidden pointer-events-none select-none"
+      className={`absolute inset-0 overflow-hidden select-none ${spotlight ? "pointer-events-auto" : "pointer-events-none"}`}
       style={spotlight ? ({ "--mx": "50%", "--my": "50%" } as React.CSSProperties) : undefined}
       aria-hidden="true"
     >
       {/* Base pattern layer — subtle, always visible */}
       <svg
-        className="absolute inset-0 w-full h-full"
+        className="absolute inset-0 w-full h-full pointer-events-none"
         xmlns="http://www.w3.org/2000/svg"
         preserveAspectRatio="xMidYMid slice"
       >
@@ -77,7 +87,7 @@ const HeroPattern = ({ spotlight = false }: HeroPatternProps) => {
       {/* Spotlight reveal layer — only rendered when spotlight=true */}
       {spotlight && (
         <svg
-          className="absolute inset-0 w-full h-full text-slate-700 dark:text-slate-300"
+          className="absolute inset-0 w-full h-full text-slate-700 dark:text-slate-300 pointer-events-none"
           xmlns="http://www.w3.org/2000/svg"
           preserveAspectRatio="xMidYMid slice"
           style={{

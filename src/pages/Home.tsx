@@ -44,19 +44,19 @@ const Home = () => {
             </ScrollReveal>
             <ScrollReveal delay={0.36}>
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Link to="/auth?mode=signup">
+                <Link to="/auth?mode=signup" className="w-full sm:w-auto">
                   <Button
                     size="lg"
-                    className="bg-bronze hover:bg-bronze-dark text-base md:text-lg px-10 py-7 font-poppins font-semibold shadow-lg hover-scale"
+                    className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-sm sm:text-base md:text-lg px-6 sm:px-10 py-5 sm:py-7 font-poppins font-semibold shadow-lg hover-scale"
                   >
                     Start Free <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
-                <Link to="/pricing">
+                <Link to="/pricing" className="w-full sm:w-auto">
                   <Button
                     size="lg"
                     variant="outline"
-                    className="text-base md:text-lg px-10 py-7 font-poppins font-semibold border-2 border-bronze/30 hover:border-bronze hover:bg-bronze/10"
+                    className="w-full sm:w-auto text-sm sm:text-base md:text-lg px-6 sm:px-10 py-5 sm:py-7 font-poppins font-semibold border-2 border-bronze/30 hover:border-bronze hover:bg-bronze/10"
                   >
                     See Pricing
                   </Button>
@@ -156,7 +156,7 @@ const Home = () => {
                   For creatives, it turns individuals into companies. For brands, 
                   it turns chaos into structured creative operations.
                 </p>
-                <div className="grid grid-cols-2 gap-3 max-w-md">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-md">
                   {[
                     { icon: Link2, label: "Crevia Link" },
                     { icon: MessageCircle, label: "Crevia Chat" },
@@ -192,7 +192,7 @@ const Home = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             <ScrollReveal delay={0} variant="fade-up">
-              <div className="p-8 md:p-10 rounded-2xl border border-border bg-card hover:border-bronze/30 transition-all duration-300 hover:shadow-xl space-y-6 h-full">
+              <div className="p-5 sm:p-7 md:p-8 lg:p-10 rounded-2xl border border-border bg-card hover:border-bronze/30 transition-all duration-300 hover:shadow-xl space-y-6 h-full">
                 <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase">
                   For Creatives
                 </p>
@@ -213,7 +213,7 @@ const Home = () => {
             </ScrollReveal>
 
             <ScrollReveal delay={0.12} variant="fade-up">
-              <div className="p-8 md:p-10 rounded-2xl border border-border bg-card hover:border-bronze/30 transition-all duration-300 hover:shadow-xl space-y-6 h-full">
+              <div className="p-5 sm:p-7 md:p-8 lg:p-10 rounded-2xl border border-border bg-card hover:border-bronze/30 transition-all duration-300 hover:shadow-xl space-y-6 h-full">
                 <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase">
                   For Brands
                 </p>
@@ -253,10 +253,10 @@ const Home = () => {
             </p>
           </ScrollReveal>
           <ScrollReveal delay={0.24} variant="scale">
-            <Link to="/auth?mode=signup">
+            <Link to="/auth?mode=signup" className="w-full sm:w-auto inline-block">
               <Button
                 size="lg"
-                className="bg-bronze hover:bg-bronze-dark text-lg px-12 py-7 font-poppins font-semibold shadow-lg hover-scale"
+                className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-sm sm:text-base md:text-lg px-6 sm:px-10 md:px-12 py-5 sm:py-7 font-poppins font-semibold shadow-lg hover-scale"
               >
                 Own Your Story <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
