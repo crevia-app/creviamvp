@@ -341,6 +341,35 @@ All colors MUST be HSL.
     box-shadow: 0 12px 40px -12px hsl(var(--foreground) / 0.08);
   }
 
+  /* Bronze-edged card glow on hover — for interactive Studio/feature tiles */
+  .card-bronze-glow {
+    transition: border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .card-bronze-glow:hover {
+    border-color: hsl(var(--bronze) / 0.35);
+    box-shadow: 0 0 20px -4px hsl(var(--bronze) / 0.18),
+                0 8px 24px -8px hsl(var(--foreground) / 0.1);
+    transform: translateY(-2px);
+  }
+}
+
+/* ============ Accessibility: respect reduced motion ============ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .animate-scroll-left {
+    animation: none;
+  }
+}
+
   /* ============ Stagger Children ============ */
   .stagger-children > * {
     opacity: 0;

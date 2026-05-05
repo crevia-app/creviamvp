@@ -16,6 +16,7 @@ const Home = () => {
       navigate("/auth?mode=signup");
     }
   };
+
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <Header />
@@ -30,19 +31,20 @@ const Home = () => {
                 Own Your Story
               </p>
             </ScrollReveal>
-            <ScrollReveal delay={0.12}>
+            {/* variant="hero" — larger 40px travel, no blur, clean typographic entrance */}
+            <ScrollReveal delay={0.12} variant="hero" duration={0.8}>
               <h1 className="font-vollkorn text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] font-bold leading-[1.08]">
                 The operating system for the{" "}
                 <span className="text-gradient-bronze">creative industry.</span>
               </h1>
             </ScrollReveal>
-            <ScrollReveal delay={0.24}>
+            <ScrollReveal delay={0.26}>
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground font-poppins leading-relaxed max-w-2xl">
                 Crevia gives creatives and brands the intelligence, tools, and
                 infrastructure to build scalable businesses — not just content.
               </p>
             </ScrollReveal>
-            <ScrollReveal delay={0.36}>
+            <ScrollReveal delay={0.38}>
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <Link to="/auth?mode=signup" className="w-full sm:w-auto">
                   <Button
@@ -56,7 +58,7 @@ const Home = () => {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="w-full sm:w-auto text-sm sm:text-base md:text-lg px-6 sm:px-10 py-5 sm:py-7 font-poppins font-semibold border-2 border-bronze/30 hover:border-bronze hover:bg-bronze/10"
+                    className="w-full sm:w-auto text-sm sm:text-base md:text-lg px-6 sm:px-10 py-5 sm:py-7 font-poppins font-semibold border-2 border-bronze/30 hover:border-bronze hover:bg-bronze/10 transition-premium"
                   >
                     See Pricing
                   </Button>
@@ -70,16 +72,16 @@ const Home = () => {
       {/* ═══════════════ THE PROBLEM ═══════════════ */}
       <section className="py-20 md:py-28 px-4 md:px-6">
         <div className="container mx-auto max-w-4xl text-center">
-          <ScrollReveal>
+          <ScrollReveal variant="hero">
             <h2 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl font-bold mb-6 leading-tight">
               Creatives aren't broke.{" "}
               <span className="text-gradient-bronze">They're under-tooled.</span>
             </h2>
           </ScrollReveal>
-          <ScrollReveal delay={0.1}>
+          <ScrollReveal delay={0.12}>
             <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-              You don't need another content calendar. You need an operating system — 
-              one place to price, scope, invoice, contract, communicate, and get paid. 
+              You don't need another content calendar. You need an operating system —
+              one place to price, scope, invoice, contract, communicate, and get paid.
               That's Crevia.
             </p>
           </ScrollReveal>
@@ -115,7 +117,7 @@ const Home = () => {
                   <span className="text-gradient-bronze">Think sharper.</span>
                 </h3>
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  Kira brings African market intelligence into your business logic. 
+                  Kira brings African market intelligence into your business logic.
                   No copy-pasted global playbooks — real data on pricing, scoping, and
                   structuring deals that make sense for your market.
                 </p>
@@ -153,7 +155,7 @@ const Home = () => {
                 </h3>
                 <p className="text-lg text-muted-foreground leading-relaxed">
                   Links, contracts, invoices, and communication — all moving in one flow.
-                  For creatives, it turns individuals into companies. For brands, 
+                  For creatives, it turns individuals into companies. For brands,
                   it turns chaos into structured creative operations.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-md">
@@ -166,9 +168,9 @@ const Home = () => {
                     <ScrollReveal key={label} delay={0.06 * i} variant="scale">
                       <button
                         onClick={handleAuthGatedClick}
-                        className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:border-bronze/30 hover:bg-bronze/5 transition-colors text-left cursor-pointer"
+                        className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:bg-bronze/5 card-bronze-glow text-left cursor-pointer"
                       >
-                        <Icon className="w-5 h-5 text-bronze flex-shrink-0" />
+                        <Icon className="w-5 h-5 text-bronze flex-shrink-0 transition-premium group-hover:scale-110" />
                         <span className="font-poppins text-sm font-medium">{label}</span>
                       </button>
                     </ScrollReveal>
@@ -192,7 +194,7 @@ const Home = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             <ScrollReveal delay={0} variant="fade-up">
-              <div className="p-5 sm:p-7 md:p-8 lg:p-10 rounded-2xl border border-border bg-card hover:border-bronze/30 transition-all duration-300 hover:shadow-xl space-y-6 h-full">
+              <div className="p-5 sm:p-7 md:p-8 lg:p-10 rounded-2xl border border-border bg-card hover:border-bronze/30 card-interactive space-y-6 h-full">
                 <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase">
                   For Creatives
                 </p>
@@ -201,7 +203,7 @@ const Home = () => {
                 </h3>
                 <p className="text-muted-foreground text-base leading-relaxed">
                   You're not "just a creator." You're a business. Crevia gives you
-                  the invoices, contracts, link-in-bio, and AI strategy to prove it — 
+                  the invoices, contracts, link-in-bio, and AI strategy to prove it —
                   to clients, to brands, and to yourself.
                 </p>
                 <Link to="/auth?mode=signup">
@@ -213,7 +215,7 @@ const Home = () => {
             </ScrollReveal>
 
             <ScrollReveal delay={0.12} variant="fade-up">
-              <div className="p-5 sm:p-7 md:p-8 lg:p-10 rounded-2xl border border-border bg-card hover:border-bronze/30 transition-all duration-300 hover:shadow-xl space-y-6 h-full">
+              <div className="p-5 sm:p-7 md:p-8 lg:p-10 rounded-2xl border border-border bg-card hover:border-bronze/30 card-interactive space-y-6 h-full">
                 <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase">
                   For Brands
                 </p>

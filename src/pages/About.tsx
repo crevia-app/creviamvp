@@ -89,7 +89,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
               <img
                 src={src}
                 alt="Crevia community"
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
                 draggable={false}
               />
             </div>
@@ -230,7 +230,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
         <div className="container mx-auto max-w-4xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             <ScrollReveal variant="fade-left">
-              <div className="p-8 md:p-10 rounded-2xl border border-border bg-card space-y-4 h-full">
+              <div className="p-8 md:p-10 rounded-2xl border border-border bg-card card-interactive space-y-4 h-full">
                 <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase">
                   Our Mission
                 </p>
@@ -244,7 +244,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
               </div>
             </ScrollReveal>
             <ScrollReveal variant="fade-right" delay={0.1}>
-              <div className="p-8 md:p-10 rounded-2xl border border-border bg-card space-y-4 h-full">
+              <div className="p-8 md:p-10 rounded-2xl border border-border bg-card card-interactive space-y-4 h-full">
                 <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase">
                   Our Vision
                 </p>
