@@ -303,7 +303,7 @@ if (actionsToday >= actionsLimit) {
   throw new Error("You have reached your daily Kira limit of " + actionsLimit + " actions. Upgrade to Pro for 40 actions per day.");
 }
 
-    const history = userMessages.slice(-11, -1).map(m => ({ role: m.role, content: m.content }));
+    const history = userMessages.slice(-7, -1).map(m => ({ role: m.role, content: m.content }));
 
     const { data, error } = await supabase.functions.invoke('kira-gpt', {
       body: { prompt: lastUserContent, history },

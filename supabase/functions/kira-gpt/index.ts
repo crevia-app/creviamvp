@@ -94,7 +94,7 @@ serve(async (req) => {
     }
 
     const contentLength = req.headers.get('content-length');
-    if (contentLength && parseInt(contentLength) > 10000) {
+    if (contentLength && parseInt(contentLength) > 50000) {
       return new Response(JSON.stringify({ error: 'Request too large' }), { status: 413, headers: cors });
     }
 
