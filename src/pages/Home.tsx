@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HeroPattern from "@/components/HeroPattern";
 import ScrollReveal from "@/components/ui/ScrollReveal";
+import TestimonialMarquee from "@/components/TestimonialMarquee";
 import { supabase } from "@/integrations/supabase/client";
 
 const Home = () => {
@@ -87,6 +88,8 @@ const Home = () => {
           </ScrollReveal>
         </div>
       </section>
+
+      <TestimonialMarquee />
 
       {/* ═══════════════ TWO LAYERS ═══════════════ */}
       <section className="py-16 md:py-24 px-4 md:px-6 bg-secondary/30">

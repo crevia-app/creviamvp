@@ -127,6 +127,11 @@ export default {
           "0%": { opacity: "1", transform: "scale(1) translateY(0)" },
           "100%": { opacity: "0", transform: "scale(0.96) translateY(4px)" },
         },
+        // Testimonial marquee — translates exactly one full set (-50% of doubled content)
+        "marquee": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.25s cubic-bezier(0.32, 0.72, 0, 1)",
@@ -145,6 +150,8 @@ export default {
         "blur-in": "blur-in 0.4s cubic-bezier(0.32, 0.72, 0, 1)",
         "content-show": "content-show 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
         "content-hide": "content-hide 0.2s cubic-bezier(0.32, 0.72, 0, 1)",
+        // Slow, luxurious scroll — 48s feels deliberate, not frantic
+        "marquee": "marquee 48s linear infinite",
       },
     },
   },
