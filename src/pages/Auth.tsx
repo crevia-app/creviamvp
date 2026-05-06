@@ -187,7 +187,7 @@ const Auth = () => {
           return;
         }
         const { data: signUpData, error } = await supabase.auth.signUp({
-          email,
+          email: email.trim(),
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth`,
@@ -235,14 +235,14 @@ const Auth = () => {
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email,
+          email: email.trim(),
           password,
         });
 
         if (error) {
           const msg = error.message.toLowerCase();
           if (msg.includes("invalid login") || msg.includes("invalid credentials") || msg.includes("wrong password")) {
-            toast({ title: "Incorrect email or password", description: "Please check your details and try again.", variant: "destructive" });
+            toast({ title: "Incorrect email or password", description: "Please check your details and try again. If you signed up with Google, use the Google button above.", variant: "destructive" });
           } else if (msg.includes("email not confirmed")) {
             toast({ title: "Email not confirmed", description: "Please check your inbox and click the confirmation link we sent you.", variant: "destructive" });
           } else {
