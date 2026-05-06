@@ -303,10 +303,22 @@ if (actionsToday >= actionsLimit) {
   throw new Error("You have reached your daily Kira limit of " + actionsLimit + " actions. Upgrade to Pro for 40 actions per day.");
 }
 
+    const history = userMessages.slice(-11, -1).map(m => ({ role: m.role, content: m.content }));
+
     const { data, error } = await supabase.functions.invoke('kira-gpt', {
-      body: { prompt: lastUserContent },
+      body: { prompt: lastUserContent, history },
     });
-    if (error) throw error;
+
+    if (error) {
+      let msg = "Couldn't reach Kira right now. Please try again!";
+      try {
+        const body = await (error as any).context?.json?.();
+        if (body?.error) msg = body.error;
+      } catch { /* ignore parse failure */ }
+      throw new Error(msg);
+    }
+
+    if (!data?.reply) throw new Error("Kira didn't respond. Please try again!");
 
     const assistantContent = data.reply;
 

@@ -105,7 +105,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400, headers: cors });
     }
 
-    const { prompt } = body;
+    const { prompt, history } = body;
 
     if (!prompt || typeof prompt !== 'string') {
       return new Response(JSON.stringify({ error: 'Prompt is required' }), { status: 400, headers: cors });
@@ -122,6 +122,14 @@ serve(async (req) => {
     }
 
     const sanitizedPrompt = sanitizePrompt(prompt);
+
+    // Conversation history — last 10 turns, each message capped at 1500 chars
+    const conversationHistory = Array.isArray(history)
+      ? history.slice(-10).map((m: { role: string; content: string }) => ({
+          role: m.role === 'assistant' ? 'assistant' : 'user',
+          content: String(m.content || '').slice(0, 1500),
+        }))
+      : [];
 
     // Atomic server-side gate — checks limit and increments in one locked transaction.
     // Returns false if the user has hit their daily cap. Cannot be bypassed from the client.
@@ -152,6 +160,7 @@ serve(async (req) => {
         max_tokens: 1000,
         messages: [
           { role: "system", content: KIRA_SYSTEM_PROMPT },
+          ...conversationHistory,
           { role: "user", content: sanitizedPrompt }
         ],
       }),
@@ -172,8 +181,9 @@ serve(async (req) => {
       headers: { ...cors, 'Content-Type': 'application/json' },
     });
 
-  } catch (error) {
-    console.error("Function Error:", error.message);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("Function Error:", msg);
     return new Response(JSON.stringify({ error: 'Something went wrong. Please try again.' }), {
       status: 500, headers: cors
     });
