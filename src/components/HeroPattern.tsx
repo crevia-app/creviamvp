@@ -5,16 +5,19 @@ interface HeroPatternProps {
 }
 
 /**
- * African geometric pattern background.
- * Tile vocabulary: Kente diamond grid, Adinkra concentric rings,
- * Ndebele corner fills, Bogolan mudcloth cross-marks.
+ * Subtle geometric pattern background for hero / CTA sections.
  *
- * spotlight=true enables the cursor/touch reveal effect.
- * CSS custom properties --mx / --my are mutated directly — zero React re-renders, 60fps.
+ * spotlight=true enables the cursor+touch reveal effect.
+ * --mx / --my CSS vars are mutated directly on the container — zero React re-renders, 60fps.
+ *
+ * Mobile fix: touchmove/touchend are on `window`, not `el`.
+ * Hero content (buttons, text) sits at z-10 and intercepts touches before they reach
+ * the background container. Listening globally means any finger movement on the hero
+ * updates the spotlight regardless of which element is touched.
  *
  * Reveal colours:
- *   light mode → rich dark-brown ink  (text-stone-700  #44403c)
- *   dark mode  → warm antique gold    (#c9aa80)
+ *   light mode → warm charcoal  (text-stone-600)
+ *   dark mode  → antique gold   (#c9aa80)
  */
 const HeroPattern = ({ spotlight = false }: HeroPatternProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -24,10 +27,10 @@ const HeroPattern = ({ spotlight = false }: HeroPatternProps) => {
     const el = containerRef.current;
     if (!el) return;
 
-    const setCoords = (x: number, y: number) => {
+    const setCoords = (clientX: number, clientY: number) => {
       const rect = el.getBoundingClientRect();
-      el.style.setProperty("--mx", `${x - rect.left}px`);
-      el.style.setProperty("--my", `${y - rect.top}px`);
+      el.style.setProperty("--mx", `${clientX - rect.left}px`);
+      el.style.setProperty("--my", `${clientY - rect.top}px`);
     };
 
     const reset = () => {
@@ -35,21 +38,25 @@ const HeroPattern = ({ spotlight = false }: HeroPatternProps) => {
       el.style.setProperty("--my", "50%");
     };
 
+    // Desktop — mouse events on element work fine
     const onMouseMove = (e: MouseEvent) => setCoords(e.clientX, e.clientY);
+
+    // Mobile — must listen on window because hero content (z-10) intercepts
+    // touchstart on buttons/text, so touchmove never reaches the background el.
     const onTouchMove = (e: TouchEvent) => {
       if (e.touches[0]) setCoords(e.touches[0].clientX, e.touches[0].clientY);
     };
 
     el.addEventListener("mousemove", onMouseMove);
     el.addEventListener("mouseleave", reset);
-    el.addEventListener("touchmove", onTouchMove, { passive: true });
-    el.addEventListener("touchend", reset, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("touchend", reset, { passive: true });
 
     return () => {
       el.removeEventListener("mousemove", onMouseMove);
       el.removeEventListener("mouseleave", reset);
-      el.removeEventListener("touchmove", onTouchMove);
-      el.removeEventListener("touchend", reset);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", reset);
     };
   }, [spotlight]);
 
@@ -66,64 +73,46 @@ const HeroPattern = ({ spotlight = false }: HeroPatternProps) => {
       }
       aria-hidden="true"
     >
-      {/* ── Base pattern: always-visible ghost layer ── */}
+      {/* ── Base pattern — always-visible ghost layer ── */}
       <svg
-        className="absolute inset-0 w-full h-full pointer-events-none text-foreground opacity-[0.065] dark:opacity-[0.095]"
+        className="absolute inset-0 w-full h-full pointer-events-none text-foreground"
         xmlns="http://www.w3.org/2000/svg"
         preserveAspectRatio="xMidYMid slice"
       >
         <defs>
-          <pattern
-            id="crevia-african-base"
-            x="0"
-            y="0"
-            width="160"
-            height="160"
-            patternUnits="userSpaceOnUse"
-          >
-            {/* Frame */}
-            <rect x="6" y="6" width="148" height="148" fill="none" stroke="currentColor" strokeWidth="0.7" />
-            {/* Kente diamond — large rotated square */}
-            <path d="M80 10 L150 80 L80 150 L10 80 Z" fill="none" stroke="currentColor" strokeWidth="0.9" />
-            {/* Inner diamond */}
-            <path d="M80 34 L126 80 L80 126 L34 80 Z" fill="none" stroke="currentColor" strokeWidth="0.65" />
-            {/* Adinkra concentric rings */}
-            <circle cx="80" cy="80" r="26" fill="none" stroke="currentColor" strokeWidth="0.85" />
-            <circle cx="80" cy="80" r="16" fill="none" stroke="currentColor" strokeWidth="0.65" />
-            <circle cx="80" cy="80" r="4.5" fill="currentColor" />
-            {/* Cardinal cross */}
-            <line x1="80" y1="54" x2="80" y2="106" stroke="currentColor" strokeWidth="0.65" />
-            <line x1="54" y1="80" x2="106" y2="80" stroke="currentColor" strokeWidth="0.65" />
-            {/* Diagonal cross */}
-            <line x1="61.6" y1="61.6" x2="98.4" y2="98.4" stroke="currentColor" strokeWidth="0.5" />
-            <line x1="98.4" y1="61.6" x2="61.6" y2="98.4" stroke="currentColor" strokeWidth="0.5" />
-            {/* Ndebele corner fills */}
-            <path d="M0 0 L22 0 L0 22 Z" fill="currentColor" />
-            <path d="M160 0 L138 0 L160 22 Z" fill="currentColor" />
-            <path d="M0 160 L22 160 L0 138 Z" fill="currentColor" />
-            <path d="M160 160 L138 160 L160 138 Z" fill="currentColor" />
-            {/* Kente chevron strips */}
-            <path d="M0 42 L10 34 L20 42 L30 34 L40 42 L50 34 L60 42 L70 34 L80 42 L90 34 L100 42 L110 34 L120 42 L130 34 L140 42 L150 34 L160 42" fill="none" stroke="currentColor" strokeWidth="0.75" />
-            <path d="M0 118 L10 126 L20 118 L30 126 L40 118 L50 126 L60 118 L70 126 L80 118 L90 126 L100 118 L110 126 L120 118 L130 126 L140 118 L150 126 L160 118" fill="none" stroke="currentColor" strokeWidth="0.75" />
-            {/* Bogolan cross-marks in quadrant interiors */}
-            <path d="M43 43 L49 43 M46 40 L46 46" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
-            <path d="M111 43 L117 43 M114 40 L114 46" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
-            <path d="M43 117 L49 117 M46 114 L46 120" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
-            <path d="M111 117 L117 117 M114 114 L114 120" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
-            {/* Diamond nodes at cardinal midpoints of outer frame */}
-            <rect x="77" y="4.5" width="5.5" height="5.5" transform="rotate(45 80 7.25)" fill="currentColor" />
-            <rect x="77" y="150" width="5.5" height="5.5" transform="rotate(45 80 152.75)" fill="currentColor" />
-            <rect x="4.5" y="77" width="5.5" height="5.5" transform="rotate(45 7.25 80)" fill="currentColor" />
-            <rect x="150" y="77" width="5.5" height="5.5" transform="rotate(45 152.75 80)" fill="currentColor" />
+          {/* Primary tile — 120×120 abstract geometry */}
+          <pattern id="hero-geo" x="0" y="0" width="120" height="120" patternUnits="userSpaceOnUse">
+            <circle cx="30" cy="30" r="22" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.13" />
+            <path d="M90 8 Q112 30 90 52 Q68 30 90 8Z" fill="currentColor" opacity="0.07" />
+            <line x1="10" y1="70" x2="50" y2="110" stroke="currentColor" strokeWidth="1.2" opacity="0.10" />
+            <line x1="50" y1="70" x2="10" y2="110" stroke="currentColor" strokeWidth="1.2" opacity="0.10" />
+            <path d="M120 120 Q120 70 70 70" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.12" />
+            <path d="M120 120 Q120 85 85 85" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.08" />
+            <circle cx="60" cy="60" r="2.5" fill="currentColor" opacity="0.13" />
+            <circle cx="0"   cy="0"   r="2" fill="currentColor" opacity="0.09" />
+            <circle cx="120" cy="0"   r="2" fill="currentColor" opacity="0.09" />
+            <circle cx="0"   cy="120" r="2" fill="currentColor" opacity="0.09" />
+            <circle cx="120" cy="120" r="2" fill="currentColor" opacity="0.09" />
+            <rect x="52" y="52" width="16" height="16" rx="1"
+                  transform="rotate(45 60 60)"
+                  fill="none" stroke="currentColor" strokeWidth="1" opacity="0.09" />
+          </pattern>
+
+          {/* Secondary tile — offset by (60,60) to break repetition */}
+          <pattern id="hero-geo-2" x="60" y="60" width="120" height="120" patternUnits="userSpaceOnUse">
+            <circle cx="60" cy="60" r="28" fill="none" stroke="currentColor" strokeWidth="0.9" opacity="0.07" />
+            <path d="M30 0 Q52 22 30 44 Q8 22 30 0Z" fill="currentColor" opacity="0.05" />
+            <path d="M0 60 Q0 30 30 30" fill="none" stroke="currentColor" strokeWidth="1" opacity="0.08" />
           </pattern>
         </defs>
-        <rect width="100%" height="100%" fill="url(#crevia-african-base)" />
+        <rect width="100%" height="100%" fill="url(#hero-geo)" />
+        <rect width="100%" height="100%" fill="url(#hero-geo-2)" />
       </svg>
 
-      {/* ── Spotlight layers ── only when spotlight=true ── */}
+      {/* ── Spotlight layers — only when spotlight=true ── */}
       {spotlight && (
         <>
-          {/* Bronze micro-glow that tracks the cursor/touch point */}
+          {/* Bronze micro-glow that tracks cursor / finger */}
           <div
             className="absolute rounded-full pointer-events-none w-72 h-72 md:w-[420px] md:h-[420px]"
             style={{
@@ -131,68 +120,57 @@ const HeroPattern = ({ spotlight = false }: HeroPatternProps) => {
               top: "var(--my, 50%)",
               transform: "translate(-50%, -50%)",
               background:
-                "radial-gradient(circle, hsl(var(--bronze) / 0.15) 0%, hsl(var(--bronze) / 0.04) 55%, transparent 72%)",
-              filter: "blur(22px)",
+                "radial-gradient(circle, hsl(var(--bronze) / 0.13) 0%, hsl(var(--bronze) / 0.04) 55%, transparent 72%)",
+              filter: "blur(20px)",
             }}
           />
 
-          {/* High-contrast reveal layer — same tile at full weight, masked to spotlight shape
-              Light mode: dark brown ink (#44403c = stone-700)
-              Dark mode:  antique gold   (#c9aa80) */}
+          {/* High-contrast reveal — same tile shapes at 3-4× opacity, masked to cursor radius.
+              Light mode: warm charcoal (stone-600).  Dark mode: antique gold (#c9aa80). */}
           <svg
-            className="absolute inset-0 w-full h-full pointer-events-none text-stone-700 dark:text-[#c9aa80]"
+            className="absolute inset-0 w-full h-full pointer-events-none text-stone-600 dark:text-[#c9aa80]"
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="xMidYMid slice"
             style={{
               maskImage:
-                "radial-gradient(circle 420px at var(--mx, 50%) var(--my, 50%), black 0%, transparent 100%)",
+                "radial-gradient(circle 400px at var(--mx, 50%) var(--my, 50%), black 0%, transparent 100%)",
               WebkitMaskImage:
-                "radial-gradient(circle 420px at var(--mx, 50%) var(--my, 50%), black 0%, transparent 100%)",
+                "radial-gradient(circle 400px at var(--mx, 50%) var(--my, 50%), black 0%, transparent 100%)",
             }}
           >
             <defs>
-              <pattern
-                id="crevia-african-reveal"
-                x="0"
-                y="0"
-                width="160"
-                height="160"
-                patternUnits="userSpaceOnUse"
-              >
-                <rect x="6" y="6" width="148" height="148" fill="none" stroke="currentColor" strokeWidth="0.85" />
-                <path d="M80 10 L150 80 L80 150 L10 80 Z" fill="none" stroke="currentColor" strokeWidth="1.1" />
-                <path d="M80 34 L126 80 L80 126 L34 80 Z" fill="none" stroke="currentColor" strokeWidth="0.8" />
-                <circle cx="80" cy="80" r="26" fill="none" stroke="currentColor" strokeWidth="1.1" />
-                <circle cx="80" cy="80" r="16" fill="none" stroke="currentColor" strokeWidth="0.8" />
-                <circle cx="80" cy="80" r="4.5" fill="currentColor" />
-                <line x1="80" y1="54" x2="80" y2="106" stroke="currentColor" strokeWidth="0.8" />
-                <line x1="54" y1="80" x2="106" y2="80" stroke="currentColor" strokeWidth="0.8" />
-                <line x1="61.6" y1="61.6" x2="98.4" y2="98.4" stroke="currentColor" strokeWidth="0.65" />
-                <line x1="98.4" y1="61.6" x2="61.6" y2="98.4" stroke="currentColor" strokeWidth="0.65" />
-                <path d="M0 0 L22 0 L0 22 Z" fill="currentColor" />
-                <path d="M160 0 L138 0 L160 22 Z" fill="currentColor" />
-                <path d="M0 160 L22 160 L0 138 Z" fill="currentColor" />
-                <path d="M160 160 L138 160 L160 138 Z" fill="currentColor" />
-                <path d="M0 42 L10 34 L20 42 L30 34 L40 42 L50 34 L60 42 L70 34 L80 42 L90 34 L100 42 L110 34 L120 42 L130 34 L140 42 L150 34 L160 42" fill="none" stroke="currentColor" strokeWidth="0.9" />
-                <path d="M0 118 L10 126 L20 118 L30 126 L40 118 L50 126 L60 118 L70 126 L80 118 L90 126 L100 118 L110 126 L120 118 L130 126 L140 118 L150 126 L160 118" fill="none" stroke="currentColor" strokeWidth="0.9" />
-                <path d="M43 43 L49 43 M46 40 L46 46" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
-                <path d="M111 43 L117 43 M114 40 L114 46" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
-                <path d="M43 117 L49 117 M46 114 L46 120" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
-                <path d="M111 117 L117 117 M114 114 L114 120" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
-                <rect x="77" y="4.5" width="5.5" height="5.5" transform="rotate(45 80 7.25)" fill="currentColor" />
-                <rect x="77" y="150" width="5.5" height="5.5" transform="rotate(45 80 152.75)" fill="currentColor" />
-                <rect x="4.5" y="77" width="5.5" height="5.5" transform="rotate(45 7.25 80)" fill="currentColor" />
-                <rect x="150" y="77" width="5.5" height="5.5" transform="rotate(45 152.75 80)" fill="currentColor" />
+              <pattern id="hero-geo-reveal" x="0" y="0" width="120" height="120" patternUnits="userSpaceOnUse">
+                <circle cx="30" cy="30" r="22" fill="none" stroke="currentColor" strokeWidth="1.4" opacity="0.45" />
+                <path d="M90 8 Q112 30 90 52 Q68 30 90 8Z" fill="currentColor" opacity="0.28" />
+                <line x1="10" y1="70" x2="50" y2="110" stroke="currentColor" strokeWidth="1.4" opacity="0.38" />
+                <line x1="50" y1="70" x2="10" y2="110" stroke="currentColor" strokeWidth="1.4" opacity="0.38" />
+                <path d="M120 120 Q120 70 70 70" fill="none" stroke="currentColor" strokeWidth="1.4" opacity="0.42" />
+                <path d="M120 120 Q120 85 85 85" fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.32" />
+                <circle cx="60" cy="60" r="2.5" fill="currentColor" opacity="0.50" />
+                <circle cx="0"   cy="0"   r="2" fill="currentColor" opacity="0.35" />
+                <circle cx="120" cy="0"   r="2" fill="currentColor" opacity="0.35" />
+                <circle cx="0"   cy="120" r="2" fill="currentColor" opacity="0.35" />
+                <circle cx="120" cy="120" r="2" fill="currentColor" opacity="0.35" />
+                <rect x="52" y="52" width="16" height="16" rx="1"
+                      transform="rotate(45 60 60)"
+                      fill="none" stroke="currentColor" strokeWidth="1.2" opacity="0.36" />
+              </pattern>
+
+              <pattern id="hero-geo-reveal-2" x="60" y="60" width="120" height="120" patternUnits="userSpaceOnUse">
+                <circle cx="60" cy="60" r="28" fill="none" stroke="currentColor" strokeWidth="1.1" opacity="0.30" />
+                <path d="M30 0 Q52 22 30 44 Q8 22 30 0Z" fill="currentColor" opacity="0.22" />
+                <path d="M0 60 Q0 30 30 30" fill="none" stroke="currentColor" strokeWidth="1.1" opacity="0.30" />
               </pattern>
             </defs>
-            <rect width="100%" height="100%" fill="url(#crevia-african-reveal)" />
+            <rect width="100%" height="100%" fill="url(#hero-geo-reveal)" />
+            <rect width="100%" height="100%" fill="url(#hero-geo-reveal-2)" />
           </svg>
         </>
       )}
 
       {/* Bronze ambient glows */}
-      <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full bg-bronze/[0.06] dark:bg-bronze/[0.09] blur-[120px] pointer-events-none" />
-      <div className="absolute -bottom-48 -left-48 w-[600px] h-[600px] rounded-full bg-bronze/[0.04] dark:bg-bronze/[0.07] blur-[140px] pointer-events-none" />
+      <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full bg-bronze/[0.05] dark:bg-bronze/[0.08] blur-[120px] pointer-events-none" />
+      <div className="absolute -bottom-48 -left-48 w-[600px] h-[600px] rounded-full bg-bronze/[0.03] dark:bg-bronze/[0.06] blur-[140px] pointer-events-none" />
 
       {/* Radial vignette — fades pattern toward edges */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,hsl(var(--background))_80%)] pointer-events-none" />
