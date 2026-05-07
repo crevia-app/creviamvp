@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import SuccessOverlay from "@/components/ui/SuccessOverlay";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, FileSignature, Sparkles, ChevronRight, User, Calendar, Coins, Shield, FileText, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, FileSignature, ChevronRight, User, Coins, Shield, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -33,14 +33,6 @@ interface CreateContractDialogProps {
   kiraContext?: Record<string, unknown> | null;
 }
 
-const contractTypes = [
-  { value: "sponsorship", label: "Sponsorship", icon: "💎", desc: "Paid promotions & brand deals" },
-  { value: "content_creation", label: "Content Creation", icon: "🎬", desc: "Photo, video & creative work" },
-  { value: "brand_ambassador", label: "Brand Ambassador", icon: "🤝", desc: "Long-term brand partnerships" },
-  { value: "ugc", label: "UGC", icon: "📱", desc: "Authentic user-generated content" },
-  { value: "affiliate", label: "Affiliate", icon: "🔗", desc: "Commission-based partnerships" },
-  { value: "custom", label: "Custom", icon: "📄", desc: "Build from scratch" },
-];
 
 const currencies = [
   { code: "KES", name: "Kenyan Shilling" },
@@ -50,227 +42,8 @@ const currencies = [
   { code: "NGN", name: "Nigerian Naira" },
 ];
 
-const contractTemplates: Record<string, { content: string; deliverables: string[]; paymentTerms: string; usageRights: string; terminationClause: string }> = {
-  sponsorship: {
-    content: `SPONSORSHIP AGREEMENT
-
-This Sponsorship Agreement ("Agreement") is entered into as of [START_DATE] by and between:
-
-CREATOR: [CREATOR_NAME]
-CLIENT: [CLIENT_NAME]
-
-1. SCOPE OF WORK
-The Creator agrees to provide the following sponsored content:
-[DELIVERABLES]
-
-2. COMPENSATION
-Total Compensation: [VALUE] [CURRENCY]
-Payment Schedule: [PAYMENT_TERMS]
-
-3. CONTENT REQUIREMENTS
-- All content must be clearly marked as sponsored
-- Content must align with brand guidelines provided
-- Creator maintains creative control within agreed parameters
-
-4. USAGE RIGHTS
-[USAGE_RIGHTS]
-
-5. EXCLUSIVITY
-[EXCLUSIVITY_CLAUSE]
-
-6. TERM
-This Agreement begins on [START_DATE] and ends on [END_DATE].
-
-7. TERMINATION
-[TERMINATION_CLAUSE]
-
-8. CONFIDENTIALITY
-Both parties agree to keep confidential any proprietary information shared during this partnership.
-
-SIGNATURES
-________________________
-Creator: [CREATOR_NAME]
-Date: _______________
-
-________________________
-Client Representative: [CLIENT_NAME]
-Date: _______________`,
-    deliverables: ["1x Instagram Post", "2x Instagram Stories", "1x TikTok Video"],
-    paymentTerms: "50% upfront, 50% upon content approval",
-    usageRights: "Client receives a 12-month license for promotional use across owned channels",
-    terminationClause: "Either party may terminate with 14 days written notice",
-  },
-  content_creation: {
-    content: `CONTENT CREATION AGREEMENT
-
-This Agreement is made between:
-CREATOR: [CREATOR_NAME]
-CLIENT: [CLIENT_NAME]
-DATE: [START_DATE]
-
-PROJECT OVERVIEW
-The Creator will produce original content as detailed below.
-
-DELIVERABLES
-[DELIVERABLES]
-
-COMPENSATION
-Total Fee: [VALUE] [CURRENCY]
-Payment Terms: [PAYMENT_TERMS]
-
-TIMELINE
-Start Date: [START_DATE]
-Delivery Date: [END_DATE]
-
-OWNERSHIP & RIGHTS
-[USAGE_RIGHTS]
-
-REVISIONS
-Two (2) rounds of revisions included in the scope.
-
-TERMINATION
-[TERMINATION_CLAUSE]
-
-SIGNATURES
-________________________
-Creator: [CREATOR_NAME]
-
-________________________
-Client: [CLIENT_NAME]`,
-    deliverables: ["4x Original Photos", "2x Edited Videos", "Caption Copy"],
-    paymentTerms: "100% upon project completion and delivery",
-    usageRights: "Full ownership transfers to client upon final payment",
-    terminationClause: "Termination requires payment for work completed to date",
-  },
-  brand_ambassador: {
-    content: `BRAND AMBASSADOR AGREEMENT
-
-PARTIES
-Ambassador: [CREATOR_NAME]
-Brand: [CLIENT_NAME]
-Effective Date: [START_DATE]
-
-AMBASSADOR DUTIES
-The Ambassador agrees to:
-- Represent the Brand positively across social platforms
-- Create content as specified in deliverables
-- Attend events when reasonably requested
-- Not promote competing brands during the term
-
-DELIVERABLES
-[DELIVERABLES]
-
-COMPENSATION
-Ambassador Fee: [VALUE] [CURRENCY]
-Payment Schedule: [PAYMENT_TERMS]
-
-TERM
-[START_DATE] to [END_DATE]
-
-EXCLUSIVITY
-[EXCLUSIVITY_CLAUSE]
-
-CONTENT RIGHTS
-[USAGE_RIGHTS]
-
-TERMINATION
-[TERMINATION_CLAUSE]
-
-SIGNATURES
-________________________
-Ambassador: [CREATOR_NAME]
-Date: _______________
-
-________________________
-Brand Representative: [CLIENT_NAME]
-Date: _______________`,
-    deliverables: ["Monthly Instagram content (4 posts)", "Quarterly YouTube mention", "Event attendance (2 per year)"],
-    paymentTerms: "Monthly retainer paid on the 1st of each month",
-    usageRights: "Brand may repurpose Ambassador content for marketing with credit",
-    terminationClause: "30 days written notice required from either party",
-  },
-  ugc: {
-    content: `UGC (USER-GENERATED CONTENT) AGREEMENT
-
-Creator: [CREATOR_NAME]
-Brand: [CLIENT_NAME]
-Date: [START_DATE]
-
-This Agreement covers the creation of authentic user-generated content.
-
-CONTENT SPECIFICATIONS
-[DELIVERABLES]
-
-COMPENSATION
-Fee: [VALUE] [CURRENCY]
-Payment: [PAYMENT_TERMS]
-
-USAGE RIGHTS
-[USAGE_RIGHTS]
-
-CREATOR REQUIREMENTS
-- Content must appear organic and authentic
-- No visible branding of competitors
-- Follow brand aesthetic guidelines
-
-DELIVERY
-All content due by: [END_DATE]
-
-TERMINATION
-[TERMINATION_CLAUSE]
-
-ACCEPTED AND AGREED:
-________________________
-Creator: [CREATOR_NAME]
-
-________________________
-Client: [CLIENT_NAME]`,
-    deliverables: ["3x Raw Video Clips (15-30 sec each)", "5x Lifestyle Photos", "1x Testimonial Video"],
-    paymentTerms: "50% deposit, 50% on delivery",
-    usageRights: "Perpetual license for all paid advertising and organic use",
-    terminationClause: "Either party may terminate with 7 days notice; deposit non-refundable",
-  },
-  affiliate: {
-    content: `AFFILIATE PARTNERSHIP AGREEMENT
-
-Affiliate: [CREATOR_NAME]
-Company: [CLIENT_NAME]
-Effective: [START_DATE]
-
-PROGRAM OVERVIEW
-This Agreement establishes the terms for the affiliate marketing relationship.
-
-AFFILIATE OBLIGATIONS
-- Promote products through approved channels
-- Disclose affiliate relationship per FTC guidelines
-- Not make false claims about products
-
-COMPENSATION
-Commission Structure: [VALUE]% per qualified sale
-Payment Terms: [PAYMENT_TERMS]
-
-TERM
-[START_DATE] to [END_DATE]
-
-INTELLECTUAL PROPERTY
-[USAGE_RIGHTS]
-
-TERMINATION
-[TERMINATION_CLAUSE]
-
-SIGNATURES
-________________________
-Affiliate: [CREATOR_NAME]
-
-________________________
-Company: [CLIENT_NAME]`,
-    deliverables: ["Affiliate link promotion", "Monthly product review", "Quarterly performance report"],
-    paymentTerms: "Commission paid monthly, 30 days after conversion",
-    usageRights: "Limited license to use brand assets for promotion only",
-    terminationClause: "Either party may terminate with 7 days notice; pending commissions still paid",
-  },
-  custom: {
-    content: `CUSTOM AGREEMENT
+const CUSTOM_TEMPLATE = {
+  content: `AGREEMENT
 
 Between: [CREATOR_NAME] ("Creator")
 And: [CLIENT_NAME] ("Client")
@@ -302,16 +75,13 @@ Creator
 
 ________________________
 Client`,
-    deliverables: [],
-    paymentTerms: "As agreed",
-    usageRights: "As agreed between parties",
-    terminationClause: "As agreed between parties",
-  },
+  paymentTerms: "As agreed",
+  usageRights: "As agreed between parties",
+  terminationClause: "As agreed between parties",
 };
 
 const steps = [
-  { id: "type", label: "Type", icon: <FileText className="h-4 w-4" /> },
-  { id: "parties", label: "Parties", icon: <User className="h-4 w-4" /> },
+  { id: "parties", label: "Details", icon: <User className="h-4 w-4" /> },
   { id: "terms", label: "Terms", icon: <Coins className="h-4 w-4" /> },
   { id: "content", label: "Content", icon: <FileSignature className="h-4 w-4" /> },
 ];
@@ -360,7 +130,7 @@ const CreateContractDialog = ({
       setExclusivityDetails(editingContract.exclusivity_details || "");
       setUsageRights(editingContract.usage_rights || "");
       setTerminationClause(editingContract.termination_clause || "");
-      setCurrentStep(1);
+      setCurrentStep(0);
     } else if (kiraContext) {
       // Prefill from Kira conversation context
       if (kiraContext.title) setTitle(kiraContext.title as string);
@@ -373,8 +143,7 @@ const CreateContractDialog = ({
       if (Array.isArray(kiraContext.deliverables) && kiraContext.deliverables.length > 0) {
         setDeliverables(kiraContext.deliverables as string[]);
       }
-      // Skip to parties step if we have enough context
-      if (kiraContext.client_name || kiraContext.contract_type) setCurrentStep(1);
+      if (kiraContext.client_name || kiraContext.contract_type) setCurrentStep(0);
     } else {
       resetForm();
     }
@@ -389,31 +158,14 @@ const CreateContractDialog = ({
     setEndDate("");
     setValue(undefined);
     setCurrency("KES");
-    setContent("");
+    setContent(CUSTOM_TEMPLATE.content);
     setDeliverables([""]);
-    setPaymentTerms("");
+    setPaymentTerms(CUSTOM_TEMPLATE.paymentTerms);
     setExclusivity(false);
     setExclusivityDetails("");
-    setUsageRights("");
-    setTerminationClause("");
+    setUsageRights(CUSTOM_TEMPLATE.usageRights);
+    setTerminationClause(CUSTOM_TEMPLATE.terminationClause);
     setCurrentStep(0);
-  };
-
-  const applyTemplate = (type: string) => {
-    const template = contractTemplates[type];
-    if (template) {
-      setContent(template.content);
-      setDeliverables(template.deliverables.length > 0 ? template.deliverables : [""]);
-      setPaymentTerms(template.paymentTerms);
-      setUsageRights(template.usageRights);
-      setTerminationClause(template.terminationClause);
-    }
-  };
-
-  const selectType = (type: string) => {
-    setContractType(type);
-    if (!editingContract) applyTemplate(type);
-    setCurrentStep(1);
   };
 
   const updateDeliverable = (index: number, val: string) => {
@@ -479,8 +231,7 @@ const CreateContractDialog = ({
   };
 
   const canProceed = () => {
-    if (currentStep === 0) return true;
-    if (currentStep === 1) return title.trim() && clientName.trim();
+    if (currentStep === 0) return title.trim() && clientName.trim();
     return true;
   };
 
@@ -510,7 +261,7 @@ const CreateContractDialog = ({
             {steps.map((step, i) => (
               <div key={step.id} className="flex items-center">
                 <button
-                  onClick={() => i <= (editingContract ? 3 : Math.max(currentStep, i)) && setCurrentStep(i)}
+                  onClick={() => i <= (editingContract ? 2 : Math.max(currentStep, i)) && setCurrentStep(i)}
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
                     i === currentStep
@@ -538,45 +289,8 @@ const CreateContractDialog = ({
         {/* Step Content */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
           <AnimatePresence mode="wait">
-            {/* Step 0: Contract Type */}
+            {/* Step 0: Details */}
             {currentStep === 0 && (
-              <motion.div
-                key="step-0"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-4"
-              >
-                <div>
-                  <h3 className="font-semibold text-foreground mb-1">Choose a template</h3>
-                  <p className="text-xs text-muted-foreground">Select a contract type to get started with a professional template</p>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {contractTypes.map((type) => (
-                    <button
-                      key={type.value}
-                      onClick={() => selectType(type.value)}
-                      className={cn(
-                        "group flex items-center gap-3 p-4 rounded-xl border text-left transition-all hover:border-primary/30 hover:bg-primary/5",
-                        contractType === type.value
-                          ? "border-primary/40 bg-primary/5"
-                          : "border-border/50"
-                      )}
-                    >
-                      <span className="text-2xl">{type.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-foreground">{type.label}</p>
-                        <p className="text-xs text-muted-foreground">{type.desc}</p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
-            {/* Step 1: Parties */}
-            {currentStep === 1 && (
               <motion.div
                 key="step-1"
                 initial={{ opacity: 0, x: 20 }}
@@ -631,10 +345,10 @@ const CreateContractDialog = ({
               </motion.div>
             )}
 
-            {/* Step 2: Terms */}
-            {currentStep === 2 && (
+            {/* Step 1: Terms */}
+            {currentStep === 1 && (
               <motion.div
-                key="step-2"
+                key="step-1"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -733,10 +447,10 @@ const CreateContractDialog = ({
               </motion.div>
             )}
 
-            {/* Step 3: Content */}
-            {currentStep === 3 && (
+            {/* Step 2: Content */}
+            {currentStep === 2 && (
               <motion.div
-                key="step-3"
+                key="step-2"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -770,7 +484,7 @@ const CreateContractDialog = ({
             {currentStep === 0 ? "Cancel" : "Back"}
           </Button>
           <div className="flex items-center gap-2">
-            {currentStep < 3 ? (
+            {currentStep < 2 ? (
               <Button
                 onClick={() => setCurrentStep(currentStep + 1)}
                 disabled={!canProceed()}
