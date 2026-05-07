@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Sparkles, MoreHorizontal, Plug, Briefcase, Crown } from "lucide-react";
+import { Home, Sparkles, MoreHorizontal, Briefcase, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -131,23 +131,6 @@ const MobileBottomNav = () => {
                   <Crown className="h-5 w-5 flex-shrink-0" />
                   <span className="font-poppins text-sm font-semibold">Upgrade to Pro</span>
                 </Link>
-
-                <Separator className="bg-white/10" />
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 px-2 mb-2">
-                    <Plug className="w-4 h-4 text-bronze" />
-                    <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider">{t("profile.integrations")}</p>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-11 text-sm font-medium rounded-xl"
-                    onClick={() => handleNavigation("/profile/integrations")}
-                  >
-                    <Plug className="w-4 h-4 mr-3" />
-                    {t("integrations.manageIntegrations")}
-                  </Button>
-                </div>
 
                 <Separator className="bg-white/10" />
 
