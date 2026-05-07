@@ -1,4 +1,5 @@
-import { Star } from "lucide-react";
+import { useState } from "react";
+import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 
 interface Testimonial {
@@ -46,72 +47,21 @@ const TESTIMONIALS: Testimonial[] = [
   },
 ];
 
-const TestimonialCard = ({ quote, name, role, initials }: Testimonial) => (
-  <div
-    // mr-5 on each card (not gap on container) — ensures exactly 50% of total
-    // track width equals one full set, giving a pixel-perfect seamless loop.
-    className="group relative flex-shrink-0 w-[320px] md:w-[370px] mr-5 p-6 rounded-2xl border overflow-hidden select-none
-               bg-card/80 dark:bg-white/[0.04] backdrop-blur-sm
-               border-border dark:border-white/[0.07]
-               transition-all duration-500
-               hover:bg-card dark:hover:bg-white/[0.07]
-               hover:border-border/80 dark:hover:border-white/[0.13]
-               hover:shadow-[0_4px_32px_-8px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_4px_32px_-8px_rgba(0,0,0,0.5)]"
-  >
-    {/* Bronze radial glow — fades in on hover */}
-    <div
-      className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-      style={{
-        background:
-          "radial-gradient(ellipse 80% 50% at 50% -10%, hsl(var(--bronze) / 0.10) 0%, transparent 70%)",
-      }}
-    />
-
-    {/* Stars */}
-    <div className="relative z-10 flex gap-0.5 mb-4">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Star key={i} className="w-3.5 h-3.5 fill-bronze text-bronze" />
-      ))}
-    </div>
-
-    {/* Quote */}
-    <blockquote className="relative z-10 font-poppins text-[14.5px] leading-[1.75] text-foreground/70 dark:text-zinc-300 mb-5">
-      &ldquo;{quote}&rdquo;
-    </blockquote>
-
-    {/* Hairline divider */}
-    <div className="relative z-10 h-px w-full bg-border dark:bg-white/[0.06] mb-4" />
-
-    {/* Author */}
-    <div className="relative z-10 flex items-center gap-3">
-      <div
-        className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center
-                   bg-gradient-to-br from-bronze to-bronze-dark
-                   text-white text-[11px] font-semibold font-poppins tracking-wide"
-      >
-        {initials}
-      </div>
-      <div className="min-w-0">
-        <p className="font-poppins text-sm font-semibold text-foreground leading-tight truncate">
-          {name}
-        </p>
-        <p className="font-poppins text-xs text-muted-foreground mt-0.5 leading-tight truncate">
-          {role}
-        </p>
-      </div>
-    </div>
-  </div>
-);
-
 const TestimonialMarquee = () => {
-  // Duplicate once — animation translates -50% (exactly one full set width)
-  const doubled = [...TESTIMONIALS, ...TESTIMONIALS];
+  const [active, setActive] = useState(0);
+  const count = TESTIMONIALS.length;
+
+  const prev = () => setActive((i) => (i - 1 + count) % count);
+  const next = () => setActive((i) => (i + 1) % count);
+
+  const t = TESTIMONIALS[active];
 
   return (
-    <section className="py-20 md:py-28">
-      {/* Header */}
-      <div className="container mx-auto max-w-6xl px-4 md:px-6 text-center mb-14 md:mb-16">
-        <ScrollReveal>
+    <section className="py-20 md:py-28 px-4 md:px-6">
+      <div className="container mx-auto max-w-4xl">
+
+        {/* Header */}
+        <ScrollReveal className="text-center mb-12 md:mb-16">
           <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase mb-4">
             Real Voices
           </p>
@@ -120,29 +70,97 @@ const TestimonialMarquee = () => {
             <span className="text-gradient-bronze">across the continent.</span>
           </h2>
         </ScrollReveal>
-      </div>
 
-      {/* Marquee — edge-faded, hardware-accelerated */}
-      <div
-        className="relative overflow-hidden"
-        style={{
-          // Soft horizontal fade — cards dissolve into the background at both edges
-          maskImage:
-            "linear-gradient(to right, transparent 0%, black 7%, black 93%, transparent 100%)",
-          WebkitMaskImage:
-            "linear-gradient(to right, transparent 0%, black 7%, black 93%, transparent 100%)",
-        }}
-      >
-        <div
-          // animate-marquee defined in tailwind.config.ts
-          // hover:[animation-play-state:paused] — Tailwind arbitrary property, no config needed
-          className="flex animate-marquee hover:[animation-play-state:paused]"
-          style={{ width: "max-content", willChange: "transform" }}
-        >
-          {doubled.map((t, i) => (
-            <TestimonialCard key={i} {...t} />
-          ))}
+        {/* Card — overflow-hidden clips off-screen cards; translateX slides between them */}
+        <div className="overflow-hidden rounded-2xl">
+          <div
+            className="flex transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            style={{ transform: `translateX(-${active * 100}%)` }}
+          >
+            {TESTIMONIALS.map((item, i) => (
+              <div key={i} className="w-full flex-shrink-0">
+                <div className="bg-card border border-border rounded-2xl p-7 sm:p-10 md:p-14">
+                  {/* Stars */}
+                  <div className="flex gap-1 mb-6 md:mb-8">
+                    {Array.from({ length: 5 }).map((_, j) => (
+                      <Star key={j} className="w-4 h-4 fill-bronze text-bronze" />
+                    ))}
+                  </div>
+
+                  {/* Quote */}
+                  <blockquote className="font-vollkorn text-xl sm:text-2xl md:text-3xl font-medium leading-[1.5] text-foreground mb-8 md:mb-10">
+                    &ldquo;{item.quote}&rdquo;
+                  </blockquote>
+
+                  {/* Author */}
+                  <div className="flex items-center gap-4">
+                    <div
+                      className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center
+                                 bg-gradient-to-br from-bronze to-bronze-dark
+                                 text-white text-sm font-semibold font-poppins"
+                    >
+                      {item.initials}
+                    </div>
+                    <div>
+                      <p className="font-poppins font-semibold text-foreground leading-tight">
+                        {item.name}
+                      </p>
+                      <p className="font-poppins text-sm text-muted-foreground mt-0.5">
+                        {item.role}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
+
+        {/* Controls — dots left, arrows right */}
+        <div className="flex items-center justify-between mt-6 md:mt-8">
+          {/* Progress dots */}
+          <div className="flex items-center gap-2">
+            {TESTIMONIALS.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setActive(i)}
+                aria-label={`Go to testimonial ${i + 1}`}
+                className={`h-1.5 rounded-full transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                  i === active
+                    ? "w-8 bg-bronze"
+                    : "w-2 bg-border hover:bg-muted-foreground"
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Prev / Next */}
+          <div className="flex gap-3">
+            <button
+              onClick={prev}
+              aria-label="Previous testimonial"
+              className="w-11 h-11 rounded-full border border-border bg-background
+                         flex items-center justify-center text-foreground
+                         hover:bg-bronze hover:border-bronze hover:text-white
+                         transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
+                         active:scale-95"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              onClick={next}
+              aria-label="Next testimonial"
+              className="w-11 h-11 rounded-full border border-border bg-background
+                         flex items-center justify-center text-foreground
+                         hover:bg-bronze hover:border-bronze hover:text-white
+                         transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
+                         active:scale-95"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
       </div>
     </section>
   );
