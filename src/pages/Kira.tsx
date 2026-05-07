@@ -4,6 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/use-subscription";
 import UsageLimitBanner from "@/components/subscription/UsageLimitBanner";
@@ -153,6 +163,8 @@ const Kira = () => {
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [kiraContractContext, setKiraContractContext] = useState<Record<string, unknown> | null>(null);
   const [kiraInvoiceContext, setKiraInvoiceContext] = useState<Record<string, unknown> | null>(null);
+
+  const [chatToDelete, setChatToDelete] = useState<string | null>(null);
 
   // ── NEW: message interaction state ──
   const [editingMessageIdx, setEditingMessageIdx] = useState<number | null>(null);
@@ -461,7 +473,7 @@ const Kira = () => {
       .from('kira_conversations')
       .delete()
       .eq('id', chatId);
-    
+
     if (!error) {
       setChatHistories(prev => prev.filter(c => c.id !== chatId));
       if (activeChat === chatId) {
@@ -469,6 +481,7 @@ const Kira = () => {
         setActiveChat(remaining.length > 0 ? remaining[0].id : null);
       }
     }
+    setChatToDelete(null);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -649,9 +662,9 @@ const Kira = () => {
                       >
                         <MessageSquare className={`w-4 h-4 flex-shrink-0 ${activeChat === chat.id ? 'text-bronze' : ''}`} />
                         <span className="flex-1 text-sm truncate">{chat.title}</span>
-                        <button 
+                        <button
                           className="opacity-0 group-hover:opacity-100 p-1 hover:bg-destructive/10 rounded transition-all"
-                          onClick={(e) => { e.stopPropagation(); handleDeleteChat(chat.id); }}
+                          onClick={(e) => { e.stopPropagation(); setChatToDelete(chat.id); }}
                         >
                           <Trash2 className="w-3 h-3 text-muted-foreground hover:text-destructive" />
                         </button>
@@ -677,13 +690,19 @@ const Kira = () => {
                                 key={chat.id}
                                 onClick={() => { setActiveChat(chat.id); setActiveProjectId(project.id); setViewMode("chat"); }}
                                 className={`group flex items-center gap-2 p-2 pl-7 rounded-lg cursor-pointer transition-all ${
-                                  activeChat === chat.id 
-                                    ? 'bg-bronze/10 text-foreground' 
+                                  activeChat === chat.id
+                                    ? 'bg-bronze/10 text-foreground'
                                     : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                                 }`}
                               >
                                 <MessageSquare className={`w-3.5 h-3.5 flex-shrink-0 ${activeChat === chat.id ? 'text-bronze' : ''}`} />
                                 <span className="flex-1 text-sm truncate">{chat.title}</span>
+                                <button
+                                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-destructive/10 rounded transition-all"
+                                  onClick={(e) => { e.stopPropagation(); setChatToDelete(chat.id); }}
+                                >
+                                  <Trash2 className="w-3 h-3 text-muted-foreground hover:text-destructive" />
+                                </button>
                               </div>
                             ))}
                           </div>
@@ -760,8 +779,15 @@ const Kira = () => {
                     onClick={() => { setActiveChat(chat.id); setActiveProjectId(chat.project_id || null); setMobileSidebarOpen(false); setViewMode("chat"); }}
                     className={`group flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-all ${activeChat === chat.id ? 'bg-bronze/10' : 'hover:bg-muted/50'}`}
                   >
-                    <MessageSquare className={`w-4 h-4 ${activeChat === chat.id ? 'text-bronze' : 'text-muted-foreground'}`} />
+                    <MessageSquare className={`w-4 h-4 flex-shrink-0 ${activeChat === chat.id ? 'text-bronze' : 'text-muted-foreground'}`} />
                     <span className="flex-1 text-sm truncate">{chat.title}</span>
+                    <button
+                      className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all flex-shrink-0"
+                      onClick={(e) => { e.stopPropagation(); setChatToDelete(chat.id); }}
+                      aria-label="Delete chat"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -777,6 +803,7 @@ const Kira = () => {
           isLoading={isLoadingProjects}
           onCreateProject={() => setCreateProjectOpen(true)}
           onSelectProject={(project) => { setSelectedProject(project); setProjectDetailOpen(true); }}
+          onDeleteProject={handleProjectDeleted}
         />
       ) : (
         <div className="flex-1 flex flex-col min-w-0">
@@ -1137,6 +1164,27 @@ const Kira = () => {
         open={approveDialogOpen}
         onOpenChange={setApproveDialogOpen}
       />
+
+      {/* Chat delete confirmation */}
+      <AlertDialog open={!!chatToDelete} onOpenChange={(open) => { if (!open) setChatToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this chat?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This conversation will be permanently deleted and cannot be recovered.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              onClick={() => chatToDelete && handleDeleteChat(chatToDelete)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

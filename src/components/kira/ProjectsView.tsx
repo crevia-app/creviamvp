@@ -10,11 +10,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import {
   Plus,
   Search,
   FolderOpen,
   LayoutGrid,
   Loader2,
+  Trash2,
 } from "lucide-react";
 
 interface Project {
@@ -31,6 +44,7 @@ interface ProjectsViewProps {
   isLoading: boolean;
   onCreateProject: () => void;
   onSelectProject: (project: Project) => void;
+  onDeleteProject: (projectId: string) => void;
 }
 
 export const ProjectsView = ({
@@ -38,9 +52,39 @@ export const ProjectsView = ({
   isLoading,
   onCreateProject,
   onSelectProject,
+  onDeleteProject,
 }: ProjectsViewProps) => {
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"activity" | "name" | "created">("activity");
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const confirmDeleteProject = async () => {
+    if (!projectToDelete) return;
+    setIsDeleting(true);
+    try {
+      await supabase
+        .from("kira_conversations")
+        .update({ project_id: null })
+        .eq("project_id", projectToDelete.id);
+
+      const { error } = await supabase
+        .from("kira_projects")
+        .delete()
+        .eq("id", projectToDelete.id);
+
+      if (error) throw error;
+
+      onDeleteProject(projectToDelete.id);
+      toast({ title: "Project deleted", description: `"${projectToDelete.name}" has been removed` });
+    } catch {
+      toast({ title: "Error", description: "Couldn't delete project", variant: "destructive" });
+    } finally {
+      setIsDeleting(false);
+      setProjectToDelete(null);
+    }
+  };
 
   const filteredProjects = projects
     .filter((p) =>
@@ -143,15 +187,24 @@ export const ProjectsView = ({
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredProjects.map((project) => (
-                <button
+                <div
                   key={project.id}
+                  className="group relative text-left p-5 rounded-2xl border border-border/50 hover:border-bronze/50 bg-card hover:bg-muted/30 transition-all cursor-pointer"
                   onClick={() => onSelectProject(project)}
-                  className="group text-left p-5 rounded-2xl border border-border/50 hover:border-bronze/50 bg-card hover:bg-muted/30 transition-all"
                 >
+                  {/* Delete button */}
+                  <button
+                    className="absolute top-3 right-3 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all"
+                    onClick={(e) => { e.stopPropagation(); setProjectToDelete(project); }}
+                    aria-label="Delete project"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+
                   <div className="w-12 h-12 rounded-xl bg-bronze/10 flex items-center justify-center mb-4 group-hover:bg-bronze/20 transition-colors">
                     <FolderOpen className="w-6 h-6 text-bronze" />
                   </div>
-                  <h3 className="font-semibold mb-1 truncate">{project.name}</h3>
+                  <h3 className="font-semibold mb-1 truncate pr-6">{project.name}</h3>
                   {project.description && (
                     <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
                       {project.description}
@@ -160,12 +213,33 @@ export const ProjectsView = ({
                   <p className="text-xs text-muted-foreground">
                     Updated {new Date(project.updated_at).toLocaleDateString()}
                   </p>
-                </button>
+                </div>
               ))}
             </div>
           )}
         </div>
       </ScrollArea>
+
+      <AlertDialog open={!!projectToDelete} onOpenChange={(open) => { if (!open) setProjectToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete "{projectToDelete?.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This project will be permanently deleted. All chats linked to it will be moved to general chats.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              onClick={confirmDeleteProject}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
