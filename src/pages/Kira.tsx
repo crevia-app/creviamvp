@@ -284,27 +284,7 @@ const Kira = () => {
 
   const streamKiraResponse = useCallback(async (userMessages: Message[], conversationId: string) => {
     const lastUserContent = userMessages[userMessages.length - 1].content;
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-    if (!session) {
-      throw new Error("User session not found. Please log in again.");
-    }
-    // ── CHECK KIRA DAILY LIMIT ──
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('kira_actions_used, kira_actions_limit')
-      .eq('id', userId)
-      .single();
-
-const actionsToday = profile?.kira_actions_used || 0;
-const actionsLimit = profile?.kira_actions_limit || 10;
-
-if (actionsToday >= actionsLimit) {
-  throw new Error("You have reached your daily Kira limit of " + actionsLimit + " actions. Upgrade to Pro for 40 actions per day.");
-}
-
     const history = userMessages.slice(-7, -1).map(m => ({ role: m.role, content: m.content }));
-
     const { data, error } = await supabase.functions.invoke('kira-gpt', {
       body: { prompt: lastUserContent, history },
     });
