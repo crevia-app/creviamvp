@@ -820,7 +820,7 @@ const Kira = () => {
                       <h1 className="font-vollkorn text-2xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-bronze to-bronze-dark bg-clip-text text-transparent">
                         {activeProject ? `Working on ${activeProject.name}` : currentGreeting}
                       </h1>
-                      <p className="text-muted-foreground text-sm md:text-base max-w-md mb-12">
+                      <p className="text-muted-foreground text-base max-w-md mb-12">
                         {activeProject 
                           ? activeProject.description || "Start chatting with project context"
                           : userType === 'brand' 
@@ -838,7 +838,7 @@ const Kira = () => {
                             <div className="p-2 rounded-lg bg-bronze/10 text-bronze group-hover:bg-bronze group-hover:text-background transition-all">
                               <action.icon className="w-4 h-4" />
                             </div>
-                            <span className="text-sm font-medium">{action.label}</span>
+                            <span className="text-sm font-medium leading-snug">{action.label}</span>
                             <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                           </button>
                         ))}
@@ -906,7 +906,7 @@ const Kira = () => {
                                         : 'bg-muted rounded-tl-md'
                                     }`}
                                   >
-                                    <p className="text-sm md:text-base whitespace-pre-wrap text-left">{msg.content}</p>
+                                    <p className="text-base whitespace-pre-wrap text-left">{msg.content}</p>
                                     {msg.file && (
                                       <div className="mt-2 flex items-center gap-2 text-xs opacity-70">
                                         <Paperclip className="w-3 h-3" />

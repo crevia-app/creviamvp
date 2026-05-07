@@ -66,7 +66,7 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
                   )} 
                 />
               </div>
-              <span className="font-poppins text-[11px] font-medium text-center leading-tight transition-all duration-300">
+              <span className="font-poppins text-xs font-medium text-center leading-tight transition-all duration-300">
                 {item.label}
               </span>
             </Link>
@@ -79,7 +79,7 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
               <div className="p-2.5 rounded-xl transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105">
                 <MoreHorizontal className="h-6 w-6 transition-all duration-300" />
               </div>
-              <span className="font-poppins text-[11px] font-medium text-center leading-tight">
+              <span className="font-poppins text-xs font-medium text-center leading-tight">
                 {t("common.more")}
               </span>
             </button>
@@ -126,7 +126,7 @@ const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) =>
               {profile?.display_name?.charAt(0) || profile?.email?.charAt(0) || "U"}
             </AvatarFallback>
           </Avatar>
-          <span className="font-poppins text-[11px] font-medium text-center leading-tight truncate w-full">
+          <span className="font-poppins text-xs font-medium text-center leading-tight truncate w-full">
             {profile?.display_name || "User"}
           </span>
         </button>

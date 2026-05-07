@@ -90,7 +90,7 @@ All colors MUST be HSL.
 
 @layer base {
   html {
-    font-size: 17px; /* Global +1px bump — all rem values scale up proportionally */
+    font-size: 18px; /* Global base — all rem values scale proportionally */
   }
 
   * {
