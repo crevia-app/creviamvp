@@ -2211,16 +2211,6 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <p className="font-medium truncate text-sm">{user.display_name || "User"}</p>
-                            <Badge
-                              variant="outline"
-                              className={`text-[9px] px-1 py-0 capitalize ${
-                                user.user_type === "brand"
-                                  ? "border-blue-300 text-blue-600"
-                                  : "border-purple-300 text-purple-600"
-                              }`}
-                            >
-                              {user.user_type}
-                            </Badge>
                           </div>
                           <p className="text-xs text-muted-foreground truncate">@{user.handle}</p>
                         </div>
@@ -2310,9 +2300,6 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                           <p className="text-sm font-medium truncate">{user.display_name || "User"}</p>
                           <p className="text-xs text-muted-foreground">@{user.handle}</p>
                         </div>
-                        <Badge variant="outline" className="text-[9px] capitalize">
-                          {user.user_type}
-                        </Badge>
                       </div>
                     </button>
                   );
@@ -2465,8 +2452,8 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                               </Badge>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground capitalize">
-                            {member.profile?.user_type}
+                          <p className="text-xs text-muted-foreground">
+                            {member.profile?.handle ? `@${member.profile.handle}` : ""}
                           </p>
                         </div>
                       </div>

@@ -2,33 +2,17 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
-interface ConnectTabsMobileProps {
-  userType: "creator" | "brand";
-}
+const tabs = [
+  { id: "campaigns", label: "My Campaigns" },
+  { id: "projects", label: "My Projects" },
+  { id: "analytics", label: "Analytics" },
+  { id: "kira", label: "Kira" },
+  { id: "chat", label: "Chat" },
+];
 
-const ConnectTabsMobile = ({ userType }: ConnectTabsMobileProps) => {
+const ConnectTabsMobile = () => {
   const location = useLocation();
-  const currentTab = new URLSearchParams(location.search).get("tab") || 
-    (userType === "creator" ? "campaigns" : "discovery");
-
-  const creatorTabs = [
-    { id: "campaigns", label: "My Campaigns" },
-    { id: "projects", label: "My Projects" },
-    { id: "analytics", label: "Analytics" },
-    { id: "kira", label: "Kira" },
-    { id: "chat", label: "Crevia Chat" },
-  ];
-
-  const brandTabs = [
-    { id: "discovery", label: "Talent Discovery" },
-    { id: "campaigns", label: "Campaigns" },
-    { id: "projects", label: "Projects" },
-    { id: "creators", label: "My Creatives" },
-    { id: "kira", label: "Kira for Brands" },
-    { id: "chat", label: "Crevia Chat" },
-  ];
-
-  const tabs = userType === "creator" ? creatorTabs : brandTabs;
+  const currentTab = new URLSearchParams(location.search).get("tab") || "campaigns";
 
   return (
     <div className="md:hidden sticky top-0 z-40 bg-background border-b border-border/40">
@@ -36,7 +20,7 @@ const ConnectTabsMobile = ({ userType }: ConnectTabsMobileProps) => {
         <div className="flex gap-1 px-4 py-2">
           {tabs.map((tab) => {
             const isActive = currentTab === tab.id;
-            
+
             return (
               <Link
                 key={tab.id}

@@ -1,37 +1,26 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Wallet, 
-  CreditCard, 
-  Smartphone, 
-  ArrowUpRight, 
-  ArrowDownLeft,
+import {
+  Wallet,
+  CreditCard,
+  Smartphone,
+  ArrowUpRight,
   Clock,
   CheckCircle2,
-  AlertCircle,
   Plus,
   Shield,
-  Send,
-  Users,
   TrendingUp,
   Download,
   Search,
-  Filter
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import AddPayoutMethodDialog from "@/components/crevia-connect/shared/AddPayoutMethodDialog";
-
-interface WalletTabProps {
-  userType: "creator" | "brand";
-}
 
 interface EscrowPayment {
   id: string;
@@ -63,12 +52,11 @@ interface PayoutMethod {
   bank_account_name: string | null;
 }
 
-const WalletTab = ({ userType }: WalletTabProps) => {
+const WalletTab = () => {
   const [escrowPayments, setEscrowPayments] = useState<EscrowPayment[]>([]);
   const [payoutMethods, setPayoutMethods] = useState<PayoutMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddMethodDialog, setShowAddMethodDialog] = useState(false);
-  const [selectedPayments, setSelectedPayments] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -80,7 +68,6 @@ const WalletTab = ({ userType }: WalletTabProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Fetch escrow payments
       const { data: payments, error: paymentsError } = await supabase
         .from("escrow_payments")
         .select(`
@@ -94,17 +81,14 @@ const WalletTab = ({ userType }: WalletTabProps) => {
       if (paymentsError) throw paymentsError;
       setEscrowPayments(payments || []);
 
-      // Fetch payout methods for creators
-      if (userType === "creator") {
-        const { data: methods, error: methodsError } = await supabase
-          .from("creator_payout_methods")
-          .select("*")
-          .eq("creator_id", user.id)
-          .order("is_default", { ascending: false });
+      const { data: methods, error: methodsError } = await supabase
+        .from("creator_payout_methods")
+        .select("*")
+        .eq("creator_id", user.id)
+        .order("is_default", { ascending: false });
 
-        if (methodsError) throw methodsError;
-        setPayoutMethods(methods || []);
-      }
+      if (methodsError) throw methodsError;
+      setPayoutMethods(methods || []);
     } catch (error) {
       console.error("Error fetching wallet data:", error);
       toast.error("Failed to load wallet data");
@@ -132,40 +116,21 @@ const WalletTab = ({ userType }: WalletTabProps) => {
     }, 0);
 
     const totalReleased = released.reduce((sum, p) => sum + Number(p.total_amount), 0);
-    const totalPending = pending.reduce((sum, p) => sum + Number(p.total_amount), 0);
 
-    return { 
-      pendingCount: pending.length, 
-      pendingAmount: totalPending,
-      inEscrow: totalInEscrow, 
-      released: totalReleased 
+    return {
+      pendingCount: pending.length,
+      inEscrow: totalInEscrow,
+      released: totalReleased,
     };
   };
 
   const stats = calculateStats();
 
-  const handleSelectPayment = (id: string, checked: boolean) => {
-    if (checked) {
-      setSelectedPayments([...selectedPayments, id]);
-    } else {
-      setSelectedPayments(selectedPayments.filter(p => p !== id));
-    }
-  };
-
-  const handleBulkPay = () => {
-    if (selectedPayments.length === 0) {
-      toast.error("Please select payments to process");
-      return;
-    }
-    toast.success(`Processing ${selectedPayments.length} payment(s)`);
-    setSelectedPayments([]);
-  };
-
   const filteredPayments = escrowPayments.filter(payment => {
     const searchLower = searchQuery.toLowerCase();
     const campaignTitle = payment.campaign?.title?.toLowerCase() || "";
-    const creatorName = payment.creator_profile?.display_name?.toLowerCase() || "";
-    return campaignTitle.includes(searchLower) || creatorName.includes(searchLower);
+    const counterpart = (payment.brand_profile?.display_name || payment.creator_profile?.display_name || "").toLowerCase();
+    return campaignTitle.includes(searchLower) || counterpart.includes(searchLower);
   });
 
   if (loading) {
@@ -189,58 +154,36 @@ const WalletTab = ({ userType }: WalletTabProps) => {
                   <Wallet className="h-6 w-6 text-bronze" />
                 </div>
                 <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                  {userType === "creator" ? "Available Balance" : "Wallet Balance"}
+                  Balance
                 </span>
               </div>
               <h1 className="font-vollkorn text-4xl md:text-5xl font-bold text-foreground">
-                KES {(userType === "creator" ? stats.inEscrow : stats.released).toLocaleString()}
+                KES {stats.inEscrow.toLocaleString()}
               </h1>
               <p className="text-muted-foreground mt-2 font-poppins">
-                {userType === "creator" 
-                  ? "Ready to withdraw" 
-                  : `${stats.pendingCount} pending payment${stats.pendingCount !== 1 ? 's' : ''}`}
+                {stats.pendingCount > 0
+                  ? `${stats.pendingCount} pending payment${stats.pendingCount !== 1 ? "s" : ""}`
+                  : "Ready to withdraw"}
               </p>
             </div>
-            
+
             <div className="flex gap-3">
-              {userType === "brand" ? (
-                <>
-                  <Button 
-                    size="lg" 
-                    className="bg-bronze hover:bg-bronze-dark font-poppins gap-2 h-12 px-6"
-                  >
-                    <Plus className="h-5 w-5" />
-                    Top Up
-                  </Button>
-                  <Button 
-                    size="lg" 
-                    variant="outline" 
-                    className="font-poppins gap-2 h-12 px-6"
-                  >
-                    <Send className="h-5 w-5" />
-                    Bulk Pay
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button 
-                    size="lg" 
-                    className="bg-bronze hover:bg-bronze-dark font-poppins gap-2 h-12 px-6"
-                  >
-                    <Download className="h-5 w-5" />
-                    Withdraw
-                  </Button>
-                  <Button 
-                    size="lg" 
-                    variant="outline" 
-                    className="font-poppins gap-2 h-12 px-6"
-                    onClick={() => setShowAddMethodDialog(true)}
-                  >
-                    <Plus className="h-5 w-5" />
-                    Add Method
-                  </Button>
-                </>
-              )}
+              <Button
+                size="lg"
+                className="bg-bronze hover:bg-bronze-dark font-poppins gap-2 h-12 px-6"
+              >
+                <Download className="h-5 w-5" />
+                Withdraw
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="font-poppins gap-2 h-12 px-6"
+                onClick={() => setShowAddMethodDialog(true)}
+              >
+                <Plus className="h-5 w-5" />
+                Add Method
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -256,9 +199,7 @@ const WalletTab = ({ userType }: WalletTabProps) => {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-medium">Pending</p>
-                <p className="text-lg font-bold font-vollkorn text-foreground">
-                  {stats.pendingCount}
-                </p>
+                <p className="text-lg font-bold font-vollkorn text-foreground">{stats.pendingCount}</p>
               </div>
             </div>
           </CardContent>
@@ -287,9 +228,7 @@ const WalletTab = ({ userType }: WalletTabProps) => {
                 <CheckCircle2 className="h-5 w-5 text-green-500" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground font-medium">
-                  {userType === "creator" ? "Earned" : "Paid Out"}
-                </p>
+                <p className="text-xs text-muted-foreground font-medium">Completed</p>
                 <p className="text-lg font-bold font-vollkorn text-foreground">
                   KES {stats.released.toLocaleString()}
                 </p>
@@ -306,38 +245,26 @@ const WalletTab = ({ userType }: WalletTabProps) => {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground font-medium">This Month</p>
-                <p className="text-lg font-bold font-vollkorn text-foreground">
-                  +12%
-                </p>
+                <p className="text-lg font-bold font-vollkorn text-foreground">+12%</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Content Tabs */}
-      <Tabs defaultValue={userType === "brand" ? "pending" : "earnings"} className="space-y-4">
+      {/* Main Tabs */}
+      <Tabs defaultValue="payments" className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <TabsList className="bg-muted/50 w-fit">
-            {userType === "brand" ? (
-              <>
-                <TabsTrigger value="pending" className="font-poppins">Pending</TabsTrigger>
-                <TabsTrigger value="escrow" className="font-poppins">In Escrow</TabsTrigger>
-                <TabsTrigger value="history" className="font-poppins">History</TabsTrigger>
-              </>
-            ) : (
-              <>
-                <TabsTrigger value="earnings" className="font-poppins">Earnings</TabsTrigger>
-                <TabsTrigger value="methods" className="font-poppins">Payout Methods</TabsTrigger>
-                <TabsTrigger value="history" className="font-poppins">History</TabsTrigger>
-              </>
-            )}
+            <TabsTrigger value="payments" className="font-poppins">Payments</TabsTrigger>
+            <TabsTrigger value="methods" className="font-poppins">Payout Methods</TabsTrigger>
+            <TabsTrigger value="history" className="font-poppins">History</TabsTrigger>
           </TabsList>
-          
+
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search payments..." 
+            <Input
+              placeholder="Search payments..."
               className="pl-9 h-10 w-full sm:w-64"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -345,109 +272,15 @@ const WalletTab = ({ userType }: WalletTabProps) => {
           </div>
         </div>
 
-        {/* Brand: Pending Payments Tab */}
-        <TabsContent value="pending" className="space-y-4">
-          {/* 50/50 Split Info */}
-          <Card className="border-bronze/30 bg-bronze/5">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <Shield className="h-5 w-5 text-bronze mt-0.5 shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-bronze font-poppins">Secure 50/50 Split System</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Payments are split: 50% released when work begins, 50% on approval. This protects everyone.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {filteredPayments.filter(p => p.first_payment_status === "pending").length === 0 ? (
-            <Card className="border-dashed border-2">
-              <CardContent className="flex flex-col items-center justify-center py-16">
-                <div className="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-                  <CheckCircle2 className="h-8 w-8 text-muted-foreground/50" />
-                </div>
-                <h3 className="font-semibold text-lg font-vollkorn">All caught up!</h3>
-                <p className="text-muted-foreground text-center max-w-sm mt-2">
-                  No pending payments at the moment
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {filteredPayments
-                .filter(p => p.first_payment_status === "pending")
-                .map((payment) => (
-                  <Card key={payment.id} className="hover:border-bronze/30 transition-colors">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-4">
-                        <Checkbox 
-                          checked={selectedPayments.includes(payment.id)}
-                          onCheckedChange={(checked) => handleSelectPayment(payment.id, !!checked)}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-semibold truncate font-poppins">
-                              {payment.campaign?.title || "Campaign"}
-                            </h4>
-                            <Badge variant="outline" className="text-yellow-500 border-yellow-500/30 shrink-0">
-                              Pending
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {payment.creator_profile?.display_name || "Creator"}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-lg font-vollkorn">
-                            KES {Number(payment.total_amount).toLocaleString()}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(payment.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <Button size="sm" className="bg-bronze hover:bg-bronze-dark shrink-0">
-                          Fund
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              
-              {/* Bulk Action Bar */}
-              {selectedPayments.length > 0 && (
-                <Card className="sticky bottom-4 bg-bronze text-white border-none shadow-lg">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium font-poppins">
-                        {selectedPayments.length} payment{selectedPayments.length > 1 ? 's' : ''} selected
-                      </span>
-                      <Button 
-                        variant="secondary" 
-                        onClick={handleBulkPay}
-                        className="bg-white text-bronze hover:bg-white/90"
-                      >
-                        <Send className="h-4 w-4 mr-2" />
-                        Pay Selected
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Creator: Earnings Tab */}
-        <TabsContent value="earnings" className="space-y-4">
+        {/* Payments Tab */}
+        <TabsContent value="payments" className="space-y-4">
           {filteredPayments.length === 0 ? (
             <Card className="border-dashed border-2">
               <CardContent className="flex flex-col items-center justify-center py-16">
                 <div className="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
                   <Wallet className="h-8 w-8 text-muted-foreground/50" />
                 </div>
-                <h3 className="font-semibold text-lg font-vollkorn">No earnings yet</h3>
+                <h3 className="font-semibold text-lg font-vollkorn">No payments yet</h3>
                 <p className="text-muted-foreground text-center max-w-sm mt-2">
                   Complete campaigns to start earning
                 </p>
@@ -461,10 +294,10 @@ const WalletTab = ({ userType }: WalletTabProps) => {
                     <div className="flex items-center gap-4">
                       <div className={cn(
                         "h-10 w-10 rounded-xl flex items-center justify-center shrink-0",
-                        payment.first_payment_status === "released" 
-                          ? "bg-green-500/10" 
-                          : payment.first_payment_status === "paid" 
-                            ? "bg-bronze/10" 
+                        payment.first_payment_status === "released"
+                          ? "bg-green-500/10"
+                          : payment.first_payment_status === "paid"
+                            ? "bg-bronze/10"
                             : "bg-yellow-500/10"
                       )}>
                         {payment.first_payment_status === "released" ? (
@@ -480,7 +313,7 @@ const WalletTab = ({ userType }: WalletTabProps) => {
                           {payment.campaign?.title || "Campaign"}
                         </h4>
                         <p className="text-sm text-muted-foreground mt-0.5">
-                          {payment.brand_profile?.display_name || "Brand"}
+                          {payment.brand_profile?.display_name || payment.creator_profile?.display_name || "—"}
                         </p>
                       </div>
                       <div className="text-right">
@@ -489,14 +322,14 @@ const WalletTab = ({ userType }: WalletTabProps) => {
                         </p>
                         <Badge variant="outline" className={cn(
                           "text-xs",
-                          payment.first_payment_status === "released" 
-                            ? "text-green-500 border-green-500/30" 
+                          payment.first_payment_status === "released"
+                            ? "text-green-500 border-green-500/30"
                             : payment.first_payment_status === "paid"
                               ? "text-bronze border-bronze/30"
                               : "text-yellow-500 border-yellow-500/30"
                         )}>
-                          {payment.first_payment_status === "released" ? "Completed" : 
-                           payment.first_payment_status === "paid" ? "In Escrow" : "Pending"}
+                          {payment.first_payment_status === "released" ? "Completed" :
+                            payment.first_payment_status === "paid" ? "In Escrow" : "Pending"}
                         </Badge>
                       </div>
                     </div>
@@ -507,59 +340,7 @@ const WalletTab = ({ userType }: WalletTabProps) => {
           )}
         </TabsContent>
 
-        {/* Escrow Tab */}
-        <TabsContent value="escrow" className="space-y-4">
-          {filteredPayments.filter(p => p.first_payment_status === "paid").length === 0 ? (
-            <Card className="border-dashed border-2">
-              <CardContent className="flex flex-col items-center justify-center py-16">
-                <div className="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-                  <Shield className="h-8 w-8 text-muted-foreground/50" />
-                </div>
-                <h3 className="font-semibold text-lg font-vollkorn">No funds in escrow</h3>
-                <p className="text-muted-foreground text-center max-w-sm mt-2">
-                  Funded payments will appear here
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {filteredPayments
-                .filter(p => p.first_payment_status === "paid")
-                .map((payment) => (
-                  <Card key={payment.id} className="border-bronze/20">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-xl bg-bronze/10 flex items-center justify-center shrink-0">
-                          <Shield className="h-5 w-5 text-bronze" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold truncate font-poppins">
-                            {payment.campaign?.title || "Campaign"}
-                          </h4>
-                          <p className="text-sm text-muted-foreground mt-0.5">
-                            {payment.creator_profile?.display_name || "Creator"}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-lg font-vollkorn text-bronze">
-                            KES {Number(payment.first_payment_amount).toLocaleString()}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            50% • Phase 1
-                          </p>
-                        </div>
-                        <Button size="sm" variant="outline">
-                          View
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Payout Methods Tab (Creator only) */}
+        {/* Payout Methods Tab */}
         <TabsContent value="methods" className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
@@ -584,8 +365,8 @@ const WalletTab = ({ userType }: WalletTabProps) => {
                 <p className="text-muted-foreground text-center max-w-sm mt-2">
                   Add M-Pesa or a card to receive your earnings
                 </p>
-                <Button 
-                  onClick={() => setShowAddMethodDialog(true)} 
+                <Button
+                  onClick={() => setShowAddMethodDialog(true)}
                   className="mt-6 gap-2 bg-bronze hover:bg-bronze-dark"
                 >
                   <Plus className="h-4 w-4" />
@@ -620,7 +401,7 @@ const WalletTab = ({ userType }: WalletTabProps) => {
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground mt-1">
-                            {method.method_type === "mpesa" 
+                            {method.method_type === "mpesa"
                               ? `${method.mpesa_name} • ${method.mpesa_phone}`
                               : `${method.card_holder_name} • ****${method.card_last_four}`}
                           </p>
@@ -650,8 +431,8 @@ const WalletTab = ({ userType }: WalletTabProps) => {
         </TabsContent>
       </Tabs>
 
-      <AddPayoutMethodDialog 
-        open={showAddMethodDialog} 
+      <AddPayoutMethodDialog
+        open={showAddMethodDialog}
         onOpenChange={setShowAddMethodDialog}
         onSuccess={fetchData}
       />

@@ -21,7 +21,6 @@ const MobileBottomNav = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [profile, setProfile] = useState<any>(null);
-  const [userType, setUserType] = useState<"creator" | "brand" | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
@@ -34,7 +33,6 @@ const MobileBottomNav = () => {
           .eq("id", session.user.id)
           .single();
         setProfile(profileData);
-        setUserType(profileData?.user_type || null);
       }
     };
     fetchProfile();
@@ -111,11 +109,6 @@ const MobileBottomNav = () => {
                       {profile?.display_name || "User"}
                     </p>
                     <p className="text-xs text-white/50 truncate">{profile?.email}</p>
-                    {userType && (
-                      <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-bronze/20 text-bronze border border-bronze/30 capitalize">
-                        {userType}
-                      </span>
-                    )}
                   </div>
                 </div>
               )}

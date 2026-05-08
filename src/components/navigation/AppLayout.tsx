@@ -14,7 +14,6 @@ interface AppLayoutProps {
 const AppLayout = ({ children }: AppLayoutProps) => {
   const location = useLocation();
   const { setTheme } = useTheme();
-  const [userType, setUserType] = useState<"creator" | "brand" | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
@@ -48,9 +47,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         .single();
 
       setProfile(profileData);
-      setUserType(profileData?.user_type || null);
     } else {
-      setUserType("creator");
       setProfile({ display_name: "Guest", email: "" });
     }
     setLoading(false);
@@ -64,7 +61,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     );
   }
 
-  if (!userType || !profile) {
+  if (!profile) {
     return null;
   }
 
@@ -80,7 +77,6 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
       <div className="flex flex-1 overflow-hidden">
         <MainSidebar
-          userType={userType}
           profile={profile}
           onProfileClick={() => setProfileDrawerOpen(true)}
         />
@@ -96,7 +92,6 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         isOpen={profileDrawerOpen}
         onClose={() => setProfileDrawerOpen(false)}
         profile={profile}
-        userType={userType}
       />
     </div>
   );

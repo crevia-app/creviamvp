@@ -26,10 +26,9 @@ interface ProfileDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   profile: any;
-  userType: "creator" | "brand";
 }
 
-const ProfileDrawer = ({ isOpen, onClose, profile, userType }: ProfileDrawerProps) => {
+const ProfileDrawer = ({ isOpen, onClose, profile }: ProfileDrawerProps) => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const subscription = useSubscription();
@@ -71,14 +70,9 @@ const ProfileDrawer = ({ isOpen, onClose, profile, userType }: ProfileDrawerProp
             <p className="text-xs text-white/50 truncate">{profile?.email}</p>
             <Badge
               variant="outline"
-              className={
-                userType === "creator"
-                  ? "mt-1.5 text-[10px] font-semibold border-bronze text-bronze bg-bronze/15 px-2 py-0.5"
-                  : "mt-1.5 text-[10px] font-semibold border-blue-400 text-blue-400 bg-blue-400/15 px-2 py-0.5"
-              }
+              className="mt-1.5 text-[10px] font-semibold border-bronze text-bronze bg-bronze/15 px-2 py-0.5"
             >
-              {userType === "creator" ? "Creator" : "Brand"}
-              {!subscription.isFree && " · Pro"}
+              {subscription.isFree ? "Free" : "Pro"}
             </Badge>
           </div>
         </div>

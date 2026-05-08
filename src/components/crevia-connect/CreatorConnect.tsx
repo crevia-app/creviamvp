@@ -33,11 +33,10 @@ const CreatorConnect = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <ConnectTabsMobile userType="creator" />
+      <ConnectTabsMobile />
 
       <div className="flex flex-1 w-full">
-        <ConnectSidebarDesktop 
-          userType="creator" 
+        <ConnectSidebarDesktop
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         />

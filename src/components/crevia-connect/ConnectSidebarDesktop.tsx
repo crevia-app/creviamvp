@@ -1,47 +1,32 @@
 import { Link, useLocation } from "react-router-dom";
-import { 
-  Search, 
-  Briefcase, 
-  BarChart3, 
-  Sparkles, 
+import {
+  Briefcase,
+  BarChart3,
+  Sparkles,
   MessageSquare,
-  Users,
   FolderKanban,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface ConnectSidebarDesktopProps {
-  userType: "creator" | "brand";
   collapsed: boolean;
   onToggleCollapse: () => void;
 }
 
-const ConnectSidebarDesktop = ({ userType, collapsed, onToggleCollapse }: ConnectSidebarDesktopProps) => {
+const navItems = [
+  { id: "campaigns", label: "My Campaigns", icon: FolderKanban },
+  { id: "projects", label: "My Projects", icon: Briefcase },
+  { id: "analytics", label: "Analytics", icon: BarChart3 },
+  { id: "kira", label: "Kira Suggestions", icon: Sparkles },
+  { id: "chat", label: "Crevia Chat", icon: MessageSquare },
+];
+
+const ConnectSidebarDesktop = ({ collapsed, onToggleCollapse }: ConnectSidebarDesktopProps) => {
   const location = useLocation();
-  const currentTab = new URLSearchParams(location.search).get("tab") || 
-    (userType === "creator" ? "campaigns" : "discovery");
-
-  const creatorItems = [
-    { id: "campaigns", label: "My Campaigns", icon: FolderKanban },
-    { id: "projects", label: "My Projects", icon: Briefcase },
-    { id: "analytics", label: "Analytics", icon: BarChart3 },
-    { id: "kira", label: "Kira Suggestions", icon: Sparkles },
-    { id: "chat", label: "Crevia Chat", icon: MessageSquare },
-  ];
-
-  const brandItems = [
-    { id: "discovery", label: "Talent Discovery", icon: Search },
-    { id: "campaigns", label: "Campaigns", icon: FolderKanban },
-    { id: "projects", label: "Projects", icon: Briefcase },
-    { id: "creators", label: "My Creatives", icon: Users },
-    { id: "kira", label: "Kira for Brands", icon: Sparkles },
-    { id: "chat", label: "Crevia Chat", icon: MessageSquare },
-  ];
-
-  const items = userType === "creator" ? creatorItems : brandItems;
+  const currentTab = new URLSearchParams(location.search).get("tab") || "campaigns";
 
   return (
     <aside
@@ -50,7 +35,6 @@ const ConnectSidebarDesktop = ({ userType, collapsed, onToggleCollapse }: Connec
         collapsed ? "w-[60px]" : "w-[200px]"
       )}
     >
-      {/* Collapse button */}
       <div className={cn(
         "flex items-center p-2",
         collapsed ? "justify-center" : "justify-end"
@@ -66,7 +50,7 @@ const ConnectSidebarDesktop = ({ userType, collapsed, onToggleCollapse }: Connec
       </div>
 
       <nav className="flex-1 px-2 py-1 space-y-1">
-        {items.map((item) => {
+        {navItems.map((item) => {
           const isActive = currentTab === item.id;
           const Icon = item.icon;
 
@@ -81,11 +65,11 @@ const ConnectSidebarDesktop = ({ userType, collapsed, onToggleCollapse }: Connec
                   : "text-white/80 hover:text-bronze hover:bg-white/5"
               )}
             >
-              <Icon 
+              <Icon
                 className={cn(
                   "h-5 w-5 shrink-0 transition-all",
                   isActive && "drop-shadow-[0_0_8px_rgba(207,129,80,0.5)]"
-                )} 
+                )}
               />
               {!collapsed && (
                 <span className="font-poppins text-sm font-medium truncate">

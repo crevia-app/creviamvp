@@ -19,12 +19,11 @@ import {
 import { useLanguage } from "@/i18n/LanguageContext";
 
 interface MainSidebarProps {
-  userType: "creator" | "brand";
   profile: any;
   onProfileClick: () => void;
 }
 
-const MainSidebar = ({ userType, profile, onProfileClick }: MainSidebarProps) => {
+const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
   const location = useLocation();
   const { t } = useLanguage();
 

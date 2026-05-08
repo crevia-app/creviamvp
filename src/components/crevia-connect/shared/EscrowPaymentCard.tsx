@@ -47,11 +47,12 @@ interface EscrowPayment {
 
 interface EscrowPaymentCardProps {
   payment: EscrowPayment;
-  userType: "creator" | "brand";
+  currentUserId: string;
   onUpdate: () => void;
 }
 
-const EscrowPaymentCard = ({ payment, userType, onUpdate }: EscrowPaymentCardProps) => {
+const EscrowPaymentCard = ({ payment, currentUserId, onUpdate }: EscrowPaymentCardProps) => {
+  const isPayer = currentUserId === payment.brand_id;
   const [expanded, setExpanded] = useState(false);
   const [showFundDialog, setShowFundDialog] = useState(false);
   const [showReleaseDialog, setShowReleaseDialog] = useState(false);
@@ -160,11 +161,11 @@ const EscrowPaymentCard = ({ payment, userType, onUpdate }: EscrowPaymentCardPro
     }
   };
 
-  const canFund = userType === "brand" && 
-    (payment.first_payment_status === "pending" || 
+  const canFund = isPayer &&
+    (payment.first_payment_status === "pending" ||
      (payment.first_payment_status === "released" && payment.second_payment_status === "pending"));
 
-  const canRelease = userType === "brand" && 
+  const canRelease = isPayer &&
     (payment.first_payment_status === "paid" || payment.second_payment_status === "paid");
 
   return (
@@ -183,9 +184,9 @@ const EscrowPaymentCard = ({ payment, userType, onUpdate }: EscrowPaymentCardPro
               <div>
                 <h3 className="font-semibold">{payment.campaign?.title || "Campaign"}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {userType === "creator" 
-                    ? `From: ${payment.brand_profile?.display_name || "Brand"}`
-                    : `To: ${payment.creator_profile?.display_name || payment.creator_profile?.handle || "Creator"}`}
+                  {isPayer
+                    ? `To: ${payment.creator_profile?.display_name || payment.creator_profile?.handle || "Collaborator"}`
+                    : `From: ${payment.brand_profile?.display_name || "Client"}`}
                 </p>
               </div>
             </div>
@@ -219,7 +220,7 @@ const EscrowPaymentCard = ({ payment, userType, onUpdate }: EscrowPaymentCardPro
                   <p className="text-2xl font-bold">KES {Number(payment.first_payment_amount).toLocaleString()}</p>
                   <p className="text-xs text-muted-foreground mt-1">Released when work begins</p>
                   
-                  {userType === "brand" && payment.first_payment_status === "paid" && (
+                  {isPayer && payment.first_payment_status === "paid" && (
                     <Button 
                       size="sm" 
                       className="mt-3 w-full"
@@ -244,7 +245,7 @@ const EscrowPaymentCard = ({ payment, userType, onUpdate }: EscrowPaymentCardPro
                   <p className="text-2xl font-bold">KES {Number(payment.second_payment_amount).toLocaleString()}</p>
                   <p className="text-xs text-muted-foreground mt-1">Released when deliverables approved</p>
                   
-                  {userType === "brand" && payment.second_payment_status === "paid" && (
+                  {isPayer && payment.second_payment_status === "paid" && (
                     <Button 
                       size="sm" 
                       className="mt-3 w-full"
