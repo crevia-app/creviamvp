@@ -46,6 +46,7 @@ import {
   Check,
   Pencil,
   RotateCcw,
+  Brain,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -61,6 +62,7 @@ import { VoiceChatDialog } from "@/components/kira/VoiceChatDialog";
 import CreateContractDialog from "@/components/studio/CreateContractDialog";
 import CreateInvoiceDialog from "@/components/studio/CreateInvoiceDialog";
 import { ApproveActionDialog } from "@/components/kira/ApproveActionDialog";
+import { KiraMemoryPanel } from "@/components/kira/KiraMemoryPanel";
 import { motion, AnimatePresence } from "framer-motion";
 
 
@@ -165,6 +167,7 @@ const Kira = () => {
   const [kiraInvoiceContext, setKiraInvoiceContext] = useState<Record<string, unknown> | null>(null);
 
   const [chatToDelete, setChatToDelete] = useState<string | null>(null);
+  const [memoryPanelOpen, setMemoryPanelOpen] = useState(false);
 
   // ── NEW: message interaction state ──
   const [editingMessageIdx, setEditingMessageIdx] = useState<number | null>(null);
@@ -559,14 +562,27 @@ const Kira = () => {
               <span className="font-poppins font-semibold text-sm">Kira AI</span>
             </div>
           )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-          >
-            {sidebarCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-          </Button>
+          <div className="flex items-center gap-1">
+            {!sidebarCollapsed && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMemoryPanelOpen(true)}
+                title="Tell Kira about you"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              >
+                <Brain className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            >
+              {sidebarCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
 
         <div className="p-3">
@@ -724,6 +740,9 @@ const Kira = () => {
             <Button variant="ghost" size="icon" onClick={() => { setSidebarCollapsed(false); setViewMode("projects"); }} className="w-10 h-10 text-muted-foreground hover:text-foreground">
               <FolderOpen className="h-4 w-4" />
             </Button>
+            <Button variant="ghost" size="icon" onClick={() => setMemoryPanelOpen(true)} title="Tell Kira about you" className="w-10 h-10 text-muted-foreground hover:text-foreground">
+              <Brain className="h-4 w-4" />
+            </Button>
           </div>
         )}
       </div>
@@ -812,12 +831,15 @@ const Kira = () => {
             <Button variant="ghost" size="icon" onClick={() => setMobileSidebarOpen(true)} className="h-8 w-8">
               <PanelLeft className="h-4 w-4" />
             </Button>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-1">
               <div className="w-6 h-6 rounded-full bg-gradient-to-br from-bronze to-bronze-dark flex items-center justify-center">
                 <Sparkles className="w-3 h-3 text-background" />
               </div>
               <span className="font-poppins font-semibold text-sm">Kira</span>
             </div>
+            <Button variant="ghost" size="icon" onClick={() => setMemoryPanelOpen(true)} title="Tell Kira about you" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+              <Brain className="h-4 w-4" />
+            </Button>
           </div>
 
           {/* Project Context Banner */}
@@ -1164,6 +1186,14 @@ const Kira = () => {
         open={approveDialogOpen}
         onOpenChange={setApproveDialogOpen}
       />
+
+      {userId && (
+        <KiraMemoryPanel
+          open={memoryPanelOpen}
+          onOpenChange={setMemoryPanelOpen}
+          userId={userId}
+        />
+      )}
 
       {/* Chat delete confirmation */}
       <AlertDialog open={!!chatToDelete} onOpenChange={(open) => { if (!open) setChatToDelete(null); }}>

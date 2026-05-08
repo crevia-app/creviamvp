@@ -148,6 +148,56 @@ serve(async (req) => {
       }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
+    // Fetch profile context to personalise every response
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select(`
+        display_name,
+        user_type,
+        bio,
+        kira_memory,
+        creator_profiles (creator_types, goals),
+        brand_profiles (business_type, company_description)
+      `)
+      .eq('id', user.id)
+      .single();
+
+    const memory = (profile?.kira_memory as Record<string, unknown>) || {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const creatorProfile = (profile as any)?.creator_profiles;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const brandProfile = (profile as any)?.brand_profiles;
+    const isCreator = profile?.user_type === 'creator';
+
+    const contextLines: string[] = [
+      `- Name: ${profile?.display_name || 'not set'}`,
+      `- Type: ${isCreator ? 'Creator' : 'Brand'}`,
+    ];
+    if (profile?.bio) contextLines.push(`- Bio: ${profile.bio}`);
+    if (isCreator && Array.isArray(creatorProfile?.creator_types) && creatorProfile.creator_types.length > 0) {
+      contextLines.push(`- Niche: ${(creatorProfile.creator_types as string[]).join(', ')}`);
+    }
+    if (isCreator && Array.isArray(creatorProfile?.goals) && creatorProfile.goals.length > 0) {
+      contextLines.push(`- Goals: ${(creatorProfile.goals as string[]).join(', ')}`);
+    }
+    if (!isCreator && brandProfile?.business_type) {
+      contextLines.push(`- Business type: ${brandProfile.business_type}`);
+    }
+    if (!isCreator && brandProfile?.company_description) {
+      contextLines.push(`- Company: ${brandProfile.company_description}`);
+    }
+    contextLines.push(`- Standard rate: ${(memory.standard_rate as string) || 'not set — ask if relevant'}`);
+    contextLines.push(`- Currency: ${(memory.currency as string) || 'KES (assumed)'}`);
+    const clients = Array.isArray(memory.clients) && (memory.clients as string[]).length > 0
+      ? (memory.clients as string[]).join(', ')
+      : 'none on file';
+    contextLines.push(`- Regular clients: ${clients}`);
+    contextLines.push(`- Payment terms: ${(memory.payment_terms as string) || 'not set'}`);
+    if (memory.notes) contextLines.push(`- Notes: ${memory.notes}`);
+
+    const userContextBlock = `USER CONTEXT (use this to personalise every response — do not repeat it back verbatim):\n${contextLines.join('\n')}`;
+    const systemPrompt = `${KIRA_SYSTEM_PROMPT}\n\n${userContextBlock}`;
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -158,7 +208,7 @@ serve(async (req) => {
         model: "gpt-4o-mini",
         max_tokens: 1000,
         messages: [
-          { role: "system", content: KIRA_SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           ...conversationHistory,
           { role: "user", content: sanitizedPrompt }
         ],

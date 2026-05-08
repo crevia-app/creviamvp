@@ -1598,6 +1598,7 @@ export type Database = {
           is_verified: boolean | null
           kira_actions_limit: number | null
           kira_actions_used: number | null
+          kira_memory: Json | null
           kira_tokens_limit: number | null
           kira_tokens_used: number | null
           kira_usage_month: string | null
@@ -1625,6 +1626,7 @@ export type Database = {
           is_verified?: boolean | null
           kira_actions_limit?: number | null
           kira_actions_used?: number | null
+          kira_memory?: Json | null
           kira_tokens_limit?: number | null
           kira_tokens_used?: number | null
           kira_usage_month?: string | null
@@ -1652,6 +1654,7 @@ export type Database = {
           is_verified?: boolean | null
           kira_actions_limit?: number | null
           kira_actions_used?: number | null
+          kira_memory?: Json | null
           kira_tokens_limit?: number | null
           kira_tokens_used?: number | null
           kira_usage_month?: string | null
