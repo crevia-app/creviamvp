@@ -125,7 +125,7 @@ function DesktopChatItem({
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-          <button className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-muted/80 transition-all flex-shrink-0">
+          <button className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-muted/80 transition-opacity flex-shrink-0 focus:opacity-100">
             <MoreVertical className="w-3.5 h-3.5" />
           </button>
         </DropdownMenuTrigger>
@@ -176,7 +176,7 @@ interface MobileChatItemProps {
 function MobileChatItem({
   chat, isActive, isRenaming, renameValue,
   onSelect, onRenameChange, onRenameSubmit, onRenameCancel,
-  onLongPress: _onLongPress, onLongPressStart, onLongPressEnd,
+  onLongPress, onLongPressStart, onLongPressEnd,
 }: MobileChatItemProps) {
   return (
     <div
@@ -184,7 +184,7 @@ function MobileChatItem({
       onTouchStart={onLongPressStart}
       onTouchEnd={onLongPressEnd}
       onTouchMove={onLongPressEnd}
-      onContextMenu={(e) => { e.preventDefault(); _onLongPress(); }}
+      onContextMenu={(e) => { e.preventDefault(); onLongPress(); }}
       className={`flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-all select-none ${
         isActive ? 'bg-bronze/10' : 'hover:bg-muted/50'
       }`}
@@ -208,7 +208,12 @@ function MobileChatItem({
         <span className="flex-1 text-sm truncate">{chat.title}</span>
       )}
 
-      {chat.pinned && <Pin className="w-3 h-3 text-muted-foreground/60 flex-shrink-0" />}
+      <button
+        onClick={(e) => { e.stopPropagation(); onLongPress(); }}
+        className="p-1 rounded flex-shrink-0 text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/80 transition-all"
+      >
+        <MoreVertical className="w-3.5 h-3.5" />
+      </button>
     </div>
   );
 }

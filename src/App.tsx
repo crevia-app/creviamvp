@@ -140,7 +140,7 @@ function AppContent() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="theme">
+    <ThemeProvider attribute="class" forcedTheme="light" enableSystem={false} storageKey="theme">
       <LanguageProvider>
         <TooltipProvider>
           <Toaster />
