@@ -47,6 +47,9 @@ import {
   Pencil,
   RotateCcw,
   Brain,
+  MoreVertical,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -71,6 +74,143 @@ interface ChatHistory {
   title: string;
   timestamp: Date;
   project_id?: string | null;
+  pinned?: boolean;
+}
+
+// ── Desktop chat item with 3-dot context menu ──
+interface DesktopChatItemProps {
+  chat: ChatHistory;
+  isActive: boolean;
+  isRenaming: boolean;
+  renameValue: string;
+  indent?: boolean;
+  onSelect: () => void;
+  onRenameChange: (v: string) => void;
+  onRenameSubmit: () => void;
+  onRenameCancel: () => void;
+  onStartRename: () => void;
+  onPin: () => void;
+  onDelete: () => void;
+}
+
+function DesktopChatItem({
+  chat, isActive, isRenaming, renameValue, indent = false,
+  onSelect, onRenameChange, onRenameSubmit, onRenameCancel, onStartRename, onPin, onDelete,
+}: DesktopChatItemProps) {
+  return (
+    <div
+      onClick={() => { if (!isRenaming) onSelect(); }}
+      className={`group flex items-center gap-2 ${indent ? 'p-2 pl-7' : 'p-2.5'} rounded-lg cursor-pointer transition-all ${
+        isActive ? 'bg-bronze/10 text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+      }`}
+    >
+      <MessageSquare className={`w-${indent ? '3.5' : '4'} h-${indent ? '3.5' : '4'} flex-shrink-0 ${isActive ? 'text-bronze' : ''}`} />
+
+      {isRenaming ? (
+        <input
+          autoFocus
+          value={renameValue}
+          onChange={(e) => onRenameChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') onRenameSubmit();
+            if (e.key === 'Escape') onRenameCancel();
+          }}
+          onBlur={onRenameSubmit}
+          onClick={(e) => e.stopPropagation()}
+          className="flex-1 bg-transparent text-sm outline-none border-b border-bronze/50 focus:border-bronze text-foreground min-w-0"
+        />
+      ) : (
+        <span className="flex-1 text-sm truncate">{chat.title}</span>
+      )}
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+          <button className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-muted/80 transition-all flex-shrink-0">
+            <MoreVertical className="w-3.5 h-3.5" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem
+            onClick={(e) => { e.stopPropagation(); onPin(); }}
+            className="gap-2 cursor-pointer"
+          >
+            {chat.pinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+            {chat.pinned ? 'Unpin' : 'Pin'}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={(e) => { e.stopPropagation(); onStartRename(); }}
+            className="gap-2 cursor-pointer"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+            Rename
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            className="gap-2 cursor-pointer text-destructive focus:text-destructive"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
+// ── Mobile chat item with long-press ──
+interface MobileChatItemProps {
+  chat: ChatHistory;
+  isActive: boolean;
+  isRenaming: boolean;
+  renameValue: string;
+  onSelect: () => void;
+  onRenameChange: (v: string) => void;
+  onRenameSubmit: () => void;
+  onRenameCancel: () => void;
+  onLongPress: () => void;
+  onLongPressStart: () => void;
+  onLongPressEnd: () => void;
+}
+
+function MobileChatItem({
+  chat, isActive, isRenaming, renameValue,
+  onSelect, onRenameChange, onRenameSubmit, onRenameCancel,
+  onLongPress: _onLongPress, onLongPressStart, onLongPressEnd,
+}: MobileChatItemProps) {
+  return (
+    <div
+      onClick={() => { if (!isRenaming) onSelect(); }}
+      onTouchStart={onLongPressStart}
+      onTouchEnd={onLongPressEnd}
+      onTouchMove={onLongPressEnd}
+      onContextMenu={(e) => { e.preventDefault(); _onLongPress(); }}
+      className={`flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-all select-none ${
+        isActive ? 'bg-bronze/10' : 'hover:bg-muted/50'
+      }`}
+    >
+      <MessageSquare className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-bronze' : 'text-muted-foreground'}`} />
+
+      {isRenaming ? (
+        <input
+          autoFocus
+          value={renameValue}
+          onChange={(e) => onRenameChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') onRenameSubmit();
+            if (e.key === 'Escape') onRenameCancel();
+          }}
+          onBlur={onRenameSubmit}
+          onClick={(e) => e.stopPropagation()}
+          className="flex-1 bg-transparent text-sm outline-none border-b border-bronze/50 focus:border-bronze text-foreground min-w-0"
+        />
+      ) : (
+        <span className="flex-1 text-sm truncate">{chat.title}</span>
+      )}
+
+      {chat.pinned && <Pin className="w-3 h-3 text-muted-foreground/60 flex-shrink-0" />}
+    </div>
+  );
 }
 
 interface Message {
@@ -168,6 +308,10 @@ const Kira = () => {
 
   const [chatToDelete, setChatToDelete] = useState<string | null>(null);
   const [memoryPanelOpen, setMemoryPanelOpen] = useState(false);
+  const [renamingChatId, setRenamingChatId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [mobileLongPressChat, setMobileLongPressChat] = useState<ChatHistory | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── NEW: message interaction state ──
   const [editingMessageIdx, setEditingMessageIdx] = useState<number | null>(null);
@@ -201,7 +345,8 @@ const Kira = () => {
             id: c.id,
             title: c.title,
             timestamp: new Date(c.updated_at),
-            project_id: c.project_id
+            project_id: c.project_id,
+            pinned: c.pinned ?? false,
           })));
           
           if (conversations.length > 0) {
@@ -487,6 +632,47 @@ const Kira = () => {
     setChatToDelete(null);
   };
 
+  const handlePinChat = async (chatId: string, currentlyPinned: boolean) => {
+    const { error } = await supabase
+      .from('kira_conversations')
+      .update({ pinned: !currentlyPinned })
+      .eq('id', chatId);
+    if (!error) {
+      setChatHistories(prev => prev.map(c =>
+        c.id === chatId ? { ...c, pinned: !currentlyPinned } : c
+      ));
+    }
+  };
+
+  const handleRenameChat = async (chatId: string) => {
+    const trimmed = renameValue.trim();
+    setRenamingChatId(null);
+    setRenameValue("");
+    if (!trimmed) return;
+    const { error } = await supabase
+      .from('kira_conversations')
+      .update({ title: trimmed })
+      .eq('id', chatId);
+    if (!error) {
+      setChatHistories(prev => prev.map(c =>
+        c.id === chatId ? { ...c, title: trimmed } : c
+      ));
+    }
+  };
+
+  const handleLongPressStart = (chat: ChatHistory) => {
+    longPressTimerRef.current = setTimeout(() => {
+      setMobileLongPressChat(chat);
+    }, 500);
+  };
+
+  const handleLongPressEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
@@ -521,6 +707,8 @@ const Kira = () => {
 
   const generalChats = filteredChats.filter(c => !c.project_id);
   const projectChats = filteredChats.filter(c => c.project_id);
+  const pinnedGeneralChats = generalChats.filter(c => c.pinned);
+  const unpinnedGeneralChats = generalChats.filter(c => !c.pinned);
 
   const quickActions = userType === 'brand' ? [
     { icon: Users, label: "Find creators", prompt: "Help me find creators for my next campaign" },
@@ -662,29 +850,47 @@ const Kira = () => {
                   </div>
                 ) : (
                   <>
-                    {generalChats.map((chat) => (
-                      <div
-                        key={chat.id}
-                        onClick={() => {
-                          setActiveChat(chat.id);
-                          setActiveProjectId(null);
-                          setViewMode("chat");
-                        }}
-                        className={`group flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-all ${
-                          activeChat === chat.id 
-                            ? 'bg-bronze/10 text-foreground' 
-                            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                        }`}
-                      >
-                        <MessageSquare className={`w-4 h-4 flex-shrink-0 ${activeChat === chat.id ? 'text-bronze' : ''}`} />
-                        <span className="flex-1 text-sm truncate">{chat.title}</span>
-                        <button
-                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-destructive/10 rounded transition-all"
-                          onClick={(e) => { e.stopPropagation(); setChatToDelete(chat.id); }}
-                        >
-                          <Trash2 className="w-3 h-3 text-muted-foreground hover:text-destructive" />
-                        </button>
+                    {/* Pinned section */}
+                    {pinnedGeneralChats.length > 0 && (
+                      <div className="mb-1">
+                        <p className="text-xs font-medium text-muted-foreground px-2 py-1.5 flex items-center gap-1.5">
+                          <Pin className="w-3 h-3" /> Pinned
+                        </p>
+                        {pinnedGeneralChats.map((chat) => (
+                          <DesktopChatItem
+                            key={chat.id}
+                            chat={chat}
+                            isActive={activeChat === chat.id}
+                            isRenaming={renamingChatId === chat.id}
+                            renameValue={renameValue}
+                            onSelect={() => { setActiveChat(chat.id); setActiveProjectId(null); setViewMode("chat"); }}
+                            onRenameChange={setRenameValue}
+                            onRenameSubmit={() => handleRenameChat(chat.id)}
+                            onRenameCancel={() => { setRenamingChatId(null); setRenameValue(""); }}
+                            onStartRename={() => { setRenamingChatId(chat.id); setRenameValue(chat.title); }}
+                            onPin={() => handlePinChat(chat.id, !!chat.pinned)}
+                            onDelete={() => setChatToDelete(chat.id)}
+                          />
+                        ))}
                       </div>
+                    )}
+
+                    {/* Recent chats */}
+                    {unpinnedGeneralChats.map((chat) => (
+                      <DesktopChatItem
+                        key={chat.id}
+                        chat={chat}
+                        isActive={activeChat === chat.id}
+                        isRenaming={renamingChatId === chat.id}
+                        renameValue={renameValue}
+                        onSelect={() => { setActiveChat(chat.id); setActiveProjectId(null); setViewMode("chat"); }}
+                        onRenameChange={setRenameValue}
+                        onRenameSubmit={() => handleRenameChat(chat.id)}
+                        onRenameCancel={() => { setRenamingChatId(null); setRenameValue(""); }}
+                        onStartRename={() => { setRenamingChatId(chat.id); setRenameValue(chat.title); }}
+                        onPin={() => handlePinChat(chat.id, !!chat.pinned)}
+                        onDelete={() => setChatToDelete(chat.id)}
+                      />
                     ))}
 
                     {projects.map(project => {
@@ -702,24 +908,21 @@ const Kira = () => {
                           </button>
                           <div className="space-y-1 mt-1">
                             {projectConversations.slice(0, 3).map((chat) => (
-                              <div
+                              <DesktopChatItem
                                 key={chat.id}
-                                onClick={() => { setActiveChat(chat.id); setActiveProjectId(project.id); setViewMode("chat"); }}
-                                className={`group flex items-center gap-2 p-2 pl-7 rounded-lg cursor-pointer transition-all ${
-                                  activeChat === chat.id
-                                    ? 'bg-bronze/10 text-foreground'
-                                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                                }`}
-                              >
-                                <MessageSquare className={`w-3.5 h-3.5 flex-shrink-0 ${activeChat === chat.id ? 'text-bronze' : ''}`} />
-                                <span className="flex-1 text-sm truncate">{chat.title}</span>
-                                <button
-                                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-destructive/10 rounded transition-all"
-                                  onClick={(e) => { e.stopPropagation(); setChatToDelete(chat.id); }}
-                                >
-                                  <Trash2 className="w-3 h-3 text-muted-foreground hover:text-destructive" />
-                                </button>
-                              </div>
+                                chat={chat}
+                                isActive={activeChat === chat.id}
+                                isRenaming={renamingChatId === chat.id}
+                                renameValue={renameValue}
+                                indent
+                                onSelect={() => { setActiveChat(chat.id); setActiveProjectId(project.id); setViewMode("chat"); }}
+                                onRenameChange={setRenameValue}
+                                onRenameSubmit={() => handleRenameChat(chat.id)}
+                                onRenameCancel={() => { setRenamingChatId(null); setRenameValue(""); }}
+                                onStartRename={() => { setRenamingChatId(chat.id); setRenameValue(chat.title); }}
+                                onPin={() => handlePinChat(chat.id, !!chat.pinned)}
+                                onDelete={() => setChatToDelete(chat.id)}
+                              />
                             ))}
                           </div>
                         </div>
@@ -792,22 +995,45 @@ const Kira = () => {
 
             <ScrollArea className="flex-1 px-2">
               <div className="space-y-1 pb-3">
-                {filteredChats.map((chat) => (
-                  <div
+                {/* Pinned mobile */}
+                {filteredChats.filter(c => c.pinned).length > 0 && (
+                  <p className="text-xs font-medium text-muted-foreground px-2 py-1.5 flex items-center gap-1.5">
+                    <Pin className="w-3 h-3" /> Pinned
+                  </p>
+                )}
+                {filteredChats.filter(c => c.pinned).map((chat) => (
+                  <MobileChatItem
                     key={chat.id}
-                    onClick={() => { setActiveChat(chat.id); setActiveProjectId(chat.project_id || null); setMobileSidebarOpen(false); setViewMode("chat"); }}
-                    className={`group flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-all ${activeChat === chat.id ? 'bg-bronze/10' : 'hover:bg-muted/50'}`}
-                  >
-                    <MessageSquare className={`w-4 h-4 flex-shrink-0 ${activeChat === chat.id ? 'text-bronze' : 'text-muted-foreground'}`} />
-                    <span className="flex-1 text-sm truncate">{chat.title}</span>
-                    <button
-                      className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all flex-shrink-0"
-                      onClick={(e) => { e.stopPropagation(); setChatToDelete(chat.id); }}
-                      aria-label="Delete chat"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                    chat={chat}
+                    isActive={activeChat === chat.id}
+                    isRenaming={renamingChatId === chat.id}
+                    renameValue={renameValue}
+                    onSelect={() => { setActiveChat(chat.id); setActiveProjectId(chat.project_id || null); setMobileSidebarOpen(false); setViewMode("chat"); }}
+                    onRenameChange={setRenameValue}
+                    onRenameSubmit={() => handleRenameChat(chat.id)}
+                    onRenameCancel={() => { setRenamingChatId(null); setRenameValue(""); }}
+                    onLongPress={() => setMobileLongPressChat(chat)}
+                    onLongPressStart={() => handleLongPressStart(chat)}
+                    onLongPressEnd={handleLongPressEnd}
+                  />
+                ))}
+
+                {/* Recent mobile */}
+                {filteredChats.filter(c => !c.pinned).map((chat) => (
+                  <MobileChatItem
+                    key={chat.id}
+                    chat={chat}
+                    isActive={activeChat === chat.id}
+                    isRenaming={renamingChatId === chat.id}
+                    renameValue={renameValue}
+                    onSelect={() => { setActiveChat(chat.id); setActiveProjectId(chat.project_id || null); setMobileSidebarOpen(false); setViewMode("chat"); }}
+                    onRenameChange={setRenameValue}
+                    onRenameSubmit={() => handleRenameChat(chat.id)}
+                    onRenameCancel={() => { setRenamingChatId(null); setRenameValue(""); }}
+                    onLongPress={() => setMobileLongPressChat(chat)}
+                    onLongPressStart={() => handleLongPressStart(chat)}
+                    onLongPressEnd={handleLongPressEnd}
+                  />
                 ))}
               </div>
             </ScrollArea>
@@ -1194,6 +1420,54 @@ const Kira = () => {
           userId={userId}
         />
       )}
+
+      {/* Mobile long-press chat actions */}
+      <Sheet open={!!mobileLongPressChat} onOpenChange={(open) => { if (!open) setMobileLongPressChat(null); }}>
+        <SheetContent side="bottom" className="rounded-t-2xl pb-8">
+          <SheetHeader className="pb-3">
+            <SheetTitle className="text-sm font-medium truncate text-left">
+              {mobileLongPressChat?.title}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="space-y-1">
+            <button
+              onClick={() => {
+                handlePinChat(mobileLongPressChat!.id, !!mobileLongPressChat!.pinned);
+                setMobileLongPressChat(null);
+              }}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-muted transition-colors text-left"
+            >
+              {mobileLongPressChat?.pinned
+                ? <PinOff className="w-4 h-4 text-muted-foreground" />
+                : <Pin className="w-4 h-4 text-muted-foreground" />}
+              <span className="text-sm font-medium">{mobileLongPressChat?.pinned ? 'Unpin' : 'Pin'}</span>
+            </button>
+            <button
+              onClick={() => {
+                setRenamingChatId(mobileLongPressChat!.id);
+                setRenameValue(mobileLongPressChat!.title);
+                setActiveChat(mobileLongPressChat!.id);
+                setMobileLongPressChat(null);
+                setMobileSidebarOpen(true);
+              }}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-muted transition-colors text-left"
+            >
+              <Pencil className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Rename</span>
+            </button>
+            <button
+              onClick={() => {
+                setChatToDelete(mobileLongPressChat!.id);
+                setMobileLongPressChat(null);
+              }}
+              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-destructive/10 text-destructive transition-colors text-left"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span className="text-sm font-medium">Delete</span>
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Chat delete confirmation */}
       <AlertDialog open={!!chatToDelete} onOpenChange={(open) => { if (!open) setChatToDelete(null); }}>
