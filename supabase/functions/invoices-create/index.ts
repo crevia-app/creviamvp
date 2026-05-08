@@ -70,6 +70,38 @@ serve(async (req) => {
     const userId = claimsData.claims.sub;
     // === END AUTH VALIDATION ===
 
+    // === PLAN LIMIT GATE (free: 5 invoices/month) ===
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('subscription_plan')
+      .eq('id', userId)
+      .single();
+
+    const isFreePlan = !profile?.subscription_plan || profile.subscription_plan === 'free';
+
+    if (isFreePlan) {
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const { count } = await supabase
+        .from('invoices')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .gte('created_at', startOfMonth.toISOString());
+
+      if ((count ?? 0) >= 5) {
+        return new Response(JSON.stringify({
+          error: 'Free plan limit reached. Upgrade to Pro for unlimited invoices.',
+          code: 'PLAN_LIMIT_REACHED',
+        }), {
+          status: 403,
+          headers: { ...cors, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+    // === END PLAN LIMIT GATE ===
+
     // === INPUT VALIDATION ===
     let body: Record<string, unknown>;
     try {

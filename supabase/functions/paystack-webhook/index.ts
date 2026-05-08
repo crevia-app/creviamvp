@@ -97,6 +97,8 @@ serve(async (req) => {
         const expiresAt = new Date();
         expiresAt.setMonth(expiresAt.getMonth() + 1);
 
+        const kiraLimit = subscriptionPlan === 'business' ? 200 : 40;
+
         await supabase
           .from('profiles')
           .update({
@@ -104,7 +106,7 @@ serve(async (req) => {
             subscription_status: 'active',
             subscription_expires_at: expiresAt.toISOString(),
             paystack_customer_code: customer.customer_code,
-            kira_actions_limit: 40,
+            kira_actions_limit: kiraLimit,
           })
           .eq('id', profile.id);
       }

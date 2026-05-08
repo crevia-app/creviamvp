@@ -130,14 +130,11 @@ serve(async (req) => {
       content: sanitizeMessage(msg.content || ''),
     }));
 
-    // ── CHECK DAILY LIMITS ──
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('kira_tokens_used_today, kira_tokens_limit_daily')
-      .eq('id', user.id)
-      .single();
+    // ── CHECK & CONSUME DAILY ACTION (atomic — same RPC as kira-gpt) ──
+    const { data: allowed, error: gateError } = await supabase
+      .rpc('consume_kira_action', { p_user_id: user.id });
 
-    if (profile && profile.kira_tokens_used_today >= profile.kira_tokens_limit_daily) {
+    if (gateError || !allowed) {
       return new Response(JSON.stringify({
         reply: "You have reached your daily Kira limit. Upgrade to Pro for 40 actions per day."
       }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
@@ -166,17 +163,10 @@ serve(async (req) => {
 
     const aiData = await response.json();
     const reply = aiData.choices?.[0]?.message?.content;
-    const tokensUsed = aiData.usage?.total_tokens || 0;
 
     if (!reply) {
       throw new Error('No response from AI');
     }
-
-    // ── UPDATE TOKEN COUNT ──
-    await supabase.rpc('increment_kira_tokens', {
-      user_id: user.id,
-      tokens_to_add: tokensUsed
-    });
 
     return new Response(JSON.stringify({ reply }), {
       headers: { ...cors, 'Content-Type': 'application/json' }
