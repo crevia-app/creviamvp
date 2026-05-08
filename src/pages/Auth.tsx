@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Loader2, Palette, Crown, Check } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +30,6 @@ const Auth = () => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   // const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [userType, setUserType] = useState<"creator" | "brand">("creator");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const [emailConfirmPending, setEmailConfirmPending] = useState(false);
@@ -192,7 +191,7 @@ const Auth = () => {
           options: {
             emailRedirectTo: `${window.location.origin}/auth`,
             data: {
-              user_type: userType,
+              user_type: 'creator',
             },
           },
         });
@@ -349,89 +348,6 @@ const Auth = () => {
           </p>
         </div>
 
-        {/* User Type Toggle - Only show for signup */}
-        {isSignup && (
-          <div className="mb-6">
-            <Label className="text-sm font-medium text-muted-foreground mb-3 block text-center">
-              I am a...
-            </Label>
-            <div className="grid grid-cols-2 gap-3">
-              {/* Creative Card */}
-              <button
-                type="button"
-                onClick={() => setUserType("creator")}
-                className={cn(
-                  "relative flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all duration-300 group overflow-hidden",
-                  userType === "creator"
-                    ? "border-bronze bg-gradient-to-b from-bronze/15 to-bronze/5 text-bronze shadow-lg shadow-bronze/10 scale-[1.02]"
-                    : "border-border bg-card hover:border-bronze/40 text-muted-foreground hover:text-foreground hover:bg-bronze/5 hover:scale-[1.01]"
-                )}
-              >
-                {/* Checkmark badge */}
-                <span className={cn(
-                  "absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300",
-                  userType === "creator"
-                    ? "bg-bronze opacity-100 scale-100"
-                    : "bg-muted opacity-0 scale-75"
-                )}>
-                  <Check className="w-3 h-3 text-white" />
-                </span>
-
-                {/* Icon blob */}
-                <div className={cn(
-                  "w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300",
-                  userType === "creator"
-                    ? "bg-bronze/20"
-                    : "bg-muted group-hover:bg-bronze/10"
-                )}>
-                  <Palette className={cn(
-                    "h-7 w-7 transition-transform duration-300",
-                    userType === "creator" ? "scale-110" : "group-hover:scale-110"
-                  )} />
-                </div>
-
-                <p className="font-poppins text-sm font-bold leading-tight">Creative</p>
-              </button>
-
-              {/* Brand Card */}
-              <button
-                type="button"
-                onClick={() => setUserType("brand")}
-                className={cn(
-                  "relative flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all duration-300 group overflow-hidden",
-                  userType === "brand"
-                    ? "border-bronze bg-gradient-to-b from-bronze/15 to-bronze/5 text-bronze shadow-lg shadow-bronze/10 scale-[1.02]"
-                    : "border-border bg-card hover:border-bronze/40 text-muted-foreground hover:text-foreground hover:bg-bronze/5 hover:scale-[1.01]"
-                )}
-              >
-                {/* Checkmark badge */}
-                <span className={cn(
-                  "absolute top-2.5 right-2.5 w-5 h-5 rounded-full flex items-center justify-center transition-all duration-300",
-                  userType === "brand"
-                    ? "bg-bronze opacity-100 scale-100"
-                    : "bg-muted opacity-0 scale-75"
-                )}>
-                  <Check className="w-3 h-3 text-white" />
-                </span>
-
-                {/* Icon blob */}
-                <div className={cn(
-                  "w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300",
-                  userType === "brand"
-                    ? "bg-bronze/20"
-                    : "bg-muted group-hover:bg-bronze/10"
-                )}>
-                  <Crown className={cn(
-                    "h-7 w-7 transition-transform duration-300",
-                    userType === "brand" ? "scale-110" : "group-hover:scale-110"
-                  )} />
-                </div>
-
-                <p className="font-poppins text-sm font-bold leading-tight">Brand</p>
-              </button>
-            </div>
-          </div>
-        )}
 
         <div className="justify-center">
           <Button 

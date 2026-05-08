@@ -16,8 +16,6 @@ import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
-import CreatorSignup from "./pages/CreatorSignup";
-import BrandSignup from "./pages/BrandSignup";
 import Kira from "./pages/Kira";
 import CreviaLink from "./pages/CreviaLink";
 import CreviaStudio from "./pages/CreviaStudio";
@@ -111,8 +109,8 @@ function AppContent() {
         <Route path="/privacy-policy" element={<AppLayout><PrivacyPolicy /></AppLayout>} />
         <Route path="/terms-of-service" element={<AppLayout><TermsOfService /></AppLayout>} />
         <Route path="/user-type-selection" element={<Navigate to="/auth" replace />} />
-        <Route path="/signup/creator" element={<PublicPageWrapper><CreatorSignup /></PublicPageWrapper>} />
-        <Route path="/signup/brand" element={<PublicPageWrapper><BrandSignup /></PublicPageWrapper>} />
+        <Route path="/signup/creator" element={<Navigate to="/auth?mode=signup" replace />} />
+        <Route path="/signup/brand" element={<Navigate to="/auth?mode=signup" replace />} />
         <Route path="/:username" element={<PublicPageWrapper><PublicProfile /></PublicPageWrapper>} />
 
         {/* Protected routes */}

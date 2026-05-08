@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Check, ArrowRight, Sparkles } from "lucide-react";
+import { Check, ArrowRight, Sparkles, Zap } from "lucide-react";
 import HeroPattern from "@/components/HeroPattern";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -9,35 +9,125 @@ import ScrollReveal from "@/components/ui/ScrollReveal";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 
+const PLANS = (billingCycle: "monthly" | "yearly") => [
+  {
+    name: "Free",
+    badge: null,
+    priceMonthly: "KES 0",
+    priceYearly: "KES 0",
+    period: "",
+    usd: null,
+    description: "Everything you need to get started.",
+    features: [
+      "Crevia Link — basic templates",
+      "10 Kira AI actions per day",
+      "Unlimited bio links",
+      "5 invoices per month",
+      "5 contracts per month",
+      "Standard chat interface",
+      "Community support",
+    ],
+    cta: "Get Started",
+    highlighted: false,
+    planKey: null as "pro" | "business" | null,
+    monthlyAmount: 0,
+    yearlyAmount: 0,
+  },
+  {
+    name: "Pro",
+    badge: billingCycle === "yearly" ? "2 Months Free" : "Most Popular",
+    priceMonthly: "KES 1,949",
+    priceYearly: "KES 19,490",
+    period: billingCycle === "monthly" ? "/mo" : "/yr",
+    usd: billingCycle === "monthly" ? "$14.99/mo" : "$149.90/yr",
+    description: "Advanced tools for serious creators and businesses.",
+    features: [
+      "Verified badge on your profile",
+      "40 Kira AI actions per day",
+      "Crevia Link — all premium themes",
+      "Full visitor analytics",
+      "Unlimited invoices & tracking",
+      "Unlimited AI contract generation",
+      "E-Signatures inside the app",
+      "Client Portal access",
+      "Priority support",
+    ],
+    cta: "Go Pro",
+    highlighted: true,
+    planKey: "pro" as const,
+    monthlyAmount: 1949,
+    yearlyAmount: 19490,
+  },
+  {
+    name: "Business",
+    badge: "For Teams",
+    priceMonthly: "KES 3,899",
+    priceYearly: "KES 38,990",
+    period: billingCycle === "monthly" ? "/mo" : "/yr",
+    usd: billingCycle === "monthly" ? "$29.99/mo" : "$299.90/yr",
+    description: "Team workspaces, admin seats, and premium execution tools.",
+    features: [
+      "Everything in Pro",
+      "3 admin seats included",
+      "Additional seats at KES 999/seat",
+      "Team workspaces",
+      "Talent roster tracking",
+      "Branded client room links",
+      "Advanced team analytics",
+      "Dedicated account support",
+    ],
+    cta: "Get Business",
+    highlighted: false,
+    planKey: "business" as const,
+    monthlyAmount: 3899,
+    yearlyAmount: 38990,
+  },
+  {
+    name: "Enterprise",
+    badge: null,
+    priceMonthly: "Custom",
+    priceYearly: "Custom",
+    period: "",
+    usd: null,
+    description: "Custom limits, SSO, and a dedicated success team.",
+    features: [
+      "Everything in Business",
+      "Unlimited admin seats",
+      "Custom Kira AI action limits",
+      "Single Sign-On (SSO)",
+      "Custom integrations & API access",
+      "SLA guarantee",
+      "Dedicated success manager",
+      "Custom onboarding",
+    ],
+    cta: "Contact Sales",
+    highlighted: false,
+    planKey: null as "pro" | "business" | null,
+    monthlyAmount: 0,
+    yearlyAmount: 0,
+  },
+];
+
 const Pricing = () => {
   const navigate = useNavigate();
-  const [selectedType, setSelectedType] = useState<"creative" | "brand">("creative");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userType, setUserType] = useState<string | null>(null);
-  const [isPaystackLoading, setIsPaystackLoading] = useState(false);
+  const [isPaystackLoading, setIsPaystackLoading] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) return;
-      setIsLoggedIn(true);
-      supabase.from("profiles").select("user_type").eq("id", session.user.id).single()
-        .then(({ data }) => setUserType(data?.user_type || null));
+      setIsLoggedIn(!!session);
     });
   }, []);
 
-  const handleUpgrade = async (planType: "creative" | "brand") => {
+  const handleUpgrade = async (planKey: "pro" | "business", monthlyAmount: number, yearlyAmount: number) => {
     if (!isLoggedIn) { navigate("/auth"); return; }
-    setIsPaystackLoading(true);
+    setIsPaystackLoading(planKey);
 
-    const plan = planType === "brand" ? "brand_workspace" : "creative_pro";
-    const monthlyAmount = planType === "brand" ? 2900 : 799;
-    const yearlyAmount = planType === "brand" ? 29000 : 7990;
     const amount = billingCycle === "yearly" ? yearlyAmount : monthlyAmount;
-
     const { data: { user } } = await supabase.auth.getUser();
     const email = user?.email;
-    if (!email) { setIsPaystackLoading(false); return; }
+    if (!email) { setIsPaystackLoading(null); return; }
 
     const w = window as unknown as {
       PaystackPop: { setup: (opts: Record<string, unknown>) => { openIframe: () => void } }
@@ -45,108 +135,19 @@ const Pricing = () => {
     const handler = w.PaystackPop.setup({
       key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
       email,
-      amount: amount * 100, // Paystack KES uses kobo: KES 799 → 79900
+      amount: amount * 100,
       currency: "KES",
-      metadata: { plan, billing_cycle: billingCycle },
-      callback: (_response: { reference: string }) => {
+      metadata: { plan: planKey, billing_cycle: billingCycle },
+      callback: () => {
         navigate("/profile/payments-billing");
-        setIsPaystackLoading(false);
+        setIsPaystackLoading(null);
       },
-      onClose: () => setIsPaystackLoading(false),
+      onClose: () => setIsPaystackLoading(null),
     });
     handler.openIframe();
   };
 
-  const creativePlans = [
-    {
-      name: "Free",
-      priceMonthly: "KES 0",
-      priceYearly: "KES 0",
-      period: "",
-      description: "Everything you need to get started as a creative.",
-      features: [
-        "Crevia Link-basic templates",
-        "10 Kira Ai actions per day",
-        "Unlimited bio links",
-        "5 invoices per month",
-        "5 contracts per month",
-        "Standard chat interface",
-        "Community support",
-      ],
-      cta: "Start Free",
-      highlighted: false,
-      badge: null,
-      planType: null,
-    },
-    {
-      name: "Creative Pro",
-      priceMonthly: "KES 799",
-      priceYearly: "KES 7,990",
-      period: billingCycle === "monthly" ? "/mo" : "/yr",
-      description: "For creatives who are ready to scale in their business.",
-      features: [
-        "Verified badge on your Profile",
-        "40 Kira AI actions per day",
-        "Crevia Link - all premium themes",
-        "Full visitor analytics",
-        "Unlimited invoices & tracking",
-        "Unlimited AI contract generation",
-        "E-Signatures inside the app",
-        "Client Portal access",
-        "Priority Support",
-      ],
-      cta: "Go Pro",
-      highlighted: true,
-      badge: billingCycle === "yearly" ? "2 Months Free" : "Most Popular",
-      planType: "creative" as const,
-    },
-  ];
-
-  const brandPlans = [
-    {
-      name: "Free",
-      priceMonthly: "KES 0",
-      priceYearly: "KES 0",
-      period: "",
-      description: "Start discovering and working with creatives.",
-      features: [
-        "Basic access to creatives",
-        "Limited chat usage",
-        "Limited project interactions",
-        "Standard support",
-        "Basic analytics",
-      ],
-      cta: "Start Free",
-      highlighted: false,
-      badge: null,
-      planType: null,
-    },
-    {
-      name: "Brand Workspace",
-      priceMonthly: "KES 2,900",
-      priceYearly: "KES 29,000",
-      period: billingCycle === "monthly" ? "/mo" : "/yr",
-      description: "For brands scaling creative operations.",
-      features: [
-        "3 admin seats included",
-        "KES 999 per extra seat",
-        "Verified badge on your profile",
-        "40 Kira AI actions per day",
-        "Unlimited talent roster tracking",
-        "Crevia Link - all premium themes + analytics",
-        "Client Portal - branded room links",
-        "Unlimited invoices & contracts",
-        "E-Signatures inside the app",
-        "Priority support",
-      ],
-      cta: "Get Workspace",
-      highlighted: true,
-      badge: billingCycle === "yearly" ? "2 Months Free" : "Most Popular",
-      planType: "brand" as const,
-    },
-  ];
-
-  const plans = selectedType === "creative" ? creativePlans : brandPlans;
+  const plans = PLANS(billingCycle);
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
@@ -155,7 +156,7 @@ const Pricing = () => {
       {/* Hero */}
       <section className="relative pt-28 md:pt-36 pb-8 md:pb-12 px-4 md:px-6 overflow-hidden">
         <HeroPattern />
-        <div className="container mx-auto max-w-4xl text-center relative z-10">
+        <div className="container mx-auto max-w-5xl text-center relative z-10">
           <ScrollReveal>
             <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase mb-4">
               Pricing
@@ -169,166 +170,157 @@ const Pricing = () => {
           </ScrollReveal>
           <ScrollReveal delay={0.16}>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-              Start free. Upgrade when your business is ready for more power.
+              One platform. Every tool you need to run your creative business.
             </p>
           </ScrollReveal>
 
-          {/* Creative / Brand Toggle */}
-          <ScrollReveal delay={0.24}>
-            <div className="inline-flex items-center p-1 bg-secondary rounded-full mb-6">
+          {/* Monthly / Yearly Toggle */}
+          <ScrollReveal delay={0.22}>
+            <div className="inline-flex items-center p-1 bg-secondary rounded-full">
               <button
-                onClick={() => setSelectedType("creative")}
-                className={`px-4 sm:px-6 md:px-8 py-2.5 rounded-full font-poppins font-semibold text-xs sm:text-sm transition-all duration-300 ${
-                  selectedType === "creative"
-                    ? "bg-bronze text-white shadow-md"
+                onClick={() => setBillingCycle("monthly")}
+                className={`px-5 md:px-8 py-2.5 rounded-full font-poppins font-semibold text-xs sm:text-sm transition-all duration-300 ${
+                  billingCycle === "monthly"
+                    ? "bg-foreground text-background shadow-md"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                For Creatives
+                Monthly
               </button>
               <button
-                onClick={() => setSelectedType("brand")}
-                className={`px-4 sm:px-6 md:px-8 py-2.5 rounded-full font-poppins font-semibold text-xs sm:text-sm transition-all duration-300 ${
-                  selectedType === "brand"
-                    ? "bg-bronze text-white shadow-md"
+                onClick={() => setBillingCycle("yearly")}
+                className={`px-5 md:px-8 py-2.5 rounded-full font-poppins font-semibold text-xs sm:text-sm transition-all duration-300 ${
+                  billingCycle === "yearly"
+                    ? "bg-foreground text-background shadow-md"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                For Brands
+                Yearly
               </button>
             </div>
-
-            {/* Monthly / Yearly Toggle */}
-            <div className="block">
-              <div className="inline-flex items-center p-1 bg-secondary rounded-full">
-                <button
-                  onClick={() => setBillingCycle("monthly")}
-                  className={`px-3 sm:px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-[11px] sm:text-xs transition-all duration-300 ${
-                    billingCycle === "monthly"
-                      ? "bg-foreground text-background shadow-md"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Monthly
-                </button>
-                <button
-                  onClick={() => setBillingCycle("yearly")}
-                  className={`px-3 sm:px-5 md:px-6 py-2 rounded-full font-poppins font-semibold text-[11px] sm:text-xs transition-all duration-300 ${
-                    billingCycle === "yearly"
-                      ? "bg-foreground text-background shadow-md"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Yearly
-                </button>
-              </div>
-              {billingCycle === "yearly" && (
-                <p className="text-xs text-bronze font-poppins font-semibold mt-2">
-                  🎉 Save 2 months with yearly billing
-                </p>
-              )}
-            </div>
+            {billingCycle === "yearly" && (
+              <p className="text-xs text-bronze font-poppins font-semibold mt-3">
+                Save 2 months with yearly billing
+              </p>
+            )}
           </ScrollReveal>
         </div>
       </section>
 
-      {/* Cards */}
+      {/* Pricing Cards */}
       <section className="pb-20 md:pb-28 px-4 md:px-6">
-        <div className="container mx-auto max-w-4xl">
+        <div className="container mx-auto max-w-7xl">
           <AnimatePresence mode="wait">
             <motion.div
-              key={selectedType + billingCycle}
+              key={billingCycle}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6 lg:gap-8"
+              className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6"
             >
               {plans.map((plan, i) => (
                 <motion.div
                   key={plan.name}
                   initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.1 * i, ease: [0.25, 0.46, 0.45, 0.94] }}
-                  className={`rounded-2xl p-5 sm:p-7 md:p-8 lg:p-10 transition-all duration-300 hover:shadow-xl ${
+                  transition={{ duration: 0.5, delay: 0.08 * i, ease: [0.25, 0.46, 0.45, 0.94] }}
+                  className={`relative flex flex-col rounded-2xl p-6 md:p-8 transition-all duration-300 hover:shadow-xl ${
                     plan.highlighted
-                      ? "border-2 border-bronze bg-gradient-to-br from-bronze/5 to-background shadow-lg"
+                      ? "border-2 border-bronze bg-gradient-to-br from-bronze/8 to-background shadow-lg shadow-bronze/10"
                       : "border border-border bg-card"
                   }`}
                 >
                   {plan.badge && (
-                    <span className="inline-flex items-center gap-1 bg-bronze text-white px-4 py-1 rounded-full text-xs font-poppins font-semibold mb-6 uppercase tracking-wider">
-                      <Sparkles className="w-3 h-3" />
+                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-poppins font-semibold mb-5 uppercase tracking-wider w-fit ${
+                      plan.highlighted
+                        ? "bg-bronze text-white"
+                        : "bg-secondary text-muted-foreground"
+                    }`}>
+                      {plan.highlighted && <Sparkles className="w-3 h-3" />}
                       {plan.badge}
                     </span>
                   )}
 
-                  <h3 className="font-vollkorn text-2xl md:text-3xl font-bold mb-2">
-                    {plan.name}
-                  </h3>
-                  <p className="text-muted-foreground text-sm mb-6">
-                    {plan.description}
-                  </p>
+                  {!plan.badge && <div className="mb-8" />}
 
-                  <div className="flex items-baseline gap-1 mb-2">
-                    <span className="font-vollkorn text-4xl sm:text-5xl md:text-6xl font-bold">
+                  <h3 className="font-vollkorn text-2xl font-bold mb-1">{plan.name}</h3>
+                  <p className="text-muted-foreground text-sm mb-6 leading-relaxed">{plan.description}</p>
+
+                  <div className="mb-1">
+                    <span className="font-vollkorn text-4xl md:text-5xl font-bold">
                       {billingCycle === "monthly" ? plan.priceMonthly : plan.priceYearly}
                     </span>
                     {plan.period && (
-                      <span className="text-muted-foreground text-lg">{plan.period}</span>
+                      <span className="text-muted-foreground text-base ml-1">{plan.period}</span>
                     )}
                   </div>
 
-                  {/* Yearly savings note */}
-                  {plan.highlighted && billingCycle === "yearly" && (
-                    <p className="text-xs text-bronze font-poppins mb-6">
-                      {selectedType === "creative" ? "Saves ~KES 1,598 vs monthly" : "Saves ~KES 5,800 vs monthly"}
-                    </p>
+                  {plan.usd && (
+                    <p className="text-xs text-muted-foreground font-poppins mb-1">{plan.usd}</p>
                   )}
-                  {plan.highlighted && billingCycle === "monthly" && (
-                    <p className="text-xs text-muted-foreground font-poppins mb-6">
-                      Switch to yearly and save 2 months
-                    </p>
-                  )}
-                  {!plan.highlighted && <div className="mb-6" />}
 
-                  <ul className="space-y-2 sm:space-y-3 md:space-y-3.5 mb-8 sm:mb-10">
+                  <div className="mb-6 h-5">
+                    {plan.highlighted && billingCycle === "yearly" && (
+                      <p className="text-xs text-bronze font-poppins font-semibold">
+                        Saves ~KES 3,898 vs monthly
+                      </p>
+                    )}
+                    {plan.highlighted && billingCycle === "monthly" && (
+                      <p className="text-xs text-muted-foreground font-poppins">
+                        Switch to yearly and save 2 months
+                      </p>
+                    )}
+                  </div>
+
+                  <ul className="space-y-3 mb-8 flex-1">
                     {plan.features.map((feature, fi) => (
                       <motion.li
                         key={feature}
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, delay: 0.2 + fi * 0.04 }}
-                        className="flex items-start gap-2 sm:gap-3"
+                        transition={{ duration: 0.3, delay: 0.15 + fi * 0.04 }}
+                        className="flex items-start gap-2.5"
                       >
-                        <Check className="w-5 h-5 text-bronze flex-shrink-0 mt-0.5" />
+                        <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${plan.highlighted ? "text-bronze" : "text-muted-foreground"}`} />
                         <span className="text-sm leading-relaxed">{feature}</span>
                       </motion.li>
                     ))}
                   </ul>
 
-                  {plan.planType ? (
+                  {/* CTA */}
+                  {plan.planKey ? (
                     <Button
-                      onClick={() => handleUpgrade(plan.planType!)}
-                      disabled={isPaystackLoading}
+                      onClick={() => handleUpgrade(plan.planKey!, plan.monthlyAmount, plan.yearlyAmount)}
+                      disabled={isPaystackLoading !== null}
                       className={`w-full font-poppins font-semibold ${
                         plan.highlighted
-                          ? "bg-bronze hover:bg-bronze-dark"
+                          ? "bg-bronze hover:bg-bronze-dark text-white"
                           : "bg-secondary hover:bg-secondary/80 text-foreground"
                       }`}
                       size="lg"
                     >
-                      {isPaystackLoading ? "Processing..." : plan.cta}
-                      {!isPaystackLoading && <ArrowRight className="ml-2 w-4 h-4" />}
+                      {isPaystackLoading === plan.planKey ? (
+                        "Processing..."
+                      ) : (
+                        <>{plan.cta} <ArrowRight className="ml-2 w-4 h-4" /></>
+                      )}
                     </Button>
-                  ) : (
-                    <Link to="/auth">
+                  ) : plan.name === "Enterprise" ? (
+                    <a href="mailto:hello@crevia.app">
                       <Button
-                        className={`w-full font-poppins font-semibold ${
-                          plan.highlighted
-                            ? "bg-bronze hover:bg-bronze-dark"
-                            : "bg-secondary hover:bg-secondary/80 text-foreground"
-                        }`}
+                        variant="outline"
+                        className="w-full font-poppins font-semibold border-border hover:border-bronze/50 hover:bg-bronze/5"
+                        size="lg"
+                      >
+                        <Zap className="mr-2 w-4 h-4" />
+                        {plan.cta}
+                      </Button>
+                    </a>
+                  ) : (
+                    <Link to={isLoggedIn ? "/kira" : "/auth?mode=signup"}>
+                      <Button
+                        className="w-full font-poppins font-semibold bg-secondary hover:bg-secondary/80 text-foreground"
                         size="lg"
                       >
                         {plan.cta} <ArrowRight className="ml-2 w-4 h-4" />
@@ -350,7 +342,6 @@ const Pricing = () => {
               Questions? <span className="text-gradient-bronze">Answers.</span>
             </h2>
           </ScrollReveal>
-
           <div className="space-y-6">
             {[
               {
@@ -359,27 +350,31 @@ const Pricing = () => {
               },
               {
                 q: "Can I switch plans anytime?",
-                a: "Yes. Upgrade, downgrade, or cancel anytime. Changes take effect on your next billing cycle.",
+                a: "Yes. Upgrade, downgrade, or cancel at any time. Changes take effect on your next billing cycle.",
               },
               {
                 q: "What payment methods do you accept?",
-                a: "All major credit/debit cards and M-Pesa for African creatives and brands.",
+                a: "All major credit and debit cards, and M-Pesa for local payments across Africa.",
               },
               {
                 q: "What is the Client Portal?",
-                a: "A professional branded room link you can send to clients for a premium experience. Available on Pro and Brand Workspace plans.",
+                a: "A professional branded room link you can share with clients for a premium experience. Available on Pro and Business plans.",
               },
               {
-                q: "How does the Brand Workspace extra seat pricing work?",
-                a: "The Brand Workspace includes 3 admin seats. You can add more team members at KES 999 per extra seat per month.",
+                q: "How does the Business extra seat pricing work?",
+                a: "Business includes 3 admin seats. Additional team members cost KES 999 per seat per month.",
               },
               {
                 q: "What happens to my data if I downgrade?",
-                a: "Your data is safe. You keep access to everything you created but new creations will be limited to free plan limits.",
+                a: "Your data is always safe. You retain access to everything you created — new activity is simply limited to your new plan's limits.",
+              },
+              {
+                q: "What is Enterprise?",
+                a: "Enterprise is a custom plan for organisations that need SSO, dedicated support, custom API limits, and an SLA. Reach out and we'll build a plan around your needs.",
               },
             ].map(({ q, a }, i) => (
               <ScrollReveal key={q} delay={i * 0.06}>
-                <div className="p-4 sm:p-5 md:p-6 lg:p-8 rounded-xl border border-border bg-card">
+                <div className="p-5 md:p-8 rounded-xl border border-border bg-card">
                   <h3 className="font-vollkorn text-lg md:text-xl font-bold mb-2">{q}</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">{a}</p>
                 </div>
@@ -402,7 +397,7 @@ const Pricing = () => {
             </p>
           </ScrollReveal>
           <ScrollReveal delay={0.15} variant="scale">
-            <Link to="/auth">
+            <Link to={isLoggedIn ? "/kira" : "/auth?mode=signup"}>
               <Button
                 size="lg"
                 className="bg-bronze hover:bg-bronze-dark text-lg px-12 py-7 font-poppins font-semibold shadow-lg hover-scale"
