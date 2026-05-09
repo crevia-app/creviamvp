@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -35,6 +35,13 @@ const Auth = () => {
   const [emailConfirmPending, setEmailConfirmPending] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
   const [isResendingConfirm, setIsResendingConfirm] = useState(false);
+  const [resetStep, setResetStep] = useState<1 | 2 | 3>(1);
+  const [resetOtpCode, setResetOtpCode] = useState("");
+  const [resetNewPassword, setResetNewPassword] = useState("");
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  // Prevents onAuthStateChange from navigating to /kira while the user is in the password-reset OTP flow.
+  const inPasswordResetFlow = useRef(false);
   // True when we landed here from a Google OAuth redirect — hide the form while Supabase exchanges the code.
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(hasOAuthCallback);
 
@@ -68,7 +75,7 @@ const Auth = () => {
 
     // Listen for auth state changes (for OAuth redirects)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
+      if (event === 'SIGNED_IN' && session && !inPasswordResetFlow.current) {
         const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
         if (aalData?.nextLevel === "aal2" && aalData?.nextLevel !== aalData?.currentLevel) {
           navigate("/mfa-verify", { replace: true });
@@ -264,29 +271,67 @@ const Auth = () => {
     }
   };
 
+  const clearResetState = () => {
+    setResetStep(1);
+    setResetEmail("");
+    setResetOtpCode("");
+    setResetNewPassword("");
+    inPasswordResetFlow.current = false;
+  };
+
+  // Step 1 — send OTP code to email
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsResetting(true);
-
-    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/reset-password`,
+    const { error } = await supabase.auth.signInWithOtp({
+      email: resetEmail,
+      options: { shouldCreateUser: false },
     });
-
     setIsResetting(false);
-
     if (error) {
-      toast({
-        title: "Oops! 😅",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Couldn't send code", description: error.message, variant: "destructive" });
     } else {
-      toast({
-        title: "Check your inbox! 📧",
-        description: "We sent you a link to reset your password.",
-      });
+      setResetStep(2);
+    }
+  };
+
+  // Step 2 — verify the 6-digit code
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsVerifyingOtp(true);
+    inPasswordResetFlow.current = true;
+    const { error } = await supabase.auth.verifyOtp({
+      email: resetEmail,
+      token: resetOtpCode,
+      type: "email",
+    });
+    setIsVerifyingOtp(false);
+    if (error) {
+      inPasswordResetFlow.current = false;
+      toast({ title: "Invalid code", description: "The code is wrong or expired. Try resending.", variant: "destructive" });
+    } else {
+      setResetStep(3);
+    }
+  };
+
+  // Step 3 — set a new password
+  const handleSetNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const errors = validatePassword(resetNewPassword);
+    if (errors.length > 0) {
+      toast({ title: "Weak password", description: "Please meet all the password requirements.", variant: "destructive" });
+      return;
+    }
+    setIsUpdatingPassword(true);
+    const { error } = await supabase.auth.updateUser({ password: resetNewPassword });
+    setIsUpdatingPassword(false);
+    if (error) {
+      toast({ title: "Couldn't update password", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Password updated", description: "You're now logged in." });
       setShowForgotPassword(false);
-      setResetEmail("");
+      clearResetState();
+      navigate("/kira", { replace: true });
     }
   };
 
@@ -516,49 +561,119 @@ const Auth = () => {
         </p>
       </Card>
 
-      {/* Forgot Password Dialog */}
-      <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
+      {/* Forgot Password Dialog — 3-step: email → OTP code → new password */}
+      <Dialog open={showForgotPassword} onOpenChange={(open) => { setShowForgotPassword(open); if (!open) clearResetState(); }}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="font-vollkorn text-2xl">Reset your password</DialogTitle>
-            <DialogDescription>
-              Enter your email address and we'll send you a link to reset your password.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleForgotPassword} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="reset-email">Email</Label>
-              <Input
-                id="reset-email"
-                type="email"
-                placeholder="you@example.com"
-                value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
-                required
-                className="h-12"
-              />
-            </div>
-            <DialogFooter className="flex-col sm:flex-row gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setShowForgotPassword(false);
-                  setResetEmail("");
-                }}
-                className="h-12"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isResetting}
-                className="h-12 bg-bronze hover:bg-bronze-dark font-semibold"
-              >
-                {isResetting ? "Sending..." : "Send Reset Link"}
-              </Button>
-            </DialogFooter>
-          </form>
+
+          {/* Step 1: enter email */}
+          {resetStep === 1 && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="font-vollkorn text-2xl">Reset your password</DialogTitle>
+                <DialogDescription>Enter your email and we'll send a verification code.</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email">Email</Label>
+                  <Input
+                    id="reset-email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    required
+                    className="h-12"
+                  />
+                </div>
+                <DialogFooter className="flex-col sm:flex-row gap-2">
+                  <Button type="button" variant="outline" onClick={() => setShowForgotPassword(false)} className="h-12">Cancel</Button>
+                  <Button type="submit" disabled={isResetting} className="h-12 bg-bronze hover:bg-bronze-dark font-semibold">
+                    {isResetting ? "Sending..." : "Send Code"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </>
+          )}
+
+          {/* Step 2: enter the 6-digit code */}
+          {resetStep === 2 && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="font-vollkorn text-2xl">Enter the code</DialogTitle>
+                <DialogDescription>
+                  We sent a 6-digit code to <span className="font-semibold text-foreground">{resetEmail}</span>. Enter it below.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleVerifyOtp} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="otp-code">Verification code</Label>
+                  <Input
+                    id="otp-code"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="123456"
+                    maxLength={6}
+                    value={resetOtpCode}
+                    onChange={(e) => setResetOtpCode(e.target.value.replace(/\D/g, ""))}
+                    required
+                    className="h-12 text-center text-xl tracking-widest font-mono"
+                    autoFocus
+                  />
+                </div>
+                <DialogFooter className="flex-col sm:flex-row gap-2">
+                  <Button type="button" variant="outline" onClick={() => setResetStep(1)} className="h-12">Back</Button>
+                  <Button type="submit" disabled={isVerifyingOtp || resetOtpCode.length < 6} className="h-12 bg-bronze hover:bg-bronze-dark font-semibold">
+                    {isVerifyingOtp ? "Verifying..." : "Verify Code"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </>
+          )}
+
+          {/* Step 3: set new password */}
+          {resetStep === 3 && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="font-vollkorn text-2xl">Set new password</DialogTitle>
+                <DialogDescription>Choose a strong password for your account.</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSetNewPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-pw">New Password</Label>
+                  <Input
+                    id="new-pw"
+                    type="password"
+                    placeholder="••••••••"
+                    value={resetNewPassword}
+                    onChange={(e) => setResetNewPassword(e.target.value)}
+                    required
+                    className="h-12"
+                    autoFocus
+                  />
+                </div>
+                {resetNewPassword.length > 0 && (
+                  <div className="space-y-1.5">
+                    {["At least 8 characters","One uppercase letter","One lowercase letter","One number","One special character"].map((rule) => {
+                      const errors = validatePassword(resetNewPassword);
+                      const passing = !errors.includes(rule);
+                      return (
+                        <div key={rule} className="flex items-center gap-2 text-xs">
+                          <div className={`w-1.5 h-1.5 rounded-full ${passing ? "bg-primary" : "bg-destructive"}`} />
+                          <span className={passing ? "text-primary" : "text-muted-foreground"}>{rule}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <DialogFooter>
+                  <Button type="submit" disabled={isUpdatingPassword} className="w-full h-12 bg-bronze hover:bg-bronze-dark font-semibold">
+                    {isUpdatingPassword ? "Saving..." : "Set Password"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </>
+          )}
+
         </DialogContent>
       </Dialog>
     </div>
