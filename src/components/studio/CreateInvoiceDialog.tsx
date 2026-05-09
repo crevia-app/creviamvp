@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -18,9 +19,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, Receipt, Building2, CheckCircle2, Settings } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Plus, Trash2, Receipt, Building2, CheckCircle2, Settings, Users, ChevronDown, BookUser } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import ClientAddressBook, { type SavedClient } from "@/components/studio/ClientAddressBook";
 
 interface InvoiceItem {
   id?: string;
@@ -94,6 +101,13 @@ const CreateInvoiceDialog = ({
   ]);
   const [loadedSettings, setLoadedSettings] = useState<BusinessSettings | null>(null);
   const [settingsLoading, setSettingsLoading] = useState(false);
+
+  // Address book state
+  const [savedClients, setSavedClients] = useState<SavedClient[]>([]);
+  const [autofillOpen, setAutofillOpen] = useState(false);
+  const [clientSearch, setClientSearch] = useState("");
+  const [saveToBook, setSaveToBook] = useState(false);
+  const [addressBookOpen, setAddressBookOpen] = useState(false);
 
   // Effect 1 — synchronous form reset the moment the dialog opens
   useEffect(() => {
@@ -196,6 +210,35 @@ const CreateInvoiceDialog = ({
 
     return () => { cancelled = true; };
   }, [open, editingInvoice]);
+
+  // Effect 3 — fetch saved clients for autofill
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const { data } = await (supabase as any)
+        .from("saved_clients")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("client_name", { ascending: true });
+      setSavedClients(data || []);
+    })();
+  }, [open]);
+
+  const applyClient = (client: SavedClient) => {
+    setClientName(client.client_name);
+    setClientEmail(client.client_email || "");
+    setClientAddress(client.billing_address || "");
+    setAutofillOpen(false);
+    setClientSearch("");
+    toast.success(`Autofilled from ${client.client_name}`);
+  };
+
+  const filteredClients = savedClients.filter(c =>
+    c.client_name.toLowerCase().includes(clientSearch.toLowerCase()) ||
+    (c.client_email || "").toLowerCase().includes(clientSearch.toLowerCase())
+  );
 
   const fetchItems = async (invoiceId: string) => {
     const { data } = await supabase
@@ -432,6 +475,21 @@ const CreateInvoiceDialog = ({
         if (itemsError) throw itemsError;
 
         if (invoice?.id) onCreated?.(invoice.id);
+
+        // Save client to address book if requested
+        if (saveToBook && clientName) {
+          await (supabase as any).from("saved_clients").upsert(
+            {
+              user_id: session.user.id,
+              client_name: clientName,
+              client_email: clientEmail || null,
+              billing_address: clientAddress || null,
+            },
+            { onConflict: "user_id,client_name", ignoreDuplicates: false }
+          );
+          setSaveToBook(false);
+        }
+
         onOpenChange(false);
         setShowSuccess(true);
       }
@@ -458,6 +516,24 @@ const CreateInvoiceDialog = ({
       title="Invoice Created"
       subtitle="Your invoice is ready to send"
       onComplete={() => { setShowSuccess(false); onSuccess(); }}
+    />
+    <ClientAddressBook
+      open={addressBookOpen}
+      onOpenChange={open => {
+        setAddressBookOpen(open);
+        // Refresh client list when address book closes
+        if (!open) {
+          supabase.auth.getSession().then(({ data: { session } }) => {
+            if (!session) return;
+            (supabase as any)
+              .from("saved_clients")
+              .select("*")
+              .eq("user_id", session.user.id)
+              .order("client_name", { ascending: true })
+              .then(({ data }: { data: SavedClient[] | null }) => setSavedClients(data || []));
+          });
+        }
+      }}
     />
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[calc(100vw-16px)] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -561,7 +637,63 @@ const CreateInvoiceDialog = ({
 
           {/* Client Details */}
           <div className="space-y-4 p-4 bg-muted/30 rounded-xl">
-            <h3 className="font-semibold text-foreground">Client Information</h3>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <h3 className="font-semibold text-foreground">Client Information</h3>
+              <div className="flex items-center gap-2">
+                {/* Autofill combobox */}
+                <Popover open={autofillOpen} onOpenChange={setAutofillOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs border-bronze/30 text-bronze hover:bg-bronze/5">
+                      <Users className="h-3.5 w-3.5" />
+                      Autofill
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72 p-2" align="end">
+                    <Input
+                      placeholder="Search saved clients..."
+                      value={clientSearch}
+                      onChange={e => setClientSearch(e.target.value)}
+                      className="mb-2 h-8 text-sm"
+                      autoFocus
+                    />
+                    <div className="max-h-48 overflow-y-auto space-y-0.5">
+                      {filteredClients.length === 0 ? (
+                        <p className="text-xs text-muted-foreground text-center py-4">
+                          {savedClients.length === 0 ? "No saved clients yet" : "No matches"}
+                        </p>
+                      ) : (
+                        filteredClients.map(client => (
+                          <button
+                            key={client.id}
+                            type="button"
+                            onClick={() => applyClient(client)}
+                            className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted/60 transition-colors"
+                          >
+                            <p className="text-sm font-medium text-foreground leading-tight">{client.client_name}</p>
+                            {client.client_email && (
+                              <p className="text-xs text-muted-foreground mt-0.5">{client.client_email}</p>
+                            )}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                {/* Manage address book */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => setAddressBookOpen(true)}
+                >
+                  <BookUser className="h-3.5 w-3.5" />
+                  Manage
+                </Button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label>Client Name *</Label>
@@ -593,6 +725,21 @@ const CreateInvoiceDialog = ({
                 rows={2}
               />
             </div>
+
+            {/* Save to address book — only shown for new invoices with a client name */}
+            {!editingInvoice && clientName.trim() && (
+              <div className="flex items-center gap-2 pt-1">
+                <Checkbox
+                  id="save-to-book"
+                  checked={saveToBook}
+                  onCheckedChange={v => setSaveToBook(!!v)}
+                  className="border-bronze/50 data-[state=checked]:bg-bronze data-[state=checked]:border-bronze"
+                />
+                <Label htmlFor="save-to-book" className="text-xs text-muted-foreground cursor-pointer font-normal">
+                  Save <span className="font-medium text-foreground">{clientName}</span> to my Client Address Book for future invoices
+                </Label>
+              </div>
+            )}
           </div>
 
           {/* Line Items */}
