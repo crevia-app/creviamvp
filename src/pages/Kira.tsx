@@ -218,6 +218,66 @@ function MobileChatItem({
   );
 }
 
+const THINKING_STATES = [
+  "Analyzing your request...",
+  "Checking your Crevia data...",
+  "Formulating response...",
+];
+
+function ThinkingIndicator() {
+  const [stateIdx, setStateIdx] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setStateIdx(i => (i + 1) % THINKING_STATES.length), 1500);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -4 }}
+      transition={{ duration: 0.3 }}
+      className="flex gap-3"
+    >
+      <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
+        <div className="flex items-center gap-2.5">
+          <div className="flex gap-1">
+            {[0, 1, 2].map(i => (
+              <motion.span
+                key={i}
+                className="block w-1.5 h-1.5 rounded-full bg-bronze"
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+              />
+            ))}
+          </div>
+          <AnimatePresence mode="wait">
+            <motion.span
+              key={stateIdx}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.2 }}
+              className="text-sm text-muted-foreground"
+            >
+              {THINKING_STATES[stateIdx]}
+            </motion.span>
+          </AnimatePresence>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function StreamingCursor() {
+  return (
+    <motion.span
+      animate={{ opacity: [1, 0] }}
+      transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
+      className="inline-block w-0.5 h-4 bg-foreground/70 ml-0.5 align-middle"
+    />
+  );
+}
+
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -242,6 +302,7 @@ const Kira = () => {
   const [userType, setUserType] = useState<'creator' | 'brand' | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -450,26 +511,70 @@ const Kira = () => {
   const streamKiraResponse = useCallback(async (userMessages: Message[], conversationId: string) => {
     const lastUserContent = userMessages[userMessages.length - 1].content;
     const history = userMessages.slice(-7, -1).map(m => ({ role: m.role, content: m.content }));
-    const { data, error } = await supabase.functions.invoke('kira-gpt', {
-      body: { prompt: lastUserContent, history },
-    });
 
-    if (error) {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) throw new Error("Not authenticated");
+
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kira-gpt`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ prompt: lastUserContent, history }),
+      }
+    );
+
+    if (!response.ok) {
       let msg = "Couldn't reach Kira right now. Please try again!";
       try {
-        const body = await (error as any).context?.json?.();
+        const body = await response.json();
         if (body?.error) msg = body.error;
-      } catch { /* ignore parse failure */ }
+      } catch { /* ignore */ }
       throw new Error(msg);
     }
 
-    if (!data?.reply) throw new Error("Kira didn't respond. Please try again!");
+    const contentType = response.headers.get('content-type') ?? '';
 
+    // Streaming path — edge function returns text/plain
+    if (contentType.includes('text/plain') && response.body) {
+      setIsStreaming(true);
+      setMessages(prev => [...prev, { role: 'assistant', content: '', timestamp: new Date() }]);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullContent = '';
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          fullContent += chunk;
+          setMessages(prev => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { ...updated[updated.length - 1], content: fullContent };
+            return updated;
+          });
+        }
+      } finally {
+        setIsStreaming(false);
+      }
+
+      await saveMessage(conversationId, 'assistant', fullContent);
+      return fullContent;
+    }
+
+    // Fallback: JSON (prompt-abuse reply or unexpected content-type)
+    const data = await response.json();
     const assistantContent = data.reply;
-
-    setMessages(prev => [...prev, { role: "assistant", content: assistantContent, timestamp: new Date() }]);
-    await saveMessage(conversationId, "assistant", assistantContent);
-    
+    if (!assistantContent) throw new Error("Kira didn't respond. Please try again!");
+    setMessages(prev => [...prev, { role: 'assistant', content: assistantContent, timestamp: new Date() }]);
+    await saveMessage(conversationId, 'assistant', assistantContent);
     return assistantContent;
   }, [userType, activeProjectId, projects]);
 
@@ -1186,7 +1291,12 @@ const Kira = () => {
                                         : 'bg-muted rounded-tl-md'
                                     }`}
                                   >
-                                    <p className="text-base whitespace-pre-wrap text-left">{msg.content}</p>
+                                    <p className="text-base whitespace-pre-wrap text-left">
+                                      {msg.content}
+                                      {isStreaming && idx === messages.length - 1 && msg.role === 'assistant' && (
+                                        <StreamingCursor />
+                                      )}
+                                    </p>
                                     {msg.file && (
                                       <div className="mt-2 flex items-center gap-2 text-xs opacity-70">
                                         <Paperclip className="w-3 h-3" />
@@ -1275,17 +1385,12 @@ const Kira = () => {
                         </motion.div>
                       ))}
                       
-                      {/* Loading indicator */}
-                      {isLoading && messages[messages.length - 1]?.role === 'user' && (
-                        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="flex gap-3">
-                          <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <Loader2 className="w-4 h-4 animate-spin text-bronze" />
-                              <span className="text-sm text-muted-foreground">Thinking...</span>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
+                      {/* Thinking indicator — shown before streaming begins */}
+                      <AnimatePresence>
+                        {isLoading && !isStreaming && messages[messages.length - 1]?.role === 'user' && (
+                          <ThinkingIndicator />
+                        )}
+                      </AnimatePresence>
                       <div ref={messagesEndRef} />
                     </div>
                   )}

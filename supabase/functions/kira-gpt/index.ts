@@ -198,7 +198,7 @@ serve(async (req) => {
     const userContextBlock = `USER CONTEXT (use this to personalise every response — do not repeat it back verbatim):\n${contextLines.join('\n')}`;
     const systemPrompt = `${KIRA_SYSTEM_PROMPT}\n\n${userContextBlock}`;
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${Deno.env.get("OPENAI_API_KEY")}`,
@@ -207,6 +207,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "gpt-4o-mini",
         max_tokens: 1000,
+        stream: true,
         messages: [
           { role: "system", content: systemPrompt },
           ...conversationHistory,
@@ -215,19 +216,49 @@ serve(async (req) => {
       }),
     });
 
-    if (!response.ok) {
-      throw new Error("OpenAI API error: " + response.status);
+    if (!openaiResponse.ok) {
+      throw new Error("OpenAI API error: " + openaiResponse.status);
     }
 
-    const aiData = await response.json();
-    const assistantContent = aiData.choices?.[0]?.message?.content;
+    // Parse OpenAI SSE stream and pipe plain text tokens to the client
+    const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
+    const writer = writable.getWriter();
+    const encoder = new TextEncoder();
 
-    if (!assistantContent) {
-      throw new Error('No response from AI');
-    }
+    const pump = async () => {
+      const reader = openaiResponse.body!.getReader();
+      const decoder = new TextDecoder();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          for (const line of chunk.split('\n')) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith('data: ')) continue;
+            const data = trimmed.slice(6);
+            if (data === '[DONE]') return;
+            try {
+              const parsed = JSON.parse(data);
+              const token = parsed.choices?.[0]?.delta?.content;
+              if (token) await writer.write(encoder.encode(token));
+            } catch { /* skip malformed SSE lines */ }
+          }
+        }
+      } finally {
+        await writer.close().catch(() => {});
+      }
+    };
 
-    return new Response(JSON.stringify({ reply: assistantContent }), {
-      headers: { ...cors, 'Content-Type': 'application/json' },
+    pump();
+
+    return new Response(readable, {
+      headers: {
+        ...cors,
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-cache',
+        'X-Accel-Buffering': 'no',
+      },
     });
 
   } catch (error: unknown) {
