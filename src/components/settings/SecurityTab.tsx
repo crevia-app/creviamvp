@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,6 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import {
   Shield,
   KeyRound,
-  Fingerprint,
   Smartphone,
   Eye,
   EyeOff,
@@ -34,109 +33,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-// --- WebAuthn Helpers ---
-const BIOMETRIC_CRED_KEY = "crevia_webauthn_cred_id";
-const BIOMETRIC_ENABLED_KEY = "crevia_biometric_enabled";
-
-function bufferToBase64url(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let str = "";
-  for (const b of bytes) str += String.fromCharCode(b);
-  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-function base64urlToBuffer(base64url: string): ArrayBuffer {
-  const base64 = base64url.replace(/-/g, "+").replace(/_/g, "/");
-  const pad = base64.length % 4 === 0 ? "" : "=".repeat(4 - (base64.length % 4));
-  const binary = atob(base64 + pad);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes.buffer;
-}
-
-function isWebAuthnSupported(): boolean {
-  return !!(window.PublicKeyCredential && navigator.credentials);
-}
-
-function isInIframe(): boolean {
-  try { return window.self !== window.top; } catch { return true; }
-}
-
-async function isPlatformAuthAvailable(): Promise<boolean> {
-  if (!isWebAuthnSupported()) return false;
-  if (isInIframe()) return false;
-  try {
-    return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-  } catch {
-    return false;
-  }
-}
-
-async function registerBiometric(userId: string): Promise<string | null> {
-  const challenge = crypto.getRandomValues(new Uint8Array(32));
-  const userIdBytes = new TextEncoder().encode(userId);
-
-  const credential = (await navigator.credentials.create({
-    publicKey: {
-      challenge,
-      rp: { name: "Crevia", id: window.location.hostname },
-      user: {
-        id: userIdBytes,
-        name: userId,
-        displayName: "Crevia User",
-      },
-      pubKeyCredParams: [
-        { alg: -7, type: "public-key" },   // ES256
-        { alg: -257, type: "public-key" },  // RS256
-      ],
-      authenticatorSelection: {
-        authenticatorAttachment: "platform",
-        userVerification: "required",
-        residentKey: "preferred",
-      },
-      timeout: 60000,
-      attestation: "none",
-    },
-  })) as PublicKeyCredential | null;
-
-  if (!credential) return null;
-  const credId = bufferToBase64url(credential.rawId);
-  localStorage.setItem(BIOMETRIC_CRED_KEY, credId);
-  localStorage.setItem(BIOMETRIC_ENABLED_KEY, "true");
-  return credId;
-}
-
-async function verifyBiometric(): Promise<boolean> {
-  const storedCredId = localStorage.getItem(BIOMETRIC_CRED_KEY);
-  if (!storedCredId) return false;
-
-  const challenge = crypto.getRandomValues(new Uint8Array(32));
-  try {
-    const assertion = (await navigator.credentials.get({
-      publicKey: {
-        challenge,
-        allowCredentials: [
-          {
-            id: base64urlToBuffer(storedCredId),
-            type: "public-key",
-            transports: ["internal"],
-          },
-        ],
-        userVerification: "required",
-        timeout: 60000,
-      },
-    })) as PublicKeyCredential | null;
-    return !!assertion;
-  } catch {
-    return false;
-  }
-}
-
-function removeBiometric() {
-  localStorage.removeItem(BIOMETRIC_CRED_KEY);
-  localStorage.removeItem(BIOMETRIC_ENABLED_KEY);
-}
-// --- End WebAuthn Helpers ---
 
 const SecurityTab = () => {
   const { toast } = useToast();
@@ -159,21 +55,14 @@ const SecurityTab = () => {
   const [twoFaDisabling, setTwoFaDisabling] = useState(false);
   const [twoFaSending, setTwoFaSending] = useState(false);
 
-  // biometric toggles
-  const [biometricEnabled, setBiometricEnabled] = useState(
-    () => localStorage.getItem(BIOMETRIC_ENABLED_KEY) === "true"
-  );
-  const [biometricAvailable, setBiometricAvailable] = useState(false);
-  const [biometricBusy, setBiometricBusy] = useState(false);
   const [loginAlertsEnabled, setLoginAlertsEnabled] = useState(true);
 
   // Sign out all devices dialog
   const [showSignOutAll, setShowSignOutAll] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
-  // Load 2FA status and biometric availability on mount
+  // Load 2FA status on mount
   useEffect(() => {
-    isPlatformAuthAvailable().then(setBiometricAvailable);
     supabase.auth.getUser().then(({ data: { user } }) => {
       setTwoFactorEnabled(!!user?.user_metadata?.two_fa_enabled);
       if (user?.email) setTwoFaEmail(user.email);
@@ -220,70 +109,6 @@ const SecurityTab = () => {
       setTwoFaDisabling(false);
     }
   };
-
-  const handleBiometricToggle = useCallback(async (checked: boolean) => {
-    setBiometricBusy(true);
-    try {
-      if (checked) {
-        if (!biometricAvailable) {
-          toast({
-            title: "Not supported",
-            description: "Your device or browser doesn't support biometric authentication.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          toast({ title: "Not logged in", variant: "destructive" });
-          return;
-        }
-
-        const credId = await registerBiometric(session.user.id);
-        if (!credId) {
-          toast({
-            title: "Registration cancelled",
-            description: "Biometric registration was cancelled or failed.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        setBiometricEnabled(true);
-        toast({
-          title: "Biometric login enabled",
-          description: "You can now use fingerprint or Face ID to unlock Crevia.",
-        });
-      } else {
-        // Verify identity before disabling
-        const verified = await verifyBiometric();
-        if (!verified) {
-          toast({
-            title: "Verification failed",
-            description: "Biometric verification is required to disable this feature.",
-            variant: "destructive",
-          });
-          return;
-        }
-        removeBiometric();
-        setBiometricEnabled(false);
-        toast({
-          title: "Biometric login disabled",
-          description: "Biometric credentials have been removed from this device.",
-        });
-      }
-    } catch (err: any) {
-      console.error("Biometric error:", err);
-      toast({
-        title: "Biometric error",
-        description: err?.message || "Something went wrong with biometric authentication.",
-        variant: "destructive",
-      });
-    } finally {
-      setBiometricBusy(false);
-    }
-  }, [biometricAvailable, toast]);
 
   // Password strength checker
   const getPasswordStrength = (pw: string) => {
@@ -654,81 +479,6 @@ const SecurityTab = () => {
 
 
 
-
-      {/* Biometric Authentication */}
-      <Card className="p-4 md:p-8">
-        <div className="flex items-center gap-3 mb-1">
-          <Fingerprint className="w-5 h-5 text-bronze" />
-          <h2 className="font-vollkorn text-xl md:text-2xl font-bold">Biometric Login</h2>
-        </div>
-        <p className="text-sm text-muted-foreground mb-5">
-          Use your device's biometric sensor to unlock Crevia quickly and securely.
-        </p>
-
-        <div className="space-y-4">
-          <div className="flex items-start md:items-center justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <Label className="text-sm md:text-base">Fingerprint / Face ID</Label>
-                {biometricEnabled && (
-                  <Badge variant="outline" className="text-primary border-primary/30 text-[10px]">Active</Badge>
-                )}
-              </div>
-              <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-                {isInIframe()
-                  ? "Biometric login requires opening the app directly (not in a preview iframe). Please publish and open the app in a new tab."
-                  : biometricAvailable
-                    ? "Requires a device with biometric hardware. Available on supported browsers and mobile devices."
-                    : "Your current browser or device does not support biometric authentication."}
-              </p>
-            </div>
-            <Switch
-              checked={biometricEnabled}
-              onCheckedChange={handleBiometricToggle}
-              disabled={biometricBusy || !biometricAvailable}
-              className="flex-shrink-0"
-            />
-          </div>
-
-          {biometricEnabled && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/10">
-              <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
-              <p className="text-xs text-muted-foreground">
-                Biometric credential is registered on this device. You can use it to quickly verify your identity.
-              </p>
-            </div>
-          )}
-
-          {biometricEnabled && (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={biometricBusy}
-              onClick={async () => {
-                setBiometricBusy(true);
-                try {
-                  const ok = await verifyBiometric();
-                  toast({
-                    title: ok ? "Verification successful" : "Verification failed",
-                    description: ok
-                      ? "Biometric identity confirmed!"
-                      : "Could not verify your biometric. Please try again.",
-                    variant: ok ? "default" : "destructive",
-                  });
-                } catch {
-                  toast({ title: "Error", description: "Biometric check failed.", variant: "destructive" });
-                } finally {
-                  setBiometricBusy(false);
-                }
-              }}
-              className="gap-2"
-            >
-              <Fingerprint className="w-4 h-4" />
-              {biometricBusy ? "Verifying..." : "Test Biometric"}
-            </Button>
-          )}
-        </div>
-      </Card>
 
       {/* Session Security */}
       <Card className="p-4 md:p-8">
