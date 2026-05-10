@@ -219,15 +219,26 @@ function MobileChatItem({
 }
 
 const THINKING_STATES = [
-  "Analyzing your request...",
-  "Checking your Crevia data...",
-  "Formulating response...",
+  "Thinking...",
+  "Cooking something up...",
+  "Connecting the dots...",
+  "Reading between the lines...",
+  "Pulling it together...",
+  "Working through this...",
+  "Let me dig in...",
+  "Weighing the details...",
+  "Crafting your response...",
+  "On it...",
+  "Processing the context...",
+  "Laying the groundwork...",
+  "Sharpening my thoughts...",
+  "Almost there...",
 ];
 
 function ThinkingIndicator() {
-  const [stateIdx, setStateIdx] = useState(0);
+  const [stateIdx, setStateIdx] = useState(() => Math.floor(Math.random() * THINKING_STATES.length));
   useEffect(() => {
-    const id = setInterval(() => setStateIdx(i => (i + 1) % THINKING_STATES.length), 1500);
+    const id = setInterval(() => setStateIdx(i => (i + 1) % THINKING_STATES.length), 2000);
     return () => clearInterval(id);
   }, []);
   return (
