@@ -1,61 +1,70 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Shield, Loader2 } from "lucide-react";
+import { Shield, Loader2, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 const MFAVerify = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSending, setIsSending] = useState(true);
 
-  const verifyCode = async () => {
-    if (code.length !== 6) {
+  const sendOTP = useCallback(async (userEmail: string) => {
+    setIsSending(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: userEmail,
+        options: { shouldCreateUser: false },
+      });
+      if (error) throw error;
+    } catch (err: any) {
       toast({
-        title: "Invalid code",
-        description: "Please enter a 6-digit code",
+        title: "Failed to send code",
+        description: err.message || "Please sign out and try again.",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setIsSending(false);
     }
+  }, [toast]);
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user?.email) {
+        navigate("/auth", { replace: true });
+        return;
+      }
+      setEmail(user.email);
+      sendOTP(user.email);
+    });
+  }, [navigate, sendOTP]);
+
+  const verifyCode = async () => {
+    if (code.length !== 6) return;
     setIsLoading(true);
     try {
-      const { data: factorsData, error: factorsError } = await supabase.auth.mfa.listFactors();
-      if (factorsError) throw factorsError;
-
-      const totpFactor = factorsData.totp[0];
-      if (!totpFactor) throw new Error("No TOTP factor found");
-
-      const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
-        factorId: totpFactor.id,
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token: code,
+        type: "email",
       });
-      if (challengeError) throw challengeError;
+      if (error) throw error;
 
-      const { error: verifyError } = await supabase.auth.mfa.verify({
-        factorId: totpFactor.id,
-        challengeId: challengeData.id,
-        code,
-      });
-      if (verifyError) throw verifyError;
-
-      toast({
-        title: "Verified!",
-        description: "Welcome back to Crevia.",
-      });
+      toast({ title: "Verified!", description: "Welcome back to Crevia." });
       navigate("/kira", { replace: true });
-
-    } catch (error: any) {
+    } catch (err: any) {
       toast({
         title: "Invalid code",
         description: "The code you entered is incorrect. Please try again.",
         variant: "destructive",
       });
+      setCode("");
     } finally {
       setIsLoading(false);
     }
@@ -64,42 +73,63 @@ const MFAVerify = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8">
-        <div className="text-center mb-6">
+        <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-full bg-bronze/10 flex items-center justify-center mx-auto mb-4">
-            <Shield className="w-8 h-8 text-bronze" />
+            <Mail className="w-8 h-8 text-bronze" />
           </div>
-          <h1 className="font-vollkorn text-2xl font-bold mb-2">Two-Factor Authentication</h1>
-          <p className="text-muted-foreground text-sm">
-            Enter the 6-digit code from your authenticator app to continue.
-          </p>
+          <h1 className="font-vollkorn text-2xl font-bold mb-2">Check your email</h1>
+          {isSending ? (
+            <div className="flex items-center justify-center gap-2 text-muted-foreground text-sm">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Sending code...
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              We sent a 6-digit code to{" "}
+              <span className="font-medium text-foreground">{email}</span>
+            </p>
+          )}
         </div>
 
-        <div className="space-y-4">
-          <div>
-            <Label className="text-sm font-medium mb-2 block">Verification Code</Label>
-            <Input
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              placeholder="000000"
-              className="text-center text-2xl font-mono tracking-widest h-14"
+        <div className="space-y-5">
+          <div className="flex justify-center">
+            <InputOTP
               maxLength={6}
+              value={code}
+              onChange={setCode}
+              onComplete={verifyCode}
+              disabled={isSending}
               autoFocus
-              onKeyDown={(e) => e.key === 'Enter' && verifyCode()}
-            />
+            >
+              <InputOTPGroup>
+                <InputOTPSlot index={0} />
+                <InputOTPSlot index={1} />
+                <InputOTPSlot index={2} />
+                <InputOTPSlot index={3} />
+                <InputOTPSlot index={4} />
+                <InputOTPSlot index={5} />
+              </InputOTPGroup>
+            </InputOTP>
           </div>
 
           <Button
             onClick={verifyCode}
-            disabled={isLoading || code.length !== 6}
+            disabled={isLoading || isSending || code.length !== 6}
             className="w-full bg-bronze hover:bg-bronze/90 text-background h-12"
           >
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <Shield className="w-4 h-4 mr-2" />
-            )}
+            {isLoading
+              ? <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              : <Shield className="w-4 h-4 mr-2" />}
             Verify & Continue
           </Button>
+
+          <button
+            onClick={() => sendOTP(email)}
+            disabled={isSending || !email}
+            className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
+          >
+            {isSending ? "Sending..." : "Didn't get it? Resend code"}
+          </button>
 
           <Button
             variant="ghost"

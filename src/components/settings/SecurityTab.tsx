@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import MFASetup from "@/components/auth/MFASetup";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   Shield,
@@ -21,6 +22,8 @@ import {
   CheckCircle2,
   LogOut,
   Lock,
+  Mail,
+  Loader2,
 } from "lucide-react";
 import {
   Dialog,
@@ -148,8 +151,15 @@ const SecurityTab = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
 
-  // 2FA / biometric toggles
+  // 2FA state
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [twoFaView, setTwoFaView] = useState<"idle" | "setup" | "disabling" | "disabling-sent">("idle");
+  const [twoFaEmail, setTwoFaEmail] = useState("");
+  const [twoFaDisableCode, setTwoFaDisableCode] = useState("");
+  const [twoFaDisabling, setTwoFaDisabling] = useState(false);
+  const [twoFaSending, setTwoFaSending] = useState(false);
+
+  // biometric toggles
   const [biometricEnabled, setBiometricEnabled] = useState(
     () => localStorage.getItem(BIOMETRIC_ENABLED_KEY) === "true"
   );
@@ -161,10 +171,55 @@ const SecurityTab = () => {
   const [showSignOutAll, setShowSignOutAll] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
-  // Check biometric availability on mount
+  // Load 2FA status and biometric availability on mount
   useEffect(() => {
     isPlatformAuthAvailable().then(setBiometricAvailable);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setTwoFactorEnabled(!!user?.user_metadata?.two_fa_enabled);
+      if (user?.email) setTwoFaEmail(user.email);
+    });
   }, []);
+
+  const startDisable2FA = async () => {
+    setTwoFaSending(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: twoFaEmail,
+        options: { shouldCreateUser: false },
+      });
+      if (error) throw error;
+      setTwoFaView("disabling-sent");
+      toast({ title: "Code sent", description: `Check ${twoFaEmail} for your verification code.` });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setTwoFaSending(false);
+    }
+  };
+
+  const confirmDisable2FA = async () => {
+    if (twoFaDisableCode.length !== 6) return;
+    setTwoFaDisabling(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: twoFaEmail,
+        token: twoFaDisableCode,
+        type: "email",
+      });
+      if (error) throw error;
+
+      await supabase.auth.updateUser({ data: { two_fa_enabled: false, two_fa_method: null } });
+      setTwoFactorEnabled(false);
+      setTwoFaView("idle");
+      setTwoFaDisableCode("");
+      toast({ title: "2FA disabled", description: "Two-factor authentication has been turned off." });
+    } catch (err: any) {
+      toast({ title: "Invalid code", description: "The code you entered is incorrect.", variant: "destructive" });
+      setTwoFaDisableCode("");
+    } finally {
+      setTwoFaDisabling(false);
+    }
+  };
 
   const handleBiometricToggle = useCallback(async (checked: boolean) => {
     setBiometricBusy(true);
@@ -466,22 +521,134 @@ const SecurityTab = () => {
       <Card className="p-4 md:p-8">
         <div className="flex items-center gap-3 mb-1">
           <Smartphone className="w-5 h-5 text-bronze" />
-            <h2 className="font-vollkorn text-xl md:text-2xl font-bold">Two-Factor Authentication</h2>
+          <h2 className="font-vollkorn text-xl md:text-2xl font-bold">Two-Factor Authentication</h2>
         </div>
         <p className="text-sm text-muted-foreground mb-5">
-          Add an extra layer of protection. Even if your password is compromised, your account stays safe.
+          Add an extra layer of protection. Every sign-in will require a code sent to your email.
         </p>
-        <MFASetup
-          onComplete={() => {
-             setTwoFactorEnabled(true);
-             toast({
-               title: "2FA Enabled!",
-               description: "Your account is now secured with two-factor authentication.",
-             });
-            }}
-            onSkip={() => setTwoFactorEnabled(false)}
-         />
-       </Card>
+
+        {twoFaView === "idle" && (
+          <div className="flex items-start md:items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <Label className="text-sm md:text-base">Email Verification Code</Label>
+                {twoFactorEnabled ? (
+                  <Badge variant="outline" className="text-primary border-primary/30 text-[10px]">Active</Badge>
+                ) : (
+                  <Badge variant="outline" className="text-muted-foreground text-[10px]">Not set up</Badge>
+                )}
+              </div>
+              <p className="text-xs md:text-sm text-muted-foreground">
+                {twoFactorEnabled
+                  ? "A 6-digit code is sent to your email each time you sign in."
+                  : "We'll send a 6-digit code to your email each time you sign in. No app required."}
+              </p>
+            </div>
+            {twoFactorEnabled ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setTwoFaView("disabling")}
+                className="flex-shrink-0 text-destructive border-destructive/30 hover:bg-destructive/10"
+              >
+                Disable
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                onClick={() => setTwoFaView("setup")}
+                className="flex-shrink-0 bg-bronze hover:bg-bronze/90 text-background"
+              >
+                Enable
+              </Button>
+            )}
+          </div>
+        )}
+
+        {twoFaView === "setup" && (
+          <div className="mt-2">
+            <MFASetup
+              onComplete={() => {
+                setTwoFactorEnabled(true);
+                setTwoFaView("idle");
+                toast({ title: "2FA Enabled!", description: "Your account is now secured with two-factor authentication." });
+              }}
+              onSkip={() => setTwoFaView("idle")}
+            />
+          </div>
+        )}
+
+        {twoFaView === "disabling" && (
+          <div className="mt-4 p-4 rounded-xl border border-destructive/20 bg-destructive/5 space-y-4">
+            <div className="flex items-center gap-2 text-sm text-destructive font-medium">
+              <AlertTriangle className="w-4 h-4" />
+              Disable Two-Factor Authentication
+            </div>
+            <p className="text-xs text-muted-foreground">
+              We'll send a verification code to <span className="font-medium text-foreground">{twoFaEmail}</span> to confirm this action.
+            </p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={startDisable2FA}
+                disabled={twoFaSending}
+                className="bg-destructive hover:bg-destructive/90 text-background"
+              >
+                {twoFaSending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Mail className="w-4 h-4 mr-1" />}
+                Send Code
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setTwoFaView("idle")}>Cancel</Button>
+            </div>
+          </div>
+        )}
+
+        {twoFaView === "disabling-sent" && (
+          <div className="mt-4 p-4 rounded-xl border border-destructive/20 bg-destructive/5 space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Enter the 6-digit code sent to <span className="font-medium text-foreground">{twoFaEmail}</span>
+            </p>
+            <div className="flex justify-start">
+              <InputOTP
+                maxLength={6}
+                value={twoFaDisableCode}
+                onChange={setTwoFaDisableCode}
+                onComplete={confirmDisable2FA}
+                autoFocus
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={confirmDisable2FA}
+                disabled={twoFaDisabling || twoFaDisableCode.length !== 6}
+                className="bg-destructive hover:bg-destructive/90 text-background"
+              >
+                {twoFaDisabling && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
+                Confirm Disable
+              </Button>
+              <button
+                onClick={startDisable2FA}
+                disabled={twoFaSending}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2"
+              >
+                {twoFaSending ? "Sending..." : "Resend code"}
+              </button>
+              <Button size="sm" variant="ghost" onClick={() => { setTwoFaView("idle"); setTwoFaDisableCode(""); }}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+      </Card>
 
 
 

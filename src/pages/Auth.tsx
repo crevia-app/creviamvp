@@ -61,23 +61,18 @@ const Auth = () => {
   };
 
   useEffect(() => {
-    // Check if user is already logged in
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // Check if user is already logged in — existing session means 2FA already done
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-        if (aalData?.nextLevel === "aal2" && aalData?.nextLevel !== aalData?.currentLevel) {
-          navigate("/mfa-verify", { replace: true });
-        } else {
-          navigate("/kira", { replace: true });
-        }
+        navigate("/kira", { replace: true });
       }
     });
 
-    // Listen for auth state changes (for OAuth redirects)
+    // Listen for auth state changes (fresh logins and OAuth redirects)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session && !inPasswordResetFlow.current) {
-        const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-        if (aalData?.nextLevel === "aal2" && aalData?.nextLevel !== aalData?.currentLevel) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.user_metadata?.two_fa_enabled) {
           navigate("/mfa-verify", { replace: true });
         } else {
           navigate("/kira", { replace: true });
@@ -228,12 +223,8 @@ const Auth = () => {
           }
         } else if (signUpData.session) {
           // User is immediately signed in (email confirmation disabled)
-          const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-          if (aalData?.nextLevel === "aal2" && aalData?.nextLevel !== aalData?.currentLevel) {
-            navigate("/mfa-verify", { replace: true });
-          } else {
-            navigate("/kira", { replace: true });
-          }
+          // New accounts won't have 2FA enabled yet, so go straight to the app
+          navigate("/kira", { replace: true });
         } else {
           // Email confirmation required — show dedicated screen
           setPendingEmail(email);
