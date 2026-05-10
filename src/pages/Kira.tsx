@@ -378,6 +378,9 @@ const Kira = () => {
   const [renameValue, setRenameValue] = useState("");
   const [mobileLongPressChat, setMobileLongPressChat] = useState<ChatHistory | null>(null);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const streamBufferRef = useRef('');
+  const animFrameRef = useRef<number | null>(null);
+  const networkDoneRef = useRef(false);
 
   // ── NEW: message interaction state ──
   const [editingMessageIdx, setEditingMessageIdx] = useState<number | null>(null);
@@ -508,6 +511,40 @@ const Kira = () => {
     return projects.find(p => p.id === activeProjectId);
   };
 
+  // Character-reveal animation: drains streamBufferRef at ~6 chars/frame (~360 chars/sec)
+  // so tokens appear smoothly instead of jumping in as large batches.
+  useEffect(() => {
+    if (!isStreaming) return;
+    const CHARS_PER_FRAME = 6;
+
+    const tick = () => {
+      if (streamBufferRef.current.length > 0) {
+        const batch = streamBufferRef.current.slice(0, CHARS_PER_FRAME);
+        streamBufferRef.current = streamBufferRef.current.slice(CHARS_PER_FRAME);
+        setMessages(prev => {
+          const updated = [...prev];
+          const last = updated[updated.length - 1];
+          if (last?.role === 'assistant') {
+            updated[updated.length - 1] = { ...last, content: last.content + batch };
+          }
+          return updated;
+        });
+      }
+
+      if (streamBufferRef.current.length === 0 && networkDoneRef.current) {
+        setIsStreaming(false);
+        return;
+      }
+
+      animFrameRef.current = requestAnimationFrame(tick);
+    };
+
+    animFrameRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (animFrameRef.current !== null) cancelAnimationFrame(animFrameRef.current);
+    };
+  }, [isStreaming]);
+
   const streamKiraResponse = useCallback(async (userMessages: Message[], conversationId: string) => {
     const lastUserContent = userMessages[userMessages.length - 1].content;
     const history = userMessages.slice(-7, -1).map(m => ({ role: m.role, content: m.content }));
@@ -542,8 +579,10 @@ const Kira = () => {
 
     // Streaming path — edge function returns text/plain
     if (contentType.includes('text/plain') && response.body) {
-      setIsStreaming(true);
+      streamBufferRef.current = '';
+      networkDoneRef.current = false;
       setMessages(prev => [...prev, { role: 'assistant', content: '', timestamp: new Date() }]);
+      setIsStreaming(true);
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -555,14 +594,13 @@ const Kira = () => {
           if (done) break;
           const chunk = decoder.decode(value, { stream: true });
           fullContent += chunk;
-          setMessages(prev => {
-            const updated = [...prev];
-            updated[updated.length - 1] = { ...updated[updated.length - 1], content: fullContent };
-            return updated;
-          });
+          streamBufferRef.current += chunk;
         }
-      } finally {
-        setIsStreaming(false);
+        networkDoneRef.current = true;
+      } catch (err) {
+        streamBufferRef.current = '';
+        networkDoneRef.current = true;
+        throw err;
       }
 
       await saveMessage(conversationId, 'assistant', fullContent);
