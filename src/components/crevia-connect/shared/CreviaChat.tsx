@@ -610,7 +610,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
           .select("last_read_at")
           .eq("room_id", room.id)
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
         let unreadCount = 0;
         if (receipt?.last_read_at) {
@@ -2458,7 +2458,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
 
       {/* Room Info Dialog */}
       <Dialog open={showRoomInfo} onOpenChange={setShowRoomInfo}>
-        <DialogContent className="sm:max-w-[420px] max-h-[85vh] flex flex-col p-0 gap-0">
+        <DialogContent className="sm:max-w-[420px] max-h-[85vh] flex flex-col p-0 gap-0" aria-describedby={undefined}>
           <DialogHeader className="px-6 pt-5 pb-4 border-b border-border/50 flex-shrink-0">
             <DialogTitle>
               {selectedRoom?.is_group ? "Group Info" : "Contact Info"}

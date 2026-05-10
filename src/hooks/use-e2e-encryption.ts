@@ -240,7 +240,7 @@ export function useE2EEncryption(currentUserId: string) {
         const encryptedKey = await wrapRoomKey(roomKey, privateKey, memberPublicKey);
         await supabase.from("room_encrypted_keys" as any).upsert(
           { room_id: roomId, user_id: memberId, encrypted_by: currentUserId, encrypted_key: encryptedKey },
-          { onConflict: "room_id,user_id" }
+          { onConflict: "room_id,user_id", ignoreDuplicates: true }
         );
       } catch (err) {
         console.error(`Failed to redistribute key for ${memberId}:`, err);
