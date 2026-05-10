@@ -217,6 +217,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typingTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const presenceChannelRef = useRef<any>(null);
   const selectedExternalRef = useRef<string>("");
 
@@ -362,6 +363,14 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                 }
               }
               setMessages((prev) => [...prev, msgWithProfile]);
+              // Clear typing indicator for this sender immediately when message lands
+              if (newMsg.sender_id !== currentUserId) {
+                if (typingTimeoutsRef.current[newMsg.sender_id]) {
+                  clearTimeout(typingTimeoutsRef.current[newMsg.sender_id]);
+                  delete typingTimeoutsRef.current[newMsg.sender_id];
+                }
+                setTypingUsers((prev) => prev.filter((id) => id !== newMsg.sender_id));
+              }
             })();
             updateReadReceipt(newMsg.room_id);
           }
@@ -389,37 +398,41 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     };
   }, [currentUserId, selectedRoom]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Typing indicator presence channel
+  // Typing indicator — uses Broadcast (low-latency fire-and-forget) instead of
+  // Presence so the signal appears instantly on the other side, like WhatsApp.
   useEffect(() => {
     if (!selectedRoom || !currentUserId) return;
 
-    const channel = supabase.channel(`typing-${selectedRoom.id}`, {
-      config: { presence: { key: currentUserId } },
-    });
+    const channel = supabase.channel(`typing-${selectedRoom.id}`);
 
     channel
-      .on("presence", { event: "sync" }, () => {
-        const state = channel.presenceState();
-        const typers: string[] = [];
-        for (const [userId, presences] of Object.entries(state)) {
-          if (userId !== currentUserId) {
-            const p = presences as any[];
-            if (p.some((pr: any) => pr.typing)) {
-              typers.push(userId);
-            }
+      .on("broadcast", { event: "typing" }, ({ payload }) => {
+        const { userId, typing } = payload as { userId: string; typing: boolean };
+        if (userId === currentUserId) return;
+
+        if (typing) {
+          setTypingUsers((prev) => (prev.includes(userId) ? prev : [...prev, userId]));
+          // Safety fallback: auto-clear after 3 s if the stop event never arrives
+          if (typingTimeoutsRef.current[userId]) clearTimeout(typingTimeoutsRef.current[userId]);
+          typingTimeoutsRef.current[userId] = setTimeout(() => {
+            setTypingUsers((prev) => prev.filter((id) => id !== userId));
+            delete typingTimeoutsRef.current[userId];
+          }, 3000);
+        } else {
+          if (typingTimeoutsRef.current[userId]) {
+            clearTimeout(typingTimeoutsRef.current[userId]);
+            delete typingTimeoutsRef.current[userId];
           }
+          setTypingUsers((prev) => prev.filter((id) => id !== userId));
         }
-        setTypingUsers(typers);
       })
-      .subscribe((status) => {
-        if (status === "SUBSCRIBED") {
-          channel.track({ typing: false });
-        }
-      });
+      .subscribe();
 
     presenceChannelRef.current = channel;
 
     return () => {
+      Object.values(typingTimeoutsRef.current).forEach(clearTimeout);
+      typingTimeoutsRef.current = {};
       supabase.removeChannel(channel);
       presenceChannelRef.current = null;
     };
@@ -430,16 +443,21 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Broadcast typing status
+  // Send a broadcast typing event
   const broadcastTyping = useCallback((isTyping: boolean) => {
-    if (!presenceChannelRef.current) return;
-    presenceChannelRef.current.track({ typing: isTyping });
-  }, []);
+    if (!presenceChannelRef.current || !currentUserId) return;
+    presenceChannelRef.current.send({
+      type: "broadcast",
+      event: "typing",
+      payload: { userId: currentUserId, typing: isTyping },
+    });
+  }, [currentUserId]);
 
   const handleTyping = useCallback(() => {
     broadcastTyping(true);
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = setTimeout(() => broadcastTyping(false), 2000);
+    // Stop-typing signal fires 1.5 s after the last keystroke (matches WhatsApp cadence)
+    typingTimeoutRef.current = setTimeout(() => broadcastTyping(false), 1500);
   }, [broadcastTyping]);
 
   const loadSenderProfile = async (msg: ChatMessage): Promise<ChatMessage> => {
