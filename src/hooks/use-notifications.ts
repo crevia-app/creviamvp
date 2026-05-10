@@ -38,13 +38,24 @@ export function useNotifications(userId: string) {
       .channel(`notifications:${userId}`)
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${userId}`,
-        },
-        () => refresh()
+        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
+        (payload) => {
+          // Prepend the new notification immediately — no round-trip needed.
+          const notif = payload.new as AppNotification;
+          setNotifications((prev) => [notif, ...prev].slice(0, LIMIT));
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
+        (payload) => {
+          const updated = payload.new as AppNotification;
+          setNotifications((prev) => {
+            const without = prev.filter((n) => n.id !== updated.id);
+            // Move bumped/updated notification back to the top.
+            return [updated, ...without].slice(0, LIMIT);
+          });
+        }
       )
       .subscribe();
 
@@ -53,8 +64,8 @@ export function useNotifications(userId: string) {
 
   const markRead = useCallback(async (id: string) => {
     await supabase.from("notifications").update({ read: true }).eq("id", id);
-    setNotifications(prev =>
-      prev.map(n => (n.id === id ? { ...n, read: true } : n))
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
   }, []);
 
@@ -65,10 +76,10 @@ export function useNotifications(userId: string) {
       .update({ read: true })
       .eq("user_id", userId)
       .eq("read", false);
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   }, [userId]);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return { notifications, unreadCount, loading, markRead, markAllRead, refresh };
 }
