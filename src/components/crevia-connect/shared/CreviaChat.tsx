@@ -42,6 +42,8 @@ import {
   Sparkles,
   Loader2,
   CheckCircle2,
+  Globe,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
@@ -63,6 +65,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { format, isToday, isYesterday } from "date-fns";
 import ChatMediaPanel from "./ChatMediaPanel";
 import { useE2EEncryption } from "@/hooks/use-e2e-encryption";
+import { iconOptions } from "@/components/crevia-link/iconOptions";
 
 interface ChatRoom {
   id: string;
@@ -213,6 +216,8 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const [showMessageSearch, setShowMessageSearch] = useState(false);
   const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
   const [externalRoomNotFound, setExternalRoomNotFound] = useState(false);
+  const [contactLinkProfile, setContactLinkProfile] = useState<{ id: string; username: string; bio: string | null } | null>(null);
+  const [contactSocialLinks, setContactSocialLinks] = useState<{ id: string; platform: string; url: string }[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -437,6 +442,38 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
       presenceChannelRef.current = null;
     };
   }, [selectedRoom?.id, currentUserId]);
+
+  // Fetch the other user's Crevia link profile + social links when contact info opens
+  useEffect(() => {
+    if (!showRoomInfo || !selectedRoom || selectedRoom.is_group) {
+      setContactLinkProfile(null);
+      setContactSocialLinks([]);
+      return;
+    }
+    const other = selectedRoom.members?.find((m) => m.user_id !== currentUserId);
+    if (!other) return;
+
+    (async () => {
+      const { data: lp } = await supabase
+        .from("link_profiles")
+        .select("id, username, bio")
+        .eq("user_id", other.user_id)
+        .maybeSingle();
+
+      setContactLinkProfile(lp ?? null);
+
+      if (lp?.id) {
+        const { data: sl } = await supabase
+          .from("link_social_icons")
+          .select("id, platform, url, order_index")
+          .eq("profile_id", lp.id)
+          .order("order_index", { ascending: true });
+        setContactSocialLinks(sl ?? []);
+      } else {
+        setContactSocialLinks([]);
+      }
+    })();
+  }, [showRoomInfo, selectedRoom?.id, currentUserId]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -2421,71 +2458,149 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
 
       {/* Room Info Dialog */}
       <Dialog open={showRoomInfo} onOpenChange={setShowRoomInfo}>
-        <DialogContent className="sm:max-w-[450px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[420px] max-h-[85vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="px-6 pt-5 pb-4 border-b border-border/50 flex-shrink-0">
             <DialogTitle>
               {selectedRoom?.is_group ? "Group Info" : "Contact Info"}
             </DialogTitle>
           </DialogHeader>
-          {selectedRoom && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-full bg-bronze/20 flex items-center justify-center text-xl font-bold text-bronze">
-                  {selectedRoom.is_group ? (
-                    <Users className="h-8 w-8" />
-                  ) : (
-                    getRoomInitial(selectedRoom)
-                  )}
-                </div>
-                <div>
-                  <p className="font-bold text-lg">{getRoomDisplayName(selectedRoom)}</p>
-                  {selectedRoom.is_group && (
-                    <p className="text-sm text-muted-foreground">
-                      {selectedRoom.members?.length} members
-                    </p>
-                  )}
-                </div>
-              </div>
 
-              {selectedRoom.members && selectedRoom.members.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                    Members
-                  </p>
-                  <div className="space-y-2">
-                    {selectedRoom.members.map((member) => (
-                      <div key={member.user_id} className="flex items-center gap-3 p-2 rounded-lg">
-                        <div className="h-8 w-8 rounded-full bg-bronze/10 flex items-center justify-center text-xs font-semibold overflow-hidden">
-                          {member.profile?.avatar_url ? (
-                            <img src={member.profile.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
-                          ) : (
-                            member.profile?.display_name?.[0]?.toUpperCase() || "U"
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <p className="text-sm font-medium truncate">
-                              {member.profile?.display_name || member.profile?.handle || "User"}
-                              {member.user_id === currentUserId && " (You)"}
-                            </p>
-                            {member.role === "admin" && (
-                              <Badge variant="secondary" className="text-[9px] px-1 py-0">
-                                Admin
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {member.profile?.handle ? `@${member.profile.handle}` : ""}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+          {selectedRoom && (
+            <ScrollArea className="flex-1 overflow-hidden">
+              <div className="px-6 py-5 space-y-5">
+
+                {/* Avatar + name */}
+                <div className="flex flex-col items-center gap-3">
+                  <div className="h-20 w-20 rounded-full bg-bronze/20 flex items-center justify-center overflow-hidden">
+                    {(() => {
+                      const other = selectedRoom.members?.find((m) => m.user_id !== currentUserId);
+                      return selectedRoom.is_group ? (
+                        <Users className="h-8 w-8 text-bronze" />
+                      ) : other?.profile?.avatar_url ? (
+                        <img src={other.profile.avatar_url} alt="" className="h-20 w-20 rounded-full object-cover" />
+                      ) : (
+                        <span className="text-2xl font-bold text-bronze">{getRoomInitial(selectedRoom)}</span>
+                      );
+                    })()}
+                  </div>
+                  <div className="text-center">
+                    <p className="font-bold text-lg leading-tight">{getRoomDisplayName(selectedRoom)}</p>
+                    {!selectedRoom.is_group && (() => {
+                      const other = selectedRoom.members?.find((m) => m.user_id !== currentUserId);
+                      return other?.profile?.handle ? (
+                        <p className="text-sm text-muted-foreground mt-0.5">@{other.profile.handle}</p>
+                      ) : null;
+                    })()}
+                    {selectedRoom.is_group && (
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        {selectedRoom.members?.length} members
+                      </p>
+                    )}
                   </div>
                 </div>
-              )}
 
-              <ChatMediaPanel roomId={selectedRoom.id} />
-            </div>
+                {/* ── DM only: Crevia link + social links ── */}
+                {!selectedRoom.is_group && (
+                  <>
+                    {/* Crevia Profile link */}
+                    {contactLinkProfile?.username && (
+                      <div>
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                          Crevia Profile
+                        </p>
+                        <a
+                          href={`/${contactLinkProfile.username}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 p-3 rounded-xl bg-bronze/5 border border-bronze/20 hover:bg-bronze/10 transition-colors"
+                        >
+                          <div className="h-8 w-8 rounded-lg bg-bronze/15 flex items-center justify-center flex-shrink-0">
+                            <Sparkles className="h-4 w-4 text-bronze" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-foreground">
+                              crevia.io/{contactLinkProfile.username}
+                            </p>
+                            {contactLinkProfile.bio && (
+                              <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                {contactLinkProfile.bio}
+                              </p>
+                            )}
+                          </div>
+                          <ExternalLink className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        </a>
+                      </div>
+                    )}
+
+                    {/* Social links */}
+                    {contactSocialLinks.length > 0 && (
+                      <div>
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                          Social Links
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {contactSocialLinks.map((link) => {
+                            const opt = iconOptions.find((o) => o.value === link.platform);
+                            const Icon = opt?.icon ?? Globe;
+                            return (
+                              <a
+                                key={link.id}
+                                href={link.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted hover:bg-muted/70 transition-colors text-xs font-medium"
+                              >
+                                <Icon className="h-3.5 w-3.5 text-bronze" />
+                                <span>{opt?.label ?? link.platform}</span>
+                              </a>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* ── Group only: members list ── */}
+                {selectedRoom.is_group && selectedRoom.members && selectedRoom.members.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                      Members
+                    </p>
+                    <div className="space-y-1">
+                      {selectedRoom.members.map((member) => (
+                        <div key={member.user_id} className="flex items-center gap-3 p-2 rounded-lg">
+                          <div className="h-8 w-8 rounded-full bg-bronze/10 flex items-center justify-center text-xs font-semibold overflow-hidden flex-shrink-0">
+                            {member.profile?.avatar_url ? (
+                              <img src={member.profile.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                            ) : (
+                              member.profile?.display_name?.[0]?.toUpperCase() || "U"
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-sm font-medium truncate">
+                                {member.profile?.display_name || member.profile?.handle || "User"}
+                                {member.user_id === currentUserId && " (You)"}
+                              </p>
+                              {member.role === "admin" && (
+                                <Badge variant="secondary" className="text-[9px] px-1 py-0">Admin</Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {member.profile?.handle ? `@${member.profile.handle}` : ""}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Shared Media — visible for both DMs and groups */}
+                <ChatMediaPanel roomId={selectedRoom.id} />
+              </div>
+            </ScrollArea>
           )}
         </DialogContent>
       </Dialog>
