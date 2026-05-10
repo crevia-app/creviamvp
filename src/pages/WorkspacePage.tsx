@@ -217,7 +217,7 @@ const WorkspacePage = () => {
       {/* Chat + Desktop Action Vault */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <div className="flex-1 min-w-0 overflow-hidden">
-          <CreviaChat />
+          <CreviaChat externalRoomId={id} hideRoomList={true} onBack={() => navigate("/crevia-studio?tab=chat")} />
         </div>
 
         {/* Desktop sidebar — hidden below lg */}

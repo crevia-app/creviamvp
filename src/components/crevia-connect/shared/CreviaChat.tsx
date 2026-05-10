@@ -411,7 +411,11 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
         }
         setTypingUsers(typers);
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          channel.track({ typing: false });
+        }
+      });
 
     presenceChannelRef.current = channel;
 
