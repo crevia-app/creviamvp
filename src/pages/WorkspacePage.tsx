@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { motion } from "framer-motion";
 import CreviaChat from "@/components/crevia-connect/shared/CreviaChat";
-import { ArrowLeft, CheckCircle2, Clock, FileSignature, Receipt, Sparkles, ArrowRight } from "lucide-react";
+import WorkspaceMembersDialog from "@/components/studio/workspaces/WorkspaceMembersDialog";
+import { ArrowLeft, CheckCircle2, Clock, FileSignature, Receipt, Sparkles, ArrowRight, Users } from "lucide-react";
 
 const DEAL_STAGES = [
   { id: "negotiating", label: "Negotiating" },
@@ -18,10 +19,11 @@ const DEAL_STAGES = [
 interface VaultProps {
   contracts: any[];
   invoices: any[];
+  loading: boolean;
   onNavigate: (path: string) => void;
 }
 
-const ActionVaultContent = ({ contracts, invoices, onNavigate }: VaultProps) => (
+const ActionVaultContent = ({ contracts, invoices, loading, onNavigate }: VaultProps) => (
   <div className="flex-1 overflow-y-auto p-4 space-y-4">
     {/* Contract */}
     <div>
@@ -29,7 +31,11 @@ const ActionVaultContent = ({ contracts, invoices, onNavigate }: VaultProps) => 
         <FileSignature className="w-3.5 h-3.5 text-bronze" />
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Contract</span>
       </div>
-      {contracts.length === 0 ? (
+      {loading ? (
+        <div className="space-y-2">
+          <div className="h-16 rounded-xl bg-muted/50 animate-pulse" />
+        </div>
+      ) : contracts.length === 0 ? (
         <div className="p-4 rounded-xl border border-dashed border-border text-center">
           <FileSignature className="w-6 h-6 text-muted-foreground/40 mx-auto mb-1" />
           <p className="text-xs text-muted-foreground">No contracts yet</p>
@@ -62,7 +68,11 @@ const ActionVaultContent = ({ contracts, invoices, onNavigate }: VaultProps) => 
         <Receipt className="w-3.5 h-3.5 text-bronze" />
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Invoice</span>
       </div>
-      {invoices.length === 0 ? (
+      {loading ? (
+        <div className="space-y-2">
+          <div className="h-16 rounded-xl bg-muted/50 animate-pulse" />
+        </div>
+      ) : invoices.length === 0 ? (
         <div className="p-4 rounded-xl border border-dashed border-border text-center">
           <Receipt className="w-6 h-6 text-muted-foreground/40 mx-auto mb-1" />
           <p className="text-xs text-muted-foreground">No invoices yet</p>
@@ -115,6 +125,8 @@ const WorkspacePage = () => {
   const [workspace, setWorkspace] = useState<any>(null);
   const [contracts, setContracts] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [membersOpen, setMembersOpen] = useState(false);
   const [activeStage, setActiveStage] = useState("negotiating");
   const [loading, setLoading] = useState(true);
   const [vaultOpen, setVaultOpen] = useState(false);
@@ -122,6 +134,9 @@ const WorkspacePage = () => {
   useEffect(() => { if (id) fetchData(); }, [id]);
 
   const fetchData = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) setCurrentUserId(user.id);
+
     const [{ data: room }, { data: contractsData }, { data: invoicesData }] = await Promise.all([
       supabase.from("chat_rooms").select("*").eq("id", id).single(),
       supabase.from("contracts").select("*").order("created_at", { ascending: false }).limit(3),
@@ -141,14 +156,6 @@ const WorkspacePage = () => {
   };
 
   const activeIndex = DEAL_STAGES.findIndex(s => s.id === activeStage);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-pulse text-muted-foreground">Loading workspace...</div>
-      </div>
-    );
-  }
 
   return (
     // subtract topbar (64px) + mobile bottom nav (64px) on mobile, topbar only on desktop
@@ -171,6 +178,15 @@ const WorkspacePage = () => {
               <Badge variant="outline" className="text-[10px] border-bronze/30 text-bronze">
                 {DEAL_STAGES[activeIndex]?.label}
               </Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5 text-xs border-border text-muted-foreground hover:text-foreground hover:border-bronze/40"
+                onClick={() => setMembersOpen(true)}
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">People</span>
+              </Button>
               {/* Mobile vault trigger — hidden on lg+ where the sidebar is visible */}
               <Button
                 variant="outline"
@@ -233,7 +249,7 @@ const WorkspacePage = () => {
               </div>
             </div>
           </div>
-          <ActionVaultContent contracts={contracts} invoices={invoices} onNavigate={navigate} />
+          <ActionVaultContent contracts={contracts} invoices={invoices} loading={loading} onNavigate={navigate} />
         </div>
       </div>
 
@@ -248,9 +264,19 @@ const WorkspacePage = () => {
               Action Vault
             </SheetTitle>
           </SheetHeader>
-          <ActionVaultContent contracts={contracts} invoices={invoices} onNavigate={(path) => { navigate(path); setVaultOpen(false); }} />
+          <ActionVaultContent contracts={contracts} invoices={invoices} loading={loading} onNavigate={(path) => { navigate(path); setVaultOpen(false); }} />
         </SheetContent>
       </Sheet>
+
+      {workspace && currentUserId && (
+        <WorkspaceMembersDialog
+          open={membersOpen}
+          onOpenChange={setMembersOpen}
+          roomId={workspace.id}
+          createdBy={workspace.created_by}
+          currentUserId={currentUserId}
+        />
+      )}
     </div>
   );
 };

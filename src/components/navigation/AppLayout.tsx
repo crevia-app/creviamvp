@@ -15,7 +15,6 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const location = useLocation();
   const { setTheme } = useTheme();
   const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -50,20 +49,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     } else {
       setProfile({ display_name: "Guest", email: "" });
     }
-    setLoading(false);
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white/60 font-poppins">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!profile) {
-    return null;
-  }
 
   const isCrevidAI = location.pathname === "/crevia-ai";
 
