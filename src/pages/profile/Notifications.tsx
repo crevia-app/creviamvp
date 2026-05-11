@@ -6,18 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotifications } from "@/hooks/use-notifications";
-import { Bell, MessageSquare, FileText, Sparkles, Shield, BellOff, CheckCheck, Loader2, MessageCircle, FileSignature, Receipt, Trash2, AlertTriangle } from "lucide-react";
+import { Bell, MessageSquare, FileText, Sparkles, Shield, BellOff, CheckCheck, Loader2, MessageCircle, FileSignature, Receipt } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-
 const SETTINGS_KEY = "crevia_notif_settings";
 
 const notificationGroups = [
@@ -63,12 +53,9 @@ function timeAgo(dateStr: string): string {
 }
 
 const Notifications = () => {
-  const { toast } = useToast();
   const navigate = useNavigate();
   const [userId, setUserId] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [clearDialogOpen, setClearDialogOpen] = useState(false);
-  const [clearing, setClearing] = useState(false);
   const [settings, setSettings] = useState<Record<string, boolean>>(() => {
     try {
       const saved = localStorage.getItem(SETTINGS_KEY);
@@ -94,23 +81,6 @@ const Notifications = () => {
     });
   };
 
-  const handleClearChats = async () => {
-    setClearing(true);
-    try {
-      const { error } = await supabase
-        .from("chat_rooms")
-        .delete()
-        .eq("created_by", userId);
-      if (error) throw error;
-      toast({ title: "Chats cleared", description: "All your recent chats have been deleted." });
-    } catch (err: any) {
-      toast({ title: "Failed to clear chats", description: err.message, variant: "destructive" });
-    } finally {
-      setClearing(false);
-      setClearDialogOpen(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 md:px-6 py-8 md:py-12 max-w-2xl">
@@ -120,7 +90,8 @@ const Notifications = () => {
         </div>
         <p className="text-muted-foreground mb-8 text-sm">Manage alerts and see recent activity</p>
 
-        {/* Recent notifications */}
+        {/* Recent notifications — only shown when there are notifications */}
+        {(loading || notifications.length > 0) && (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-poppins text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -142,12 +113,6 @@ const Notifications = () => {
             {loading ? (
               <div className="flex items-center justify-center py-10">
                 <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 text-center px-6">
-                <Bell className="w-8 h-8 text-muted-foreground/30 mb-2" />
-                <p className="text-sm font-medium text-muted-foreground">No notifications yet</p>
-                <p className="text-xs text-muted-foreground/60 mt-1">Activity from chats, contracts and invoices will appear here</p>
               </div>
             ) : (
               <div className="divide-y divide-border/50">
@@ -193,6 +158,7 @@ const Notifications = () => {
             )}
           </Card>
         </div>
+        )}
 
         {/* Settings */}
         <h2 className="font-poppins text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
@@ -242,56 +208,6 @@ const Notifications = () => {
           </div>
         </Card>
 
-        {/* Clear Recent Chats */}
-        <Card className="p-5 mt-4 border-destructive/20">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <Trash2 className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium text-sm">Clear Recent Chats</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Permanently delete all workspaces and chat history you created.
-                </p>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setClearDialogOpen(true)}
-              className="shrink-0 border-destructive/30 text-destructive hover:bg-destructive/10"
-            >
-              Clear
-            </Button>
-          </div>
-        </Card>
-
-        {/* Confirmation dialog */}
-        <Dialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-destructive" />
-                Clear Recent Chats?
-              </DialogTitle>
-              <DialogDescription>
-                This will permanently delete all workspaces you created, including every message and member inside them. This cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button variant="ghost" onClick={() => setClearDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={handleClearChats}
-                disabled={clearing}
-              >
-                {clearing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                {clearing ? "Clearing..." : "Yes, clear everything"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );
