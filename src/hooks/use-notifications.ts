@@ -34,6 +34,9 @@ export function useNotifications(userId: string) {
     if (!userId) return;
     refresh();
 
+    const handleCleared = () => setNotifications([]);
+    window.addEventListener("crevia:notifications-cleared", handleCleared);
+
     const channel = supabase
       .channel(`notifications:${userId}`)
       .on(
@@ -66,7 +69,10 @@ export function useNotifications(userId: string) {
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener("crevia:notifications-cleared", handleCleared);
+    };
   }, [userId, refresh]);
 
   const markRead = useCallback(async (id: string) => {
@@ -89,7 +95,7 @@ export function useNotifications(userId: string) {
   const clearAll = useCallback(async () => {
     if (!userId) return;
     await supabase.from("notifications").delete().eq("user_id", userId);
-    setNotifications([]);
+    window.dispatchEvent(new Event("crevia:notifications-cleared"));
   }, [userId]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
