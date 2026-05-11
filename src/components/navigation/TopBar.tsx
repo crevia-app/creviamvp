@@ -140,6 +140,7 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
         loading={loading}
         onMarkRead={markRead}
         onMarkAllRead={markAllRead}
+        userId={profile?.id ?? ""}
       />
     </header>
   );

@@ -1,10 +1,21 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bell, MessageSquare, FileSignature, Receipt, Sparkles, CreditCard, CheckCheck, Loader2 } from "lucide-react";
+import { Bell, MessageSquare, FileSignature, Receipt, Sparkles, CreditCard, CheckCheck, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AppNotification } from "@/hooks/use-notifications";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface NotificationSheetProps {
   open: boolean;
@@ -14,6 +25,7 @@ interface NotificationSheetProps {
   loading: boolean;
   onMarkRead: (id: string) => void;
   onMarkAllRead: () => void;
+  userId?: string;
 }
 
 function timeAgo(dateStr: string): string {
@@ -45,8 +57,29 @@ export default function NotificationSheet({
   loading,
   onMarkRead,
   onMarkAllRead,
+  userId = "",
 }: NotificationSheetProps) {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [clearing, setClearing] = useState(false);
+
+  const handleClearChats = async () => {
+    setClearing(true);
+    try {
+      const { error } = await supabase
+        .from("chat_rooms")
+        .delete()
+        .eq("created_by", userId);
+      if (error) throw error;
+      toast({ title: "Chats cleared", description: "All your recent chats have been deleted." });
+      setClearDialogOpen(false);
+    } catch (err: any) {
+      toast({ title: "Failed to clear chats", description: err.message, variant: "destructive" });
+    } finally {
+      setClearing(false);
+    }
+  };
 
   const handleClick = (n: AppNotification) => {
     if (!n.read) onMarkRead(n.id);
@@ -134,8 +167,8 @@ export default function NotificationSheet({
           )}
         </ScrollArea>
 
-        {notifications.length > 0 && (
-          <div className="px-4 py-3 border-t border-border flex-shrink-0">
+        <div className="px-4 py-3 border-t border-border flex-shrink-0 space-y-1">
+          {notifications.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
@@ -144,9 +177,41 @@ export default function NotificationSheet({
             >
               Notification settings
             </Button>
-          </div>
-        )}
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-xs text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5"
+            onClick={() => setClearDialogOpen(true)}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Clear Recent Chats
+          </Button>
+        </div>
       </SheetContent>
+
+      <Dialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              Clear Recent Chats?
+            </DialogTitle>
+            <DialogDescription>
+              This will permanently delete all workspaces you created, including every message and member inside them. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setClearDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleClearChats} disabled={clearing}>
+              {clearing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {clearing ? "Clearing..." : "Yes, clear everything"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Sheet>
   );
 }
