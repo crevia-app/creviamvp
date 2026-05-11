@@ -56,16 +56,19 @@ const SecurityTab = () => {
   const [twoFaSending, setTwoFaSending] = useState(false);
 
   const [loginAlertsEnabled, setLoginAlertsEnabled] = useState(true);
+  const [savingLoginAlerts, setSavingLoginAlerts] = useState(false);
 
   // Sign out all devices dialog
   const [showSignOutAll, setShowSignOutAll] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
-  // Load 2FA status on mount
+  // Load 2FA and login alerts status on mount
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setTwoFactorEnabled(!!user?.user_metadata?.two_fa_enabled);
       if (user?.email) setTwoFaEmail(user.email);
+      const saved = user?.user_metadata?.login_alerts_enabled;
+      setLoginAlertsEnabled(saved === undefined ? true : !!saved);
     });
   }, []);
 
@@ -500,14 +503,26 @@ const SecurityTab = () => {
             </div>
             <Switch
               checked={loginAlertsEnabled}
-              onCheckedChange={(checked) => {
-                setLoginAlertsEnabled(checked);
-                toast({
-                  title: checked ? "Login alerts enabled" : "Login alerts disabled",
-                  description: checked
-                    ? "You'll be notified of new sign-ins."
-                    : "You won't be notified of new sign-ins.",
-                });
+              disabled={savingLoginAlerts}
+              onCheckedChange={async (checked) => {
+                setSavingLoginAlerts(true);
+                try {
+                  const { error } = await supabase.auth.updateUser({
+                    data: { login_alerts_enabled: checked },
+                  });
+                  if (error) throw error;
+                  setLoginAlertsEnabled(checked);
+                  toast({
+                    title: checked ? "Login alerts enabled" : "Login alerts disabled",
+                    description: checked
+                      ? "You'll be notified of new sign-ins."
+                      : "You won't be notified of new sign-ins.",
+                  });
+                } catch (err: any) {
+                  toast({ title: "Failed to save", description: err.message, variant: "destructive" });
+                } finally {
+                  setSavingLoginAlerts(false);
+                }
               }}
               className="flex-shrink-0"
             />

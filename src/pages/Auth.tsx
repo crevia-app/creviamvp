@@ -75,6 +75,7 @@ const Auth = () => {
         if (user?.user_metadata?.two_fa_enabled) {
           navigate("/mfa-verify", { replace: true });
         } else {
+          supabase.functions.invoke("login-alert").catch(() => {});
           navigate("/kira", { replace: true });
         }
       } else if (event !== 'INITIAL_SESSION' && isProcessingOAuth) {
