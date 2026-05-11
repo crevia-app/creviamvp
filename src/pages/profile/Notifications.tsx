@@ -5,8 +5,17 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotifications } from "@/hooks/use-notifications";
-import { Bell, MessageSquare, FileText, Sparkles, Shield, BellOff, CheckCheck, Loader2, MessageCircle, FileSignature, Receipt } from "lucide-react";
+import { Bell, MessageSquare, FileText, Sparkles, Shield, BellOff, CheckCheck, Loader2, MessageCircle, FileSignature, Receipt, Trash2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const SETTINGS_KEY = "crevia_notif_settings";
 
@@ -53,7 +62,10 @@ function timeAgo(dateStr: string): string {
 }
 
 const Notifications = () => {
+  const { toast } = useToast();
   const [userId, setUserId] = useState("");
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const [settings, setSettings] = useState<Record<string, boolean>>(() => {
     try {
       const saved = localStorage.getItem(SETTINGS_KEY);
@@ -77,6 +89,23 @@ const Notifications = () => {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
       return next;
     });
+  };
+
+  const handleClearChats = async () => {
+    setClearing(true);
+    try {
+      const { error } = await supabase
+        .from("chat_rooms")
+        .delete()
+        .eq("created_by", userId);
+      if (error) throw error;
+      toast({ title: "Chats cleared", description: "All your recent chats have been deleted." });
+    } catch (err: any) {
+      toast({ title: "Failed to clear chats", description: err.message, variant: "destructive" });
+    } finally {
+      setClearing(false);
+      setClearDialogOpen(false);
+    }
   };
 
   return (
@@ -198,6 +227,57 @@ const Notifications = () => {
             <Switch id="muteAll" checked={settings.muteAll} onCheckedChange={() => toggle("muteAll")} />
           </div>
         </Card>
+
+        {/* Clear Recent Chats */}
+        <Card className="p-5 mt-4 border-destructive/20">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <Trash2 className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-sm">Clear Recent Chats</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Permanently delete all workspaces and chat history you created.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setClearDialogOpen(true)}
+              className="shrink-0 border-destructive/30 text-destructive hover:bg-destructive/10"
+            >
+              Clear
+            </Button>
+          </div>
+        </Card>
+
+        {/* Confirmation dialog */}
+        <Dialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-destructive" />
+                Clear Recent Chats?
+              </DialogTitle>
+              <DialogDescription>
+                This will permanently delete all workspaces you created, including every message and member inside them. This cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="ghost" onClick={() => setClearDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleClearChats}
+                disabled={clearing}
+              >
+                {clearing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {clearing ? "Clearing..." : "Yes, clear everything"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
