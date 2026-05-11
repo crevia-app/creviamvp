@@ -21,7 +21,7 @@ const themeOptions = [
 
 const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
   const [sheetOpen, setSheetOpen] = useState(false);
-  const { notifications, unreadCount, loading, markRead, markAllRead } =
+  const { notifications, unreadCount, loading, markRead, markAllRead, clearAll } =
     useNotifications(profile?.id ?? "");
 
   const { setTheme } = useTheme();
@@ -140,7 +140,7 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
         loading={loading}
         onMarkRead={markRead}
         onMarkAllRead={markAllRead}
-        userId={profile?.id ?? ""}
+        onClearAll={clearAll}
       />
     </header>
   );
