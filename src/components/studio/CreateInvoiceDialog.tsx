@@ -582,12 +582,7 @@ const CreateInvoiceDialog = ({
                 <Building2 className="h-4 w-4 text-bronze" />
                 <h3 className="font-semibold text-foreground text-sm">From (Your Business)</h3>
               </div>
-              {(loadedSettings?.business_name || loadedSettings?.business_email) ? (
-                <span className="flex items-center gap-1 text-xs text-emerald-500 font-medium">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  Auto-filled from Settings
-                </span>
-              ) : (
+              {!(loadedSettings?.business_name || loadedSettings?.business_email) && (
                 <Link
                   to="/crevia-studio?tab=settings"
                   onClick={() => onOpenChange(false)}
