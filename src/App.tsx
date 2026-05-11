@@ -39,6 +39,7 @@ import TermsOfService from "./pages/TermsOfService";
 import AppLayout from "./components/navigation/AppLayout";
 import PublicPageWrapper from "./components/PublicPageWrapper";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { FloatingThemeToggle } from "./components/FloatingThemeToggle";
 
 const queryClient = new QueryClient();
 
@@ -82,6 +83,7 @@ function AppContent() {
   return (
     <>
       <ScrollToTop />
+      <FloatingThemeToggle />
 
       {/* Non-dismissible: shown on a new device when a v2 backup exists */}
       <RecoveryPasswordModal
@@ -138,7 +140,7 @@ function AppContent() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" forcedTheme="light" enableSystem={false} storageKey="theme">
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="theme">
       <LanguageProvider>
         <TooltipProvider>
           <Toaster />
