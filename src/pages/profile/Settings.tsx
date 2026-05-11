@@ -297,13 +297,6 @@ const Settings = () => {
               </div>
               <div className="flex items-start md:items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <Label className="text-sm md:text-base">{t("settings.hideEarnings")}</Label>
-                  <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{t("settings.hideEarningsDesc")}</p>
-                </div>
-                <Switch className="flex-shrink-0" />
-              </div>
-              <div className="flex items-start md:items-center justify-between gap-3">
-                <div className="flex-1 min-w-0">
                   <Label className="text-sm md:text-base">{t("settings.doNotDisturb")}</Label>
                   <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{t("settings.doNotDisturbDesc")}</p>
                 </div>
