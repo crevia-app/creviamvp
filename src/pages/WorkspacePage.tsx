@@ -127,6 +127,7 @@ const WorkspacePage = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [membersOpen, setMembersOpen] = useState(false);
+  const [memberCount, setMemberCount] = useState<number | null>(null);
   const [activeStage, setActiveStage] = useState("negotiating");
   const [loading, setLoading] = useState(true);
   const [vaultOpen, setVaultOpen] = useState(false);
@@ -137,11 +138,13 @@ const WorkspacePage = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) setCurrentUserId(user.id);
 
-    const [{ data: room }, { data: contractsData }, { data: invoicesData }] = await Promise.all([
+    const [{ data: room }, { data: contractsData }, { data: invoicesData }, { count }] = await Promise.all([
       supabase.from("chat_rooms").select("*").eq("id", id).single(),
       supabase.from("contracts").select("*").order("created_at", { ascending: false }).limit(3),
       supabase.from("invoices").select("*").order("created_at", { ascending: false }).limit(3),
+      supabase.from("chat_room_members").select("*", { count: "exact", head: true }).eq("room_id", id),
     ]);
+    setMemberCount(count ?? null);
 
     setWorkspace(room);
     setContracts(contractsData || []);
@@ -181,11 +184,16 @@ const WorkspacePage = () => {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 gap-1.5 text-xs border-border text-muted-foreground hover:text-foreground hover:border-bronze/40"
+                className="h-8 gap-1.5 text-xs border-bronze/40 text-bronze hover:bg-bronze/10"
                 onClick={() => setMembersOpen(true)}
               >
                 <Users className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">People</span>
+                People
+                {memberCount !== null && (
+                  <span className="bg-bronze/20 text-bronze rounded-full px-1.5 py-0 text-[10px] font-semibold leading-4">
+                    {memberCount}
+                  </span>
+                )}
               </Button>
               {/* Mobile vault trigger — hidden on lg+ where the sidebar is visible */}
               <Button
@@ -271,7 +279,16 @@ const WorkspacePage = () => {
       {workspace && currentUserId && (
         <WorkspaceMembersDialog
           open={membersOpen}
-          onOpenChange={setMembersOpen}
+          onOpenChange={(open) => {
+            setMembersOpen(open);
+            if (!open) {
+              supabase
+                .from("chat_room_members")
+                .select("*", { count: "exact", head: true })
+                .eq("room_id", workspace.id)
+                .then(({ count }) => setMemberCount(count ?? null));
+            }
+          }}
           roomId={workspace.id}
           createdBy={workspace.created_by}
           currentUserId={currentUserId}

@@ -90,14 +90,18 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
 
     searchTimer.current = setTimeout(async () => {
       setSearching(true);
-      const memberIds = members.map((m) => m.user_id);
-      const { data } = await supabase
+      const excludeIds = [currentUserId, ...members.map((m) => m.user_id)];
+      let query = supabase
         .from("profiles")
         .select("id, display_name, email, avatar_url")
         .or(`email.ilike.%${value}%,display_name.ilike.%${value}%`)
-        .not("id", "in", `(${[currentUserId, ...memberIds].join(",")})`)
         .limit(6);
 
+      if (excludeIds.length > 0) {
+        query = query.not("id", "in", `(${excludeIds.join(",")})`);
+      }
+
+      const { data } = await query;
       setSearchResults(data || []);
       setSearching(false);
     }, 300);
