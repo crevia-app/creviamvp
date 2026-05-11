@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/select";
 import { languages } from "@/data/countries";
 import { useToast } from "@/hooks/use-toast";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const Settings = () => {
@@ -149,13 +148,12 @@ const Settings = () => {
       <p className="text-sm md:text-base text-muted-foreground mb-6 md:mb-8">{t("settings.subtitle")}</p>
 
       <Tabs defaultValue="account" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-6 md:mb-8 h-auto">
+        <TabsList className="grid w-full grid-cols-3 mb-6 md:mb-8 h-auto">
           <TabsTrigger value="account" className="text-xs sm:text-sm py-2">{t("settings.account")}</TabsTrigger>
           <TabsTrigger value="security" className="text-xs sm:text-sm py-2 gap-1">
             <Shield className="w-3.5 h-3.5 hidden sm:inline" />
             Security
           </TabsTrigger>
-          <TabsTrigger value="appearance" className="text-xs sm:text-sm py-2">{t("settings.appearance")}</TabsTrigger>
           <TabsTrigger value="privacy" className="text-xs sm:text-sm py-2">{t("settings.privacy")}</TabsTrigger>
         </TabsList>
 
@@ -248,28 +246,7 @@ const Settings = () => {
                   {bio.length}/160 — {t("settings.bioMax")}
                 </p>
               </div>
-              <div className="pt-2">
-                <Button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-sm md:text-base px-6 py-5 md:py-6"
-                >
-                  {saving ? "Saving..." : t("common.save")}
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="appearance">
-          <Card className="p-4 md:p-8">
-            <h2 className="font-vollkorn text-xl md:text-2xl font-bold mb-4 md:mb-6">{t("settings.appearance")}</h2>
-            <div className="space-y-6">
-              <div>
-                <Label className="text-sm md:text-base mb-2 block">{t("settings.theme")}</Label>
-                <ThemeToggle />
-              </div>
-              
+              {/* Language */}
               <div className="pt-4 border-t">
                 <div className="flex items-center gap-2 mb-3">
                   <Languages className="w-5 h-5 text-bronze" />
@@ -277,10 +254,7 @@ const Settings = () => {
                 </div>
                 <Select value={language} onValueChange={(val) => {
                   setLanguage(val);
-                  toast({
-                    title: t("toast.languageChanged"),
-                    description: t("toast.languageChangedDesc"),
-                  });
+                  toast({ title: t("toast.languageChanged"), description: t("toast.languageChangedDesc") });
                 }}>
                   <SelectTrigger className="w-full md:w-80 h-11">
                     <SelectValue placeholder="Select language" />
@@ -293,13 +267,22 @@ const Settings = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs md:text-sm text-muted-foreground mt-2">
-                  {t("settings.languageDesc")}
-                </p>
+                <p className="text-xs md:text-sm text-muted-foreground mt-2">{t("settings.languageDesc")}</p>
+              </div>
+
+              <div className="pt-2 border-t">
+                <Button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-sm md:text-base px-6 py-5 md:py-6"
+                >
+                  {saving ? "Saving..." : t("common.save")}
+                </Button>
               </div>
             </div>
           </Card>
         </TabsContent>
+
 
         <TabsContent value="privacy">
           <Card className="p-4 md:p-8">
