@@ -12,6 +12,17 @@ export interface AppNotification {
 }
 
 const LIMIT = 40;
+const clearedKey = (uid: string) => `crevia_notif_cleared_${uid}`;
+
+function getClearedAt(userId: string): string | null {
+  return localStorage.getItem(clearedKey(userId));
+}
+
+function applyFilter(data: AppNotification[], userId: string): AppNotification[] {
+  const clearedAt = getClearedAt(userId);
+  if (!clearedAt) return data;
+  return data.filter((n) => n.created_at > clearedAt);
+}
 
 export function useNotifications(userId: string) {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
@@ -26,7 +37,7 @@ export function useNotifications(userId: string) {
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(LIMIT);
-    setNotifications((data as AppNotification[]) ?? []);
+    setNotifications(applyFilter((data as AppNotification[]) ?? [], userId));
     setLoading(false);
   }, [userId]);
 
@@ -43,7 +54,6 @@ export function useNotifications(userId: string) {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
         (payload) => {
-          // Prepend the new notification immediately — no round-trip needed.
           const notif = payload.new as AppNotification;
           setNotifications((prev) => [notif, ...prev].slice(0, LIMIT));
         }
@@ -94,6 +104,8 @@ export function useNotifications(userId: string) {
 
   const clearAll = useCallback(async () => {
     if (!userId) return;
+    // Store the cleared timestamp so notifications stay hidden across refreshes
+    localStorage.setItem(clearedKey(userId), new Date().toISOString());
     await supabase.from("notifications").delete().eq("user_id", userId);
     window.dispatchEvent(new Event("crevia:notifications-cleared"));
   }, [userId]);
