@@ -52,9 +52,16 @@ export function useNotifications(userId: string) {
           const updated = payload.new as AppNotification;
           setNotifications((prev) => {
             const without = prev.filter((n) => n.id !== updated.id);
-            // Move bumped/updated notification back to the top.
             return [updated, ...without].slice(0, LIMIT);
           });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
+        (payload) => {
+          const deleted = payload.old as { id: string };
+          setNotifications((prev) => prev.filter((n) => n.id !== deleted.id));
         }
       )
       .subscribe();

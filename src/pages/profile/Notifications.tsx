@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -42,13 +43,13 @@ const notificationGroups = [
   },
 ];
 
-const TYPE_ICONS: Record<string, React.ElementType> = {
-  message:  MessageCircle,
-  contract: FileSignature,
-  invoice:  Receipt,
-  campaign: Sparkles,
-  billing:  Bell,
-  system:   Bell,
+const TYPE_CONFIG: Record<string, { icon: React.ElementType; nav: string }> = {
+  message:  { icon: MessageCircle, nav: "/crevia-studio?tab=chat" },
+  contract: { icon: FileSignature, nav: "/crevia-studio?tab=contracts" },
+  invoice:  { icon: Receipt,       nav: "/crevia-studio?tab=invoices" },
+  campaign: { icon: Sparkles,      nav: "/crevia-studio" },
+  billing:  { icon: Bell,          nav: "/profile/payments-billing" },
+  system:   { icon: Bell,          nav: "" },
 };
 
 function timeAgo(dateStr: string): string {
@@ -63,7 +64,9 @@ function timeAgo(dateStr: string): string {
 
 const Notifications = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [userId, setUserId] = useState("");
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [settings, setSettings] = useState<Record<string, boolean>>(() => {
@@ -149,22 +152,33 @@ const Notifications = () => {
             ) : (
               <div className="divide-y divide-border/50">
                 {notifications.slice(0, 10).map(n => {
-                  const Icon = TYPE_ICONS[n.type] ?? Bell;
+                  const cfg = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.system;
+                  const Icon = cfg.icon;
+                  const isActive = activeId === n.id;
                   return (
                     <div
                       key={n.id}
-                      onClick={() => !n.read && markRead(n.id)}
+                      onClick={() => {
+                        if (!n.read) markRead(n.id);
+                        setActiveId(n.id);
+                        let nav = cfg.nav;
+                        if (n.type === "message" && n.data?.room_id) {
+                          nav = `/crevia-studio?tab=chat&roomId=${n.data.room_id}`;
+                        }
+                        if (nav) navigate(nav);
+                      }}
                       className={cn(
                         "flex items-start gap-3 px-4 py-3.5 cursor-pointer hover:bg-muted/40 transition-colors",
-                        !n.read && "bg-bronze/5"
+                        !n.read && "bg-bronze/5",
+                        isActive && "bg-bronze/10 border-l-2 border-bronze"
                       )}
                     >
-                      <div className={cn("mt-0.5 p-1.5 rounded-lg flex-shrink-0", !n.read ? "bg-bronze/10" : "bg-muted")}>
-                        <Icon className={cn("w-3.5 h-3.5", !n.read ? "text-bronze" : "text-muted-foreground")} />
+                      <div className={cn("mt-0.5 p-1.5 rounded-lg flex-shrink-0", !n.read || isActive ? "bg-bronze/10" : "bg-muted")}>
+                        <Icon className={cn("w-3.5 h-3.5", !n.read || isActive ? "text-bronze" : "text-muted-foreground")} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <p className={cn("text-sm leading-snug", !n.read ? "font-semibold" : "font-medium text-foreground/80")}>
+                          <p className={cn("text-sm leading-snug", !n.read || isActive ? "font-semibold" : "font-medium text-foreground/80")}>
                             {n.title}
                           </p>
                           {!n.read && <span className="mt-1.5 w-2 h-2 rounded-full bg-bronze flex-shrink-0" />}
