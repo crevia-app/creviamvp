@@ -714,6 +714,18 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                           { value: "crimson", label: "Crimson", gradient: "from-red-600 to-rose-800" },
                           { value: "jade", label: "Jade", gradient: "from-teal-600 to-emerald-700" },
                           { value: "sand", label: "Sand", gradient: "from-amber-200 to-stone-300" },
+                          { value: "champagne", label: "Champagne", gradient: "from-amber-100 to-yellow-50" },
+                          // ── 10 Premium ──
+                          { value: "onyx", label: "Onyx", gradient: "from-zinc-900 to-black" },
+                          { value: "electric", label: "Electric", gradient: "from-blue-600 via-cyan-500 to-teal-400" },
+                          { value: "velvet", label: "Velvet", gradient: "from-purple-900 via-violet-900 to-fuchsia-950" },
+                          { value: "terra", label: "Terra", gradient: "from-orange-700 via-red-800 to-rose-900" },
+                          { value: "glacier", label: "Glacier", gradient: "from-sky-50 via-blue-100 to-cyan-100" },
+                          { value: "dusk", label: "Dusk", gradient: "from-indigo-900 via-purple-700 to-rose-900" },
+                          { value: "citrus", label: "Citrus", gradient: "from-yellow-400 via-amber-400 to-orange-500" },
+                          { value: "ash", label: "Ash", gradient: "from-stone-600 to-stone-900" },
+                          { value: "graphite", label: "Graphite", gradient: "from-zinc-600 via-zinc-700 to-zinc-900" },
+                          { value: "blush", label: "Blush", gradient: "from-pink-100 via-rose-100 to-fuchsia-50" },
                         ].map((theme) => (
                           <div key={theme.value} className="relative">
                             <RadioGroupItem value={theme.value} id={`embedded-${theme.value}`} className="peer sr-only" />
@@ -1238,6 +1250,18 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         { value: "crimson", label: "Crimson", gradient: "from-red-600 to-rose-800" },
                         { value: "jade", label: "Jade", gradient: "from-teal-600 to-emerald-700" },
                         { value: "sand", label: "Sand", gradient: "from-amber-200 to-stone-300" },
+                        { value: "champagne", label: "Champagne", gradient: "from-amber-100 to-yellow-50" },
+                        // ── 10 Premium ──
+                        { value: "onyx", label: "Onyx", gradient: "from-zinc-900 to-black" },
+                        { value: "electric", label: "Electric", gradient: "from-blue-600 via-cyan-500 to-teal-400" },
+                        { value: "velvet", label: "Velvet", gradient: "from-purple-900 via-violet-900 to-fuchsia-950" },
+                        { value: "terra", label: "Terra", gradient: "from-orange-700 via-red-800 to-rose-900" },
+                        { value: "glacier", label: "Glacier", gradient: "from-sky-50 via-blue-100 to-cyan-100" },
+                        { value: "dusk", label: "Dusk", gradient: "from-indigo-900 via-purple-700 to-rose-900" },
+                        { value: "citrus", label: "Citrus", gradient: "from-yellow-400 via-amber-400 to-orange-500" },
+                        { value: "ash", label: "Ash", gradient: "from-stone-600 to-stone-900" },
+                        { value: "graphite", label: "Graphite", gradient: "from-zinc-600 via-zinc-700 to-zinc-900" },
+                        { value: "blush", label: "Blush", gradient: "from-pink-100 via-rose-100 to-fuchsia-50" },
                       ].map((theme) => (
                         <div key={theme.value} className="relative">
                           <RadioGroupItem value={theme.value} id={theme.value} className="peer sr-only" />

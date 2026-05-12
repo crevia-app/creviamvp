@@ -62,22 +62,48 @@ const PublicProfile = () => {
     const bgStyle = profile?.background?.style || "solid";
     
     const themeMap: Record<string, { className: string }> = {
-      light: { className: "bg-white text-gray-900" },
-      dark: { className: "bg-gray-900 text-white" },
-      bronze: { className: "bg-gradient-to-br from-[#1a1a1a] to-[#2d2520] text-white" },
-      minimal: { className: "bg-gray-50 text-gray-800" },
-      sunset: { className: "bg-gradient-to-br from-orange-500 to-pink-600 text-white" },
-      ocean: { className: "bg-gradient-to-br from-blue-600 to-teal-500 text-white" },
-      forest: { className: "bg-gradient-to-br from-green-700 to-emerald-900 text-white" },
-      royal: { className: "bg-gradient-to-br from-purple-700 to-indigo-900 text-white" },
-      midnight: { className: "bg-gradient-to-br from-slate-900 to-blue-950 text-white" },
-      rose: { className: "bg-gradient-to-br from-rose-400 to-pink-300 text-white" },
-      noir: { className: "bg-gradient-to-br from-zinc-900 to-neutral-950 text-white" },
-      sapphire: { className: "bg-gradient-to-br from-blue-700 to-indigo-900 text-white" },
-      burgundy: { className: "bg-gradient-to-br from-rose-900 to-red-950 text-white" },
-      emerald: { className: "bg-gradient-to-br from-emerald-700 to-green-900 text-white" },
-      lavender: { className: "bg-gradient-to-br from-violet-400 to-purple-500 text-white" },
+      // Base themes
+      light:     { className: "bg-white text-gray-900" },
+      dark:      { className: "bg-gray-900 text-white" },
+      bronze:    { className: "bg-gradient-to-br from-[#1a1a1a] to-[#2d2520] text-white" },
+      minimal:   { className: "bg-gray-50 text-gray-800" },
+      // Nature
+      sunset:    { className: "bg-gradient-to-br from-orange-500 to-pink-600 text-white" },
+      ocean:     { className: "bg-gradient-to-br from-blue-600 to-teal-500 text-white" },
+      forest:    { className: "bg-gradient-to-br from-green-700 to-emerald-900 text-white" },
+      coral:     { className: "bg-gradient-to-br from-orange-400 to-rose-500 text-white" },
+      jade:      { className: "bg-gradient-to-br from-teal-600 to-emerald-700 text-white" },
+      // Dark & moody
+      royal:     { className: "bg-gradient-to-br from-purple-700 to-indigo-900 text-white" },
+      midnight:  { className: "bg-gradient-to-br from-slate-900 to-blue-950 text-white" },
+      noir:      { className: "bg-gradient-to-br from-zinc-900 to-neutral-950 text-white" },
+      sapphire:  { className: "bg-gradient-to-br from-blue-700 to-indigo-900 text-white" },
+      burgundy:  { className: "bg-gradient-to-br from-rose-900 to-red-950 text-white" },
+      obsidian:  { className: "bg-gradient-to-br from-gray-950 to-slate-900 text-white" },
+      crimson:   { className: "bg-gradient-to-br from-red-600 to-rose-800 text-white" },
+      aurora:    { className: "bg-gradient-to-br from-purple-900 via-teal-800 to-green-900 text-white" },
+      // Light & airy
+      rose:      { className: "bg-gradient-to-br from-rose-400 to-pink-300 text-white" },
+      lavender:  { className: "bg-gradient-to-br from-violet-400 to-purple-500 text-white" },
+      emerald:   { className: "bg-gradient-to-br from-emerald-700 to-green-900 text-white" },
+      arctic:    { className: "bg-gradient-to-br from-sky-100 to-blue-200 text-gray-900" },
+      peach:     { className: "bg-gradient-to-br from-orange-100 to-pink-100 text-gray-900" },
+      sand:      { className: "bg-gradient-to-br from-amber-200 to-stone-300 text-gray-900" },
       champagne: { className: "bg-gradient-to-br from-amber-100 to-yellow-50 text-gray-900" },
+      // Warm metallics
+      copper:    { className: "bg-gradient-to-br from-amber-600 to-orange-800 text-white" },
+      steel:     { className: "bg-gradient-to-br from-slate-400 to-slate-600 text-white" },
+      // ── 10 NEW PREMIUM THEMES ──
+      onyx:      { className: "bg-[radial-gradient(ellipse_at_top,_#27272a,_#09090b)] text-white" },
+      electric:  { className: "bg-gradient-to-br from-blue-600 via-cyan-500 to-teal-400 text-white" },
+      velvet:    { className: "bg-gradient-to-br from-purple-900 via-violet-900 to-fuchsia-950 text-white" },
+      terra:     { className: "bg-gradient-to-br from-orange-700 via-red-800 to-rose-900 text-white" },
+      glacier:   { className: "bg-gradient-to-br from-sky-50 via-blue-100 to-cyan-100 text-gray-900" },
+      dusk:      { className: "bg-gradient-to-br from-indigo-900 via-purple-700 to-rose-900 text-white" },
+      citrus:    { className: "bg-gradient-to-br from-yellow-400 via-amber-400 to-orange-500 text-gray-900" },
+      ash:       { className: "bg-gradient-to-br from-stone-600 to-stone-900 text-white" },
+      graphite:  { className: "bg-gradient-to-br from-zinc-600 via-zinc-700 to-zinc-900 text-white" },
+      blush:     { className: "bg-gradient-to-br from-pink-100 via-rose-100 to-fuchsia-50 text-gray-900" },
       custom_image: { className: "text-white" },
     };
     return themeMap[theme] || themeMap.dark;
