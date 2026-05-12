@@ -18,7 +18,7 @@ const galleryImages = [gallery1, gallery2, gallery3, gallery4, connectHero];
 
 const OPS_CARDS = [
   { icon: Link2,        label: "Crevia Link",         path: "/crevia-link" },
-  { icon: MessageCircle,label: "Crevia Chat",          path: "/crevia-workspace" },
+  { icon: MessageCircle,label: "Crevia Chat",          path: "/crevia-studio" },
   { icon: Receipt,      label: "Invoices & Receipts",  path: "/crevia-invoice" },
   { icon: Shield,       label: "Contracts",            path: "/crevia-contracts" },
 ];
