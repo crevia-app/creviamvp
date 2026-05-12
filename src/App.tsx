@@ -24,6 +24,7 @@ import CreviaContracts from "./pages/CreviaContracts";
 import WorkspacesList from "./pages/WorkspacesList";
 import MFAVerify from "./components/auth/MFAVerify";
 import WorkspacePage from "./pages/WorkspacePage";
+import WorkspaceInvitePage from "./pages/WorkspaceInvitePage";
 import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
 import PaymentsBilling from "./pages/profile/PaymentsBilling";
@@ -123,6 +124,7 @@ function AppContent() {
         <Route path="/mfa-verify" element={<MFAVerify />} />
         <Route path="/crevia-workspace" element={<ProtectedRoute><AppLayout><WorkspacesList /></AppLayout></ProtectedRoute>} />
         <Route path="/crevia-workspace/:id" element={<ProtectedRoute><AppLayout><WorkspacePage /></AppLayout></ProtectedRoute>} />
+        <Route path="/invite/:token" element={<WorkspaceInvitePage />} />
         <Route path="/profile/payments-billing" element={<ProtectedRoute><AppLayout><PaymentsBilling /></AppLayout></ProtectedRoute>} />
         <Route path="/profile/notifications" element={<ProtectedRoute><AppLayout><Notifications /></AppLayout></ProtectedRoute>} />
         <Route path="/profile/verification" element={<ProtectedRoute><AppLayout><Verification /></AppLayout></ProtectedRoute>} />

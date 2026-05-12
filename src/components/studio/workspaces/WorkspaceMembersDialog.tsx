@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Users, Search, UserPlus, X, Loader2, Crown } from "lucide-react";
+import { Users, Search, UserPlus, X, Loader2, Crown, Link2, Copy, Check } from "lucide-react";
 
 interface Member {
   user_id: string;
@@ -46,6 +46,8 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
   const [searching, setSearching] = useState(false);
   const [addingId, setAddingId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [generatingLink, setGeneratingLink] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isCreator = currentUserId === createdBy;
 
@@ -141,6 +143,27 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
     setRemovingId(null);
   };
 
+  const generateInviteLink = async () => {
+    setGeneratingLink(true);
+    try {
+      const { data, error } = await supabase
+        .from("workspace_invites" as any)
+        .insert({ room_id: roomId, invited_by: currentUserId })
+        .select("token")
+        .single();
+      if (error) throw error;
+      const link = `${window.location.origin}/invite/${(data as any).token}`;
+      await navigator.clipboard.writeText(link);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+      toast.success("Invite link copied to clipboard");
+    } catch {
+      toast.error("Failed to generate invite link");
+    } finally {
+      setGeneratingLink(false);
+    }
+  };
+
   const getInitial = (profile: SearchResult | Member["profile"]) =>
     profile.display_name?.charAt(0) || profile.email?.charAt(0) || "?";
 
@@ -158,6 +181,29 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Invite link — creator only */}
+          {isCreator && (
+            <button
+              onClick={generateInviteLink}
+              disabled={generatingLink}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-dashed border-bronze/30 bg-bronze/5 hover:bg-bronze/10 hover:border-bronze/50 transition-all text-left group"
+            >
+              <div className="w-7 h-7 rounded-lg bg-bronze/15 flex items-center justify-center flex-shrink-0">
+                <Link2 className="w-3.5 h-3.5 text-bronze" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-foreground">Share Invite Link</p>
+                <p className="text-[10px] text-muted-foreground">Anyone with the link can join</p>
+              </div>
+              {generatingLink
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin text-bronze flex-shrink-0" />
+                : copiedLink
+                ? <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                : <Copy className="w-3.5 h-3.5 text-bronze/60 group-hover:text-bronze flex-shrink-0 transition-colors" />
+              }
+            </button>
+          )}
+
           {/* Search to add */}
           {isCreator && (
             <div className="relative">

@@ -97,7 +97,37 @@ const WorkspaceInboxList = ({
   const [startingDM, setStartingDM] = useState<string | null>(null);
 
   useEffect(() => {
-    if (userId) fetchRooms();
+    if (!userId) return;
+    fetchRooms();
+
+    // Real-time: bump a room to the top whenever a new message arrives
+    const channel = supabase
+      .channel(`inbox:${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "chat_rooms" },
+        (payload) => {
+          const updated = payload.new as { id: string; updated_at: string };
+          setRooms((prev) => {
+            const idx = prev.findIndex((r) => r.id === updated.id);
+            if (idx === -1) return prev;
+            const room = { ...prev[idx], updated_at: updated.updated_at };
+            const rest = prev.filter((_, i) => i !== idx);
+            return [room, ...rest];
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "chat_room_members", filter: `user_id=eq.${userId}` },
+        () => {
+          // A new room was shared with this user — refresh the full list
+          fetchRooms();
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [userId]);
 
   const fetchRooms = async () => {

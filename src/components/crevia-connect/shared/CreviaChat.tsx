@@ -10,6 +10,7 @@ import VoiceNotePlayer from "./VoiceNotePlayer";
 import MessageContextMenu from "./MessageContextMenu";
 import EmojiReactionPicker from "./EmojiReactionPicker";
 import MessageReactions from "./MessageReactions";
+import AttachmentBubble from "@/components/chat/AttachmentBubble";
 import {
   Send,
   Paperclip,
@@ -846,6 +847,21 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
       let fileData: { url: string; name: string; type: string; size: number } | null = null;
 
       if (selectedFile) {
+        // File size limits
+        const MAX_IMAGE = 10 * 1024 * 1024;  // 10 MB
+        const MAX_VIDEO = 50 * 1024 * 1024;  // 50 MB
+        const MAX_FILE  = 20 * 1024 * 1024;  // 20 MB
+        const isImage = selectedFile.type.startsWith("image/");
+        const isVideo = selectedFile.type.startsWith("video/");
+        const limit = isImage ? MAX_IMAGE : isVideo ? MAX_VIDEO : MAX_FILE;
+        const limitLabel = isImage ? "10 MB" : isVideo ? "50 MB" : "20 MB";
+
+        if (selectedFile.size > limit) {
+          toast.error(`File too large. ${isImage ? "Images" : isVideo ? "Videos" : "Files"} must be under ${limitLabel}.`);
+          setUploadingFile(false);
+          return;
+        }
+
         const fileExt = selectedFile.name.split(".").pop();
         const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
@@ -1520,17 +1536,11 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                           <span className="text-[10px] text-emerald-500 font-medium animate-pulse">
                             {getTypingDisplayNames()} typing...
                           </span>
-                        ) : (
-                          <>
-                            <Lock className="h-2.5 w-2.5 text-emerald-500" />
-                            <span className="text-[10px] text-emerald-500 font-medium">End-to-end encrypted</span>
-                          </>
-                        )}
-                        {selectedRoom.is_group && selectedRoom.members && typingUsers.length === 0 && (
+                        ) : selectedRoom.is_group && selectedRoom.members ? (
                           <span className="text-[10px] text-muted-foreground">
-                            • {selectedRoom.members.length} members
+                            {selectedRoom.members.length} members
                           </span>
-                        )}
+                        ) : null}
                       </div>
                     </div>
                     </button>
@@ -1804,23 +1814,25 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                       </button>
                                     )}
 
-                                    {/* Invoice attachment */}
-                                    {isInvoice && (
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <Receipt className={`h-4 w-4 ${isMine ? "text-background/70" : "text-bronze"}`} />
-                                        <span className={`text-xs font-semibold ${isMine ? "text-background/80" : "text-bronze"}`}>
-                                          Invoice Attached
-                                        </span>
+                                    {/* Invoice attachment — interactive card */}
+                                    {isInvoice && msg.invoice_id && (
+                                      <div className="mb-1.5">
+                                        <AttachmentBubble
+                                          type="invoice"
+                                          attachmentId={msg.invoice_id}
+                                          isMine={isMine}
+                                        />
                                       </div>
                                     )}
 
-                                    {/* Contract attachment */}
-                                    {isContract && (
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <FileSignature className={`h-4 w-4 ${isMine ? "text-background/70" : "text-bronze"}`} />
-                                        <span className={`text-xs font-semibold ${isMine ? "text-background/80" : "text-bronze"}`}>
-                                          Contract Attached
-                                        </span>
+                                    {/* Contract attachment — interactive card */}
+                                    {isContract && msg.contract_id && (
+                                      <div className="mb-1.5">
+                                        <AttachmentBubble
+                                          type="contract"
+                                          attachmentId={msg.contract_id}
+                                          isMine={isMine}
+                                        />
                                       </div>
                                     )}
 
