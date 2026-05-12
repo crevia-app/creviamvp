@@ -1,7 +1,8 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Brain, FileText, Link2, MessageCircle, Receipt, Shield } from "lucide-react";
+import { ArrowRight, Brain, FileText, Link2, MessageCircle, Receipt, Shield, Monitor, X } from "lucide-react";
+import { usePWAInstall } from "@/hooks/use-pwa-install";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HeroPattern from "@/components/HeroPattern";
@@ -26,6 +27,8 @@ const OPS_CARDS = [
 const Home = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [installDismissed, setInstallDismissed] = useState(false);
+  const { canInstall, install } = usePWAInstall();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setIsLoggedIn(!!session));
@@ -88,6 +91,34 @@ const Home = () => {
             </ScrollReveal>
           </div>
         </div>
+
+        {/* PWA install banner — first-time visitors only */}
+        {canInstall && !installDismissed && (
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 animate-fade-in">
+            <div className="flex items-center gap-3 bg-background/90 backdrop-blur-md border border-bronze/30 rounded-2xl px-4 py-3 shadow-xl">
+              <div className="w-9 h-9 rounded-xl bg-bronze/10 flex items-center justify-center flex-shrink-0">
+                <Monitor className="w-5 h-5 text-bronze" />
+              </div>
+              <div className="leading-tight">
+                <p className="text-xs font-semibold font-poppins">Install Crevia</p>
+                <p className="text-[10px] text-muted-foreground font-poppins">Add to your home screen</p>
+              </div>
+              <Button
+                size="sm"
+                onClick={install}
+                className="h-8 px-4 bg-bronze hover:bg-bronze-dark text-background text-xs font-poppins font-semibold"
+              >
+                Install
+              </Button>
+              <button
+                onClick={() => setInstallDismissed(true)}
+                className="text-muted-foreground hover:text-foreground transition-colors ml-1"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ═══════════════ PHOTO GALLERY MARQUEE ═══════════════ */}
