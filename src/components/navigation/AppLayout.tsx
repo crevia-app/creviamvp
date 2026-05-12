@@ -19,20 +19,36 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
   useEffect(() => {
     const appTheme = localStorage.getItem("app-theme");
-    if (appTheme) {
-      setTheme(appTheme);
-    }
-    loadProfile();
+    if (appTheme) setTheme(appTheme);
 
-    // Re-load profile when the session is established after a PKCE OAuth exchange
-    // (getSession() above may return null if the code is still being exchanged).
+    let realtimeChannel: ReturnType<typeof supabase.channel> | null = null;
+
+    const init = async () => {
+      await loadProfile();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      // Subscribe to profile row changes so avatar/display name syncs across all devices instantly
+      realtimeChannel = supabase
+        .channel(`profile-sync:${session.user.id}`)
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "profiles", filter: `id=eq.${session.user.id}` },
+          (payload) => setProfile(payload.new)
+        )
+        .subscribe();
+    };
+
+    init();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN") {
-        loadProfile();
-      }
+      if (event === "SIGNED_IN") loadProfile();
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (realtimeChannel) supabase.removeChannel(realtimeChannel);
+    };
   }, []);
 
   const loadProfile = async () => {

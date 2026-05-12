@@ -348,7 +348,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     if (!currentUserId) return;
 
     const channel = supabase
-      .channel("chat-realtime")
+      .channel(`chat-realtime:${currentUserId}:${selectedRoom?.id ?? "global"}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "chat_messages" },

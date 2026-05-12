@@ -22,8 +22,8 @@ const PLANS = (billingCycle: "monthly" | "yearly") => [
       "Crevia Link — basic templates",
       "10 Kira AI actions per day",
       "Unlimited bio links",
-      "5 invoices per month",
-      "5 contracts per month",
+      "2 invoices per month",
+      "2 contracts per month",
       "Standard chat interface",
       "Community support",
     ],
@@ -76,9 +76,9 @@ const PLANS = (billingCycle: "monthly" | "yearly") => [
       "Advanced team analytics",
       "Dedicated account support",
     ],
-    cta: "Get Business",
+    cta: "Contact Us",
     highlighted: false,
-    planKey: "business" as const,
+    planKey: null as "pro" | "business" | null,
     monthlyAmount: 3899,
     yearlyAmount: 38990,
   },
@@ -306,7 +306,7 @@ const Pricing = () => {
                         <>{plan.cta} <ArrowRight className="ml-2 w-4 h-4" /></>
                       )}
                     </Button>
-                  ) : plan.name === "Enterprise" ? (
+                  ) : plan.name === "Enterprise" || plan.name === "Business" ? (
                     <a href="mailto:hello@crevia.app">
                       <Button
                         variant="outline"

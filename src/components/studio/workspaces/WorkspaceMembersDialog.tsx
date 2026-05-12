@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Users, Search, UserPlus, X, Loader2, Crown, Link2, Copy, Check } from "lucide-react";
+import { Users, Search, UserPlus, X, Loader2, Crown, Link2, Copy, Check, ShieldCheck, ShieldOff } from "lucide-react";
 
 interface Member {
   user_id: string;
@@ -46,6 +46,7 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
   const [searching, setSearching] = useState(false);
   const [addingId, setAddingId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [promotingId, setPromotingId] = useState<string | null>(null);
   const [generatingLink, setGeneratingLink] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -141,6 +142,25 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
       toast.success("Member removed");
     }
     setRemovingId(null);
+  };
+
+  const toggleRole = async (userId: string, currentRole: string) => {
+    setPromotingId(userId);
+    const newRole = currentRole === "admin" ? "member" : "admin";
+    const { error } = await supabase
+      .from("chat_room_members")
+      .update({ role: newRole })
+      .eq("room_id", roomId)
+      .eq("user_id", userId);
+    if (error) {
+      toast.error("Failed to update role");
+    } else {
+      setMembers((prev) =>
+        prev.map((m) => m.user_id === userId ? { ...m, role: newRole } : m)
+      );
+      toast.success(newRole === "admin" ? "Promoted to admin" : "Demoted to member");
+    }
+    setPromotingId(null);
   };
 
   const generateInviteLink = async () => {
@@ -293,16 +313,31 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
                       {m.user_id === createdBy ? "owner" : m.role}
                     </Badge>
                     {isCreator && m.user_id !== createdBy && (
-                      <button
-                        onClick={() => removeMember(m.user_id)}
-                        disabled={removingId === m.user_id}
-                        className="text-muted-foreground hover:text-destructive transition-colors ml-1 flex-shrink-0"
-                        aria-label="Remove member"
-                      >
-                        {removingId === m.user_id
-                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          : <X className="w-3.5 h-3.5" />}
-                      </button>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          onClick={() => toggleRole(m.user_id, m.role)}
+                          disabled={promotingId === m.user_id}
+                          className="text-muted-foreground hover:text-bronze transition-colors"
+                          aria-label={m.role === "admin" ? "Demote to member" : "Promote to admin"}
+                          title={m.role === "admin" ? "Demote to member" : "Promote to admin"}
+                        >
+                          {promotingId === m.user_id
+                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            : m.role === "admin"
+                            ? <ShieldOff className="w-3.5 h-3.5" />
+                            : <ShieldCheck className="w-3.5 h-3.5" />}
+                        </button>
+                        <button
+                          onClick={() => removeMember(m.user_id)}
+                          disabled={removingId === m.user_id}
+                          className="text-muted-foreground hover:text-destructive transition-colors"
+                          aria-label="Remove member"
+                        >
+                          {removingId === m.user_id
+                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            : <X className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
                     )}
                   </div>
                 ))}
