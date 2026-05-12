@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Brain, FileText, Link2, MessageCircle, Receipt, Shield } from "lucide-react";
 import Header from "@/components/Header";
@@ -7,15 +8,34 @@ import HeroPattern from "@/components/HeroPattern";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import TestimonialMarquee from "@/components/TestimonialMarquee";
 import { supabase } from "@/integrations/supabase/client";
+import gallery1 from "@/assets/about-gallery-1.jpg";
+import gallery2 from "@/assets/about-gallery-2.jpg";
+import gallery3 from "@/assets/about-gallery-3.jpg";
+import gallery4 from "@/assets/about-gallery-4.jpg";
+import connectHero from "@/assets/crevia-connect-hero.jpg";
+
+const galleryImages = [gallery1, gallery2, gallery3, gallery4, connectHero];
+
+const OPS_CARDS = [
+  { icon: Link2,        label: "Crevia Link",         path: "/crevia-link" },
+  { icon: MessageCircle,label: "Crevia Chat",          path: "/crevia-workspace" },
+  { icon: Receipt,      label: "Invoices & Receipts",  path: "/crevia-invoice" },
+  { icon: Shield,       label: "Contracts",            path: "/crevia-contracts" },
+];
 
 const Home = () => {
   const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const handleAuthGatedClick = async () => {
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setIsLoggedIn(!!session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => setIsLoggedIn(!!session));
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleOpsClick = async (path: string) => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth?mode=signup");
-    }
+    navigate(session ? path : "/auth?mode=signup");
   };
 
   return (
@@ -67,6 +87,34 @@ const Home = () => {
               </div>
             </ScrollReveal>
           </div>
+        </div>
+      </section>
+
+      {/* ═══════════════ PHOTO GALLERY MARQUEE ═══════════════ */}
+      <section className="relative w-full py-6 overflow-hidden">
+        <div
+          className="absolute inset-y-0 left-0 w-24 md:w-36 z-10 pointer-events-none"
+          style={{ background: "linear-gradient(to right, hsl(var(--background)) 0%, transparent 100%)" }}
+        />
+        <div
+          className="absolute inset-y-0 right-0 w-24 md:w-36 z-10 pointer-events-none"
+          style={{ background: "linear-gradient(to left, hsl(var(--background)) 0%, transparent 100%)" }}
+        />
+        <div className="flex animate-scroll-left" style={{ width: "max-content", gap: "16px" }}>
+          {[...galleryImages, ...galleryImages, ...galleryImages].map((src, i) => (
+            <div
+              key={i}
+              className="relative flex-shrink-0 w-52 h-36 md:w-72 md:h-48 rounded-xl overflow-hidden border border-border/40"
+            >
+              <img
+                src={src}
+                alt=""
+                className="w-full h-full object-cover"
+                loading="lazy"
+                draggable={false}
+              />
+            </div>
+          ))}
         </div>
       </section>
 
@@ -160,18 +208,13 @@ const Home = () => {
                   it turns chaos into structured creative operations.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-md">
-                  {[
-                    { icon: Link2, label: "Crevia Link" },
-                    { icon: MessageCircle, label: "Crevia Chat" },
-                    { icon: Receipt, label: "Invoices & Receipts" },
-                    { icon: Shield, label: "Contracts" },
-                  ].map(({ icon: Icon, label }, i) => (
+                  {OPS_CARDS.map(({ icon: Icon, label, path }, i) => (
                     <ScrollReveal key={label} delay={0.06 * i} variant="scale">
                       <button
-                        onClick={handleAuthGatedClick}
+                        onClick={() => handleOpsClick(path)}
                         className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:bg-bronze/5 card-bronze-glow text-left cursor-pointer"
                       >
-                        <Icon className="w-5 h-5 text-bronze flex-shrink-0 transition-premium group-hover:scale-110" />
+                        <Icon className="w-5 h-5 text-bronze flex-shrink-0" />
                         <span className="font-poppins text-sm font-medium">{label}</span>
                       </button>
                     </ScrollReveal>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -13,35 +13,45 @@ import { RecoveryPasswordModal } from "@/components/auth/RecoveryPasswordModal";
 import { SetRecoveryPasswordDialog } from "@/components/auth/SetRecoveryPasswordDialog";
 import ScrollToTop from "./components/ScrollToTop";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-
-import Home from "./pages/Home";
-import Auth from "./pages/Auth";
-import ResetPassword from "./pages/ResetPassword";
-import Kira from "./pages/Kira";
-import CreviaLink from "./pages/CreviaLink";
-import CreviaStudio from "./pages/CreviaStudio";
-import CreviaInvoice from "./pages/CreviaInvoice";
-import CreviaContracts from "./pages/CreviaContracts";
-import WorkspacesList from "./pages/WorkspacesList";
-import MFAVerify from "./components/auth/MFAVerify";
-import WorkspacePage from "./pages/WorkspacePage";
-import WorkspaceInvitePage from "./pages/WorkspaceInvitePage";
-import PublicProfile from "./pages/PublicProfile";
-import NotFound from "./pages/NotFound";
-import PaymentsBilling from "./pages/profile/PaymentsBilling";
-import Notifications from "./pages/profile/Notifications";
-import Verification from "./pages/profile/Verification";
-import Settings from "./pages/profile/Settings";
-import Help from "./pages/profile/Help";
-import Feedback from "./pages/profile/Feedback";
-import Admin from "./pages/Admin";
-import Pricing from "./pages/Pricing";
-import About from "./pages/About";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsOfService from "./pages/TermsOfService";
 import AppLayout from "./components/navigation/AppLayout";
 import PublicPageWrapper from "./components/PublicPageWrapper";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+
+// Eagerly loaded — tiny or always needed immediately
+import Home from "./pages/Home";
+import Auth from "./pages/Auth";
+import NotFound from "./pages/NotFound";
+import MFAVerify from "./components/auth/MFAVerify";
+
+// Lazy-loaded — split into separate chunks to reduce initial bundle
+const ResetPassword    = lazy(() => import("./pages/ResetPassword"));
+const Kira             = lazy(() => import("./pages/Kira"));
+const CreviaLink       = lazy(() => import("./pages/CreviaLink"));
+const CreviaStudio     = lazy(() => import("./pages/CreviaStudio"));
+const CreviaInvoice    = lazy(() => import("./pages/CreviaInvoice"));
+const CreviaContracts  = lazy(() => import("./pages/CreviaContracts"));
+const WorkspacesList   = lazy(() => import("./pages/WorkspacesList"));
+const WorkspacePage    = lazy(() => import("./pages/WorkspacePage"));
+const WorkspaceInvitePage = lazy(() => import("./pages/WorkspaceInvitePage"));
+const PublicProfile    = lazy(() => import("./pages/PublicProfile"));
+const ReceivedDocuments = lazy(() => import("./pages/ReceivedDocuments"));
+const PaymentsBilling  = lazy(() => import("./pages/profile/PaymentsBilling"));
+const Notifications    = lazy(() => import("./pages/profile/Notifications"));
+const Verification     = lazy(() => import("./pages/profile/Verification"));
+const Settings         = lazy(() => import("./pages/profile/Settings"));
+const Help             = lazy(() => import("./pages/profile/Help"));
+const Feedback         = lazy(() => import("./pages/profile/Feedback"));
+const Admin            = lazy(() => import("./pages/Admin"));
+const Pricing          = lazy(() => import("./pages/Pricing"));
+const About            = lazy(() => import("./pages/About"));
+const PrivacyPolicy    = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService   = lazy(() => import("./pages/TermsOfService"));
+
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="w-8 h-8 rounded-full border-2 border-bronze border-t-transparent animate-spin" />
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -101,42 +111,45 @@ function AppContent() {
         onComplete={clearMigrationFlag}
       />
 
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<PublicPageWrapper><Home /></PublicPageWrapper>} />
-        <Route path="/auth" element={<PublicPageWrapper><Auth /></PublicPageWrapper>} />
-        <Route path="/reset-password" element={<PublicPageWrapper><ResetPassword /></PublicPageWrapper>} />
-        <Route path="/pricing" element={<PublicPageWrapper><Pricing /></PublicPageWrapper>} />
-        <Route path="/about" element={<PublicPageWrapper><About /></PublicPageWrapper>} />
-        <Route path="/app/about" element={<AppLayout><About isEmbedded /></AppLayout>} />
-        <Route path="/privacy-policy" element={<AppLayout><PrivacyPolicy /></AppLayout>} />
-        <Route path="/terms-of-service" element={<AppLayout><TermsOfService /></AppLayout>} />
-        <Route path="/user-type-selection" element={<Navigate to="/auth" replace />} />
-        <Route path="/signup/creator" element={<Navigate to="/auth?mode=signup" replace />} />
-        <Route path="/signup/brand" element={<Navigate to="/auth?mode=signup" replace />} />
-        <Route path="/:username" element={<PublicPageWrapper><PublicProfile /></PublicPageWrapper>} />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<PublicPageWrapper><Home /></PublicPageWrapper>} />
+          <Route path="/auth" element={<PublicPageWrapper><Auth /></PublicPageWrapper>} />
+          <Route path="/reset-password" element={<PublicPageWrapper><ResetPassword /></PublicPageWrapper>} />
+          <Route path="/pricing" element={<PublicPageWrapper><Pricing /></PublicPageWrapper>} />
+          <Route path="/about" element={<PublicPageWrapper><About /></PublicPageWrapper>} />
+          <Route path="/app/about" element={<AppLayout><About isEmbedded /></AppLayout>} />
+          <Route path="/privacy-policy" element={<AppLayout><PrivacyPolicy /></AppLayout>} />
+          <Route path="/terms-of-service" element={<AppLayout><TermsOfService /></AppLayout>} />
+          <Route path="/user-type-selection" element={<Navigate to="/auth" replace />} />
+          <Route path="/signup/creator" element={<Navigate to="/auth?mode=signup" replace />} />
+          <Route path="/signup/brand" element={<Navigate to="/auth?mode=signup" replace />} />
+          <Route path="/:username" element={<PublicPageWrapper><PublicProfile /></PublicPageWrapper>} />
 
-        {/* Protected routes */}
-        <Route path="/dashboard" element={<Navigate to="/kira" replace />} />
-        <Route path="/kira" element={<ProtectedRoute><AppLayout><Kira /></AppLayout></ProtectedRoute>} />
-        <Route path="/crevia-link" element={<ProtectedRoute><AppLayout><CreviaLink /></AppLayout></ProtectedRoute>} />
-        <Route path="/crevia-studio" element={<ProtectedRoute><AppLayout><CreviaStudio /></AppLayout></ProtectedRoute>} />
-        <Route path="/crevia-invoice" element={<ProtectedRoute><AppLayout><CreviaInvoice /></AppLayout></ProtectedRoute>} />
-        <Route path="/crevia-contracts" element={<ProtectedRoute><AppLayout><CreviaContracts /></AppLayout></ProtectedRoute>} />
-        <Route path="/mfa-verify" element={<MFAVerify />} />
-        <Route path="/crevia-workspace" element={<ProtectedRoute><AppLayout><WorkspacesList /></AppLayout></ProtectedRoute>} />
-        <Route path="/crevia-workspace/:id" element={<ProtectedRoute><AppLayout><WorkspacePage /></AppLayout></ProtectedRoute>} />
-        <Route path="/invite/:token" element={<WorkspaceInvitePage />} />
-        <Route path="/profile/payments-billing" element={<ProtectedRoute><AppLayout><PaymentsBilling /></AppLayout></ProtectedRoute>} />
-        <Route path="/profile/notifications" element={<ProtectedRoute><AppLayout><Notifications /></AppLayout></ProtectedRoute>} />
-        <Route path="/profile/verification" element={<ProtectedRoute><AppLayout><Verification /></AppLayout></ProtectedRoute>} />
-        <Route path="/profile/settings" element={<ProtectedRoute><AppLayout><Settings /></AppLayout></ProtectedRoute>} />
-        <Route path="/profile/help" element={<ProtectedRoute><AppLayout><Help /></AppLayout></ProtectedRoute>} />
-        <Route path="/profile/feedback" element={<ProtectedRoute><AppLayout><Feedback /></AppLayout></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute><AppLayout><Admin /></AppLayout></ProtectedRoute>} />
+          {/* Protected routes */}
+          <Route path="/dashboard" element={<Navigate to="/kira" replace />} />
+          <Route path="/kira" element={<ProtectedRoute><AppLayout><Kira /></AppLayout></ProtectedRoute>} />
+          <Route path="/crevia-link" element={<ProtectedRoute><AppLayout><CreviaLink /></AppLayout></ProtectedRoute>} />
+          <Route path="/crevia-studio" element={<ProtectedRoute><AppLayout><CreviaStudio /></AppLayout></ProtectedRoute>} />
+          <Route path="/crevia-invoice" element={<ProtectedRoute><AppLayout><CreviaInvoice /></AppLayout></ProtectedRoute>} />
+          <Route path="/crevia-contracts" element={<ProtectedRoute><AppLayout><CreviaContracts /></AppLayout></ProtectedRoute>} />
+          <Route path="/mfa-verify" element={<MFAVerify />} />
+          <Route path="/crevia-workspace" element={<ProtectedRoute><AppLayout><WorkspacesList /></AppLayout></ProtectedRoute>} />
+          <Route path="/crevia-workspace/:id" element={<ProtectedRoute><AppLayout><WorkspacePage /></AppLayout></ProtectedRoute>} />
+          <Route path="/invite/:token" element={<WorkspaceInvitePage />} />
+          <Route path="/received" element={<ProtectedRoute><AppLayout><ReceivedDocuments /></AppLayout></ProtectedRoute>} />
+          <Route path="/profile/payments-billing" element={<ProtectedRoute><AppLayout><PaymentsBilling /></AppLayout></ProtectedRoute>} />
+          <Route path="/profile/notifications" element={<ProtectedRoute><AppLayout><Notifications /></AppLayout></ProtectedRoute>} />
+          <Route path="/profile/verification" element={<ProtectedRoute><AppLayout><Verification /></AppLayout></ProtectedRoute>} />
+          <Route path="/profile/settings" element={<ProtectedRoute><AppLayout><Settings /></AppLayout></ProtectedRoute>} />
+          <Route path="/profile/help" element={<ProtectedRoute><AppLayout><Help /></AppLayout></ProtectedRoute>} />
+          <Route path="/profile/feedback" element={<ProtectedRoute><AppLayout><Feedback /></AppLayout></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><AppLayout><Admin /></AppLayout></ProtectedRoute>} />
 
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
     </>
   );
 }

@@ -59,30 +59,6 @@ const PLANS = (billingCycle: "monthly" | "yearly") => [
     yearlyAmount: 19490,
   },
   {
-    name: "Business",
-    badge: "For Teams",
-    priceMonthly: "KES 3,899",
-    priceYearly: "KES 38,990",
-    period: billingCycle === "monthly" ? "/mo" : "/yr",
-    usd: billingCycle === "monthly" ? "$29.99/mo" : "$299.90/yr",
-    description: "Team workspaces, admin seats, and premium execution tools.",
-    features: [
-      "Everything in Pro",
-      "3 admin seats included",
-      "Additional seats at KES 999/seat",
-      "Team workspaces",
-      "Talent roster tracking",
-      "Branded client room links",
-      "Advanced team analytics",
-      "Dedicated account support",
-    ],
-    cta: "Contact Us",
-    highlighted: false,
-    planKey: null as "pro" | "business" | null,
-    monthlyAmount: 3899,
-    yearlyAmount: 38990,
-  },
-  {
     name: "Enterprise",
     badge: null,
     priceMonthly: "Custom",
@@ -217,7 +193,7 @@ const Pricing = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6"
             >
               {plans.map((plan, i) => (
                 <motion.div
@@ -306,7 +282,7 @@ const Pricing = () => {
                         <>{plan.cta} <ArrowRight className="ml-2 w-4 h-4" /></>
                       )}
                     </Button>
-                  ) : plan.name === "Enterprise" || plan.name === "Business" ? (
+                  ) : plan.name === "Enterprise" ? (
                     <a href="mailto:hello@crevia.app">
                       <Button
                         variant="outline"
@@ -359,10 +335,6 @@ const Pricing = () => {
               {
                 q: "What is the Client Portal?",
                 a: "A professional branded room link you can share with clients for a premium experience. Available on Pro and Business plans.",
-              },
-              {
-                q: "How does the Business extra seat pricing work?",
-                a: "Business includes 3 admin seats. Additional team members cost KES 999 per seat per month.",
               },
               {
                 q: "What happens to my data if I downgrade?",

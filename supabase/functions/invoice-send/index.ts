@@ -327,6 +327,24 @@ serve(async (req) => {
       .update({ status: "sent" })
       .eq("id", invoice_id);
 
+    // Notify client if they have a Crevia account
+    const { data: clientProfile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", invoice.client_email)
+      .maybeSingle();
+
+    if (clientProfile?.id) {
+      await supabase.from("notifications").insert({
+        user_id: clientProfile.id,
+        type: "invoice_received",
+        title: `Invoice from ${senderName}`,
+        message: `You have received invoice ${invoice.invoice_number} for ${formatCurrency(invoice.total, currency)}.`,
+        data: { invoice_id, link: "/received" },
+        read: false,
+      });
+    }
+
     return new Response(JSON.stringify({ sent: true }), {
       status: 200, headers: { ...cors, "Content-Type": "application/json" },
     });
