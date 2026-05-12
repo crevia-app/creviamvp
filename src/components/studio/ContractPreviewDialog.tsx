@@ -218,14 +218,14 @@ const ContractPreviewDialog = ({
           : "max-w-4xl max-h-[92vh] rounded-2xl"
       )}>
         {/* Top Bar */}
-        <div className="sticky top-0 z-10 bg-background border-b border-border/50 px-5 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
-            <DialogTitle className="font-vollkorn text-base truncate">{localContract.title}</DialogTitle>
+        <div className="sticky top-0 z-10 bg-background border-b border-border/50 px-4 py-2.5 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <DialogTitle className="font-vollkorn text-sm sm:text-base truncate">{localContract.title}</DialogTitle>
             <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium flex-shrink-0", status.bg, status.color)}>
               {status.label}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 print:hidden">
+          <div className="flex items-center gap-1 flex-shrink-0 print:hidden">
             <div className="hidden sm:flex items-center bg-muted/50 rounded-lg p-0.5 mr-1">
               <button onClick={() => setActiveSection("document")} className={cn("px-3 py-1 rounded-md text-xs font-medium transition-all", activeSection === "document" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground")}>
                 Document
@@ -235,19 +235,22 @@ const ContractPreviewDialog = ({
               </button>
             </div>
             {!isEditingDetails && (
-              <Button variant="ghost" size="sm" onClick={() => { setIsEditingDetails(true); setActiveSection("document"); resetEditForm(localContract); }} className="gap-1.5 h-8 rounded-lg text-xs">
-                <Edit3 className="h-3 w-3" /> Edit
+              <Button variant="ghost" size="sm" onClick={() => { setIsEditingDetails(true); setActiveSection("document"); resetEditForm(localContract); }} className="gap-1 h-8 w-8 sm:w-auto sm:px-2.5 rounded-lg">
+                <Edit3 className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline text-xs">Edit</span>
               </Button>
             )}
-            <Button variant="ghost" size="sm" onClick={download} disabled={downloading} className="gap-1.5 h-8 rounded-lg text-xs">
-              <Download className="h-3 w-3" /> {downloading ? "Saving…" : "Download"}
+            <Button variant="ghost" size="sm" onClick={download} disabled={downloading} className="gap-1 h-8 w-8 sm:w-auto sm:px-2.5 rounded-lg">
+              <Download className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline text-xs">{downloading ? "Saving…" : "Download"}</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={handlePrint} className="gap-1.5 h-8 rounded-lg text-xs">
-              <Printer className="h-3 w-3" /> Print
+            <Button variant="ghost" size="sm" onClick={handlePrint} className="gap-1 h-8 w-8 sm:w-auto sm:px-2.5 rounded-lg">
+              <Printer className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline text-xs">Print</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setIsFullscreen(!isFullscreen)} className="gap-1.5 h-8 rounded-lg text-xs">
-              {isFullscreen ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
-              {isFullscreen ? "Exit" : "Full"}
+            <Button variant="ghost" size="sm" onClick={() => setIsFullscreen(!isFullscreen)} className="gap-1 h-8 w-8 sm:w-auto sm:px-2.5 rounded-lg">
+              {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+              <span className="hidden sm:inline text-xs">{isFullscreen ? "Exit" : "Full"}</span>
             </Button>
           </div>
         </div>

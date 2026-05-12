@@ -146,32 +146,26 @@ const InvoicePreviewDialog = ({
           : "max-w-3xl max-h-[90vh]"
       )}>
         {/* Toolbar */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-6 py-3 flex items-center justify-between">
-          <DialogTitle className="font-vollkorn text-lg">Invoice Preview</DialogTitle>
-          <div className="flex gap-2">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-4 py-2.5 flex items-center justify-between gap-2">
+          <DialogTitle className="font-vollkorn text-base sm:text-lg truncate min-w-0">Invoice Preview</DialogTitle>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             {invoice.status === "draft" && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSend}
-                disabled={sending}
-                className="gap-1.5"
-              >
+              <Button variant="outline" size="sm" onClick={handleSend} disabled={sending} className="gap-1.5 h-8 px-2.5">
                 <Send className="h-3.5 w-3.5" />
-                {sending ? "Sending…" : "Send"}
+                <span className="hidden sm:inline">{sending ? "Sending…" : "Send"}</span>
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={download} disabled={downloading} className="gap-1.5">
+            <Button variant="outline" size="sm" onClick={download} disabled={downloading} className="gap-1.5 h-8 px-2.5">
               <Download className="h-3.5 w-3.5" />
-              {downloading ? "Saving…" : "Download"}
+              <span className="hidden sm:inline">{downloading ? "Saving…" : "Download"}</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5">
+            <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5 h-8 px-2.5">
               <Printer className="h-3.5 w-3.5" />
-              Print
+              <span className="hidden sm:inline">Print</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setIsFullscreen(!isFullscreen)} className="gap-1.5">
+            <Button variant="outline" size="sm" onClick={() => setIsFullscreen(!isFullscreen)} className="gap-1.5 h-8 px-2.5">
               {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
-              {isFullscreen ? "Exit" : "Fullscreen"}
+              <span className="hidden sm:inline">{isFullscreen ? "Exit" : "Fullscreen"}</span>
             </Button>
           </div>
         </div>
