@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Instagram, Youtube, Linkedin } from "lucide-react";
+import creviaLogo from "@/assets/crevia-logo-full.png";
 
 const Footer = () => {
   return (
@@ -12,8 +13,7 @@ const Footer = () => {
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               className="flex items-center gap-2 mb-3 md:mb-4 cursor-pointer hover:opacity-80 transition-opacity"
             >
-              <div className="w-7 h-7 md:w-8 md:h-8 bg-bronze rounded-lg"></div>
-              <span className="font-vollkorn text-lg md:text-xl font-bold">Crevia</span>
+              <img src={creviaLogo} alt="Crevia" className="h-7 md:h-8 w-auto" />
             </button>
             <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
               Own Your Story
