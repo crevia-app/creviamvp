@@ -61,10 +61,12 @@ const Auth = () => {
   };
 
   useEffect(() => {
+    const redirectTo = searchParams.get("redirect") || "/kira";
+
     // Check if user is already logged in — existing session means 2FA already done
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate("/kira", { replace: true });
+        navigate(redirectTo, { replace: true });
       }
     });
 
@@ -76,7 +78,7 @@ const Auth = () => {
           navigate("/mfa-verify", { replace: true });
         } else {
           supabase.functions.invoke("login-alert").catch(() => {});
-          navigate("/kira", { replace: true });
+          navigate(redirectTo, { replace: true });
         }
       } else if (event !== 'INITIAL_SESSION' && isProcessingOAuth) {
         // Exchange failed — fall back to showing the login form.
@@ -85,7 +87,7 @@ const Auth = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   const handleResendConfirmation = async () => {
     setIsResendingConfirm(true);

@@ -12,6 +12,7 @@ import { useInitializeE2EE } from "@/hooks/use-initialize-e2ee";
 import { RecoveryPasswordModal } from "@/components/auth/RecoveryPasswordModal";
 import { SetRecoveryPasswordDialog } from "@/components/auth/SetRecoveryPasswordDialog";
 import ScrollToTop from "./components/ScrollToTop";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
@@ -139,19 +140,21 @@ function AppContent() {
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="theme">
-      <LanguageProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
-        </TooltipProvider>
-      </LanguageProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="theme">
+        <LanguageProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+          </TooltipProvider>
+        </LanguageProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

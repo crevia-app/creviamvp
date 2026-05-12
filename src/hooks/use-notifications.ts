@@ -31,14 +31,23 @@ export function useNotifications(userId: string) {
   const refresh = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
-    const { data } = await supabase
-      .from("notifications")
-      .select("id, type, title, body, data, read, created_at")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(LIMIT);
-    setNotifications(applyFilter((data as AppNotification[]) ?? [], userId));
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("id, type, title, body, data, read, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(LIMIT);
+
+      if (error) {
+        console.error("[notifications] Failed to load:", error.message);
+        return;
+      }
+
+      setNotifications(applyFilter((data as AppNotification[]) ?? [], userId));
+    } finally {
+      setLoading(false);
+    }
   }, [userId]);
 
   useEffect(() => {
@@ -55,6 +64,8 @@ export function useNotifications(userId: string) {
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
         (payload) => {
           const notif = payload.new as AppNotification;
+          const clearedAt = getClearedAt(userId);
+          if (clearedAt && notif.created_at <= clearedAt) return;
           setNotifications((prev) => [notif, ...prev].slice(0, LIMIT));
         }
       )
@@ -86,28 +97,38 @@ export function useNotifications(userId: string) {
   }, [userId, refresh]);
 
   const markRead = useCallback(async (id: string) => {
-    await supabase.from("notifications").update({ read: true }).eq("id", id);
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+    // Optimistic update first for instant feel
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    const { error } = await supabase.from("notifications").update({ read: true }).eq("id", id);
+    if (error) {
+      console.error("[notifications] Failed to mark read:", error.message);
+      // Revert on failure
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: false } : n)));
+    }
   }, []);
 
   const markAllRead = useCallback(async () => {
     if (!userId) return;
-    await supabase
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    const { error } = await supabase
       .from("notifications")
       .update({ read: true })
       .eq("user_id", userId)
       .eq("read", false);
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  }, [userId]);
+    if (error) {
+      console.error("[notifications] Failed to mark all read:", error.message);
+      refresh();
+    }
+  }, [userId, refresh]);
 
   const clearAll = useCallback(async () => {
     if (!userId) return;
-    // Store the cleared timestamp so notifications stay hidden across refreshes
     localStorage.setItem(clearedKey(userId), new Date().toISOString());
-    await supabase.from("notifications").delete().eq("user_id", userId);
     window.dispatchEvent(new Event("crevia:notifications-cleared"));
+    const { error } = await supabase.from("notifications").delete().eq("user_id", userId);
+    if (error) {
+      console.error("[notifications] Failed to clear:", error.message);
+    }
   }, [userId]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;

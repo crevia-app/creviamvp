@@ -68,9 +68,14 @@ const Notifications = () => {
   const { notifications, unreadCount, loading, markAllRead, markRead } = useNotifications(userId);
 
   useEffect(() => {
+    // getSession for the immediate value, onAuthStateChange for reliability
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) setUserId(session.user.id);
     });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUserId(session?.user?.id ?? "");
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   const toggle = (id: string) => {
