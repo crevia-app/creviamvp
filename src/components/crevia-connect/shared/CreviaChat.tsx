@@ -219,6 +219,9 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const [externalRoomNotFound, setExternalRoomNotFound] = useState(false);
   const [contactLinkProfile, setContactLinkProfile] = useState<{ id: string; username: string; bio: string | null } | null>(null);
   const [contactSocialLinks, setContactSocialLinks] = useState<{ id: string; platform: string; url: string }[]>([]);
+  const [memberReadTimes, setMemberReadTimes] = useState<Record<string, string>>({});
+  const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
+  const onlineChannelRef = useRef<any>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -441,6 +444,59 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
       typingTimeoutsRef.current = {};
       supabase.removeChannel(channel);
       presenceChannelRef.current = null;
+    };
+  }, [selectedRoom?.id, currentUserId]);
+
+  // Read receipts — fetch member read times and subscribe to live updates
+  useEffect(() => {
+    if (!selectedRoom) { setMemberReadTimes({}); return; }
+    const fetchReceipts = async () => {
+      const { data } = await supabase
+        .from("chat_read_receipts")
+        .select("user_id, last_read_at")
+        .eq("room_id", selectedRoom.id);
+      if (data) {
+        const map: Record<string, string> = {};
+        data.forEach((r: any) => { map[r.user_id] = r.last_read_at; });
+        setMemberReadTimes(map);
+      }
+    };
+    fetchReceipts();
+    const ch = supabase
+      .channel(`read-receipts:${selectedRoom.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_read_receipts", filter: `room_id=eq.${selectedRoom.id}` },
+        (payload: any) => {
+          if (payload.new?.user_id) {
+            setMemberReadTimes((prev) => ({ ...prev, [payload.new.user_id]: payload.new.last_read_at }));
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [selectedRoom?.id]);
+
+  // Online presence — track who is viewing this room right now
+  useEffect(() => {
+    if (!selectedRoom || !currentUserId) { setOnlineUserIds(new Set()); return; }
+    if (onlineChannelRef.current) supabase.removeChannel(onlineChannelRef.current);
+
+    const ch = supabase.channel(`presence:${selectedRoom.id}`, {
+      config: { presence: { key: currentUserId } },
+    });
+    ch
+      .on("presence", { event: "sync" }, () => {
+        const state = ch.presenceState();
+        setOnlineUserIds(new Set(Object.keys(state)));
+      })
+      .subscribe(async (status: string) => {
+        if (status === "SUBSCRIBED") {
+          await ch.track({ user_id: currentUserId, online_at: new Date().toISOString() });
+        }
+      });
+    onlineChannelRef.current = ch;
+    return () => {
+      if (onlineChannelRef.current) { supabase.removeChannel(onlineChannelRef.current); onlineChannelRef.current = null; }
+      setOnlineUserIds(new Set());
     };
   }, [selectedRoom?.id, currentUserId]);
 
@@ -1123,6 +1179,23 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
       .join(", ");
   };
 
+  const getMessageReadStatus = (msg: ChatMessage): "read" | "delivered" | "sent" => {
+    if (!selectedRoom) return "sent";
+    const others = selectedRoom.members?.filter((m) => m.user_id !== currentUserId) ?? [];
+    if (others.length === 0) return "sent";
+    const msgTime = new Date(msg.created_at).getTime();
+    const allRead = others.every((m) => {
+      const t = memberReadTimes[m.user_id];
+      return t && new Date(t).getTime() >= msgTime;
+    });
+    if (allRead) return "read";
+    const anyRead = others.some((m) => {
+      const t = memberReadTimes[m.user_id];
+      return t && new Date(t).getTime() >= msgTime;
+    });
+    return anyRead ? "delivered" : "sent";
+  };
+
   // Fetch reactions, pins, favorites, deletions when messages change
   const fetchMessageMeta = useCallback(async () => {
     if (!currentUserId || messages.length === 0) return;
@@ -1518,31 +1591,54 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                       onClick={() => setShowRoomInfo(true)}
                       className="flex items-center gap-3 min-w-0 hover:opacity-75 transition-opacity"
                     >
-                    <div className="h-9 w-9 rounded-full bg-bronze/20 flex items-center justify-center text-sm font-semibold text-bronze overflow-hidden flex-shrink-0">
-                      {selectedRoom.is_group ? (
-                        <Users className="h-4 w-4" />
-                      ) : getRoomAvatar(selectedRoom) ? (
-                        <img src={getRoomAvatar(selectedRoom)!} alt="" className="h-9 w-9 rounded-full object-cover" />
-                      ) : (
-                        getRoomInitial(selectedRoom)
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-poppins font-semibold text-sm truncate">
-                        {getRoomDisplayName(selectedRoom)}
-                      </p>
-                      <div className="flex items-center gap-1.5">
-                        {typingUsers.length > 0 ? (
-                          <span className="text-[10px] text-emerald-500 font-medium animate-pulse">
-                            {getTypingDisplayNames()} typing...
-                          </span>
-                        ) : selectedRoom.is_group && selectedRoom.members ? (
-                          <span className="text-[10px] text-muted-foreground">
-                            {selectedRoom.members.length} members
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
+                    {(() => {
+                      const otherMember = !selectedRoom.is_group
+                        ? selectedRoom.members?.find((m) => m.user_id !== currentUserId)
+                        : undefined;
+                      const isOtherOnline = otherMember ? onlineUserIds.has(otherMember.user_id) : false;
+                      return (
+                        <div className="relative h-9 w-9 flex-shrink-0">
+                          <div className="h-9 w-9 rounded-full bg-bronze/20 flex items-center justify-center text-sm font-semibold text-bronze overflow-hidden">
+                            {selectedRoom.is_group ? (
+                              <Users className="h-4 w-4" />
+                            ) : getRoomAvatar(selectedRoom) ? (
+                              <img src={getRoomAvatar(selectedRoom)!} alt="" className="h-9 w-9 rounded-full object-cover" />
+                            ) : (
+                              getRoomInitial(selectedRoom)
+                            )}
+                          </div>
+                          {isOtherOnline && (
+                            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-background" />
+                          )}
+                        </div>
+                      );
+                    })()}
+                    {(() => {
+                      const otherMember = !selectedRoom.is_group
+                        ? selectedRoom.members?.find((m) => m.user_id !== currentUserId)
+                        : undefined;
+                      const isOtherOnline = otherMember ? onlineUserIds.has(otherMember.user_id) : false;
+                      return (
+                        <div className="min-w-0 flex-1">
+                          <p className="font-poppins font-semibold text-sm truncate">
+                            {getRoomDisplayName(selectedRoom)}
+                          </p>
+                          <div className="flex items-center gap-1.5">
+                            {typingUsers.length > 0 ? (
+                              <span className="text-[10px] text-emerald-500 font-medium animate-pulse">
+                                {getTypingDisplayNames()} typing...
+                              </span>
+                            ) : isOtherOnline ? (
+                              <span className="text-[10px] text-emerald-500 font-medium">online</span>
+                            ) : selectedRoom.is_group && selectedRoom.members ? (
+                              <span className="text-[10px] text-muted-foreground">
+                                {selectedRoom.members.length} members
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      );
+                    })()}
                     </button>
                   </div>
                   <div className="flex flex-shrink-0 items-center gap-1">
@@ -1637,7 +1733,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                         <div className="flex-1 h-px bg-border" />
                       </div>
 
-                      {group.messages.map((msg) => {
+                      {group.messages.map((msg, msgIndex) => {
                         const isMine = msg.sender_id === currentUserId;
                         const isInvoice = msg.message_type === "invoice";
                         const isContract = msg.message_type === "contract";
@@ -1651,25 +1747,37 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                         const msgReactions = reactions[msg.id] || [];
                         const isHighlighted = highlightedMsgId === msg.id;
 
+                        // Message grouping — same sender consecutive messages
+                        const visibleMsgs = group.messages.filter(m => !deletedForMeIds.has(m.id));
+                        const visIdx = visibleMsgs.indexOf(msg);
+                        const prevMsg = visibleMsgs[visIdx - 1];
+                        const nextMsg = visibleMsgs[visIdx + 1];
+                        const isFirstInSeq = !prevMsg || prevMsg.sender_id !== msg.sender_id;
+                        const isLastInSeq = !nextMsg || nextMsg.sender_id !== msg.sender_id;
+
                         if (isDeletedForMe) return null;
 
                         return (
                           <div
                             key={msg.id}
                             id={`msg-${msg.id}`}
-                            className={`flex ${isMine ? "justify-end" : "justify-start"} mb-2 group transition-colors duration-500 ${
+                            className={`flex ${isMine ? "justify-end" : "justify-start"} ${isLastInSeq ? "mb-3" : "mb-0.5"} group transition-colors duration-500 ${
                               isHighlighted ? "bg-bronze/10 rounded-xl -mx-2 px-2 py-1" : ""
                             }`}
                           >
-                            {/* Avatar for group chats */}
+                            {/* Avatar for group chats — only show on last in sequence */}
                             {!isMine && selectedRoom.is_group && (
-                              <div className="w-7 h-7 rounded-full bg-bronze/20 flex items-center justify-center text-[10px] font-semibold text-bronze mr-2 mt-1 flex-shrink-0 overflow-hidden">
-                                {msg.sender?.avatar_url ? (
-                                  <img src={msg.sender.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover" />
-                                ) : (
-                                  msg.sender?.display_name?.[0]?.toUpperCase() || "U"
-                                )}
-                              </div>
+                              isLastInSeq ? (
+                                <div className="w-7 h-7 rounded-full bg-bronze/20 flex items-center justify-center text-[10px] font-semibold text-bronze mr-2 mt-1 flex-shrink-0 overflow-hidden">
+                                  {msg.sender?.avatar_url ? (
+                                    <img src={msg.sender.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover" />
+                                  ) : (
+                                    msg.sender?.display_name?.[0]?.toUpperCase() || "U"
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="w-7 mr-2 flex-shrink-0" />
+                              )
                             )}
 
                             {/* Action buttons - before message for own */}
@@ -1697,8 +1805,8 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                             )}
 
                             <div className={`max-w-[85%] md:max-w-[70%]`}>
-                              {/* Sender name in groups */}
-                              {!isMine && selectedRoom.is_group && (
+                              {/* Sender name in groups — only on first in sequence */}
+                              {!isMine && selectedRoom.is_group && isFirstInSeq && (
                                 <p className="text-[10px] font-semibold text-muted-foreground mb-0.5 ml-1">
                                   {msg.sender?.display_name || msg.sender?.handle || "User"}
                                 </p>
@@ -1789,8 +1897,8 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                   <div
                                     className={`rounded-2xl px-3 md:px-4 py-2.5 ${
                                       isMine
-                                        ? "bg-bronze text-background rounded-br-md"
-                                        : "bg-muted rounded-bl-md"
+                                        ? `bg-bronze text-background ${isLastInSeq ? "rounded-br-sm" : ""}`
+                                        : `bg-muted ${isLastInSeq ? "rounded-bl-sm" : ""}`
                                     } ${(isInvoice || isContract) ? "border-2 " + (isMine ? "border-background/20" : "border-bronze/20") : ""}`}
                                   >
                                     {/* Reply context */}
@@ -1967,9 +2075,12 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                       <p className="text-[10px] opacity-60">
                                         {format(new Date(msg.created_at), "h:mm a")}
                                       </p>
-                                      {isMine && (
-                                        <CheckCheck className="h-3 w-3 opacity-60 ml-0.5" />
-                                      )}
+                                      {isMine && (() => {
+                                        const status = getMessageReadStatus(msg);
+                                        if (status === "read") return <CheckCheck className="h-3 w-3 text-bronze ml-0.5" />;
+                                        if (status === "delivered") return <CheckCheck className="h-3 w-3 opacity-50 ml-0.5" />;
+                                        return <Check className="h-3 w-3 opacity-40 ml-0.5" />;
+                                      })()}
                                     </div>
                                   </div>
 
