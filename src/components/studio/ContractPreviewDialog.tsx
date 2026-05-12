@@ -156,16 +156,28 @@ const ContractPreviewDialog = ({
   const removeDeliverable = (idx: number) => setEditForm(f => ({ ...f, deliverables: f.deliverables.filter((_, i) => i !== idx) }));
   const updateDeliverable = (idx: number, val: string) => setEditForm(f => ({ ...f, deliverables: f.deliverables.map((d, i) => i === idx ? val : d) }));
 
+  const [sending, setSending] = useState(false);
+
   const handleSendToClient = async () => {
     if (!localContract?.client_email) {
       toast.error("No client email. Edit the contract to add one.");
       return;
     }
-    const { error } = await supabase.from("contracts").update({ status: "sent" }).eq("id", localContract.id);
-    if (error) { toast.error("Failed to update"); return; }
-    setLocalContract({ ...localContract, status: "sent" });
-    toast.success(`Contract sent to ${localContract.client_email}`);
-    onContractUpdate?.();
+    setSending(true);
+    try {
+      const { error, data } = await supabase.functions.invoke("contract-send", {
+        body: { contract_id: localContract.id },
+      });
+      if (error || data?.error) throw error ?? new Error(data.error);
+      setLocalContract({ ...localContract, status: "sent" });
+      toast.success(`Contract sent to ${localContract.client_email}`);
+      onContractUpdate?.();
+      onOpenChange(false);
+    } catch {
+      toast.error("Failed to send contract. Please try again.");
+    } finally {
+      setSending(false);
+    }
   };
 
   const replaceTemplatePlaceholders = (text: string) => {
@@ -600,8 +612,8 @@ const ContractPreviewDialog = ({
                             <p className="text-xs text-muted-foreground">Send to {localContract.client_name} for signature</p>
                           </div>
                         </div>
-                        <Button onClick={handleSendToClient} className="gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 shadow-lg">
-                          <Send className="h-4 w-4" /> Send
+                        <Button onClick={handleSendToClient} disabled={sending} className="gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 shadow-lg">
+                          <Send className="h-4 w-4" /> {sending ? "Sending…" : "Send"}
                         </Button>
                       </div>
                     </div>
