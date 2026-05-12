@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CheckCircle2, Sparkles } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 interface LivePreviewProps {
   linkProfile: any;
@@ -16,7 +16,6 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
   const fontFamily = linkProfile?.background?.font_family || "poppins";
   const hoverEffects = linkProfile?.background?.hover_effects !== false;
   const fadeAnimation = linkProfile?.background?.fade_animation !== false;
-  const showBranding = linkProfile?.show_crevia_branding !== false;
   const showVerified = linkProfile?.show_verified_badge;
   const isCustomImage = theme === "custom_image" && customBgUrl;
 
@@ -38,6 +37,16 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
     emerald: { bg: "bg-gradient-to-br from-emerald-700 to-green-900", text: "text-white", lightText: true },
     lavender: { bg: "bg-gradient-to-br from-violet-400 to-purple-500", text: "text-white", lightText: true },
     champagne: { bg: "bg-gradient-to-br from-amber-100 to-yellow-50", text: "text-gray-900", lightText: false },
+    coral: { bg: "bg-gradient-to-br from-orange-400 to-rose-500", text: "text-white", lightText: true },
+    arctic: { bg: "bg-gradient-to-br from-sky-100 to-blue-200", text: "text-slate-800", lightText: false },
+    copper: { bg: "bg-gradient-to-br from-amber-600 to-orange-800", text: "text-white", lightText: true },
+    obsidian: { bg: "bg-gradient-to-br from-gray-950 to-slate-900", text: "text-white", lightText: true },
+    peach: { bg: "bg-gradient-to-br from-orange-100 to-pink-100", text: "text-gray-800", lightText: false },
+    steel: { bg: "bg-gradient-to-br from-slate-400 to-slate-600", text: "text-white", lightText: true },
+    aurora: { bg: "bg-gradient-to-br from-purple-900 via-teal-800 to-green-900", text: "text-white", lightText: true },
+    crimson: { bg: "bg-gradient-to-br from-red-600 to-rose-800", text: "text-white", lightText: true },
+    jade: { bg: "bg-gradient-to-br from-teal-600 to-emerald-700", text: "text-white", lightText: true },
+    sand: { bg: "bg-gradient-to-br from-amber-200 to-stone-300", text: "text-gray-800", lightText: false },
     custom_image: { bg: "", text: "text-white", lightText: true },
   };
 
@@ -192,33 +201,6 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
             </div>
           </div>
 
-          {/* Bottom pinned area */}
-          <div className={cn(
-            "px-5 py-3 text-center border-t border-white/10 flex-shrink-0",
-            !isCustomImage && currentTheme.bg,
-            fontClass
-          )}
-          style={isCustomImage ? {
-            backgroundImage: `url(${customBgUrl})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'bottom center'
-          } : {}}
-          >
-            {isCustomImage && <div className="absolute inset-0 bg-black/60 z-0" />}
-            <div className="relative z-10">
-              <div className="flex items-center justify-center gap-1.5 mb-1">
-                <Sparkles className={cn("w-3 h-3 opacity-50", currentTheme.text)} />
-                <span className={cn("text-[9px] opacity-50", currentTheme.text)}>
-                  Get Crevia Link
-                </span>
-              </div>
-              {showBranding && (
-                <span className={cn("text-[10px] font-semibold opacity-40 tracking-wide", currentTheme.text)}>
-                  Crevia
-                </span>
-              )}
-            </div>
-          </div>
         </div>
       </div>
     </div>

@@ -50,7 +50,7 @@ const CreviaConnect = () => {
             </span>
           </div>
           
-          <h1 className="font-serif text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-bold text-foreground mb-6 md:mb-8 leading-[1.1] animate-fade-in stagger-1 animate-stagger px-2">
+          <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 md:mb-8 leading-[1.1] animate-fade-in stagger-1 animate-stagger px-2">
             Where stories meet{" "}
             <span className="text-gradient-bronze">opportunities</span>
           </h1>

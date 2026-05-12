@@ -5,29 +5,55 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MessageSquare, Lightbulb, Send, Rocket } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Feedback = () => {
-  const { toast } = useToast();
   const [message, setMessage] = useState("");
   const [featureTitle, setFeatureTitle] = useState("");
   const [featureDescription, setFeatureDescription] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmitFeedback = () => {
-    toast({
-      title: "Thank you for your feedback! 🎉",
-      description: "Your voice shapes Crevia's future.",
-    });
-    setMessage("");
+  const handleSubmitFeedback = async () => {
+    if (!message.trim()) return;
+    setSubmitting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { error } = await supabase.from("feedback" as any).insert({
+        user_id: session?.user?.id ?? null,
+        type: "thought",
+        message: message.trim(),
+      });
+      if (error) throw error;
+      toast.success("Thank you for your feedback!", { description: "Your voice shapes Crevia's future." });
+      setMessage("");
+    } catch {
+      toast.error("Failed to submit feedback. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleSubmitFeature = () => {
-    toast({
-      title: "Feature request submitted! 💡",
-      description: "Great idea! We'll evaluate this for our roadmap.",
-    });
-    setFeatureTitle("");
-    setFeatureDescription("");
+  const handleSubmitFeature = async () => {
+    if (!featureTitle.trim() || !featureDescription.trim()) return;
+    setSubmitting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { error } = await supabase.from("feedback" as any).insert({
+        user_id: session?.user?.id ?? null,
+        type: "feature",
+        title: featureTitle.trim(),
+        message: featureDescription.trim(),
+      });
+      if (error) throw error;
+      toast.success("Feature request submitted!", { description: "Great idea! We'll evaluate this for our roadmap." });
+      setFeatureTitle("");
+      setFeatureDescription("");
+    } catch {
+      toast.error("Failed to submit request. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -83,10 +109,10 @@ const Feedback = () => {
                 <Button
                   onClick={handleSubmitFeedback}
                   className="w-full h-11 bg-bronze hover:bg-bronze-dark text-white"
-                  disabled={!message.trim()}
+                  disabled={!message.trim() || submitting}
                 >
                   <Send className="w-4 h-4 mr-2" />
-                  Submit
+                  {submitting ? "Submitting…" : "Submit"}
                 </Button>
               </div>
             </Card>
@@ -119,10 +145,10 @@ const Feedback = () => {
                 <Button
                   onClick={handleSubmitFeature}
                   className="w-full h-11 bg-bronze hover:bg-bronze-dark text-white"
-                  disabled={!featureTitle.trim() || !featureDescription.trim()}
+                  disabled={!featureTitle.trim() || !featureDescription.trim() || submitting}
                 >
                   <Rocket className="w-4 h-4 mr-2" />
-                  Submit
+                  {submitting ? "Submitting…" : "Submit"}
                 </Button>
               </div>
             </Card>

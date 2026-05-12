@@ -305,21 +305,6 @@ const PublicProfile = () => {
           </div>
         )}
 
-        {/* Footer */}
-        {profile?.show_crevia_branding && (
-          <div className="text-center mt-16 pt-8 border-t border-[#CF8150]/20">
-            <Button
-              onClick={() => navigate('/')}
-              className="bg-gradient-to-r from-[#D9955F] to-[#D9955F] hover:from-[#D9955F] hover:to-[#111111] text-white font-poppins font-semibold px-8 py-6 rounded-full mb-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-            >
-              <Sparkles className="w-5 h-5 mr-2" />
-              Get Crevia Link
-            </Button>
-            <p className="text-sm font-poppins font-semibold opacity-40 tracking-wide">
-              Crevia
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

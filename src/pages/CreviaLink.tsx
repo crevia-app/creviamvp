@@ -704,6 +704,16 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                           { value: "burgundy", label: "Burgundy", gradient: "from-rose-900 to-red-950" },
                           { value: "emerald", label: "Emerald", gradient: "from-emerald-700 to-green-900" },
                           { value: "lavender", label: "Lavender", gradient: "from-violet-400 to-purple-500" },
+                          { value: "coral", label: "Coral", gradient: "from-orange-400 to-rose-500" },
+                          { value: "arctic", label: "Arctic", gradient: "from-sky-100 to-blue-200" },
+                          { value: "copper", label: "Copper", gradient: "from-amber-600 to-orange-800" },
+                          { value: "obsidian", label: "Obsidian", gradient: "from-gray-950 to-slate-900" },
+                          { value: "peach", label: "Peach", gradient: "from-orange-100 to-pink-100" },
+                          { value: "steel", label: "Steel", gradient: "from-slate-400 to-slate-600" },
+                          { value: "aurora", label: "Aurora", gradient: "from-purple-900 via-teal-800 to-green-900" },
+                          { value: "crimson", label: "Crimson", gradient: "from-red-600 to-rose-800" },
+                          { value: "jade", label: "Jade", gradient: "from-teal-600 to-emerald-700" },
+                          { value: "sand", label: "Sand", gradient: "from-amber-200 to-stone-300" },
                         ].map((theme) => (
                           <div key={theme.value} className="relative">
                             <RadioGroupItem value={theme.value} id={`embedded-${theme.value}`} className="peer sr-only" />
@@ -913,16 +923,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         />
                       </div>
                     )}
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <Label className="text-base font-medium">Crevia Branding</Label>
-                        <p className="text-sm text-muted-foreground mt-1">Show "Made with Crevia" on your page</p>
-                      </div>
-                      <Switch
-                        checked={linkProfile?.show_crevia_branding !== false}
-                        onCheckedChange={(checked) => setLinkProfile({ ...linkProfile, show_crevia_branding: checked })}
-                      />
-                    </div>
                   </div>
                 </Card>
 
@@ -1228,6 +1228,16 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         { value: "burgundy", label: "Burgundy", gradient: "from-rose-900 to-red-950" },
                         { value: "emerald", label: "Emerald", gradient: "from-emerald-700 to-green-900" },
                         { value: "lavender", label: "Lavender", gradient: "from-violet-400 to-purple-500" },
+                        { value: "coral", label: "Coral", gradient: "from-orange-400 to-rose-500" },
+                        { value: "arctic", label: "Arctic", gradient: "from-sky-100 to-blue-200" },
+                        { value: "copper", label: "Copper", gradient: "from-amber-600 to-orange-800" },
+                        { value: "obsidian", label: "Obsidian", gradient: "from-gray-950 to-slate-900" },
+                        { value: "peach", label: "Peach", gradient: "from-orange-100 to-pink-100" },
+                        { value: "steel", label: "Steel", gradient: "from-slate-400 to-slate-600" },
+                        { value: "aurora", label: "Aurora", gradient: "from-purple-900 via-teal-800 to-green-900" },
+                        { value: "crimson", label: "Crimson", gradient: "from-red-600 to-rose-800" },
+                        { value: "jade", label: "Jade", gradient: "from-teal-600 to-emerald-700" },
+                        { value: "sand", label: "Sand", gradient: "from-amber-200 to-stone-300" },
                       ].map((theme) => (
                         <div key={theme.value} className="relative">
                           <RadioGroupItem value={theme.value} id={theme.value} className="peer sr-only" />
@@ -1514,17 +1524,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                     </div>
                   )}
 
-                  {/* Crevia Branding */}
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <Label className="text-base font-medium">Crevia Branding</Label>
-                      <p className="text-sm text-muted-foreground mt-1">Show "Made with Crevia" on your page</p>
-                    </div>
-                    <Switch
-                      checked={linkProfile?.show_crevia_branding !== false}
-                      onCheckedChange={(checked) => setLinkProfile({ ...linkProfile, show_crevia_branding: checked })}
-                    />
-                  </div>
                 </div>
               </Card>
 
