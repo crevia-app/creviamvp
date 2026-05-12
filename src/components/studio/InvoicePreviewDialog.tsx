@@ -35,6 +35,7 @@ const InvoicePreviewDialog = ({
   const [profile, setProfile] = useState<any>(null);
   const [businessSettings, setBusinessSettings] = useState<any>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     if (invoice) {
@@ -98,17 +99,26 @@ const InvoicePreviewDialog = ({
     window.print();
   };
 
-  const handleMarkAsSent = async () => {
+  const handleSend = async () => {
     if (!invoice) return;
-    const { error } = await supabase
-      .from("invoices")
-      .update({ status: "sent" })
-      .eq("id", invoice.id);
-    if (error) {
-      toast.error("Failed to update status");
+    if (!invoice.client_email) {
+      toast.error("No client email", { description: "Add a client email address before sending." });
       return;
     }
-    toast.success("Invoice marked as sent");
+    setSending(true);
+    try {
+      const { error, data } = await supabase.functions.invoke("invoice-send", {
+        body: { invoice_id: invoice.id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success("Invoice sent!", { description: `Sent to ${invoice.client_email}` });
+      onOpenChange(false);
+    } catch (err: any) {
+      toast.error("Failed to send invoice", { description: err.message });
+    } finally {
+      setSending(false);
+    }
   };
 
   if (!invoice) return null;
@@ -136,9 +146,15 @@ const InvoicePreviewDialog = ({
           <DialogTitle className="font-vollkorn text-lg">Invoice Preview</DialogTitle>
           <div className="flex gap-2">
             {invoice.status === "draft" && (
-              <Button variant="outline" size="sm" onClick={handleMarkAsSent} className="gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSend}
+                disabled={sending}
+                className="gap-1.5"
+              >
                 <Send className="h-3.5 w-3.5" />
-                Send
+                {sending ? "Sending…" : "Send"}
               </Button>
             )}
             <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5">

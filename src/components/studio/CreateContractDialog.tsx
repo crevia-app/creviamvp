@@ -149,7 +149,13 @@ const CreateContractDialog = ({
         setShowSuccess(true);
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to save contract");
+      if (error.message?.includes("contract_limit_reached")) {
+        toast.error("Monthly limit reached", {
+          description: "Free plan allows 2 contracts per month. Upgrade to Pro for unlimited.",
+        });
+      } else {
+        toast.error(error.message || "Failed to save contract");
+      }
     } finally {
       setLoading(false);
     }

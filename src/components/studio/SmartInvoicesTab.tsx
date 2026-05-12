@@ -65,7 +65,8 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "amount">("newest");
-  const { limits, isFree } = useSubscription();
+  const { limits, isFree, invoicesUsedThisMonth } = useSubscription();
+  const invoiceLimitReached = isFree && invoicesUsedThisMonth >= limits.invoicesPerMonth;
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
@@ -183,7 +184,13 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       .single();
 
     if (error || !newInvoice) {
-      toast.error("Failed to duplicate invoice");
+      if (error?.message?.includes("invoice_limit_reached")) {
+        toast.error("Monthly limit reached", {
+          description: `Free plan allows ${limits.invoicesPerMonth} invoices per month. Upgrade to Pro for unlimited.`,
+        });
+      } else {
+        toast.error("Failed to duplicate invoice");
+      }
       return;
     }
 
@@ -298,23 +305,24 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
           </p>
         </div>
         <Button
-          // onClick={() => setCreateDialogOpen(true)}
-          onClick={async () => {
-  if (isFree) {
-    const { count } = await supabase
-      .from("invoices")
-      .select("*", { count: "exact", head: true });
-    if ((count || 0) >= limits.invoicesPerMonth) {
-      toast.error("You've reached your free plan limit of 5 invoices. Upgrade to Pro for unlimited invoices.");
-      return;
-    }
-  }
-  setCreateDialogOpen(true);
-}}
+          onClick={() => {
+            if (invoiceLimitReached) {
+              toast.error("Monthly limit reached", {
+                description: `Free plan allows ${limits.invoicesPerMonth} invoices per month. Upgrade to Pro for unlimited.`,
+              });
+              return;
+            }
+            setCreateDialogOpen(true);
+          }}
           className="gap-2 bg-bronze hover:bg-bronze/90 shadow-lg shadow-bronze/20"
         >
           <Plus className="h-4 w-4" />
           New Invoice
+          {isFree && (
+            <span className="ml-1 text-[10px] opacity-70">
+              {limits.invoicesPerMonth - invoicesUsedThisMonth} left
+            </span>
+          )}
         </Button>
       </div>
 
@@ -452,19 +460,15 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
           </p>
           {!searchQuery && statusFilter === "all" && (
             <Button
-              // onClick={() => setCreateDialogOpen(true)}
-              onClick={async () => {
-  if (isFree) {
-    const { count } = await supabase
-      .from("invoices")
-      .select("*", { count: "exact", head: true });
-    if ((count || 0) >= limits.invoicesPerMonth) {
-      toast.error("You've reached your free plan limit of 5 invoices. Upgrade to Pro for unlimited invoices.");
-      return;
-    }
-  }
-  setCreateDialogOpen(true);
-}}
+              onClick={() => {
+                if (invoiceLimitReached) {
+                  toast.error("Monthly limit reached", {
+                    description: `Free plan allows ${limits.invoicesPerMonth} invoices per month. Upgrade to Pro for unlimited.`,
+                  });
+                  return;
+                }
+                setCreateDialogOpen(true);
+              }}
               className="gap-2 bg-bronze hover:bg-bronze/90"
             >
               <Sparkles className="h-4 w-4" />

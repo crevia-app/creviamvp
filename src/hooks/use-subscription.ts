@@ -26,13 +26,15 @@ export interface SubscriptionState {
   limits: SubscriptionLimits;
   kiraActionsToday: number;
   kiraActionsLimit: number;
+  invoicesUsedThisMonth: number;
+  contractsUsedThisMonth: number;
 }
 
 const PLAN_LIMITS: Record<SubscriptionPlan, SubscriptionLimits> = {
   free: {
     kiraActionsPerDay: 10,
-    invoicesPerMonth: 5,
-    contractsPerMonth: 5,
+    invoicesPerMonth: 2,
+    contractsPerMonth: 2,
     hasESignature: false,
     hasPremiumThemes: false,
     hasClientPortal: false,
@@ -76,12 +78,16 @@ export const useSubscription = (): SubscriptionState => {
   const [isLoading, setIsLoading] = useState(true);
   const [kiraActionsToday, setKiraActionsToday] = useState(0);
   const [kiraActionsLimit, setKiraActionsLimit] = useState(10);
+  const [invoicesUsedThisMonth, setInvoicesUsedThisMonth] = useState(0);
+  const [contractsUsedThisMonth, setContractsUsedThisMonth] = useState(0);
 
   const applyProfile = (profile: Record<string, unknown>) => {
     setPlan((profile.subscription_plan as SubscriptionPlan) || "free");
     setStatus((profile.subscription_status as string) || "inactive");
     setKiraActionsToday((profile.kira_actions_used as number) || 0);
     setKiraActionsLimit((profile.kira_actions_limit as number) || 10);
+    setInvoicesUsedThisMonth((profile.invoices_used_this_month as number) || 0);
+    setContractsUsedThisMonth((profile.contracts_used_this_month as number) || 0);
   };
 
   useEffect(() => {
@@ -96,7 +102,7 @@ export const useSubscription = (): SubscriptionState => {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("subscription_plan, subscription_status, kira_actions_used, kira_actions_limit")
+        .select("subscription_plan, subscription_status, kira_actions_used, kira_actions_limit, invoices_used_this_month, contracts_used_this_month")
         .eq("id", user.id)
         .single();
 
@@ -142,5 +148,7 @@ export const useSubscription = (): SubscriptionState => {
     limits,
     kiraActionsToday,
     kiraActionsLimit,
+    invoicesUsedThisMonth,
+    contractsUsedThisMonth,
   };
 };

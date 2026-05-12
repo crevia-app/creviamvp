@@ -14,17 +14,22 @@ const Feedback = () => {
   const [featureDescription, setFeatureDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const notifyAdmin = (feedback_id: string) => {
+    supabase.functions.invoke("feedback-notify", { body: { feedback_id } }).catch(() => {});
+  };
+
   const handleSubmitFeedback = async () => {
     if (!message.trim()) return;
     setSubmitting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const { error } = await supabase.from("feedback" as any).insert({
-        user_id: session?.user?.id ?? null,
-        type: "thought",
-        message: message.trim(),
-      });
+      const { data: created, error } = await supabase
+        .from("feedback" as any)
+        .insert({ user_id: session?.user?.id ?? null, type: "thought", message: message.trim() })
+        .select("id")
+        .single();
       if (error) throw error;
+      if (created?.id) notifyAdmin(created.id);
       toast.success("Thank you for your feedback!", { description: "Your voice shapes Crevia's future." });
       setMessage("");
     } catch {
@@ -39,13 +44,18 @@ const Feedback = () => {
     setSubmitting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const { error } = await supabase.from("feedback" as any).insert({
-        user_id: session?.user?.id ?? null,
-        type: "feature",
-        title: featureTitle.trim(),
-        message: featureDescription.trim(),
-      });
+      const { data: created, error } = await supabase
+        .from("feedback" as any)
+        .insert({
+          user_id: session?.user?.id ?? null,
+          type: "feature",
+          title: featureTitle.trim(),
+          message: featureDescription.trim(),
+        })
+        .select("id")
+        .single();
       if (error) throw error;
+      if (created?.id) notifyAdmin(created.id);
       toast.success("Feature request submitted!", { description: "Great idea! We'll evaluate this for our roadmap." });
       setFeatureTitle("");
       setFeatureDescription("");

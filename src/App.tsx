@@ -34,6 +34,7 @@ import Verification from "./pages/profile/Verification";
 import Settings from "./pages/profile/Settings";
 import Help from "./pages/profile/Help";
 import Feedback from "./pages/profile/Feedback";
+import Admin from "./pages/Admin";
 import Pricing from "./pages/Pricing";
 import About from "./pages/About";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -132,6 +133,7 @@ function AppContent() {
         <Route path="/profile/settings" element={<ProtectedRoute><AppLayout><Settings /></AppLayout></ProtectedRoute>} />
         <Route path="/profile/help" element={<ProtectedRoute><AppLayout><Help /></AppLayout></ProtectedRoute>} />
         <Route path="/profile/feedback" element={<ProtectedRoute><AppLayout><Feedback /></AppLayout></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute><AppLayout><Admin /></AppLayout></ProtectedRoute>} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>

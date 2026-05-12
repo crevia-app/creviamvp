@@ -7,6 +7,8 @@
 -- Drop first so partial previous runs don't leave broken state
 DROP TABLE IF EXISTS workspace_invites CASCADE;
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE workspace_invites (
   id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   token       TEXT        UNIQUE NOT NULL DEFAULT encode(gen_random_bytes(32), 'hex'),

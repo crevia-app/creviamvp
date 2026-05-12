@@ -363,7 +363,13 @@ const CreateInvoiceDialog = ({
         setShowSuccess(true);
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to save invoice");
+      if (error.message?.includes("invoice_limit_reached")) {
+        toast.error("Monthly limit reached", {
+          description: "Free plan allows 2 invoices per month. Upgrade to Pro for unlimited.",
+        });
+      } else {
+        toast.error(error.message || "Failed to save invoice");
+      }
     } finally {
       setLoading(false);
     }
