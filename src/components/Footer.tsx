@@ -14,6 +14,7 @@ const Footer = () => {
               className="flex items-center gap-2 mb-3 md:mb-4 cursor-pointer hover:opacity-80 transition-opacity"
             >
               <img src={creviaLogo} alt="Crevia" className="h-7 md:h-8 w-auto" />
+              <span className="font-vollkorn text-lg md:text-xl font-bold">Crevia</span>
             </button>
             <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
               Own Your Story
