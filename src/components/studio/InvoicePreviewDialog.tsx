@@ -7,7 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Printer, Send, CheckCircle2, Clock, AlertCircle, Maximize2, Minimize2 } from "lucide-react";
+import { Printer, Send, CheckCircle2, Clock, AlertCircle, Maximize2, Minimize2, Download } from "lucide-react";
+import { useDownloadPDF } from "@/hooks/use-download-pdf";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,9 @@ const InvoicePreviewDialog = ({
   const [businessSettings, setBusinessSettings] = useState<any>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [sending, setSending] = useState(false);
+  const { ref: docRef, download, downloading } = useDownloadPDF(
+    invoice ? `Invoice-${invoice.invoice_number}` : "Invoice"
+  );
 
   useEffect(() => {
     if (invoice) {
@@ -157,6 +161,10 @@ const InvoicePreviewDialog = ({
                 {sending ? "Sending…" : "Send"}
               </Button>
             )}
+            <Button variant="outline" size="sm" onClick={download} disabled={downloading} className="gap-1.5">
+              <Download className="h-3.5 w-3.5" />
+              {downloading ? "Saving…" : "Download"}
+            </Button>
             <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5">
               <Printer className="h-3.5 w-3.5" />
               Print
@@ -170,7 +178,7 @@ const InvoicePreviewDialog = ({
 
         <div className="p-6">
           {/* Invoice Document */}
-          <div className="bg-white text-black rounded-xl shadow-lg overflow-hidden print:shadow-none">
+          <div ref={docRef} className="bg-white text-black rounded-xl shadow-lg overflow-hidden print:shadow-none">
             {/* Accent bar */}
             <div className="h-1.5 bg-gradient-to-r from-bronze via-amber-500 to-bronze" />
 

@@ -8,15 +8,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Printer, CheckCircle2, FileSignature, Calendar, Coins, PenTool, Send, 
-  Edit3, Save, X, Plus, Trash2, FileText, Maximize2, Minimize2
+import {
+  Printer, CheckCircle2, FileSignature, Calendar, Coins, PenTool, Send,
+  Edit3, Save, X, Plus, Trash2, FileText, Maximize2, Minimize2, Download
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import ESignatureDialog from "./ESignatureDialog";
+import { useDownloadPDF } from "@/hooks/use-download-pdf";
 
 interface ContractPreviewDialogProps {
   open: boolean;
@@ -54,6 +55,9 @@ const ContractPreviewDialog = ({
   const [savingDetails, setSavingDetails] = useState(false);
   const [activeSection, setActiveSection] = useState<"document" | "signatures">("document");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const { ref: docRef, download, downloading } = useDownloadPDF(
+    contract ? `Contract-${contract.title?.replace(/\s+/g, "-")}` : "Contract"
+  );
 
   useEffect(() => {
     if (contract) {
@@ -235,6 +239,9 @@ const ContractPreviewDialog = ({
                 <Edit3 className="h-3 w-3" /> Edit
               </Button>
             )}
+            <Button variant="ghost" size="sm" onClick={download} disabled={downloading} className="gap-1.5 h-8 rounded-lg text-xs">
+              <Download className="h-3 w-3" /> {downloading ? "Saving…" : "Download"}
+            </Button>
             <Button variant="ghost" size="sm" onClick={handlePrint} className="gap-1.5 h-8 rounded-lg text-xs">
               <Printer className="h-3 w-3" /> Print
             </Button>
@@ -361,7 +368,7 @@ const ContractPreviewDialog = ({
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl dark:shadow-2xl overflow-hidden border border-border/20 print:shadow-none print:border-0">
+                    <div ref={docRef} className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl dark:shadow-2xl overflow-hidden border border-border/20 print:shadow-none print:border-0">
                       <div className="h-1 bg-gradient-to-r from-primary via-primary/60 to-primary/20" />
                       <div className="p-6 md:p-10 space-y-8">
                         <div className="space-y-4">
