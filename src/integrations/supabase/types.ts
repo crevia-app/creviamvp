@@ -567,6 +567,7 @@ export type Database = {
           id: string
           payment_terms: string | null
           start_date: string | null
+          signature_position: Json | null
           status: string
           termination_clause: string | null
           title: string
@@ -592,6 +593,7 @@ export type Database = {
           exclusivity_details?: string | null
           id?: string
           payment_terms?: string | null
+          signature_position?: Json | null
           start_date?: string | null
           status?: string
           termination_clause?: string | null
@@ -618,6 +620,7 @@ export type Database = {
           exclusivity_details?: string | null
           id?: string
           payment_terms?: string | null
+          signature_position?: Json | null
           start_date?: string | null
           status?: string
           termination_clause?: string | null
