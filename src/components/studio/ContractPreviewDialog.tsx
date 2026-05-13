@@ -115,43 +115,56 @@ const ContractPreviewDialog = ({
 
   const status = statusConfig[localContract.status] || statusConfig.draft;
 
-  // Shared signature card rendered inside both view and edit modes
+  // Signature card — shows pending preview during placement mode, or the sign/signed state otherwise
   const SignatureSection = () => (
     <div className="pt-6 border-t border-border/30 space-y-4">
       <div className="flex items-center gap-2">
         <FileSignature className="h-4 w-4 text-primary" />
-        <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-semibold">Your Signature</p>
+        <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-semibold">
+          {placementMode ? "Signature Ready — tap document to place" : "Your Signature"}
+        </p>
       </div>
 
-      <div
-        className={cn(
-          "h-36 rounded-2xl border-2 border-dashed flex items-center justify-center relative overflow-hidden transition-all",
-          localContract.creator_signature
-            ? "border-emerald-500/30 bg-emerald-500/5"
-            : "border-border hover:border-primary/30 hover:bg-primary/5 cursor-pointer"
-        )}
-        onClick={() => { if (!localContract.creator_signature) setShowSignatureDialog(true); }}
-      >
-        {localContract.creator_signature ? (
-          <>
-            <div className="absolute top-2 right-2">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-[10px] font-semibold">
-                <CheckCircle2 className="h-3 w-3" /> Signed
-              </span>
+      {placementMode ? (
+        // Pending signature preview while placement mode is active
+        <div className="h-24 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 flex items-center justify-center overflow-hidden">
+          {placementMode.signature.startsWith("data:image") ? (
+            <img src={placementMode.signature} alt="Your signature" className="max-h-20 object-contain" />
+          ) : (
+            <span className="text-3xl font-vollkorn italic text-foreground/60">{placementMode.signature}</span>
+          )}
+        </div>
+      ) : (
+        <div
+          className={cn(
+            "h-36 rounded-2xl border-2 border-dashed flex items-center justify-center relative overflow-hidden transition-all",
+            localContract.creator_signature
+              ? "border-emerald-500/30 bg-emerald-500/5"
+              : "border-border hover:border-primary/30 hover:bg-primary/5 cursor-pointer"
+          )}
+          onClick={(e) => { e.stopPropagation(); if (!localContract.creator_signature) setShowSignatureDialog(true); }}
+        >
+          {localContract.creator_signature ? (
+            <>
+              <div className="absolute top-2 right-2">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-[10px] font-semibold">
+                  <CheckCircle2 className="h-3 w-3" /> Signed
+                </span>
+              </div>
+              {localContract.creator_signature.startsWith("data:image") ? (
+                <img src={localContract.creator_signature} alt="Signature" className="max-h-24 object-contain" />
+              ) : (
+                <span className="text-3xl font-vollkorn italic text-foreground/70">{localContract.creator_signature}</span>
+              )}
+            </>
+          ) : (
+            <div className="flex flex-col items-center gap-2 text-muted-foreground hover:text-primary transition-colors pointer-events-none">
+              <PenTool className="h-5 w-5" />
+              <span className="text-xs font-medium">Tap to sign</span>
             </div>
-            {localContract.creator_signature.startsWith("data:image") ? (
-              <img src={localContract.creator_signature} alt="Signature" className="max-h-24 object-contain" />
-            ) : (
-              <span className="text-3xl font-vollkorn italic text-foreground/70">{localContract.creator_signature}</span>
-            )}
-          </>
-        ) : (
-          <div className="flex flex-col items-center gap-2 text-muted-foreground hover:text-primary transition-colors pointer-events-none">
-            <PenTool className="h-5 w-5" />
-            <span className="text-xs font-medium">Tap to sign</span>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
@@ -163,9 +176,9 @@ const ContractPreviewDialog = ({
             </p>
           )}
         </div>
-        {!localContract.creator_signature && (
+        {!localContract.creator_signature && !placementMode && (
           <Button
-            onClick={() => setShowSignatureDialog(true)}
+            onClick={(e) => { e.stopPropagation(); setShowSignatureDialog(true); }}
             className="gap-2 rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 h-9 px-4"
           >
             <PenTool className="h-4 w-4" /> Sign Contract
@@ -218,26 +231,11 @@ const ContractPreviewDialog = ({
           </div>
         </div>
 
-        {/* ── Main Content ── */}
-        <div className="flex-1 overflow-y-auto relative">
-
-          {/* Placement overlay — tap anywhere to drop the signature */}
-          {placementMode && (
-            <div
-              className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-6 bg-background/85 backdrop-blur-sm cursor-crosshair select-none"
-              onClick={handlePlacementTap}
-            >
-              <div className="p-6 rounded-2xl bg-background border-2 border-dashed border-primary/50 shadow-2xl flex flex-col items-center gap-4 pointer-events-none">
-                {placementMode.signature.startsWith("data:image") ? (
-                  <img src={placementMode.signature} alt="Your signature" className="max-h-24 object-contain" />
-                ) : (
-                  <span className="text-4xl font-vollkorn italic text-foreground/80">{placementMode.signature}</span>
-                )}
-                <p className="text-sm text-muted-foreground font-medium tracking-wide">Tap anywhere to place your signature</p>
-              </div>
-            </div>
-          )}
-
+        {/* ── Main Content — tappable when placement mode is active ── */}
+        <div
+          className={cn("flex-1 overflow-y-auto relative", placementMode && "cursor-crosshair")}
+          onClick={placementMode ? handlePlacementTap : undefined}
+        >
           <div className="p-5 md:p-8">
 
             {/* ── EDIT MODE ── */}
@@ -330,6 +328,33 @@ const ContractPreviewDialog = ({
             )}
           </div>
         </div>
+
+        {/* ── Placement strip — small bar at bottom when signature is ready to place ── */}
+        {placementMode && (
+          <div
+            className="shrink-0 border-t border-primary/20 bg-background/95 backdrop-blur-sm px-4 py-3 flex items-center gap-3 print:hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="h-10 w-24 rounded-lg border border-dashed border-primary/40 bg-primary/5 flex items-center justify-center flex-shrink-0 overflow-hidden">
+              {placementMode.signature.startsWith("data:image") ? (
+                <img src={placementMode.signature} alt="sig" className="max-h-8 object-contain" />
+              ) : (
+                <span className="text-base font-vollkorn italic text-foreground/80 truncate px-1">{placementMode.signature}</span>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-foreground">Tap anywhere in the document to place your signature</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Once placed it cannot be moved</p>
+            </div>
+            <Button
+              size="sm" variant="ghost"
+              onClick={() => setPlacementMode(null)}
+              className="h-8 text-xs rounded-lg text-muted-foreground hover:text-foreground flex-shrink-0"
+            >
+              <X className="h-3.5 w-3.5 mr-1" /> Cancel
+            </Button>
+          </div>
+        )}
 
         <ESignatureDialog
           open={showSignatureDialog}
