@@ -196,25 +196,29 @@ const ContractPreviewDialog = ({
     );
   };
 
-  // ── Print: open a clean window with contract content, auto-print, auto-close ──
+  // ── Print: open a clean window showing only the agreement text + signature ──
   const handlePrint = () => {
     const win = window.open("", "_blank", "width=900,height=700");
     if (!win) { toast.error("Allow popups to print."); return; }
 
-    const sig = localContract.creator_signature;
-    const signatureBlock = sig
-      ? `<div class="sig-block">
-           <div class="sig-label">Creator Signature</div>
-           ${sig.startsWith("data:image")
-             ? `<img src="${sig}" class="sig-img" />`
-             : `<span class="sig-text">${sig}</span>`}
-           ${localContract.creator_signed_at
-             ? `<div class="sig-date">Signed ${new Date(localContract.creator_signed_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</div>`
-             : ""}
-         </div>`
-      : "";
+    const sig      = localContract.creator_signature;
+    const pos      = localContract.signature_position as SigPos | null;
+    const rawText  = localContract.content || "";
+    const escaped  = rawText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-    const content = (localContract.content || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    // Render signature absolutely at its saved position if available,
+    // otherwise fall back to a simple block below the text.
+    let sigHtml = "";
+    if (sig && pos) {
+      const fs = Math.max(14, Math.min(pos.h * 0.40, 48));
+      sigHtml = sig.startsWith("data:image")
+        ? `<img src="${sig}" style="position:absolute;left:${pos.x}px;top:${pos.y}px;width:${pos.w}px;height:${pos.h}px;object-fit:contain;" />`
+        : `<div style="position:absolute;left:${pos.x}px;top:${pos.y}px;width:${pos.w}px;height:${pos.h}px;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-style:italic;font-size:${fs}px;color:#111;">${sig}</div>`;
+    } else if (sig) {
+      sigHtml = sig.startsWith("data:image")
+        ? `<div style="margin-top:28px;"><img src="${sig}" style="max-height:72px;max-width:260px;object-fit:contain;" /></div>`
+        : `<div style="margin-top:28px;font-family:Georgia,serif;font-style:italic;font-size:28pt;color:#111;">${sig}</div>`;
+    }
 
     win.document.write(`<!DOCTYPE html>
 <html lang="en">
@@ -222,56 +226,19 @@ const ContractPreviewDialog = ({
   <meta charset="UTF-8" />
   <title>${localContract.title}</title>
   <style>
-    @page { size: A4; margin: 25mm 20mm; }
+    @page { size: A4; margin: 20mm; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Georgia, "Times New Roman", serif; font-size: 11pt; line-height: 1.75; color: #111; background: #fff; }
-    .doc { max-width: 720px; margin: 0 auto; padding: 0 8px; }
-
-    /* Header */
-    .header { border-bottom: 2px solid #111; padding-bottom: 16px; margin-bottom: 32px; }
-    .title { font-size: 22pt; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 10px; }
-    .meta { display: flex; gap: 24px; flex-wrap: wrap; font-size: 9pt; color: #555; }
-    .meta span { display: flex; align-items: center; gap: 4px; }
-    .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 8.5pt; font-weight: 600; letter-spacing: 0.4px; background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
-
-    /* Body */
-    .section-label { font-size: 7.5pt; text-transform: uppercase; letter-spacing: 1.5px; color: #888; font-family: Arial, sans-serif; font-weight: 700; margin-bottom: 10px; margin-top: 32px; }
-    .content-box { white-space: pre-wrap; font-family: "Courier New", monospace; font-size: 10pt; line-height: 1.8; color: #222; background: #fafafa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 20px 24px; }
-
-    /* Signature block */
-    .sig-block { margin-top: 48px; padding-top: 24px; border-top: 1px solid #ddd; page-break-inside: avoid; }
-    .sig-label { font-size: 8pt; text-transform: uppercase; letter-spacing: 1.2px; color: #888; font-family: Arial, sans-serif; font-weight: 700; margin-bottom: 10px; }
-    .sig-img { max-height: 72px; max-width: 280px; object-fit: contain; display: block; }
-    .sig-text { font-family: Georgia, serif; font-style: italic; font-size: 26pt; color: #222; display: block; }
-    .sig-date { font-size: 8.5pt; color: #777; margin-top: 6px; font-family: Arial, sans-serif; }
-    .sig-line { width: 240px; border-top: 1px solid #333; margin-top: 8px; padding-top: 4px; font-size: 8pt; color: #555; font-family: Arial, sans-serif; }
-
-    /* Footer */
-    .footer { margin-top: 60px; padding-top: 12px; border-top: 1px solid #e0e0e0; font-size: 7.5pt; color: #bbb; font-family: Arial, sans-serif; display: flex; justify-content: space-between; }
-    @media print { .footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 6px 20mm; } }
+    body { font-family: "Courier New", monospace; font-size: 10pt; line-height: 1.8; color: #111; background: #fff; }
+    .label { font-size: 7pt; text-transform: uppercase; letter-spacing: 1.5px; color: #888; font-weight: 700; margin-bottom: 10px; font-family: Arial, sans-serif; }
+    .area { position: relative; }
+    .box { white-space: pre-wrap; font-family: "Courier New", monospace; font-size: 10pt; line-height: 1.8; color: #222; border: 1px solid #e0e0e0; border-radius: 4px; padding: 16px 20px; }
   </style>
 </head>
 <body>
-  <div class="doc">
-    <div class="header">
-      <div class="title">${localContract.title}</div>
-      <div class="meta">
-        <span>Party: <strong>${localContract.client_name}</strong></span>
-        ${localContract.client_email ? `<span>Email: ${localContract.client_email}</span>` : ""}
-        ${localContract.start_date ? `<span>Effective: ${new Date(localContract.start_date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>` : ""}
-        <span class="badge">${localContract.status.charAt(0).toUpperCase() + localContract.status.slice(1)}</span>
-      </div>
-    </div>
-
-    <div class="section-label">Full Agreement</div>
-    <div class="content-box">${content || "(No content)"}</div>
-
-    ${signatureBlock}
-
-    <div class="footer">
-      <span>Generated by Crevia</span>
-      <span>Printed ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
-    </div>
+  <div class="label">Full Agreement</div>
+  <div class="area">
+    ${sigHtml}
+    <div class="box">${escaped || "(No content)"}</div>
   </div>
   <script>
     window.onload = function () {
