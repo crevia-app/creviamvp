@@ -228,17 +228,15 @@ const ContractPreviewDialog = ({
   <style>
     @page { size: A4; margin: 20mm; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: "Courier New", monospace; font-size: 10pt; line-height: 1.8; color: #111; background: #fff; }
-    .label { font-size: 7pt; text-transform: uppercase; letter-spacing: 1.5px; color: #888; font-weight: 700; margin-bottom: 10px; font-family: Arial, sans-serif; }
+    body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.8; color: #111; background: #fff; }
     .area { position: relative; }
-    .box { white-space: pre-wrap; font-family: "Courier New", monospace; font-size: 10pt; line-height: 1.8; color: #222; border: 1px solid #e0e0e0; border-radius: 4px; padding: 16px 20px; }
+    .text { white-space: pre-wrap; font-size: 11pt; line-height: 1.8; color: #111; }
   </style>
 </head>
 <body>
-  <div class="label">Full Agreement</div>
   <div class="area">
     ${sigHtml}
-    <div class="box">${escaped || "(No content)"}</div>
+    <div class="text">${escaped || ""}</div>
   </div>
   <script>
     window.onload = function () {
