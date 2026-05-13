@@ -196,18 +196,15 @@ const ContractPreviewDialog = ({
     );
   };
 
-  // ── Print: open a clean window showing only the agreement text + signature ──
+  // ── Print: inject a hidden iframe to avoid popup blockers ──
   const handlePrint = () => {
-    const win = window.open("", "_blank", "width=900,height=700");
-    if (!win) { toast.error("Allow popups to print."); return; }
+    const sig     = localContract.creator_signature;
+    const pos     = localContract.signature_position as SigPos | null;
+    const escaped = (localContract.content || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
 
-    const sig      = localContract.creator_signature;
-    const pos      = localContract.signature_position as SigPos | null;
-    const rawText  = localContract.content || "";
-    const escaped  = rawText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-    // Render signature absolutely at its saved position if available,
-    // otherwise fall back to a simple block below the text.
     let sigHtml = "";
     if (sig && pos) {
       const fs = Math.max(14, Math.min(pos.h * 0.40, 48));
@@ -216,19 +213,19 @@ const ContractPreviewDialog = ({
         : `<div style="position:absolute;left:${pos.x}px;top:${pos.y}px;width:${pos.w}px;height:${pos.h}px;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-style:italic;font-size:${fs}px;color:#111;">${sig}</div>`;
     } else if (sig) {
       sigHtml = sig.startsWith("data:image")
-        ? `<div style="margin-top:28px;"><img src="${sig}" style="max-height:72px;max-width:260px;object-fit:contain;" /></div>`
-        : `<div style="margin-top:28px;font-family:Georgia,serif;font-style:italic;font-size:28pt;color:#111;">${sig}</div>`;
+        ? `<div style="margin-bottom:20px;"><img src="${sig}" style="max-height:72px;max-width:260px;object-fit:contain;" /></div>`
+        : `<div style="margin-bottom:20px;font-family:Georgia,serif;font-style:italic;font-size:28pt;color:#111;">${sig}</div>`;
     }
 
-    win.document.write(`<!DOCTYPE html>
+    const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>${localContract.title}</title>
+  <title></title>
   <style>
-    @page { size: A4; margin: 20mm; }
+    @page { size: A4; margin: 0; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.8; color: #111; background: #fff; }
+    body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.8; color: #111; background: #fff; padding: 20mm; }
     .area { position: relative; }
     .text { white-space: pre-wrap; font-size: 11pt; line-height: 1.8; color: #111; }
   </style>
@@ -236,19 +233,28 @@ const ContractPreviewDialog = ({
 <body>
   <div class="area">
     ${sigHtml}
-    <div class="text">${escaped || ""}</div>
+    <div class="text">${escaped}</div>
   </div>
-  <script>
-    window.onload = function () {
-      setTimeout(function () {
-        window.print();
-        window.onafterprint = function () { window.close(); };
-      }, 400);
-    };
-  </script>
 </body>
-</html>`);
-    win.document.close();
+</html>`;
+
+    const iframe = document.createElement("iframe");
+    iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentDocument ?? iframe.contentWindow?.document;
+    if (!doc) { document.body.removeChild(iframe); return; }
+
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    // Give the iframe time to render, then print and clean up
+    setTimeout(() => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      setTimeout(() => document.body.removeChild(iframe), 1000);
+    }, 400);
   };
 
   // Confirm → save to DB
