@@ -150,6 +150,7 @@ const ContractPreviewDialog = ({
   const [editableContent, setEditableContent]           = useState("");
   const [savingDetails, setSavingDetails]               = useState(false);
   const [isFullscreen, setIsFullscreen]                 = useState(false);
+  const [printing, setPrinting]                         = useState(false);
 
   // ref on the INNER content padding div — DraggableSig lives inside here
   const contentAreaRef = useRef<HTMLDivElement>(null);
@@ -197,90 +198,62 @@ const ContractPreviewDialog = ({
     );
   };
 
-  // ── Print: inject a hidden iframe to avoid popup blockers ──
-  const handlePrint = () => {
-    const sig     = localContract.creator_signature;
-    const pos     = localContract.signature_position as SigPos | null;
-    const escaped = (localContract.content || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+  // ── Print: screenshot the live DOM with html2canvas → print the image ──
+  // This is the only approach that guarantees the signature stays exactly where
+  // the user placed it — no coordinate remapping, no font/reflow differences.
+  const handlePrint = async () => {
+    if (!contentAreaRef.current || printing) return;
+    setPrinting(true);
+    try {
+      const { default: html2canvas } = await import("html2canvas");
 
-    // Measure the EXACT pixel distance from contentAreaRef's top edge to the
-    // text div's top edge — this is the true spacer height we must replicate
-    // in the print so that pos.y maps to exactly the same document location.
-    const caRect   = contentAreaRef.current?.getBoundingClientRect();
-    const txtRect  = textDivRef.current?.getBoundingClientRect();
-    // D = distance from contentAreaRef top → text div top (includes padding + title + label)
-    const D = (caRect && txtRect) ? Math.round(txtRect.top - caRect.top) : 177;
-    // .cr has padding-top: 40px; the spacer sits INSIDE that padding, so:
-    //   spacer height = D - 40  (puts text div top at exactly y=D within .cr)
-    const spacerH = Math.max(0, D - 40);
+      const canvas = await html2canvas(contentAreaRef.current, {
+        scale: 2,           // retina quality
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+        removeContainer: true,
+      });
 
-    let sigHtml = "";
-    if (sig && pos) {
-      const fs = Math.max(14, Math.min(pos.h * 0.40, 48));
-      // mix-blend-mode:multiply makes white pixels invisible — works on existing
-      // white-background PNGs and on new transparent ones alike
-      sigHtml = sig.startsWith("data:image")
-        ? `<img src="${sig}" style="position:absolute;left:${pos.x}px;top:${pos.y}px;width:${pos.w}px;height:${pos.h}px;object-fit:contain;mix-blend-mode:multiply;" />`
-        : `<div style="position:absolute;left:${pos.x}px;top:${pos.y}px;width:${pos.w}px;height:${pos.h}px;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-style:italic;font-size:${fs}px;color:#111;">${sig}</div>`;
-    } else if (sig) {
-      sigHtml = sig.startsWith("data:image")
-        ? `<div style="margin-top:24px;"><img src="${sig}" style="max-height:72px;max-width:260px;object-fit:contain;mix-blend-mode:multiply;" /></div>`
-        : `<div style="margin-top:24px;font-family:Georgia,serif;font-style:italic;font-size:28pt;color:#111;">${sig}</div>`;
-    }
+      const imgSrc = canvas.toDataURL("image/png");
 
-    // .cr mirrors contentAreaRef: same width (832px) and same horizontal padding (40px).
-    // This keeps the text wrapping at exactly the same column widths as the dialog
-    // so the signature lands on the same word/line it was placed on.
-    const html = `<!DOCTYPE html>
-<html lang="en">
+      const html = `<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <title></title>
   <style>
     @page { size: A4; margin: 0; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: white; }
-    .cr  { position: relative; width: 832px; padding: 40px; }
-    .sp  { height: ${spacerH}px; }
-    .txt {
-      white-space: pre-wrap;
-      font-family: ui-monospace, monospace;
-      font-size: 14px;
-      line-height: 1.625;
-      color: #111;
-      padding: 20px;
-    }
+    img { width: 100%; display: block; }
   </style>
 </head>
-<body>
-  <div class="cr">
-    <div class="sp"></div>
-    <div class="txt">${escaped}</div>
-    ${sigHtml}
-  </div>
-</body>
+<body><img src="${imgSrc}" /></body>
 </html>`;
 
-    const iframe = document.createElement("iframe");
-    iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;";
-    document.body.appendChild(iframe);
+      const iframe = document.createElement("iframe");
+      iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;";
+      document.body.appendChild(iframe);
 
-    const doc = iframe.contentDocument ?? iframe.contentWindow?.document;
-    if (!doc) { document.body.removeChild(iframe); return; }
+      const doc = iframe.contentDocument ?? iframe.contentWindow?.document;
+      if (!doc) { document.body.removeChild(iframe); return; }
 
-    doc.open();
-    doc.write(html);
-    doc.close();
+      doc.open();
+      doc.write(html);
+      doc.close();
 
-    // Give the iframe time to render, then print and clean up
-    setTimeout(() => {
-      iframe.contentWindow?.focus();
-      iframe.contentWindow?.print();
-      setTimeout(() => document.body.removeChild(iframe), 1000);
-    }, 400);
+      setTimeout(() => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        setTimeout(() => document.body.removeChild(iframe), 1000);
+      }, 500);
+    } catch {
+      toast.error("Print failed — please try again.");
+    } finally {
+      setPrinting(false);
+    }
   };
 
   // Confirm → save to DB
@@ -372,9 +345,9 @@ const ContractPreviewDialog = ({
                   <Download className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline text-xs">{downloading ? "Saving…" : "Download"}</span>
                 </Button>
-                <Button variant="ghost" size="sm" onClick={handlePrint} className="gap-1 h-8 w-8 sm:w-auto sm:px-2.5 rounded-lg">
+                <Button variant="ghost" size="sm" onClick={handlePrint} disabled={printing} className="gap-1 h-8 w-8 sm:w-auto sm:px-2.5 rounded-lg">
                   <Printer className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline text-xs">Print</span>
+                  <span className="hidden sm:inline text-xs">{printing ? "Preparing…" : "Print"}</span>
                 </Button>
               </>
             )}
