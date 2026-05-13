@@ -96,7 +96,7 @@ const DraggableSig = ({ pos, signature, onChange }: DraggableSigProps) => {
     >
       {/* body */}
       <div
-        className="w-full h-full rounded-lg border-2 border-primary/80 bg-white/96 dark:bg-zinc-900/96 shadow-[0_8px_32px_rgba(0,0,0,0.22)] flex items-center justify-center overflow-hidden cursor-move"
+        className="w-full h-full rounded-lg border-2 border-dashed border-primary/60 flex items-center justify-center overflow-hidden cursor-move"
         onPointerDown={onBodyDown}
         onPointerMove={onBodyMove}
         onPointerUp={onBodyUp}
@@ -205,33 +205,21 @@ const ContractPreviewDialog = ({
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
-    // pos.x / pos.y are measured from the top-left of contentAreaRef which
-    // includes 40px padding + the title block (~55px) + space-y-8 gap (32px)
-    // + "Full Agreement" label with margin (~30px) + text-box padding-top (20px).
-    // Total offset from contentAreaRef top to the first line of text ≈ 177px.
-    // Subtract both offsets so the signature sits at the same spot relative to
-    // the text content in the printed page.
-    const PAD_X = 40;   // contentAreaRef padding-left (p-10)
-    const PAD_Y = 177;  // contentAreaRef padding-top + title block height
-
+    // Replicate the EXACT same DOM structure as the dialog so pos.x/pos.y
+    // map 1-to-1 with no arithmetic correction.
+    // Title block and label are visibility:hidden (take space, print nothing).
     let sigHtml = "";
     if (sig && pos) {
-      const px = Math.max(0, pos.x - PAD_X);
-      const py = Math.max(0, pos.y - PAD_Y);
       const fs = Math.max(14, Math.min(pos.h * 0.40, 48));
       sigHtml = sig.startsWith("data:image")
-        ? `<img src="${sig}" style="position:absolute;left:${px}px;top:${py}px;width:${pos.w}px;height:${pos.h}px;object-fit:contain;pointer-events:none;" />`
-        : `<div style="position:absolute;left:${px}px;top:${py}px;width:${pos.w}px;height:${pos.h}px;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-style:italic;font-size:${fs}px;color:#111;">${sig}</div>`;
+        ? `<img src="${sig}" style="position:absolute;left:${pos.x}px;top:${pos.y}px;width:${pos.w}px;height:${pos.h}px;object-fit:contain;" />`
+        : `<div style="position:absolute;left:${pos.x}px;top:${pos.y}px;width:${pos.w}px;height:${pos.h}px;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-style:italic;font-size:${fs}px;color:#111;">${sig}</div>`;
     } else if (sig) {
-      // No saved position — render inline below the text
       sigHtml = sig.startsWith("data:image")
         ? `<div style="margin-top:24px;"><img src="${sig}" style="max-height:72px;max-width:260px;object-fit:contain;" /></div>`
         : `<div style="margin-top:24px;font-family:Georgia,serif;font-style:italic;font-size:28pt;color:#111;">${sig}</div>`;
     }
 
-    // Content area width mirrors the dialog (max-w-4xl = 896px minus 80px padding = 816px).
-    // Keeping the same width ensures text wraps at the same points as in the UI,
-    // so the signature stays aligned with the correct line of text.
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -240,22 +228,36 @@ const ContractPreviewDialog = ({
   <style>
     @page { size: A4; margin: 0; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #fff; }
-    .area {
-      position: relative;
-      width: 816px;
-      padding: 40px 40px 60px;
-      font-family: ui-monospace, monospace;
-      font-size: 10pt;
-      line-height: 1.8;
-      color: #111;
-      white-space: pre-wrap;
-    }
+    body { background: white; }
+    .cr  { position: relative; padding: 40px; width: 816px; }
+    .sy8 > * + * { margin-top: 32px; }
+    .sy4 > * + * { margin-top: 16px; }
+    .title-sect { visibility: hidden; }
+    .h1  { font-size: 30px; font-weight: 700; line-height: 1.25; font-family: Georgia, serif; }
+    .hr  { height: 1px; background: #e5e7eb; }
+    .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em;
+           font-weight: 600; margin-bottom: 16px; visibility: hidden; }
+    .txt { white-space: pre-wrap; font-family: ui-monospace, monospace;
+           font-size: 14px; line-height: 1.625; color: #111; padding: 20px; }
   </style>
 </head>
 <body>
-  <div class="area">
-    ${sigHtml}${escaped}
+  <div class="cr">
+    <div class="sy8">
+      <div class="title-sect">
+        <div class="sy4">
+          <div style="display:flex;align-items:flex-start;gap:16px;">
+            <h1 class="h1">${localContract.title}</h1>
+          </div>
+          <div class="hr"></div>
+        </div>
+      </div>
+      <div>
+        <p class="lbl">Full Agreement</p>
+        <div class="txt">${escaped}</div>
+      </div>
+    </div>
+    ${sigHtml}
   </div>
 </body>
 </html>`;

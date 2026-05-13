@@ -103,8 +103,7 @@ const ESignatureDialog = ({
     ctx.lineWidth = 2.5;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // No fillRect — canvas stays transparent so exported PNG has no white background
     setHasSignature(false);
   };
 
