@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import SuccessOverlay from "@/components/ui/SuccessOverlay";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -11,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { FileSignature, PenLine } from "lucide-react";
+import { FileSignature } from "lucide-react";
 import { toast } from "sonner";
 
 interface CreateContractDialogProps {
@@ -23,24 +21,6 @@ interface CreateContractDialogProps {
   kiraContext?: Record<string, unknown> | null;
 }
 
-const SIGNATURE_BLOCK = `
-
-─────────────────────────────────────
-
-SIGNATURES
-
-Creator
-Name: ___________________________
-Signature: ___________________________
-Date: ___________________________
-
-
-Client / Brand
-Name: ___________________________
-Signature: ___________________________
-Date: ___________________________
-`;
-
 const CreateContractDialog = ({
   open,
   onOpenChange,
@@ -51,53 +31,31 @@ const CreateContractDialog = ({
 }: CreateContractDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-
-  const [title, setTitle] = useState("");
-  const [clientName, setClientName] = useState("");
-  const [clientEmail, setClientEmail] = useState("");
   const [content, setContent] = useState("");
 
   useEffect(() => {
     if (!open) return;
     if (editingContract) {
-      setTitle(editingContract.title ?? "");
-      setClientName(editingContract.client_name ?? "");
-      setClientEmail(editingContract.client_email ?? "");
       setContent(editingContract.content ?? "");
     } else if (kiraContext) {
-      if (kiraContext.title)        setTitle(kiraContext.title as string);
-      if (kiraContext.client_name)  setClientName(kiraContext.client_name as string);
-      if (kiraContext.client_email) setClientEmail(kiraContext.client_email as string);
-      if (kiraContext.content)      setContent(kiraContext.content as string);
+      if (kiraContext.content) setContent(kiraContext.content as string);
     } else {
-      setTitle("");
-      setClientName("");
-      setClientEmail("");
       setContent("");
     }
   }, [editingContract, kiraContext, open]);
 
-  const appendSignature = () => {
-    if (content.includes("SIGNATURES")) return;
-    setContent((prev) => prev + SIGNATURE_BLOCK);
-    toast.success("Signature block added");
-  };
-
   const handleSubmit = async () => {
-    if (!title.trim() || !clientName.trim()) {
-      toast.error("Contract title and client name are required");
-      return;
-    }
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { toast.error("Please log in"); return; }
 
+      const autoTitle = `Contract – ${new Date().toLocaleDateString()}`;
       const contractData = {
         user_id: session.user.id,
-        title: title.trim(),
-        client_name: clientName.trim(),
-        client_email: clientEmail.trim() || null,
+        title: editingContract?.title?.trim() || autoTitle,
+        client_name: editingContract?.client_name?.trim() || "",
+        client_email: editingContract?.client_email?.trim() || null,
         contract_type: "custom",
         content: content || null,
       };
@@ -159,62 +117,15 @@ const CreateContractDialog = ({
           </div>
 
           {/* Canvas */}
-          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-            {/* Compact meta row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <Label className="text-xs text-muted-foreground">Title *</Label>
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Q1 2026 Brand Partnership"
-                  className="mt-1 h-9 rounded-xl text-sm"
-                  autoFocus
-                />
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Client Name *</Label>
-                <Input
-                  value={clientName}
-                  onChange={(e) => setClientName(e.target.value)}
-                  placeholder="Company or individual"
-                  className="mt-1 h-9 rounded-xl text-sm"
-                />
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Client Email</Label>
-                <Input
-                  type="email"
-                  value={clientEmail}
-                  onChange={(e) => setClientEmail(e.target.value)}
-                  placeholder="client@example.com"
-                  className="mt-1 h-9 rounded-xl text-sm"
-                />
-              </div>
-            </div>
-
-            {/* Canvas area */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Canvas</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={appendSignature}
-                  className="gap-1.5 h-7 text-xs border-bronze/30 text-bronze hover:bg-bronze/8 hover:border-bronze/50"
-                >
-                  <PenLine className="h-3.5 w-3.5" />
-                  Add Signature
-                </Button>
-              </div>
-              <Textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder={`AGREEMENT\n\nBetween: [Your Name] ("Creator")\nAnd: ${clientName || "[Client Name]"} ("Client")\n\nPaste your Kira AI–generated contract here, or type your terms directly…`}
-                className="rounded-xl font-mono text-sm leading-relaxed min-h-[460px] resize-none bg-background border-border/60 focus:border-primary/30 focus-visible:ring-primary/20"
-                spellCheck={false}
-              />
-            </div>
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            <Textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Start writing your contract here…"
+              className="rounded-xl font-mono text-sm leading-relaxed min-h-[520px] resize-none bg-background border-border/60 focus:border-primary/30 focus-visible:ring-primary/20"
+              spellCheck={false}
+              autoFocus
+            />
           </div>
 
           {/* Footer */}
@@ -224,7 +135,7 @@ const CreateContractDialog = ({
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={loading || !title.trim() || !clientName.trim()}
+              disabled={loading}
               className="rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
             >
               {loading ? "Saving…" : editingContract ? "Update Contract" : "Save Contract"}
