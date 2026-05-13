@@ -33,8 +33,8 @@ export interface SubscriptionState {
 const PLAN_LIMITS: Record<SubscriptionPlan, SubscriptionLimits> = {
   free: {
     kiraActionsPerDay: 10,
-    invoicesPerMonth: 2,
-    contractsPerMonth: 2,
+    invoicesPerMonth: 20,
+    contractsPerMonth: 20,
     hasESignature: false,
     hasPremiumThemes: false,
     hasClientPortal: false,

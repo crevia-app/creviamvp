@@ -3,10 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { 
-  Plus, 
-  Search, 
-  FileSignature, 
+import {
+  Plus,
+  Search,
+  FileSignature,
   Eye,
   MoreHorizontal,
   Edit,
@@ -24,7 +24,9 @@ import {
   TrendingUp,
   Sparkles,
   File,
-  CalendarDays
+  CalendarDays,
+  Pencil,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -102,6 +104,8 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [previewContract, setPreviewContract] = useState<Contract | null>(null);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
 
   const fetchContracts = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -140,6 +144,16 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   useEffect(() => {
     fetchContracts();
   }, [workspaceId]);
+
+  const handleRename = async (id: string) => {
+    const trimmed = renameValue.trim();
+    if (!trimmed) { toast.error("Title cannot be empty"); return; }
+    const { error } = await supabase.from("contracts").update({ title: trimmed }).eq("id", id);
+    if (error) { toast.error("Failed to rename contract"); return; }
+    setRenamingId(null);
+    fetchContracts();
+    toast.success("Contract renamed");
+  };
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("contracts").delete().eq("id", id);
@@ -507,9 +521,31 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="mb-0.5 flex flex-wrap items-start gap-2">
-                        <h4 className="min-w-0 break-words font-semibold text-foreground text-sm">
-                          {contract.title}
-                        </h4>
+                        {renamingId === contract.id ? (
+                          <form
+                            onSubmit={e => { e.preventDefault(); handleRename(contract.id); }}
+                            className="flex items-center gap-1.5 min-w-0"
+                            onClick={e => e.stopPropagation()}
+                          >
+                            <input
+                              autoFocus
+                              value={renameValue}
+                              onChange={e => setRenameValue(e.target.value)}
+                              onKeyDown={e => e.key === "Escape" && setRenamingId(null)}
+                              className="h-7 text-sm rounded-lg border border-primary/40 bg-background px-2 focus:outline-none focus:ring-1 focus:ring-primary/40 min-w-0 w-40 sm:w-52"
+                            />
+                            <button type="submit" className="h-7 px-2.5 text-xs rounded-lg bg-primary text-white hover:bg-primary/90 font-medium flex-shrink-0">
+                              Save
+                            </button>
+                            <button type="button" onClick={() => setRenamingId(null)} className="h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted flex-shrink-0">
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </form>
+                        ) : (
+                          <h4 className="min-w-0 break-words font-semibold text-foreground text-sm">
+                            {contract.title}
+                          </h4>
+                        )}
                         <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${status.bg} ${status.color}`}>
                           {status.icon}
                           {status.label}
@@ -565,6 +601,13 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                           <DropdownMenuItem onClick={() => setEditingContract(contract)} className="rounded-lg">
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => { setRenamingId(contract.id); setRenameValue(contract.title); }}
+                            className="rounded-lg"
+                          >
+                            <Pencil className="h-4 w-4 mr-2" />
+                            Rename
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleDuplicate(contract)} className="rounded-lg">
                             <Copy className="h-4 w-4 mr-2" />

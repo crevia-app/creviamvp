@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Printer, CheckCircle2, FileSignature, PenTool,
+  Printer, CheckCircle2, PenTool,
   Edit3, Save, X, Maximize2, Minimize2, Download,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -244,47 +244,6 @@ const ContractPreviewDialog = ({
   const status   = statusConfig[localContract.status] || statusConfig.draft;
   const savedPos = localContract.signature_position as SigPos | null;
 
-  // ── Signature status block (bottom of document) ───────────────────────────
-  const SignatureBlock = () => {
-    if (placementMode) return null;
-    return (
-      <div className="pt-6 border-t border-border/30 space-y-3">
-        <div className="flex items-center gap-2">
-          <FileSignature className="h-4 w-4 text-primary" />
-          <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-semibold">Signature</p>
-        </div>
-        {localContract.creator_signature ? (
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="h-12 w-28 rounded-lg border border-emerald-500/30 bg-emerald-500/5 flex items-center justify-center overflow-hidden flex-shrink-0">
-              {localContract.creator_signature.startsWith("data:image")
-                ? <img src={localContract.creator_signature} alt="sig" className="max-h-10 object-contain" />
-                : <span className="text-sm font-vollkorn italic text-foreground/70 truncate px-1">{localContract.creator_signature}</span>
-              }
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
-                <CheckCircle2 className="h-3.5 w-3.5" /> Signed
-              </p>
-              {localContract.creator_signed_at && (
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {format(new Date(localContract.creator_signed_at), "MMM d, yyyy 'at' h:mm a")}
-                </p>
-              )}
-              {savedPos && <p className="text-[11px] text-primary/60 mt-0.5">Placed on document</p>}
-            </div>
-          </div>
-        ) : (
-          <Button
-            onClick={e => { e.stopPropagation(); setShowSignatureDialog(true); }}
-            className="gap-2 rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 h-9 px-4"
-          >
-            <PenTool className="h-4 w-4" /> Sign Contract
-          </Button>
-        )}
-      </div>
-    );
-  };
-
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) { setIsFullscreen(false); setPlacementMode(null); } onOpenChange(v); }}>
       <DialogContent className={cn(
@@ -292,15 +251,31 @@ const ContractPreviewDialog = ({
         isFullscreen ? "max-w-[100vw] w-screen h-screen max-h-screen rounded-none" : "max-w-4xl max-h-[92vh] rounded-2xl"
       )}>
 
+        {/* Print stylesheet — shows only the contract text content */}
+        <style>{`
+          @media print {
+            body, body * { visibility: hidden; }
+            .crevia-print-area, .crevia-print-area * { visibility: visible; }
+            .crevia-print-area {
+              position: fixed;
+              top: 0; left: 0;
+              width: 100%;
+              padding: 40px;
+              background: white;
+              font-family: ui-monospace, monospace;
+            }
+          }
+        `}</style>
+
         {/* ── Top Bar ── */}
-        <div className="sticky top-0 z-10 bg-background border-b border-border/50 px-4 py-2.5 flex items-center justify-between gap-2">
+        <div className="print:hidden sticky top-0 z-10 bg-background border-b border-border/50 px-4 py-2.5 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <DialogTitle className="font-vollkorn text-sm sm:text-base truncate">{localContract.title}</DialogTitle>
             <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium flex-shrink-0", status.bg, status.color)}>
               {status.label}
             </span>
           </div>
-          <div className="flex items-center gap-1 flex-shrink-0 print:hidden">
+          <div className="flex items-center gap-1 flex-shrink-0">
             {!isEditingDetails && !placementMode && (
               <Button variant="ghost" size="sm"
                 onClick={() => { setIsEditingDetails(true); setEditableContent(localContract.content || ""); }}
@@ -308,6 +283,16 @@ const ContractPreviewDialog = ({
               >
                 <Edit3 className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline text-xs">Edit</span>
+              </Button>
+            )}
+            {/* Sign button — only when unsigned and not in placement/edit mode */}
+            {!isEditingDetails && !placementMode && !localContract.creator_signature && (
+              <Button variant="ghost" size="sm"
+                onClick={() => setShowSignatureDialog(true)}
+                className="gap-1 h-8 w-8 sm:w-auto sm:px-2.5 rounded-lg text-primary hover:bg-primary/10"
+              >
+                <PenTool className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline text-xs">Sign</span>
               </Button>
             )}
             {!placementMode && (
@@ -364,7 +349,6 @@ const ContractPreviewDialog = ({
                       autoFocus
                     />
                   </div>
-                  <SignatureBlock />
                 </div>
               </div>
 
@@ -403,7 +387,7 @@ const ContractPreviewDialog = ({
                   )}
 
                   {/* Regular document content -------------------------------- */}
-                  <div className="space-y-8">
+                  <div className="crevia-print-area space-y-8">
 
                     {/* Title */}
                     <div className="space-y-4">
@@ -433,12 +417,6 @@ const ContractPreviewDialog = ({
                           No content yet — tap <strong>Edit</strong> to add your contract text.
                         </div>
                       )}
-                    </div>
-
-                    <SignatureBlock />
-
-                    <div className="pt-2 border-t border-border/20 text-center">
-                      <p className="text-[10px] text-muted-foreground/50 tracking-wider">CREVIA STUDIO • {format(new Date(), "yyyy")}</p>
                     </div>
                   </div>
                   {/* End regular content ------------------------------------ */}
@@ -488,7 +466,7 @@ const ContractPreviewDialog = ({
         {/* ── Placement action bar ── */}
         {placementMode && (
           <div
-            className="shrink-0 border-t border-primary/20 bg-background/97 backdrop-blur-md px-4 py-3 flex items-center gap-3 print:hidden"
+            className="print:hidden shrink-0 border-t border-primary/20 bg-background/97 backdrop-blur-md px-4 py-3 flex items-center gap-3"
             onClick={e => e.stopPropagation()}
           >
             {/* Signature thumbnail */}
