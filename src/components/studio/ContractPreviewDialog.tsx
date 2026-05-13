@@ -205,18 +205,33 @@ const ContractPreviewDialog = ({
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
+    // pos.x / pos.y are measured from the top-left of contentAreaRef which
+    // includes 40px padding + the title block (~55px) + space-y-8 gap (32px)
+    // + "Full Agreement" label with margin (~30px) + text-box padding-top (20px).
+    // Total offset from contentAreaRef top to the first line of text ≈ 177px.
+    // Subtract both offsets so the signature sits at the same spot relative to
+    // the text content in the printed page.
+    const PAD_X = 40;   // contentAreaRef padding-left (p-10)
+    const PAD_Y = 177;  // contentAreaRef padding-top + title block height
+
     let sigHtml = "";
     if (sig && pos) {
+      const px = Math.max(0, pos.x - PAD_X);
+      const py = Math.max(0, pos.y - PAD_Y);
       const fs = Math.max(14, Math.min(pos.h * 0.40, 48));
       sigHtml = sig.startsWith("data:image")
-        ? `<img src="${sig}" style="position:absolute;left:${pos.x}px;top:${pos.y}px;width:${pos.w}px;height:${pos.h}px;object-fit:contain;" />`
-        : `<div style="position:absolute;left:${pos.x}px;top:${pos.y}px;width:${pos.w}px;height:${pos.h}px;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-style:italic;font-size:${fs}px;color:#111;">${sig}</div>`;
+        ? `<img src="${sig}" style="position:absolute;left:${px}px;top:${py}px;width:${pos.w}px;height:${pos.h}px;object-fit:contain;pointer-events:none;" />`
+        : `<div style="position:absolute;left:${px}px;top:${py}px;width:${pos.w}px;height:${pos.h}px;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-style:italic;font-size:${fs}px;color:#111;">${sig}</div>`;
     } else if (sig) {
+      // No saved position — render inline below the text
       sigHtml = sig.startsWith("data:image")
-        ? `<div style="margin-bottom:20px;"><img src="${sig}" style="max-height:72px;max-width:260px;object-fit:contain;" /></div>`
-        : `<div style="margin-bottom:20px;font-family:Georgia,serif;font-style:italic;font-size:28pt;color:#111;">${sig}</div>`;
+        ? `<div style="margin-top:24px;"><img src="${sig}" style="max-height:72px;max-width:260px;object-fit:contain;" /></div>`
+        : `<div style="margin-top:24px;font-family:Georgia,serif;font-style:italic;font-size:28pt;color:#111;">${sig}</div>`;
     }
 
+    // Content area width mirrors the dialog (max-w-4xl = 896px minus 80px padding = 816px).
+    // Keeping the same width ensures text wraps at the same points as in the UI,
+    // so the signature stays aligned with the correct line of text.
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -225,15 +240,22 @@ const ContractPreviewDialog = ({
   <style>
     @page { size: A4; margin: 0; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.8; color: #111; background: #fff; padding: 20mm; }
-    .area { position: relative; }
-    .text { white-space: pre-wrap; font-size: 11pt; line-height: 1.8; color: #111; }
+    body { background: #fff; }
+    .area {
+      position: relative;
+      width: 816px;
+      padding: 40px 40px 60px;
+      font-family: ui-monospace, monospace;
+      font-size: 10pt;
+      line-height: 1.8;
+      color: #111;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
   <div class="area">
-    ${sigHtml}
-    <div class="text">${escaped}</div>
+    ${sigHtml}${escaped}
   </div>
 </body>
 </html>`;
