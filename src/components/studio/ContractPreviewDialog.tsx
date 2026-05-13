@@ -102,7 +102,7 @@ const DraggableSig = ({ pos, signature, onChange }: DraggableSigProps) => {
         onPointerUp={onBodyUp}
       >
         {signature.startsWith("data:image") ? (
-          <img src={signature} alt="sig" className="max-w-full max-h-full object-contain p-1" draggable={false} />
+          <img src={signature} alt="sig" className="max-w-full max-h-full object-contain p-1 mix-blend-multiply dark:mix-blend-screen" draggable={false} />
         ) : (
           <span className="font-vollkorn italic text-foreground/85 truncate px-2 pointer-events-none" style={{ fontSize: fs }}>
             {signature}
@@ -152,8 +152,9 @@ const ContractPreviewDialog = ({
   const [isFullscreen, setIsFullscreen]                 = useState(false);
 
   // ref on the INNER content padding div — DraggableSig lives inside here
-  // so the signature is literally embedded in the document body
   const contentAreaRef = useRef<HTMLDivElement>(null);
+  // ref on the text content div — used to measure its exact Y offset for printing
+  const textDivRef = useRef<HTMLDivElement>(null);
 
   const { ref: docRef, download, downloading } = useDownloadPDF(
     contract ? `Contract-${contract.title?.replace(/\s+/g, "-")}` : "Contract"
@@ -205,21 +206,34 @@ const ContractPreviewDialog = ({
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
-    // Replicate the EXACT same DOM structure as the dialog so pos.x/pos.y
-    // map 1-to-1 with no arithmetic correction.
-    // Title block and label are visibility:hidden (take space, print nothing).
+    // Measure the EXACT pixel distance from contentAreaRef's top edge to the
+    // text div's top edge — this is the true spacer height we must replicate
+    // in the print so that pos.y maps to exactly the same document location.
+    const caRect   = contentAreaRef.current?.getBoundingClientRect();
+    const txtRect  = textDivRef.current?.getBoundingClientRect();
+    // D = distance from contentAreaRef top → text div top (includes padding + title + label)
+    const D = (caRect && txtRect) ? Math.round(txtRect.top - caRect.top) : 177;
+    // .cr has padding-top: 40px; the spacer sits INSIDE that padding, so:
+    //   spacer height = D - 40  (puts text div top at exactly y=D within .cr)
+    const spacerH = Math.max(0, D - 40);
+
     let sigHtml = "";
     if (sig && pos) {
       const fs = Math.max(14, Math.min(pos.h * 0.40, 48));
+      // mix-blend-mode:multiply makes white pixels invisible — works on existing
+      // white-background PNGs and on new transparent ones alike
       sigHtml = sig.startsWith("data:image")
-        ? `<img src="${sig}" style="position:absolute;left:${pos.x}px;top:${pos.y}px;width:${pos.w}px;height:${pos.h}px;object-fit:contain;" />`
+        ? `<img src="${sig}" style="position:absolute;left:${pos.x}px;top:${pos.y}px;width:${pos.w}px;height:${pos.h}px;object-fit:contain;mix-blend-mode:multiply;" />`
         : `<div style="position:absolute;left:${pos.x}px;top:${pos.y}px;width:${pos.w}px;height:${pos.h}px;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-style:italic;font-size:${fs}px;color:#111;">${sig}</div>`;
     } else if (sig) {
       sigHtml = sig.startsWith("data:image")
-        ? `<div style="margin-top:24px;"><img src="${sig}" style="max-height:72px;max-width:260px;object-fit:contain;" /></div>`
+        ? `<div style="margin-top:24px;"><img src="${sig}" style="max-height:72px;max-width:260px;object-fit:contain;mix-blend-mode:multiply;" /></div>`
         : `<div style="margin-top:24px;font-family:Georgia,serif;font-style:italic;font-size:28pt;color:#111;">${sig}</div>`;
     }
 
+    // .cr mirrors contentAreaRef: same width (832px) and same horizontal padding (40px).
+    // This keeps the text wrapping at exactly the same column widths as the dialog
+    // so the signature lands on the same word/line it was placed on.
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -229,34 +243,22 @@ const ContractPreviewDialog = ({
     @page { size: A4; margin: 0; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: white; }
-    .cr  { position: relative; padding: 40px; width: 816px; }
-    .sy8 > * + * { margin-top: 32px; }
-    .sy4 > * + * { margin-top: 16px; }
-    .title-sect { visibility: hidden; }
-    .h1  { font-size: 30px; font-weight: 700; line-height: 1.25; font-family: Georgia, serif; }
-    .hr  { height: 1px; background: #e5e7eb; }
-    .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em;
-           font-weight: 600; margin-bottom: 16px; visibility: hidden; }
-    .txt { white-space: pre-wrap; font-family: ui-monospace, monospace;
-           font-size: 14px; line-height: 1.625; color: #111; padding: 20px; }
+    .cr  { position: relative; width: 832px; padding: 40px; }
+    .sp  { height: ${spacerH}px; }
+    .txt {
+      white-space: pre-wrap;
+      font-family: ui-monospace, monospace;
+      font-size: 14px;
+      line-height: 1.625;
+      color: #111;
+      padding: 20px;
+    }
   </style>
 </head>
 <body>
   <div class="cr">
-    <div class="sy8">
-      <div class="title-sect">
-        <div class="sy4">
-          <div style="display:flex;align-items:flex-start;gap:16px;">
-            <h1 class="h1">${localContract.title}</h1>
-          </div>
-          <div class="hr"></div>
-        </div>
-      </div>
-      <div>
-        <p class="lbl">Full Agreement</p>
-        <div class="txt">${escaped}</div>
-      </div>
-    </div>
+    <div class="sp"></div>
+    <div class="txt">${escaped}</div>
     ${sigHtml}
   </div>
 </body>
@@ -478,7 +480,7 @@ const ContractPreviewDialog = ({
                     <div>
                       <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-semibold mb-4">Full Agreement</p>
                       {localContract.content ? (
-                        <div className="whitespace-pre-wrap text-sm text-foreground/80 leading-relaxed font-mono p-5 rounded-xl bg-muted/20 border border-border/20">
+                        <div ref={textDivRef} className="whitespace-pre-wrap text-sm text-foreground/80 leading-relaxed font-mono p-5 rounded-xl bg-muted/20 border border-border/20">
                           {localContract.content}
                         </div>
                       ) : (
@@ -515,7 +517,7 @@ const ContractPreviewDialog = ({
                       style={{ left: savedPos.x, top: savedPos.y, width: savedPos.w, height: savedPos.h, zIndex: 5 }}
                     >
                       {localContract.creator_signature.startsWith("data:image") ? (
-                        <img src={localContract.creator_signature} alt="Signature" className="w-full h-full object-contain" draggable={false} />
+                        <img src={localContract.creator_signature} alt="Signature" className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-screen" draggable={false} />
                       ) : (
                         <span
                           className="font-vollkorn italic text-foreground/85 flex items-center justify-center w-full h-full"
