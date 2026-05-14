@@ -158,12 +158,12 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
       )}>
 
         {/* ── Toolbar ── */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-4 py-2.5 flex items-center justify-between gap-2">
-          <DialogTitle className="font-vollkorn text-base sm:text-lg truncate min-w-0">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-3 py-2 flex items-center justify-between gap-1.5">
+          <DialogTitle className="font-vollkorn text-sm sm:text-base truncate min-w-0">
             Invoice Preview
           </DialogTitle>
 
-          <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="flex items-center gap-1 flex-shrink-0">
             {/* Theme picker */}
             <div className="relative">
               <Button
@@ -178,7 +178,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
                   style={{ background: accentColor }}
                 />
                 <Palette className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline text-xs">{currentTheme.name}</span>
+                <span className="hidden md:inline text-xs">{currentTheme.name}</span>
                 {savingColor && <span className="ml-1 h-2.5 w-2.5 rounded-full border-2 border-muted-foreground border-t-foreground animate-spin" />}
               </Button>
 
@@ -234,22 +234,18 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
             </div>
 
             {invoice.status !== "paid" && (
-              <Button variant="outline" size="sm" onClick={() => setShowSendDialog(true)} className="gap-1.5 h-8 px-2.5">
+              <Button variant="outline" size="sm" onClick={() => setShowSendDialog(true)} className="h-8 w-8 p-0" title="Send">
                 <Send className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Send</span>
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={download} disabled={downloading} className="gap-1.5 h-8 px-2.5">
+            <Button variant="outline" size="sm" onClick={download} disabled={downloading} className="h-8 w-8 p-0" title="Download">
               <Download className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{downloading ? "Saving…" : "Download"}</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => window.print()} className="gap-1.5 h-8 px-2.5">
+            <Button variant="outline" size="sm" onClick={() => window.print()} className="h-8 w-8 p-0" title="Print">
               <Printer className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Print</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setIsFullscreen(!isFullscreen)} className="gap-1.5 h-8 px-2.5">
+            <Button variant="outline" size="sm" onClick={() => setIsFullscreen(!isFullscreen)} className="h-8 w-8 p-0" title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}>
               {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
-              <span className="hidden sm:inline">{isFullscreen ? "Exit" : "Fullscreen"}</span>
             </Button>
           </div>
         </div>
@@ -261,13 +257,13 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
             {/* Accent bar */}
             <div className="h-2" style={{ background: accentColor }} />
 
-            <div className="p-8 md:p-10">
+            <div className="p-4 sm:p-8 md:p-10">
 
               {/* Header */}
-              <div className="flex justify-between items-start mb-10">
+              <div className="flex justify-between items-start mb-6 sm:mb-10">
                 <div>
-                  <h1 className="text-4xl font-bold text-gray-900 tracking-tight">INVOICE</h1>
-                  <p className="text-gray-400 mt-1 text-lg font-mono">{invoice.invoice_number}</p>
+                  <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 tracking-tight">INVOICE</h1>
+                  <p className="text-gray-400 mt-1 text-sm sm:text-lg font-mono">{invoice.invoice_number}</p>
                 </div>
                 <div className="text-right">
                   {businessSettings?.logo_url && (

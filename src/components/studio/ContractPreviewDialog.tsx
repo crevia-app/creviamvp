@@ -315,7 +315,7 @@ const ContractPreviewDialog = ({
       )}>
 
         {/* ── Top Bar ── */}
-        <div className="print:hidden sticky top-0 z-10 bg-background border-b border-border/50 px-4 py-2.5 flex items-center justify-between gap-2">
+        <div className="print:hidden sticky top-0 z-10 bg-background border-b border-border/50 px-3 py-2 flex items-center justify-between gap-1.5">
           <div className="flex items-center gap-2 min-w-0">
             <DialogTitle className="font-vollkorn text-sm sm:text-base truncate">{localContract.title}</DialogTitle>
             <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium flex-shrink-0", status.bg, status.color)}>
@@ -324,50 +324,43 @@ const ContractPreviewDialog = ({
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
             {!isEditingDetails && !placementMode && (
-              <Button variant="ghost" size="sm"
+              <Button variant="ghost" size="sm" title="Edit"
                 onClick={() => { setIsEditingDetails(true); setEditableContent(localContract.content || ""); }}
-                className="gap-1 h-8 w-8 sm:w-auto sm:px-2.5 rounded-lg"
+                className="h-8 w-8 p-0 rounded-lg"
               >
                 <Edit3 className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline text-xs">Edit</span>
               </Button>
             )}
-            {/* Sign button — only when unsigned and not in placement/edit mode */}
             {!isEditingDetails && !placementMode && !localContract.creator_signature && (
-              <Button variant="ghost" size="sm"
+              <Button variant="ghost" size="sm" title="Sign"
                 onClick={() => setShowSignatureDialog(true)}
-                className="gap-1 h-8 w-8 sm:w-auto sm:px-2.5 rounded-lg text-primary hover:bg-primary/10"
+                className="h-8 w-8 p-0 rounded-lg text-primary hover:bg-primary/10"
               >
                 <PenTool className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline text-xs">Sign</span>
               </Button>
             )}
             {!placementMode && (
               <>
-                <Button variant="ghost" size="sm" onClick={() => setShowSendDialog(true)} className="gap-1 h-8 w-8 sm:w-auto sm:px-2.5 rounded-lg">
+                <Button variant="ghost" size="sm" title="Send" onClick={() => setShowSendDialog(true)} className="h-8 w-8 p-0 rounded-lg">
                   <Send className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline text-xs">Send</span>
                 </Button>
-                <Button variant="ghost" size="sm" onClick={download} disabled={downloading} className="gap-1 h-8 w-8 sm:w-auto sm:px-2.5 rounded-lg">
+                <Button variant="ghost" size="sm" title="Download" onClick={download} disabled={downloading} className="h-8 w-8 p-0 rounded-lg">
                   <Download className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline text-xs">{downloading ? "Saving…" : "Download"}</span>
                 </Button>
-                <Button variant="ghost" size="sm" onClick={handlePrint} disabled={printing} className="gap-1 h-8 w-8 sm:w-auto sm:px-2.5 rounded-lg">
+                <Button variant="ghost" size="sm" title="Print" onClick={handlePrint} disabled={printing} className="h-8 w-8 p-0 rounded-lg">
                   <Printer className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline text-xs">{printing ? "Preparing…" : "Print"}</span>
                 </Button>
               </>
             )}
-            <Button variant="ghost" size="sm" onClick={() => setIsFullscreen(f => !f)} className="gap-1 h-8 w-8 sm:w-auto sm:px-2.5 rounded-lg">
+            <Button variant="ghost" size="sm" title={isFullscreen ? "Exit fullscreen" : "Fullscreen"} onClick={() => setIsFullscreen(f => !f)} className="h-8 w-8 p-0 rounded-lg">
               {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
-              <span className="hidden sm:inline text-xs">{isFullscreen ? "Exit" : "Full"}</span>
             </Button>
           </div>
         </div>
 
         {/* ── Scrollable body ── */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-5 md:p-8">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="p-3 sm:p-5 md:p-8">
 
             {/* ────────────── EDIT MODE ────────────── */}
             {isEditingDetails ? (
@@ -460,7 +453,7 @@ const ContractPreviewDialog = ({
                     <div>
                       <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-semibold mb-4">Full Agreement</p>
                       {localContract.content ? (
-                        <div ref={textDivRef} className="whitespace-pre-wrap text-sm text-foreground/80 leading-relaxed font-mono p-5 rounded-xl bg-muted/20 border border-border/20">
+                        <div ref={textDivRef} className="whitespace-pre-wrap break-all text-sm text-foreground/80 leading-relaxed font-mono p-4 rounded-xl bg-muted/20 border border-border/20 overflow-hidden">
                           {localContract.content}
                         </div>
                       ) : (
