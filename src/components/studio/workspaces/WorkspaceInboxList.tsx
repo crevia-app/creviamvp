@@ -130,6 +130,34 @@ const WorkspaceInboxList = ({
     return () => { supabase.removeChannel(channel); };
   }, [userId]);
 
+  // Sync DM partner avatar changes in real time
+  useEffect(() => {
+    if (!userId) return;
+    const ch = supabase
+      .channel(`profile-sync-inbox:${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles" },
+        (payload) => {
+          const updated = payload.new as any;
+          setRooms((prev) =>
+            prev.map((room) => {
+              if (!room.is_group && room.memberUserIds?.includes(updated.id)) {
+                return {
+                  ...room,
+                  dmPartnerAvatar: updated.avatar_url ?? room.dmPartnerAvatar,
+                  dmPartnerName: updated.display_name ?? room.dmPartnerName,
+                };
+              }
+              return room;
+            })
+          );
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [userId]);
+
   const fetchRooms = async () => {
     const { data: memberRooms } = await supabase
       .from("chat_room_members")

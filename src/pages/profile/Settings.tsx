@@ -81,9 +81,9 @@ const Settings = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${session.user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      // Fixed path per user so upsert overwrites cleanly and RLS folder check passes
+      const filePath = `${session.user.id}/avatar.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
@@ -95,14 +95,17 @@ const Settings = () => {
         .from('avatars')
         .getPublicUrl(filePath);
 
+      // Cache-buster so the browser doesn't serve the stale image after an overwrite
+      const bustedUrl = `${publicUrl}?t=${Date.now()}`;
+
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: publicUrl })
+        .update({ avatar_url: bustedUrl })
         .eq('id', session.user.id);
 
       if (updateError) throw updateError;
 
-      setProfile({ ...profile, avatar_url: publicUrl });
+      setProfile({ ...profile, avatar_url: bustedUrl });
       toast({ title: "Profile picture updated", description: "Your profile picture has been updated successfully" });
     } catch (error) {
       console.error('Error uploading avatar:', error);

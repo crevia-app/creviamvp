@@ -407,6 +407,62 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     };
   }, [currentUserId, selectedRoom]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Sync profile picture / display name changes for all visible users in real time
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const channel = supabase
+      .channel(`profile-sync-chat:${currentUserId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles" },
+        (payload) => {
+          const updated = payload.new as any;
+          const uid = updated.id as string;
+          const patch = {
+            display_name: updated.display_name,
+            handle: updated.handle,
+            avatar_url: updated.avatar_url,
+            user_type: updated.user_type,
+          };
+
+          // Patch rooms list member cache
+          setRooms((prev) =>
+            prev.map((room) => ({
+              ...room,
+              members: room.members?.map((m) =>
+                m.user_id === uid ? { ...m, profile: { ...m.profile, ...patch } } : m
+              ),
+            }))
+          );
+
+          // Patch selected room member cache
+          setSelectedRoom((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  members: prev.members?.map((m) =>
+                    m.user_id === uid ? { ...m, profile: { ...m.profile, ...patch } } : m
+                  ),
+                }
+              : prev
+          );
+
+          // Patch sender info on already-loaded messages
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.sender_id === uid
+                ? { ...msg, sender: { ...msg.sender, ...patch } }
+                : msg
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [currentUserId]);
+
   // Typing indicator — uses Broadcast (low-latency fire-and-forget) instead of
   // Presence so the signal appears instantly on the other side, like WhatsApp.
   useEffect(() => {
