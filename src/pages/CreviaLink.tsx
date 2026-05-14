@@ -952,6 +952,21 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
             <div className="sticky top-24">
               <p className="text-sm font-medium text-center text-muted-foreground mb-4">Live Preview</p>
               <LivePreview linkProfile={linkProfile} buttons={buttons} />
+              <div className="mt-4 flex gap-2">
+                <Button
+                  className="flex-1 bg-bronze hover:bg-bronze-dark text-white gap-1.5 text-xs h-9"
+                  onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/${linkProfile?.username}`); toast({ title: "Link copied!" }); }}
+                >
+                  <Copy className="w-3.5 h-3.5" /> Copy Link
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-1.5 text-xs h-9"
+                  onClick={() => window.open(`${window.location.origin}/${linkProfile?.username}`, "_blank")}
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> View Page
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -1172,6 +1187,21 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
               <div className="md:hidden">
                 <p className="text-sm font-medium text-center text-muted-foreground mb-4">Live Preview</p>
                 <LivePreview linkProfile={linkProfile} buttons={buttons} />
+                <div className="mt-4 flex gap-2">
+                  <Button
+                    className="flex-1 bg-bronze hover:bg-bronze-dark text-white gap-1.5 text-xs h-9"
+                    onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/${linkProfile?.username}`); toast({ title: "Link copied!" }); }}
+                  >
+                    <Copy className="w-3.5 h-3.5" /> Copy Link
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 gap-1.5 text-xs h-9"
+                    onClick={() => window.open(`${window.location.origin}/${linkProfile?.username}`, "_blank")}
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" /> View Page
+                  </Button>
+                </div>
               </div>
 
               {/* Typography Section */}
@@ -1585,6 +1615,21 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
             <div className="sticky top-8">
               <p className="text-sm font-medium text-center text-muted-foreground mb-4">Live Preview</p>
               <LivePreview linkProfile={linkProfile} buttons={buttons} />
+              <div className="mt-4 flex gap-2">
+                <Button
+                  className="flex-1 bg-bronze hover:bg-bronze-dark text-white gap-1.5 text-xs h-9"
+                  onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/${linkProfile?.username}`); toast({ title: "Link copied!" }); }}
+                >
+                  <Copy className="w-3.5 h-3.5" /> Copy Link
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-1.5 text-xs h-9"
+                  onClick={() => window.open(`${window.location.origin}/${linkProfile?.username}`, "_blank")}
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> View Page
+                </Button>
+              </div>
             </div>
           </div>
         </main>
