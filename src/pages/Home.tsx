@@ -70,23 +70,25 @@ const Home = () => {
             </ScrollReveal>
             <ScrollReveal delay={0.38}>
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Link to="/auth?mode=signup" className="w-full sm:w-auto">
+                <Link to={isLoggedIn ? "/kira" : "/auth?mode=signup"} className="w-full sm:w-auto">
                   <Button
                     size="lg"
                     className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-sm sm:text-base md:text-lg px-6 sm:px-10 py-5 sm:py-7 font-poppins font-semibold shadow-lg hover-scale"
                   >
-                    Start Free <ArrowRight className="ml-2 w-5 h-5" />
+                    {isLoggedIn ? "Open Crevia" : "Start Free"} <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
-                <Link to="/pricing" className="w-full sm:w-auto">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="w-full sm:w-auto text-sm sm:text-base md:text-lg px-6 sm:px-10 py-5 sm:py-7 font-poppins font-semibold border-2 border-bronze/30 hover:border-bronze hover:bg-bronze/10 transition-premium"
-                  >
-                    See Pricing
-                  </Button>
-                </Link>
+                {!isLoggedIn && (
+                  <Link to="/pricing" className="w-full sm:w-auto">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="w-full sm:w-auto text-sm sm:text-base md:text-lg px-6 sm:px-10 py-5 sm:py-7 font-poppins font-semibold border-2 border-bronze/30 hover:border-bronze hover:bg-bronze/10 transition-premium"
+                    >
+                      See Pricing
+                    </Button>
+                  </Link>
+                )}
               </div>
             </ScrollReveal>
           </div>
@@ -283,9 +285,9 @@ const Home = () => {
                   the invoices, contracts, link-in-bio, and AI strategy to prove it —
                   to clients, to brands, and to yourself.
                 </p>
-                <Link to="/auth?mode=signup">
+                <Link to={isLoggedIn ? "/kira" : "/auth?mode=signup"}>
                   <Button className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold mt-2">
-                    Start Free <ArrowRight className="ml-2 w-4 h-4" />
+                    {isLoggedIn ? "Open Crevia" : "Start Free"} <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </Link>
               </div>
@@ -304,9 +306,9 @@ const Home = () => {
                   and deliverables at scale? That's where Crevia comes in. One platform.
                   Zero chaos.
                 </p>
-                <Link to="/auth?mode=signup">
+                <Link to={isLoggedIn ? "/kira" : "/auth?mode=signup"}>
                   <Button className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold mt-2">
-                    Start Free <ArrowRight className="ml-2 w-4 h-4" />
+                    {isLoggedIn ? "Open Crevia" : "Start Free"} <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </Link>
               </div>
@@ -332,12 +334,12 @@ const Home = () => {
             </p>
           </ScrollReveal>
           <ScrollReveal delay={0.24} variant="scale">
-            <Link to="/auth?mode=signup" className="w-full sm:w-auto inline-block">
+            <Link to={isLoggedIn ? "/kira" : "/auth?mode=signup"} className="w-full sm:w-auto inline-block">
               <Button
                 size="lg"
                 className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-sm sm:text-base md:text-lg px-6 sm:px-10 md:px-12 py-5 sm:py-7 font-poppins font-semibold shadow-lg hover-scale"
               >
-                Own Your Story <ArrowRight className="ml-2 w-5 h-5" />
+                {isLoggedIn ? "Open Crevia" : "Own Your Story"} <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
             </Link>
           </ScrollReveal>
