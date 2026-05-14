@@ -454,7 +454,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
               <Eye className="w-5 h-5 text-bronze" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-foreground">{totalViews}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-foreground">{totalViews}</p>
           <p className="text-sm text-muted-foreground mt-1">Total Views</p>
         </Card>
         <Card className="p-5 border-border/50">
@@ -463,7 +463,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
               <MousePointer className="w-5 h-5 text-green-500" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-foreground">{totalClicks}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-foreground">{totalClicks}</p>
           <p className="text-sm text-muted-foreground mt-1">Total Clicks</p>
         </Card>
         <Card className="p-5 border-border/50 col-span-2 md:col-span-1">
@@ -472,7 +472,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
               <TrendingUp className="w-5 h-5 text-blue-500" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-foreground">{clickRate}%</p>
+          <p className="text-2xl sm:text-3xl font-bold text-foreground">{clickRate}%</p>
           <p className="text-sm text-muted-foreground mt-1">Click-Through Rate</p>
         </Card>
       </div>
@@ -485,7 +485,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
               <Link2 className="w-5 h-5 text-purple-500" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-foreground">{activeLinks}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-foreground">{activeLinks}</p>
           <p className="text-sm text-muted-foreground mt-1">Active Links</p>
         </Card>
         <Card className="p-5 border-border/50">
@@ -505,7 +505,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
       <Card className="p-6 border-border/50">
         <div className="flex items-center gap-3 mb-6">
           <BarChart3 className="w-6 h-6 text-bronze" />
-          <h3 className="font-vollkorn text-2xl font-bold">Link Performance</h3>
+          <h3 className="font-vollkorn text-xl sm:text-2xl font-bold">Link Performance</h3>
         </div>
         <div className="space-y-3">
           {buttons.length > 0 ? (
@@ -1133,7 +1133,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
           {currentTab === "buttons" && (
             <Card className="p-6 md:p-8 border-border/50">
               <div className="flex items-center justify-between mb-8">
-                <h3 className="font-vollkorn text-3xl md:text-4xl font-bold text-bronze">Links & Buttons</h3>
+                <h3 className="font-vollkorn text-xl sm:text-3xl md:text-4xl font-bold text-bronze">Links & Buttons</h3>
                 <Button onClick={() => setShowAddButton(true)} className="bg-bronze hover:bg-bronze-dark">
                   <Plus className="w-4 h-4 mr-2" />
                   Add Button

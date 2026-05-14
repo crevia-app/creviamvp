@@ -126,29 +126,45 @@ const CreviaStudio = () => {
             <ScrollBar orientation="horizontal" className="h-1.5" />
           </ScrollArea>
 
-          {/* Link sub-sections (mobile only) */}
+          {/* Link sub-sections (mobile only) — segmented control */}
           {activeTab === "link" && (
-            <div className="md:hidden mt-3 border-t border-border/40 pt-3">
-              <ScrollArea className="w-full">
-                <div className="flex items-center gap-2">
-                  {linkSections.map((section) => (
-                    <button
-                      key={section.id}
-                      type="button"
-                      onClick={() => handleLinkSectionChange(section.id)}
-                      className={cn(
-                        "inline-flex items-center justify-center rounded-lg border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors",
-                        activeLinkSection === section.id
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-background text-muted-foreground border-border hover:bg-muted hover:text-foreground"
-                      )}
-                    >
-                      {section.label}
-                    </button>
-                  ))}
-                </div>
-                <ScrollBar orientation="horizontal" className="h-1.5" />
-              </ScrollArea>
+            <div className="md:hidden mt-2 border-t border-border/40 pt-2">
+              {/* Row 1: Profile · Buttons · Appearance */}
+              <div className="flex gap-1 p-1 bg-muted/60 rounded-xl mb-1">
+                {linkSections.slice(0, 3).map((section) => (
+                  <button
+                    key={section.id}
+                    type="button"
+                    onClick={() => handleLinkSectionChange(section.id)}
+                    className={cn(
+                      "flex-1 py-1.5 rounded-lg text-[11px] font-semibold text-center transition-all duration-200 active:scale-95",
+                      activeLinkSection === section.id
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground"
+                    )}
+                  >
+                    {section.label}
+                  </button>
+                ))}
+              </div>
+              {/* Row 2: Settings · Analytics */}
+              <div className="flex gap-1 p-1 bg-muted/60 rounded-xl">
+                {linkSections.slice(3).map((section) => (
+                  <button
+                    key={section.id}
+                    type="button"
+                    onClick={() => handleLinkSectionChange(section.id)}
+                    className={cn(
+                      "flex-1 py-1.5 rounded-lg text-[11px] font-semibold text-center transition-all duration-200 active:scale-95",
+                      activeLinkSection === section.id
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground"
+                    )}
+                  >
+                    {section.label}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>

@@ -103,9 +103,9 @@ const CreateContractDialog = ({
       />
 
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 rounded-2xl">
+        <DialogContent className="w-[calc(100vw-16px)] sm:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 rounded-2xl">
           {/* Header */}
-          <div className="px-6 pt-6 pb-4 border-b border-border/50 flex-shrink-0">
+          <div className="px-4 sm:px-6 pt-5 pb-4 border-b border-border/50 flex-shrink-0">
             <DialogHeader>
               <DialogTitle className="font-vollkorn text-xl flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -117,7 +117,7 @@ const CreateContractDialog = ({
           </div>
 
           {/* Canvas */}
-          <div className="flex-1 overflow-y-auto px-6 py-5">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5">
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -129,7 +129,7 @@ const CreateContractDialog = ({
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-border/50 flex items-center justify-between bg-muted/20 flex-shrink-0">
+          <div className="px-4 sm:px-6 py-4 border-t border-border/50 flex items-center justify-between bg-muted/20 flex-shrink-0">
             <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl">
               Cancel
             </Button>

@@ -317,21 +317,21 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
         className="flex flex-col md:flex-row md:items-end justify-between gap-4"
       >
         <div>
-          <h2 className="font-vollkorn text-3xl md:text-4xl font-bold text-foreground tracking-tight">
+          <h2 className="font-vollkorn text-2xl md:text-4xl font-bold text-foreground tracking-tight">
             Contracts
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
             Professional agreements, e-signatures & document management
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full md:w-auto">
           <Button
             variant="outline"
             onClick={() => setUploadDialogOpen(true)}
-            className="gap-2 h-10 rounded-xl border-dashed hover:border-bronze/50 hover:bg-bronze/5 transition-all"
+            className="gap-2 h-10 rounded-xl border-dashed hover:border-bronze/50 hover:bg-bronze/5 transition-all flex-1 md:flex-none"
           >
             <Upload className="h-4 w-4" />
-            <span className="hidden sm:inline">Upload</span>
+            <span>Upload</span>
           </Button>
           <Button
             // onClick={() => setCreateDialogOpen(true)}
@@ -347,7 +347,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
             } 
             setCreateDialogOpen(true);
           }}
-            className="gap-2 h-10 rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
+            className="gap-2 h-10 rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30 flex-1 md:flex-none"
           >
             <Plus className="h-4 w-4" />
             New Contract
@@ -355,40 +355,29 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
         </div>
       </motion.div>
 
-      {/* Stats — Glass Morphism Cards */}
-      <motion.div 
+      {/* Stats */}
+      <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05 }}
-        className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
+        className="grid grid-cols-2 gap-3 xl:grid-cols-4"
       >
         {[
-          { label: "Total", value: stats.total, icon: <File className="h-4 w-4" />, accent: "primary" },
-          { label: "Active", value: stats.active, icon: <CheckCircle2 className="h-4 w-4" />, accent: "emerald" },
-          { label: "Pending", value: stats.pending, icon: <Clock className="h-4 w-4" />, accent: "amber" },
-          { label: "Value", value: formatCurrency(stats.totalValue, "KES"), icon: <TrendingUp className="h-4 w-4" />, accent: "blue" },
-        ].map((stat, i) => (
+          { label: "Total", value: stats.total, isCurrency: false, icon: <File className="h-4 w-4" />, iconBg: "bg-primary/10 text-primary" },
+          { label: "Active", value: stats.active, isCurrency: false, icon: <CheckCircle2 className="h-4 w-4" />, iconBg: "bg-emerald-500/10 text-emerald-500" },
+          { label: "Pending", value: stats.pending, isCurrency: false, icon: <Clock className="h-4 w-4" />, iconBg: "bg-amber-500/10 text-amber-500" },
+          { label: "Value", value: stats.totalValue, isCurrency: true, icon: <TrendingUp className="h-4 w-4" />, iconBg: "bg-blue-500/10 text-blue-500" },
+        ].map((stat) => (
           <div
             key={stat.label}
-            className="relative group p-4 rounded-2xl border border-border/50 bg-card hover:border-border transition-all overflow-hidden"
+            className="flex items-center gap-2.5 p-4 rounded-2xl border border-border/50 bg-card overflow-hidden"
           >
-            <div className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${
-              stat.accent === "primary" ? "from-primary/5 to-transparent" :
-              stat.accent === "emerald" ? "from-emerald-500/5 to-transparent" :
-              stat.accent === "amber" ? "from-amber-500/5 to-transparent" :
-              "from-blue-500/5 to-transparent"
-            }`} />
-            <div className="relative">
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-2 ${
-                stat.accent === "primary" ? "bg-primary/10 text-primary" :
-                stat.accent === "emerald" ? "bg-emerald-500/10 text-emerald-500" :
-                stat.accent === "amber" ? "bg-amber-500/10 text-amber-500" :
-                "bg-blue-500/10 text-blue-500"
-              }`}>
-                {stat.icon}
-              </div>
-              <p className={`font-bold text-foreground ${stat.label === "Value" ? "text-base md:text-lg" : "text-2xl md:text-3xl"}`}>
-                {stat.value}
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${stat.iconBg}`}>
+              {stat.icon}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xl font-bold text-foreground leading-none md:text-2xl truncate">
+                {stat.isCurrency ? formatCurrency(Number(stat.value), "KES") : stat.value}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
             </div>
@@ -397,13 +386,13 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       </motion.div>
 
       {/* Search & Filters — Unified Bar */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="flex flex-col gap-2 lg:flex-row"
+        className="flex flex-col gap-2"
       >
-        <div className="relative flex-1">
+        <div className="relative">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search contracts, clients..."
@@ -412,31 +401,33 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
             className="pl-10 h-10 rounded-xl bg-muted/50 border-0 focus:bg-background focus:ring-1 focus:ring-primary/20 transition-all"
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[130px] h-10 rounded-xl bg-muted/50 border-0">
-            <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="sent">Sent</SelectItem>
-            <SelectItem value="signed">Signed</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
-          <SelectTrigger className="w-full sm:w-[130px] h-10 rounded-xl bg-muted/50 border-0">
-            <ArrowUpDown className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="newest">Newest</SelectItem>
-            <SelectItem value="oldest">Oldest</SelectItem>
-            <SelectItem value="value">Highest Value</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="flex-1 h-10 rounded-xl bg-muted/50 border-0">
+              <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground flex-shrink-0" />
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="sent">Sent</SelectItem>
+              <SelectItem value="signed">Signed</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+            <SelectTrigger className="flex-1 h-10 rounded-xl bg-muted/50 border-0">
+              <ArrowUpDown className="h-3.5 w-3.5 mr-1.5 text-muted-foreground flex-shrink-0" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest</SelectItem>
+              <SelectItem value="oldest">Oldest</SelectItem>
+              <SelectItem value="value">Highest Value</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </motion.div>
 
       {/* Contracts List */}
@@ -510,7 +501,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                   transition={{ delay: index * 0.03 }}
                 >
                   <div
-                    className="group relative flex flex-col gap-4 rounded-2xl border border-border/50 bg-card p-4 transition-all duration-300 hover:border-primary/20 hover:shadow-md hover:shadow-primary/5 cursor-pointer xl:flex-row xl:items-center"
+                    className="group relative flex flex-col gap-3 rounded-2xl border border-border/50 bg-card p-4 transition-all duration-300 hover:border-primary/20 hover:shadow-md hover:shadow-primary/5 cursor-pointer md:flex-row md:items-center"
                     onClick={() => setPreviewContract(contract)}
                   >
                     {/* Type Icon */}
@@ -579,9 +570,9 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                     </div>
 
                     {/* Value & Actions */}
-                    <div className="flex w-full items-center justify-between gap-3 xl:w-auto xl:justify-end" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex w-full items-center justify-between gap-3 md:w-auto md:justify-end" onClick={(e) => e.stopPropagation()}>
                       {contract.value && (
-                        <div className="hidden min-w-[8rem] text-left sm:block xl:text-right">
+                        <div className="text-left md:text-right">
                           <p className="text-sm font-bold text-foreground tabular-nums">
                             {formatCurrency(Number(contract.value), contract.currency)}
                           </p>

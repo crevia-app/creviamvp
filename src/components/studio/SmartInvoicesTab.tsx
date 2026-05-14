@@ -315,7 +315,7 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
             }
             setCreateDialogOpen(true);
           }}
-          className="gap-2 bg-bronze hover:bg-bronze/90 shadow-lg shadow-bronze/20"
+          className="gap-2 bg-bronze hover:bg-bronze/90 shadow-lg shadow-bronze/20 w-full md:w-auto"
         >
           <Plus className="h-4 w-4" />
           New Invoice
@@ -328,80 +328,97 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
         <Card className="p-4 md:p-5 border-0 bg-gradient-to-br from-bronze/10 via-bronze/5 to-transparent shadow-sm">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-bronze/15">
-              <Receipt className="h-5 w-5 text-bronze" />
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-bronze/15 flex-shrink-0">
+              <Receipt className="h-4 w-4 text-bronze" />
             </div>
             <div className="min-w-0">
-              <p className="break-words text-2xl font-bold leading-none text-foreground md:text-3xl">{stats.total}</p>
-              <p className="text-xs text-muted-foreground font-medium">Total</p>
+              <p className="text-xl font-bold leading-none text-foreground md:text-2xl">{stats.total}</p>
+              <p className="text-xs text-muted-foreground font-medium mt-0.5">Total</p>
             </div>
           </div>
         </Card>
         <Card className="p-4 md:p-5 border-0 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent shadow-sm">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-emerald-500/15">
-              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-emerald-500/15 flex-shrink-0">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
             </div>
             <div className="min-w-0">
-              <p className="break-words text-2xl font-bold leading-none text-foreground md:text-3xl">{stats.paid}</p>
-              <p className="text-xs text-muted-foreground font-medium">Paid</p>
+              <p className="text-xl font-bold leading-none text-foreground md:text-2xl">{stats.paid}</p>
+              <p className="text-xs text-muted-foreground font-medium mt-0.5">Paid</p>
             </div>
           </div>
         </Card>
         <Card className="p-4 md:p-5 border-0 bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent shadow-sm">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-blue-500/15">
-              <Clock className="h-5 w-5 text-blue-500" />
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-blue-500/15 flex-shrink-0">
+              <Clock className="h-4 w-4 text-blue-500" />
             </div>
             <div className="min-w-0">
-              <p className="break-words text-2xl font-bold leading-none text-foreground md:text-3xl">{stats.pending}</p>
-              <p className="text-xs text-muted-foreground font-medium">Pending</p>
+              <p className="text-xl font-bold leading-none text-foreground md:text-2xl">{stats.pending}</p>
+              <p className="text-xs text-muted-foreground font-medium mt-0.5">Pending</p>
             </div>
           </div>
         </Card>
         <Card className="p-4 md:p-5 border-0 bg-gradient-to-br from-red-500/10 via-red-500/5 to-transparent shadow-sm">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-red-500/15">
-              <AlertCircle className="h-5 w-5 text-red-500" />
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-red-500/15 flex-shrink-0">
+              <AlertCircle className="h-4 w-4 text-red-500" />
             </div>
             <div className="min-w-0">
-              <p className="break-words text-2xl font-bold leading-none text-foreground md:text-3xl">{stats.overdue}</p>
-              <p className="text-xs text-muted-foreground font-medium">Overdue</p>
+              <p className="text-xl font-bold leading-none text-foreground md:text-2xl">{stats.overdue}</p>
+              <p className="text-xs text-muted-foreground font-medium mt-0.5">Overdue</p>
             </div>
           </div>
         </Card>
       </div>
 
       {/* Revenue Summary */}
-      <Card className="p-5 md:p-6 border-0 bg-gradient-to-r from-bronze/8 via-background to-emerald-500/8 shadow-sm">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div>
+      <Card className="border-0 bg-gradient-to-r from-bronze/8 via-background to-emerald-500/8 shadow-sm overflow-hidden">
+        {/* Mobile: each metric is a full-width row (label left, amount right) */}
+        <div className="sm:hidden divide-y divide-border/40">
+          {[
+            { icon: <DollarSign className="h-4 w-4 text-muted-foreground" />, label: "Total Revenue", value: formatCurrency(stats.totalValue, "KES"), color: "text-foreground" },
+            { icon: <TrendingUp className="h-4 w-4 text-emerald-500" />, label: "Collected", value: formatCurrency(stats.paidValue, "KES"), color: "text-emerald-500" },
+            { icon: <Clock className="h-4 w-4 text-amber-500" />, label: "Outstanding", value: formatCurrency(stats.outstandingValue, "KES"), color: "text-amber-500" },
+          ].map((item) => (
+            <div key={item.label} className="flex items-center justify-between gap-4 px-4 py-3">
+              <div className="flex items-center gap-2 min-w-0">
+                {item.icon}
+                <p className="text-sm text-muted-foreground font-medium truncate">{item.label}</p>
+              </div>
+              <p className={`text-sm font-bold tabular-nums flex-shrink-0 ${item.color}`}>{item.value}</p>
+            </div>
+          ))}
+        </div>
+        {/* Desktop: 3-column grid */}
+        <div className="hidden sm:grid grid-cols-3 divide-x divide-border/40">
+          <div className="p-5">
             <div className="flex items-center gap-2 mb-1">
               <DollarSign className="h-4 w-4 text-muted-foreground" />
               <p className="text-sm text-muted-foreground font-medium">Total Revenue</p>
             </div>
-            <p className="break-words text-2xl font-bold leading-tight text-foreground md:text-3xl">
+            <p className="text-2xl font-bold leading-tight text-foreground md:text-3xl truncate">
               {formatCurrency(stats.totalValue, "KES")}
             </p>
           </div>
-          <div>
+          <div className="p-5">
             <div className="flex items-center gap-2 mb-1">
               <TrendingUp className="h-4 w-4 text-emerald-500" />
               <p className="text-sm text-muted-foreground font-medium">Collected</p>
             </div>
-            <p className="break-words text-2xl font-bold leading-tight text-emerald-500 md:text-3xl">
+            <p className="text-2xl font-bold leading-tight text-emerald-500 md:text-3xl truncate">
               {formatCurrency(stats.paidValue, "KES")}
             </p>
           </div>
-          <div>
+          <div className="p-5">
             <div className="flex items-center gap-2 mb-1">
               <Clock className="h-4 w-4 text-amber-500" />
               <p className="text-sm text-muted-foreground font-medium">Outstanding</p>
             </div>
-            <p className="break-words text-2xl font-bold leading-tight text-amber-500 md:text-3xl">
+            <p className="text-2xl font-bold leading-tight text-amber-500 md:text-3xl truncate">
               {formatCurrency(stats.outstandingValue, "KES")}
             </p>
           </div>
@@ -409,40 +426,42 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       </Card>
 
       {/* Search, Filter & Sort */}
-      <div className="flex flex-col gap-3 lg:flex-row">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-2">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search invoices or clients..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-11"
+            className="pl-10 h-10"
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[140px] h-11">
-            <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="sent">Sent</SelectItem>
-            <SelectItem value="paid">Paid</SelectItem>
-            <SelectItem value="overdue">Overdue</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
-          <SelectTrigger className="w-full sm:w-[140px] h-11">
-            <ArrowUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="newest">Newest</SelectItem>
-            <SelectItem value="oldest">Oldest</SelectItem>
-            <SelectItem value="amount">Highest Amount</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="flex-1 h-10">
+              <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground flex-shrink-0" />
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="sent">Sent</SelectItem>
+              <SelectItem value="paid">Paid</SelectItem>
+              <SelectItem value="overdue">Overdue</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+            <SelectTrigger className="flex-1 h-10">
+              <ArrowUpDown className="h-3.5 w-3.5 mr-1.5 text-muted-foreground flex-shrink-0" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest</SelectItem>
+              <SelectItem value="oldest">Oldest</SelectItem>
+              <SelectItem value="amount">Highest Amount</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Invoices List */}
@@ -490,8 +509,8 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                 }`}
                 onClick={() => setPreviewInvoice(invoice)}
               >
-                <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-center">
-                  <div className="flex items-start gap-4 flex-1 min-w-0">
+                <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
                     <div className={`p-3 rounded-2xl flex-shrink-0 transition-colors ${
                       isOverdue ? "bg-red-100 dark:bg-red-900/20" : "bg-bronze/10 group-hover:bg-bronze/15"
                     }`}>
@@ -520,16 +539,16 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex w-full items-center justify-between gap-4 xl:w-auto xl:justify-end" onClick={(e) => e.stopPropagation()}>
-                    <div className="min-w-[8rem] text-left xl:text-right">
-                      <p className="text-lg font-bold text-foreground">
+                  <div className="flex w-full items-center justify-between gap-3 md:w-auto md:justify-end" onClick={(e) => e.stopPropagation()}>
+                    <div className="text-left md:text-right">
+                      <p className="text-base font-bold text-foreground">
                         {formatCurrency(Number(invoice.total), invoice.currency)}
                       </p>
                       <p className="text-xs text-muted-foreground">{invoice.currency}</p>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="opacity-100 transition-opacity xl:opacity-0 xl:group-hover:opacity-100">
+                        <Button variant="ghost" size="icon" className="opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
