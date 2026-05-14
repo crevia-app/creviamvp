@@ -17,6 +17,24 @@ export class ErrorBoundary extends React.Component<
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error("[Crevia] Unhandled error:", error, info.componentStack);
+
+    // Stale deployment: browser has old JS chunk URLs that no longer exist on
+    // Vercel after a new deploy. Auto-reload once to pick up the new index.html.
+    const isChunkError =
+      error.message.includes("Failed to fetch dynamically imported module") ||
+      error.message.includes("Importing a module script failed") ||
+      error.message.includes("Unable to preload CSS");
+
+    if (isChunkError) {
+      const reloadKey = "crevia_chunk_reload";
+      const last = sessionStorage.getItem(reloadKey);
+      const now = Date.now();
+      // Guard against reload loops: only auto-reload once per 10 seconds
+      if (!last || now - Number(last) > 10_000) {
+        sessionStorage.setItem(reloadKey, String(now));
+        window.location.reload();
+      }
+    }
   }
 
   render() {
