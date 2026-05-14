@@ -64,19 +64,16 @@ serve(async (req) => {
       });
     }
 
+    // Service role client — bypasses RLS for all queries
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Verify requesting user owns this contract
-    const userClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } },
-    );
-    const { data: { user } } = await userClient.auth.getUser();
-    if (!user) {
+    // Verify the JWT and get the calling user — pass token directly (reliable in Deno)
+    const jwt = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...cors, "Content-Type": "application/json" },
       });

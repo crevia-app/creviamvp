@@ -59,7 +59,16 @@ export function SendDocumentDialog({
       const { error, data } = await supabase.functions.invoke(fnName, {
         body: { [bodyKey]: documentId, note: note.trim() || undefined },
       });
-      if (error) throw error;
+
+      if (error) {
+        // FunctionsHttpError wraps the real message in .context (a Response object)
+        let msg = error.message;
+        try {
+          const body = await (error as any).context?.json?.();
+          if (body?.error) msg = body.error;
+        } catch {}
+        throw new Error(msg);
+      }
       if (data?.error) throw new Error(data.error);
 
       toast.success(`${type === "invoice" ? "Invoice" : "Contract"} sent!`, {
