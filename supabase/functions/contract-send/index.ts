@@ -70,11 +70,13 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Decode user ID from JWT payload (sub claim = Supabase user UUID)
+    // Decode user ID from JWT payload — JWT uses base64url, fix padding/chars before atob
     const jwt = authHeader.replace("Bearer ", "");
     let userId: string;
     try {
-      const payload = JSON.parse(atob(jwt.split(".")[1]));
+      const b64 = jwt.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+      const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+      const payload = JSON.parse(atob(padded));
       if (!payload?.sub) throw new Error("no sub");
       userId = payload.sub;
     } catch {
