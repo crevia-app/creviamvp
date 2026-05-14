@@ -340,7 +340,7 @@ const PublicProfile = () => {
           <button
             onClick={async () => {
               const { data: { session } } = await supabase.auth.getSession();
-              navigate(session ? "/crevia-link" : "/auth");
+              navigate(session ? "/studio" : "/auth");
             }}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm transition-all duration-200 hover:scale-105 hover:shadow-lg"
             style={{ background: "linear-gradient(135deg, #c9a96e, #b8864e)", color: "#fff", boxShadow: "0 2px 12px rgba(201,169,110,0.35)" }}
