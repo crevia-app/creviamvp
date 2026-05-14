@@ -70,25 +70,35 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Verify the JWT and get the calling user — pass token directly (reliable in Deno)
+    // Decode user ID from JWT payload (sub claim = Supabase user UUID)
     const jwt = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
-    if (userError || !user) {
+    let userId: string;
+    try {
+      const payload = JSON.parse(atob(jwt.split(".")[1]));
+      if (!payload?.sub) throw new Error("no sub");
+      userId = payload.sub;
+    } catch {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...cors, "Content-Type": "application/json" },
       });
     }
 
+    // Fetch contract by ID (service role bypasses RLS), then verify ownership
     const { data: contract, error: conErr } = await supabase
       .from("contracts")
       .select("*")
       .eq("id", contract_id)
-      .eq("user_id", user.id)
       .single();
 
     if (conErr || !contract) {
       return new Response(JSON.stringify({ error: "Contract not found" }), {
         status: 404, headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
+    if (contract.user_id !== userId) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403, headers: { ...cors, "Content-Type": "application/json" },
       });
     }
 
@@ -100,8 +110,8 @@ serve(async (req) => {
 
     // Fetch sender profile + business settings
     const [{ data: profile }, { data: biz }] = await Promise.all([
-      supabase.from("profiles").select("display_name, email").eq("id", user.id).single(),
-      supabase.from("business_settings").select("*").eq("user_id", user.id).maybeSingle(),
+      supabase.from("profiles").select("display_name, email").eq("id", userId).single(),
+      supabase.from("business_settings").select("*").eq("user_id", userId).maybeSingle(),
     ]);
 
     const senderName = biz?.business_name || profile?.display_name || "Crevia User";

@@ -70,26 +70,35 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Verify the JWT and get the calling user — pass token directly (reliable in Deno)
+    // Decode user ID from JWT payload (sub claim = Supabase user UUID)
     const jwt = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
-    if (userError || !user) {
+    let userId: string;
+    try {
+      const payload = JSON.parse(atob(jwt.split(".")[1]));
+      if (!payload?.sub) throw new Error("no sub");
+      userId = payload.sub;
+    } catch {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...cors, "Content-Type": "application/json" },
       });
     }
 
-    // Fetch invoice
+    // Fetch invoice by ID (service role bypasses RLS), then verify ownership
     const { data: invoice, error: invErr } = await supabase
       .from("invoices")
       .select("*")
       .eq("id", invoice_id)
-      .eq("user_id", user.id)
       .single();
 
     if (invErr || !invoice) {
       return new Response(JSON.stringify({ error: "Invoice not found" }), {
         status: 404, headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
+    if (invoice.user_id !== userId) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403, headers: { ...cors, "Content-Type": "application/json" },
       });
     }
 
@@ -110,14 +119,14 @@ serve(async (req) => {
     const { data: biz } = await supabase
       .from("business_settings")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .maybeSingle();
 
     // Fetch sender profile
     const { data: profile } = await supabase
       .from("profiles")
       .select("display_name, email")
-      .eq("id", user.id)
+      .eq("id", userId)
       .single();
 
     const senderName = biz?.business_name || profile?.display_name || "Crevia User";
