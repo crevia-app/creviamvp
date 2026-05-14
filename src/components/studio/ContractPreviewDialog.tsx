@@ -344,12 +344,10 @@ const ContractPreviewDialog = ({
             )}
             {!placementMode && (
               <>
-                {localContract.status !== "signed" && localContract.status !== "completed" && (
-                  <Button variant="ghost" size="sm" onClick={() => setShowSendDialog(true)} className="gap-1 h-8 w-8 sm:w-auto sm:px-2.5 rounded-lg">
-                    <Send className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline text-xs">Send</span>
-                  </Button>
-                )}
+                <Button variant="ghost" size="sm" onClick={() => setShowSendDialog(true)} className="gap-1 h-8 w-8 sm:w-auto sm:px-2.5 rounded-lg">
+                  <Send className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline text-xs">Send</span>
+                </Button>
                 <Button variant="ghost" size="sm" onClick={download} disabled={downloading} className="gap-1 h-8 w-8 sm:w-auto sm:px-2.5 rounded-lg">
                   <Download className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline text-xs">{downloading ? "Saving…" : "Download"}</span>
