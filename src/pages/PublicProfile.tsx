@@ -335,6 +335,22 @@ const PublicProfile = () => {
           </div>
         )}
 
+        {/* Get Crevia Link CTA */}
+        <div className="text-center mt-10 pb-4">
+          <button
+            onClick={async () => {
+              const { data: { session } } = await supabase.auth.getSession();
+              navigate(session ? "/crevia-link" : "/auth");
+            }}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm transition-all duration-200 hover:scale-105 hover:shadow-lg"
+            style={{ background: "linear-gradient(135deg, #c9a96e, #b8864e)", color: "#fff", boxShadow: "0 2px 12px rgba(201,169,110,0.35)" }}
+          >
+            <Sparkles className="w-4 h-4" />
+            Get your Crevia Link
+          </button>
+          <p className="text-xs mt-2 opacity-40 font-poppins">Powered by Crevia</p>
+        </div>
+
       </div>
     </div>
   );
