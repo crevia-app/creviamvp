@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowRight, Sparkles, Zap } from "lucide-react";
+import { BackButton } from "@/components/BackButton";
 import HeroPattern from "@/components/HeroPattern";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -132,6 +133,9 @@ const Pricing = () => {
       {/* Hero */}
       <section className="relative pt-28 md:pt-36 pb-8 md:pb-12 px-4 md:px-6 overflow-hidden">
         <HeroPattern />
+        <div className="container mx-auto max-w-5xl relative z-10 mb-4">
+          <BackButton fallback="/" />
+        </div>
         <div className="container mx-auto max-w-5xl text-center relative z-10">
           <ScrollReveal>
             <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase mb-4">

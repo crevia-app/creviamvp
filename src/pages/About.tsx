@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Calendar } from "lucide-react";
+import { BackButton } from "@/components/BackButton";
 import HeroPattern from "@/components/HeroPattern";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
@@ -37,6 +38,11 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
       {/* ═══════════════ HERO ═══════════════ */}
       <section className="relative pt-28 md:pt-36 pb-16 md:pb-20 px-4 md:px-6 overflow-hidden">
+        {!isEmbedded && (
+          <div className="container mx-auto max-w-4xl relative z-10 mb-4">
+            <BackButton fallback="/" />
+          </div>
+        )}
         <HeroPattern />
         <div className="container mx-auto max-w-4xl text-center relative z-10">
           <ScrollReveal>

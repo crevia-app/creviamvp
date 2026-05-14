@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Instagram, Linkedin, Youtube, Mail, Globe, CheckCircle2, Sparkles } from "lucide-react";
 import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
+import { BackButton } from "@/components/BackButton";
 
 const PublicProfile = () => {
   const { username } = useParams();
@@ -252,6 +253,9 @@ const PublicProfile = () => {
       {isCustomImage && <div className="absolute inset-0 bg-black/50" />}
       {bgExtras.overlayStyle && <div className="absolute inset-0" style={bgExtras.overlayStyle} />}
       {bgExtras.className && <div className={`absolute inset-0 ${bgExtras.className}`} />}
+      <div className="absolute top-4 left-4 z-20">
+        <BackButton fallback="/" className="text-white/70 hover:text-white drop-shadow" />
+      </div>
       <div className={`${getPageWidth()} ${layoutClass} ${fadeAnimation ? 'animate-fade-in' : ''} relative z-10`}>
         {/* Profile Header */}
         <div className="text-center mb-8">
