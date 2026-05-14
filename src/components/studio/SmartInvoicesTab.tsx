@@ -57,6 +57,7 @@ interface Invoice {
   total: number;
   currency: string;
   created_at: string;
+  accent_color: string | null;
 }
 
 const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
