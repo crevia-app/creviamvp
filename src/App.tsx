@@ -21,6 +21,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 // Eagerly loaded — tiny or always needed immediately
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 import MFAVerify from "./components/auth/MFAVerify";
 
@@ -118,6 +119,7 @@ function AppContent() {
           {/* Public routes */}
           <Route path="/" element={<PublicPageWrapper><Home /></PublicPageWrapper>} />
           <Route path="/auth" element={<PublicPageWrapper><Auth /></PublicPageWrapper>} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/reset-password" element={<PublicPageWrapper><ResetPassword /></PublicPageWrapper>} />
           <Route path="/pricing" element={<PublicPageWrapper><Pricing /></PublicPageWrapper>} />
           <Route path="/about" element={<PublicPageWrapper><About /></PublicPageWrapper>} />

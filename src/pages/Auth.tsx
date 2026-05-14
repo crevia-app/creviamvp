@@ -194,7 +194,7 @@ const Auth = () => {
           email: email.trim(),
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth`,
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
             data: {
               user_type: 'creator',
             },
@@ -342,27 +342,89 @@ const Auth = () => {
 
   if (emailConfirmPending) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center p-4 md:p-6">
-        <Card className="w-full max-w-md p-6 md:p-8 mx-4 animate-fade-in text-center">
-          <div className="mb-6">
-            <img src="/crevia-logo.png" alt="Crevia Logo" className="w-10 h-10 mx-auto mb-4" />
-            <h1 className="font-vollkorn text-2xl font-bold mb-2">Confirm your email</h1>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              An email was sent to<br />
-              <span className="font-semibold text-foreground">{pendingEmail}</span>
-            </p>
+      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center p-6 relative overflow-hidden">
+        {/* Subtle dot grid */}
+        <div className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: "radial-gradient(circle, #B07D3A 1px, transparent 1px)",
+            backgroundSize: "32px 32px",
+          }}
+        />
+        {/* Bronze glow top */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-bronze/8 rounded-full blur-3xl" />
+
+        <div className="relative z-10 w-full max-w-sm animate-fade-in">
+          {/* Logo */}
+          <div className="flex items-center justify-center gap-2.5 mb-10">
+            <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9" />
+            <span className="font-vollkorn text-2xl font-bold text-white">Crevia</span>
           </div>
-          <p className="text-sm text-muted-foreground mb-6">
-            Kindly click the link in the email to confirm your account and get access to Kira. Check your spam folder if you don't see it.
+
+          {/* Card */}
+          <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-8 text-center backdrop-blur-sm">
+            {/* Icon */}
+            <div className="w-16 h-16 rounded-2xl bg-bronze/15 border border-bronze/25 flex items-center justify-center mx-auto mb-6">
+              <svg className="w-7 h-7 text-bronze" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+              </svg>
+            </div>
+
+            <h1 className="font-vollkorn text-2xl font-bold text-white mb-2">
+              Check your inbox
+            </h1>
+            <p className="text-white/50 text-sm font-poppins mb-1">
+              We sent a confirmation link to
+            </p>
+            <p className="text-bronze font-semibold font-poppins text-sm mb-6 truncate">
+              {pendingEmail}
+            </p>
+
+            {/* Steps */}
+            <div className="space-y-3 mb-8 text-left">
+              {[
+                { n: "1", label: "Open the email from Crevia" },
+                { n: "2", label: "Click the confirmation link" },
+                { n: "3", label: "You're in — the app opens automatically" },
+              ].map(({ n, label }) => (
+                <div key={n} className="flex items-center gap-3">
+                  <span className="w-6 h-6 rounded-full bg-bronze/20 border border-bronze/30 flex items-center justify-center flex-shrink-0 text-xs font-bold text-bronze font-poppins">
+                    {n}
+                  </span>
+                  <span className="text-sm text-white/60 font-poppins">{label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Open Gmail shortcut */}
+            <a
+              href="https://mail.google.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-bronze hover:bg-bronze-dark transition-colors text-white font-poppins font-semibold text-sm mb-4"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 010 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/>
+              </svg>
+              Open Gmail
+            </a>
+
+            <p className="text-white/30 text-xs font-poppins mb-4">
+              Didn't get it? Check your spam folder.
+            </p>
+
+            <button
+              onClick={handleResendConfirmation}
+              disabled={isResendingConfirm}
+              className="text-bronze/70 hover:text-bronze text-xs font-poppins underline underline-offset-2 transition-colors disabled:opacity-40"
+            >
+              {isResendingConfirm ? "Sending..." : "Resend confirmation link"}
+            </button>
+          </div>
+
+          <p className="text-center text-white/20 text-xs font-poppins mt-8">
+            © {new Date().getFullYear()} Crevia. All rights reserved.
           </p>
-          <Button
-            className="w-full h-12 bg-bronze hover:bg-bronze-dark font-semibold"
-            onClick={handleResendConfirmation}
-            disabled={isResendingConfirm}
-          >
-            {isResendingConfirm ? "Sending..." : "Resend confirmation link"}
-          </Button>
-        </Card>
+        </div>
       </div>
     );
   }
