@@ -48,6 +48,7 @@ const Pricing          = lazy(() => import("./pages/Pricing"));
 const About            = lazy(() => import("./pages/About"));
 const PrivacyPolicy    = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService   = lazy(() => import("./pages/TermsOfService"));
+const CookiePolicy     = lazy(() => import("./pages/CookiePolicy"));
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -126,6 +127,7 @@ function AppContent() {
           <Route path="/app/about" element={<AppLayout><About isEmbedded /></AppLayout>} />
           <Route path="/privacy-policy" element={<AppLayout><PrivacyPolicy /></AppLayout>} />
           <Route path="/terms-of-service" element={<AppLayout><TermsOfService /></AppLayout>} />
+          <Route path="/cookie-policy" element={<AppLayout><CookiePolicy /></AppLayout>} />
           <Route path="/user-type-selection" element={<Navigate to="/auth" replace />} />
           <Route path="/signup/creator" element={<Navigate to="/auth?mode=signup" replace />} />
           <Route path="/signup/brand" element={<Navigate to="/auth?mode=signup" replace />} />
