@@ -314,9 +314,11 @@ serve(async (req) => {
     });
 
     if (!emailRes.ok) {
-      const err = await emailRes.text();
-      console.error("Resend error:", err);
-      return new Response(JSON.stringify({ error: "Failed to send email" }), {
+      const errBody = await emailRes.text();
+      console.error("Resend error:", errBody);
+      let resendMsg = "Failed to send email";
+      try { resendMsg = JSON.parse(errBody)?.message || resendMsg; } catch {}
+      return new Response(JSON.stringify({ error: resendMsg }), {
         status: 500, headers: { ...cors, "Content-Type": "application/json" },
       });
     }
