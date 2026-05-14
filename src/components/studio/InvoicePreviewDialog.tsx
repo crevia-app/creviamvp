@@ -10,6 +10,7 @@ import {
 import { Printer, Send, CheckCircle2, Clock, AlertCircle, Maximize2, Minimize2, Download, Lock, Palette } from "lucide-react";
 import { useDownloadPDF } from "@/hooks/use-download-pdf";
 import { useSubscription } from "@/hooks/use-subscription";
+import { SendDocumentDialog } from "@/components/studio/SendDocumentDialog";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -50,7 +51,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
   const [profile, setProfile]                 = useState<any>(null);
   const [businessSettings, setBusinessSettings] = useState<any>(null);
   const [isFullscreen, setIsFullscreen]       = useState(false);
-  const [sending, setSending]                 = useState(false);
+  const [showSendDialog, setShowSendDialog]   = useState(false);
   const [accentColor, setAccentColor]         = useState(DEFAULT_COLOR);
   const [savingColor, setSavingColor]         = useState(false);
   const [showPalette, setShowPalette]         = useState(false);
@@ -124,27 +125,6 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
       currency: invoice?.currency || "KES",
     }).format(amount);
 
-  const handleSend = async () => {
-    if (!invoice) return;
-    if (!invoice.client_email) {
-      toast.error("No client email", { description: "Add a client email address before sending." });
-      return;
-    }
-    setSending(true);
-    try {
-      const { error, data } = await supabase.functions.invoke("invoice-send", {
-        body: { invoice_id: invoice.id },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      toast.success("Invoice sent!", { description: `Sent to ${invoice.client_email}` });
-      onOpenChange(false);
-    } catch (err: any) {
-      toast.error("Failed to send invoice", { description: err.message });
-    } finally {
-      setSending(false);
-    }
-  };
 
   if (!invoice) return null;
 
@@ -168,6 +148,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
   const currentTheme = INVOICE_THEMES.find((t) => t.hex === accentColor) || INVOICE_THEMES[0];
 
   return (
+  <>
     <Dialog open={open} onOpenChange={(v) => { if (!v) { setIsFullscreen(false); setShowPalette(false); } onOpenChange(v); }}>
       <DialogContent className={cn(
         "overflow-y-auto p-0 transition-all duration-300",
@@ -252,10 +233,10 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
               )}
             </div>
 
-            {invoice.status === "draft" && (
-              <Button variant="outline" size="sm" onClick={handleSend} disabled={sending} className="gap-1.5 h-8 px-2.5">
+            {invoice.status !== "paid" && (
+              <Button variant="outline" size="sm" onClick={() => setShowSendDialog(true)} className="gap-1.5 h-8 px-2.5">
                 <Send className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{sending ? "Sending…" : "Send"}</span>
+                <span className="hidden sm:inline">Send</span>
               </Button>
             )}
             <Button variant="outline" size="sm" onClick={download} disabled={downloading} className="gap-1.5 h-8 px-2.5">
@@ -427,6 +408,19 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
         </div>
       </DialogContent>
     </Dialog>
+
+    {invoice && (
+      <SendDocumentDialog
+        open={showSendDialog}
+        onOpenChange={setShowSendDialog}
+        type="invoice"
+        documentId={invoice.id}
+        defaultEmail={invoice.client_email || ""}
+        documentLabel={`Invoice ${invoice.invoice_number} · ${invoice.client_name}`}
+        onSent={() => onOpenChange(false)}
+      />
+    )}
+  </>
   );
 };
 

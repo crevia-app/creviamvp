@@ -25,7 +25,11 @@ export function useDownloadPDF(filename: string) {
       });
 
       pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
-      pdf.save(`${filename}.pdf`);
+
+      // Open in a new tab — works on iOS Safari, Android, and desktop.
+      // The browser's native PDF viewer lets users save/share from there.
+      const blobUrl = pdf.output("bloburl");
+      window.open(blobUrl, "_blank");
     } finally {
       setDownloading(false);
     }

@@ -9,12 +9,13 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import {
   Printer, CheckCircle2, PenTool,
-  Edit3, Save, X, Maximize2, Minimize2, Download,
+  Edit3, Save, X, Maximize2, Minimize2, Download, Send,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import ESignatureDialog from "./ESignatureDialog";
+import { SendDocumentDialog } from "@/components/studio/SendDocumentDialog";
 import { useDownloadPDF } from "@/hooks/use-download-pdf";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -151,6 +152,7 @@ const ContractPreviewDialog = ({
   const [savingDetails, setSavingDetails]               = useState(false);
   const [isFullscreen, setIsFullscreen]                 = useState(false);
   const [printing, setPrinting]                         = useState(false);
+  const [showSendDialog, setShowSendDialog]             = useState(false);
 
   // ref on the INNER content padding div — DraggableSig lives inside here
   const contentAreaRef = useRef<HTMLDivElement>(null);
@@ -305,6 +307,7 @@ const ContractPreviewDialog = ({
   const savedPos = localContract.signature_position as SigPos | null;
 
   return (
+  <>
     <Dialog open={open} onOpenChange={v => { if (!v) { setIsFullscreen(false); setPlacementMode(null); } onOpenChange(v); }}>
       <DialogContent className={cn(
         "overflow-hidden flex flex-col p-0 gap-0 transition-all duration-300",
@@ -341,6 +344,12 @@ const ContractPreviewDialog = ({
             )}
             {!placementMode && (
               <>
+                {localContract.status !== "signed" && localContract.status !== "completed" && (
+                  <Button variant="ghost" size="sm" onClick={() => setShowSendDialog(true)} className="gap-1 h-8 w-8 sm:w-auto sm:px-2.5 rounded-lg">
+                    <Send className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline text-xs">Send</span>
+                  </Button>
+                )}
                 <Button variant="ghost" size="sm" onClick={download} disabled={downloading} className="gap-1 h-8 w-8 sm:w-auto sm:px-2.5 rounded-lg">
                   <Download className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline text-xs">{downloading ? "Saving…" : "Download"}</span>
@@ -560,6 +569,17 @@ const ContractPreviewDialog = ({
         />
       </DialogContent>
     </Dialog>
+
+    <SendDocumentDialog
+      open={showSendDialog}
+      onOpenChange={setShowSendDialog}
+      type="contract"
+      documentId={localContract.id}
+      defaultEmail={localContract.client_email || ""}
+      documentLabel={localContract.title}
+      onSent={() => onOpenChange(false)}
+    />
+  </>
   );
 };
 
