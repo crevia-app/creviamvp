@@ -12,28 +12,25 @@ const AuthCallback = () => {
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    // Supabase Auth JS automatically exchanges the token in the URL hash.
-    // We just listen for the resulting session.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (session) {
-          setStatus("success");
-          // Brief success state so the user sees the confirmation, then go to app
-          setTimeout(() => navigate("/kira", { replace: true }), 1200);
-        }
-      }
-    );
-
-    // Fallback: if there's an error in the URL hash (e.g. expired link)
+    // Check for errors in the URL before anything else (hash or query string)
     const hash = window.location.hash;
-    if (hash.includes("error=")) {
-      const params = new URLSearchParams(hash.replace("#", "?"));
-      const desc = params.get("error_description") || "The confirmation link is invalid or has expired.";
-      setErrorMsg(decodeURIComponent(desc.replace(/\+/g, " ")));
+    const searchParams = new URLSearchParams(window.location.search);
+
+    const hashError = hash.includes("error=")
+      ? new URLSearchParams(hash.replace("#", "?")).get("error_description")
+      : null;
+    const queryError = searchParams.has("error")
+      ? searchParams.get("error_description")
+      : null;
+    const rawError = hashError || queryError;
+
+    if (rawError) {
+      setErrorMsg(decodeURIComponent(rawError.replace(/\+/g, " ")));
       setStatus("error");
+      return;
     }
 
-    // Also check if session already exists (e.g. link clicked twice)
+    // If session already exists (link clicked twice, or page refreshed after success)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setStatus("success");
@@ -41,7 +38,33 @@ const AuthCallback = () => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Supabase SDK automatically exchanges the token/code in the URL.
+    // Listen for the resulting session.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (session) {
+          setStatus("success");
+          setTimeout(() => navigate("/kira", { replace: true }), 1200);
+        }
+      }
+    );
+
+    // Safety net: if nothing resolves in 8 seconds, show a helpful error
+    // instead of leaving the user stuck on "Verifying…" forever (e.g. page refresh).
+    const timeout = setTimeout(() => {
+      setStatus((prev) => {
+        if (prev === "verifying") {
+          setErrorMsg("This link has expired or has already been used. Please sign in again.");
+          return "error";
+        }
+        return prev;
+      });
+    }, 8000);
+
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   return (

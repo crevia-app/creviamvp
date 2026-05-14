@@ -35,6 +35,7 @@ const Auth = () => {
   const [emailConfirmPending, setEmailConfirmPending] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
   const [isResendingConfirm, setIsResendingConfirm] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [resetStep, setResetStep] = useState<1 | 2 | 3>(1);
   const [resetOtpCode, setResetOtpCode] = useState("");
   const [resetNewPassword, setResetNewPassword] = useState("");
@@ -44,6 +45,13 @@ const Auth = () => {
   const inPasswordResetFlow = useRef(false);
   // True when we landed here from a Google OAuth redirect — hide the form while Supabase exchanges the code.
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(hasOAuthCallback);
+
+  // Countdown timer for resend cooldown
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const id = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(id);
+  }, [resendCooldown]);
 
   const validatePassword = (pwd: string): string[] => {
     const errors: string[] = [];
@@ -90,16 +98,18 @@ const Auth = () => {
   }, [navigate, searchParams]);
 
   const handleResendConfirmation = async () => {
+    if (resendCooldown > 0) return;
     setIsResendingConfirm(true);
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: pendingEmail,
-      options: { emailRedirectTo: `${window.location.origin}/auth` },
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     });
     setIsResendingConfirm(false);
     if (error) {
       toast({ title: "Couldn't resend", description: error.message, variant: "destructive" });
     } else {
+      setResendCooldown(60);
       toast({ title: "Email resent", description: "A new confirmation link has been sent to your inbox." });
     }
   };
@@ -119,7 +129,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth`,
+          redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account',
@@ -414,10 +424,14 @@ const Auth = () => {
 
             <button
               onClick={handleResendConfirmation}
-              disabled={isResendingConfirm}
-              className="text-bronze/70 hover:text-bronze text-xs font-poppins underline underline-offset-2 transition-colors disabled:opacity-40"
+              disabled={isResendingConfirm || resendCooldown > 0}
+              className="text-bronze/70 hover:text-bronze text-xs font-poppins underline underline-offset-2 transition-colors disabled:opacity-40 disabled:no-underline"
             >
-              {isResendingConfirm ? "Sending..." : "Resend confirmation link"}
+              {isResendingConfirm
+                ? "Sending..."
+                : resendCooldown > 0
+                ? `Resend in ${resendCooldown}s`
+                : "Resend confirmation link"}
             </button>
           </div>
 
@@ -611,7 +625,7 @@ const Auth = () => {
         <p className="text-center mt-6 text-sm text-muted-foreground">
           {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
           <button
-            onClick={() => { setIsSignup((v) => !v); setTermsAccepted(false); }}
+            onClick={() => { setIsSignup((v) => !v); setTermsAccepted(false); setPassword(""); setPasswordErrors([]); }}
             className="text-bronze hover:text-bronze-dark font-semibold bronze-underline"
           >
             {isSignup ? "Log In" : "Sign Up"}
@@ -637,6 +651,7 @@ const Auth = () => {
                     id="reset-email"
                     type="email"
                     placeholder="you@example.com"
+                    autoComplete="email"
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
                     required
