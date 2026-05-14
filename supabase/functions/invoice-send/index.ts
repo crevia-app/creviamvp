@@ -320,9 +320,8 @@ serve(async (req) => {
         user_id: clientProfile.id,
         type: "invoice_received",
         title: `Invoice from ${senderName}`,
-        message: `You have received invoice ${invoice.invoice_number} for ${formatCurrency(invoice.total, currency)}.`,
+        body: `You have received invoice ${invoice.invoice_number} for ${formatCurrency(invoice.total, currency)}.`,
         data: { invoice_id, link: "/received" },
-        read: false,
       });
     }
 

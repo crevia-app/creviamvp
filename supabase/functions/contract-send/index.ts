@@ -275,9 +275,8 @@ serve(async (req) => {
         user_id: clientProfile.id,
         type: "contract_received",
         title: `Contract from ${senderName}`,
-        message: `You have received a contract: "${contract.title}". Review and sign it on Crevia.`,
+        body: `You have received a contract: "${contract.title}". Review and sign it on Crevia.`,
         data: { contract_id, link: "/received" },
-        read: false,
       });
     }
 
