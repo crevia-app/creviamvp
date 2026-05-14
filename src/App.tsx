@@ -13,6 +13,7 @@ import { RecoveryPasswordModal } from "@/components/auth/RecoveryPasswordModal";
 import { SetRecoveryPasswordDialog } from "@/components/auth/SetRecoveryPasswordDialog";
 import ScrollToTop from "./components/ScrollToTop";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { CookieConsent } from "./components/CookieConsent";
 import AppLayout from "./components/navigation/AppLayout";
 import PublicPageWrapper from "./components/PublicPageWrapper";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -95,6 +96,7 @@ function AppContent() {
   return (
     <>
       <ScrollToTop />
+      <CookieConsent />
 
       {/* Non-dismissible: shown on a new device when a v2 backup exists */}
       <RecoveryPasswordModal
