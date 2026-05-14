@@ -98,7 +98,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
   const fetchBusinessSettings = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      const { data } = await supabase.from("business_settings").select("*").eq("user_id", session.user.id).single();
+      const { data } = await supabase.from("business_settings").select("*").eq("user_id", session.user.id).maybeSingle();
       setBusinessSettings(data);
     }
   };

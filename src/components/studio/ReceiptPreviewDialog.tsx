@@ -78,7 +78,7 @@ const ReceiptPreviewDialog = ({
         .from("business_settings")
         .select("*")
         .eq("user_id", session.user.id)
-        .single();
+        .maybeSingle();
       setBusinessSettings(data);
     }
   };

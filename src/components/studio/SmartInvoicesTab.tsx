@@ -140,7 +140,7 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       .from("business_settings")
       .select("business_name, business_email, business_phone, business_address, logo_url, tax_id, default_currency, default_tax_rate, default_payment_terms")
       .eq("user_id", session.user.id)
-      .single();
+      .maybeSingle();
     if (data) setBusinessSettings(data as any);
   };
 

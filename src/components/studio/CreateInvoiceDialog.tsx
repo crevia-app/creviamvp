@@ -150,7 +150,7 @@ const CreateInvoiceDialog = ({
         .from("business_settings")
         .select("default_currency, default_payment_terms")
         .eq("user_id", session.user.id)
-        .single();
+        .maybeSingle();
 
       if (cancelled || !bs) return;
       if (bs.default_currency) setCurrency(bs.default_currency);

@@ -110,12 +110,12 @@ serve(async (req) => {
       .eq("invoice_id", invoice_id)
       .order("created_at");
 
-    // Fetch sender business settings
+    // Fetch sender business settings (may not exist yet — use maybeSingle)
     const { data: biz } = await supabase
       .from("business_settings")
       .select("*")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     // Fetch sender profile
     const { data: profile } = await supabase
