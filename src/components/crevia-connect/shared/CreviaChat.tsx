@@ -178,6 +178,16 @@ interface CreiaChatProps {
   onBack?: () => void;
 }
 
+// Generates a unique, consistent hue-based color for each user (WhatsApp-style)
+const avatarStyle = (seed: string): React.CSSProperties => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash) % 360;
+  return { background: `hsl(${hue},55%,65%)`, color: `hsl(${hue},55%,22%)` };
+};
+
 const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {}) => {
   const [currentUserId, setCurrentUserId] = useState("");
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
@@ -1566,11 +1576,19 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                     >
                       <div className="flex items-center gap-3">
                         <div className="relative flex-shrink-0">
-                          <div className="h-11 w-11 rounded-full bg-bronze/20 flex items-center justify-center text-sm font-semibold text-bronze overflow-hidden">
+                          <div
+                            className="h-11 w-11 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden"
+                            style={room.is_group ? { background: "hsl(36,60%,65%)", color: "hsl(36,60%,22%)" } : avatarStyle(room.members?.find(m => m.user_id !== currentUserId)?.user_id || displayName)}
+                          >
                             {room.is_group ? (
                               <Users className="h-5 w-5" />
                             ) : avatar ? (
-                              <img src={avatar} alt="" className="h-11 w-11 rounded-full object-cover" />
+                              <img
+                                src={avatar}
+                                alt=""
+                                className="h-11 w-11 rounded-full object-cover"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                              />
                             ) : (
                               initial
                             )}
@@ -1652,13 +1670,23 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                         ? selectedRoom.members?.find((m) => m.user_id !== currentUserId)
                         : undefined;
                       const isOtherOnline = otherMember ? onlineUserIds.has(otherMember.user_id) : false;
+                      const avatarSeed = otherMember?.user_id || getRoomDisplayName(selectedRoom);
+                      const avatarUrl = getRoomAvatar(selectedRoom);
                       return (
-                        <div className="relative h-9 w-9 flex-shrink-0">
-                          <div className="h-9 w-9 rounded-full bg-bronze/20 flex items-center justify-center text-sm font-semibold text-bronze overflow-hidden">
+                        <div className="relative h-10 w-10 flex-shrink-0">
+                          <div
+                            className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden"
+                            style={selectedRoom.is_group ? { background: "hsl(36,60%,65%)", color: "hsl(36,60%,22%)" } : avatarStyle(avatarSeed)}
+                          >
                             {selectedRoom.is_group ? (
                               <Users className="h-4 w-4" />
-                            ) : getRoomAvatar(selectedRoom) ? (
-                              <img src={getRoomAvatar(selectedRoom)!} alt="" className="h-9 w-9 rounded-full object-cover" />
+                            ) : avatarUrl ? (
+                              <img
+                                src={avatarUrl}
+                                alt=""
+                                className="h-10 w-10 rounded-full object-cover"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                              />
                             ) : (
                               getRoomInitial(selectedRoom)
                             )}
@@ -1824,9 +1852,17 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                             {/* Avatar for group chats — only show on last in sequence */}
                             {!isMine && selectedRoom.is_group && (
                               isLastInSeq ? (
-                                <div className="w-7 h-7 rounded-full bg-bronze/20 flex items-center justify-center text-[10px] font-semibold text-bronze mr-2 mt-1 flex-shrink-0 overflow-hidden">
+                                <div
+                                  className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold mr-2 mt-1 flex-shrink-0 overflow-hidden"
+                                  style={avatarStyle(msg.sender_id)}
+                                >
                                   {msg.sender?.avatar_url ? (
-                                    <img src={msg.sender.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover" />
+                                    <img
+                                      src={msg.sender.avatar_url}
+                                      alt=""
+                                      className="w-7 h-7 rounded-full object-cover"
+                                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                    />
                                   ) : (
                                     msg.sender?.display_name?.[0]?.toUpperCase() || "U"
                                   )}
@@ -2650,18 +2686,29 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
 
                 {/* Avatar + name */}
                 <div className="flex flex-col items-center gap-3">
-                  <div className="h-20 w-20 rounded-full bg-bronze/20 flex items-center justify-center overflow-hidden">
-                    {(() => {
-                      const other = selectedRoom.members?.find((m) => m.user_id !== currentUserId);
-                      return selectedRoom.is_group ? (
-                        <Users className="h-8 w-8 text-bronze" />
-                      ) : other?.profile?.avatar_url ? (
-                        <img src={other.profile.avatar_url} alt="" className="h-20 w-20 rounded-full object-cover" />
-                      ) : (
-                        <span className="text-2xl font-bold text-bronze">{getRoomInitial(selectedRoom)}</span>
-                      );
-                    })()}
-                  </div>
+                  {(() => {
+                    const other = selectedRoom.members?.find((m) => m.user_id !== currentUserId);
+                    const seed = other?.user_id || getRoomDisplayName(selectedRoom);
+                    return (
+                      <div
+                        className="h-20 w-20 rounded-full flex items-center justify-center overflow-hidden"
+                        style={selectedRoom.is_group ? { background: "hsl(36,60%,65%)", color: "hsl(36,60%,22%)" } : avatarStyle(seed)}
+                      >
+                        {selectedRoom.is_group ? (
+                          <Users className="h-8 w-8" />
+                        ) : other?.profile?.avatar_url ? (
+                          <img
+                            src={other.profile.avatar_url}
+                            alt=""
+                            className="h-20 w-20 rounded-full object-cover"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                          />
+                        ) : (
+                          <span className="text-2xl font-bold">{getRoomInitial(selectedRoom)}</span>
+                        )}
+                      </div>
+                    );
+                  })()}
                   <div className="text-center">
                     <p className="font-bold text-lg leading-tight">{getRoomDisplayName(selectedRoom)}</p>
                     {!selectedRoom.is_group && (() => {
@@ -2749,9 +2796,17 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                     <div className="space-y-1">
                       {selectedRoom.members.map((member) => (
                         <div key={member.user_id} className="flex items-center gap-3 p-2 rounded-lg">
-                          <div className="h-8 w-8 rounded-full bg-bronze/10 flex items-center justify-center text-xs font-semibold overflow-hidden flex-shrink-0">
+                          <div
+                            className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold overflow-hidden flex-shrink-0"
+                            style={avatarStyle(member.user_id)}
+                          >
                             {member.profile?.avatar_url ? (
-                              <img src={member.profile.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                              <img
+                                src={member.profile.avatar_url}
+                                alt=""
+                                className="h-8 w-8 rounded-full object-cover"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                              />
                             ) : (
                               member.profile?.display_name?.[0]?.toUpperCase() || "U"
                             )}

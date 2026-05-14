@@ -30,6 +30,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+
+const avatarStyle = (seed: string): React.CSSProperties => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash) % 360;
+  return { background: `hsl(${hue},55%,65%)`, color: `hsl(${hue},55%,22%)` };
+};
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
@@ -585,17 +594,19 @@ const WorkspaceInboxList = ({
                           className="flex-1 text-left p-2.5 min-w-0"
                         >
                           <div className="flex items-center gap-2.5">
-                            <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            <div
+                              className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden font-bold text-[13px]"
+                              style={avatarStyle(room.memberUserIds?.find(id => id !== userId) || name)}
+                            >
                               {room.dmPartnerAvatar ? (
                                 <img
                                   src={room.dmPartnerAvatar}
                                   alt={name}
                                   className="w-full h-full object-cover"
+                                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                                 />
                               ) : (
-                                <span className="text-[13px] font-semibold text-muted-foreground/70">
-                                  {initial}
-                                </span>
+                                initial
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
@@ -762,17 +773,19 @@ const WorkspaceInboxList = ({
                       disabled={!!startingDM}
                       className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted transition-all duration-150 text-left disabled:opacity-60"
                     >
-                      <div className="w-9 h-9 rounded-full bg-bronze/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      <div
+                        className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden font-bold text-[13px]"
+                        style={avatarStyle(user.id)}
+                      >
                         {user.avatar_url ? (
                           <img
                             src={user.avatar_url}
                             alt={name}
                             className="w-full h-full object-cover rounded-full"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                           />
                         ) : (
-                          <span className="text-[13px] font-semibold text-bronze/70">
-                            {initial}
-                          </span>
+                          initial
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
