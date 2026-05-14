@@ -64,47 +64,29 @@ serve(async (req) => {
       });
     }
 
-    // Service role client — bypasses RLS for all queries
-    const supabase = createClient(
+    // User-scoped client: anon key + caller's JWT so PostgREST uses auth.uid() for RLS
+    const userClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+
+    // Admin client: service role for writes that cross user boundaries (notifications, status)
+    const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Decode user ID from JWT payload — JWT uses base64url, fix padding/chars before atob
-    const jwt = authHeader.replace("Bearer ", "");
-    let userId: string;
-    try {
-      const b64 = jwt.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-      const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
-      const payload = JSON.parse(atob(padded));
-      if (!payload?.sub) throw new Error("no sub");
-      userId = payload.sub;
-    } catch {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...cors, "Content-Type": "application/json" },
-      });
-    }
-
-    console.log("[invoice-send] userId:", userId, "invoice_id:", invoice_id);
-
-    // Fetch invoice by ID using service role (bypasses RLS), then verify ownership
-    const { data: invoice, error: invErr } = await supabase
+    // Fetch invoice as the authenticated user — RLS ensures they can only see their own
+    const { data: invoice, error: invErr } = await userClient
       .from("invoices")
       .select("*")
       .eq("id", invoice_id)
       .single();
 
-    console.log("[invoice-send] invoice found:", !!invoice, "err:", invErr?.message, "owner match:", invoice?.user_id === userId);
-
     if (invErr || !invoice) {
       return new Response(JSON.stringify({ error: "Invoice not found" }), {
         status: 404, headers: { ...cors, "Content-Type": "application/json" },
-      });
-    }
-
-    if (invoice.user_id !== userId) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403, headers: { ...cors, "Content-Type": "application/json" },
       });
     }
 
@@ -115,25 +97,11 @@ serve(async (req) => {
     }
 
     // Fetch line items
-    const { data: items } = await supabase
-      .from("invoice_items")
-      .select("*")
-      .eq("invoice_id", invoice_id)
-      .order("created_at");
-
-    // Fetch sender business settings (may not exist yet — use maybeSingle)
-    const { data: biz } = await supabase
-      .from("business_settings")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    // Fetch sender profile
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("display_name, email")
-      .eq("id", userId)
-      .single();
+    const [{ data: items }, { data: biz }, { data: profile }] = await Promise.all([
+      userClient.from("invoice_items").select("*").eq("invoice_id", invoice_id).order("created_at"),
+      userClient.from("business_settings").select("*").maybeSingle(),
+      userClient.from("profiles").select("display_name, email").single(),
+    ]);
 
     const senderName = biz?.business_name || profile?.display_name || "Crevia User";
     const senderEmail = biz?.business_email || profile?.email || "";
@@ -335,20 +303,20 @@ serve(async (req) => {
     }
 
     // Mark invoice as sent
-    await supabase
+    await adminClient
       .from("invoices")
       .update({ status: "sent" })
       .eq("id", invoice_id);
 
     // Notify client if they have a Crevia account
-    const { data: clientProfile } = await supabase
+    const { data: clientProfile } = await adminClient
       .from("profiles")
       .select("id")
       .eq("email", invoice.client_email)
       .maybeSingle();
 
     if (clientProfile?.id) {
-      await supabase.from("notifications").insert({
+      await adminClient.from("notifications").insert({
         user_id: clientProfile.id,
         type: "invoice_received",
         title: `Invoice from ${senderName}`,

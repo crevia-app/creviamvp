@@ -64,29 +64,21 @@ serve(async (req) => {
       });
     }
 
-    // Service role client — bypasses RLS for all queries
-    const supabase = createClient(
+    // User-scoped client: anon key + caller's JWT so PostgREST uses auth.uid() for RLS
+    const userClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+
+    // Admin client: service role for writes that cross user boundaries
+    const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Decode user ID from JWT payload — JWT uses base64url, fix padding/chars before atob
-    const jwt = authHeader.replace("Bearer ", "");
-    let userId: string;
-    try {
-      const b64 = jwt.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-      const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
-      const payload = JSON.parse(atob(padded));
-      if (!payload?.sub) throw new Error("no sub");
-      userId = payload.sub;
-    } catch {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...cors, "Content-Type": "application/json" },
-      });
-    }
-
-    // Fetch contract by ID (service role bypasses RLS), then verify ownership
-    const { data: contract, error: conErr } = await supabase
+    // Fetch contract as the authenticated user — RLS ensures they can only see their own
+    const { data: contract, error: conErr } = await userClient
       .from("contracts")
       .select("*")
       .eq("id", contract_id)
@@ -98,12 +90,6 @@ serve(async (req) => {
       });
     }
 
-    if (contract.user_id !== userId) {
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
-        status: 403, headers: { ...cors, "Content-Type": "application/json" },
-      });
-    }
-
     if (!contract.client_email) {
       return new Response(JSON.stringify({ error: "No client email on this contract" }), {
         status: 400, headers: { ...cors, "Content-Type": "application/json" },
@@ -112,8 +98,8 @@ serve(async (req) => {
 
     // Fetch sender profile + business settings
     const [{ data: profile }, { data: biz }] = await Promise.all([
-      supabase.from("profiles").select("display_name, email").eq("id", userId).single(),
-      supabase.from("business_settings").select("*").eq("user_id", userId).maybeSingle(),
+      userClient.from("profiles").select("display_name, email").single(),
+      userClient.from("business_settings").select("*").maybeSingle(),
     ]);
 
     const senderName = biz?.business_name || profile?.display_name || "Crevia User";
@@ -272,20 +258,20 @@ serve(async (req) => {
     }
 
     // Mark contract as sent
-    await supabase
+    await adminClient
       .from("contracts")
       .update({ status: "sent" })
       .eq("id", contract_id);
 
     // Notify client if they have a Crevia account
-    const { data: clientProfile } = await supabase
+    const { data: clientProfile } = await adminClient
       .from("profiles")
       .select("id")
       .eq("email", contract.client_email)
       .maybeSingle();
 
     if (clientProfile?.id) {
-      await supabase.from("notifications").insert({
+      await adminClient.from("notifications").insert({
         user_id: clientProfile.id,
         type: "contract_received",
         title: `Contract from ${senderName}`,
