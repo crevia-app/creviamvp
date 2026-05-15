@@ -76,7 +76,7 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
             to="/dashboard"
             className="flex items-center gap-2 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:opacity-80"
           >
-            <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 md:w-11 md:h-11" />
+            <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 md:w-11 md:h-11 rounded-full ring-1 ring-white/10" />
             <span className="font-vollkorn text-xl md:text-2xl font-bold text-white">Crevia</span>
             <span className="text-[8px] font-poppins font-medium text-bronze bg-bronze/10 px-1 py-0.5 rounded-full uppercase tracking-wider">
               beta

@@ -366,7 +366,7 @@ const Auth = () => {
         <div className="relative z-10 w-full max-w-sm animate-fade-in">
           {/* Logo */}
           <div className="flex items-center justify-center gap-2.5 mb-10">
-            <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9" />
+            <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-full ring-1 ring-white/10" />
             <span className="font-vollkorn text-2xl font-bold text-white">Crevia</span>
           </div>
 
@@ -451,7 +451,7 @@ const Auth = () => {
             <img 
               src="/crevia-logo.png" 
               alt="Crevia Logo" 
-              className="w-8 h-8 md:w-10 md:h-10 transition-transform duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-105" 
+              className="w-8 h-8 md:w-10 md:h-10 rounded-full ring-1 ring-border transition-transform duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-105"
             />
             <span className="font-vollkorn text-2xl md:text-3xl font-bold">Crevia</span>
           </Link>

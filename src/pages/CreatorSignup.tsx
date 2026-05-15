@@ -133,7 +133,7 @@ const CreatorSignup = () => {
             <img 
               src="/crevia-logo.png" 
               alt="Crevia Logo" 
-              className="w-10 h-10" 
+              className="w-10 h-10 rounded-full ring-1 ring-border"
             />
             <span className="font-vollkorn text-3xl font-bold">Crevia</span>
           </Link>
