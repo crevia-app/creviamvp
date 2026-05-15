@@ -1266,13 +1266,16 @@ const Admin = () => {
         sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
         {/* Brand */}
-        <div className="flex items-center gap-3 px-5 py-5 border-b border-white/[0.05]">
-          <img src="/crevia-logo.png" alt="Crevia" className="w-8 h-8 rounded-full ring-1 ring-white/10 flex-shrink-0" />
+        <button
+          onClick={() => { setSection("overview"); setSidebarOpen(false); }}
+          className="flex items-center gap-3 px-5 py-5 border-b border-white/[0.05] w-full text-left hover:bg-white/[0.03] transition-colors group"
+        >
+          <img src="/crevia-logo.png" alt="Crevia" className="w-8 h-8 rounded-full ring-1 ring-white/10 flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
           <div>
             <p className="font-vollkorn text-white font-bold text-sm leading-none">Crevia</p>
             <p className="text-[9px] text-white/25 font-poppins uppercase tracking-[0.12em] mt-0.5">Admin</p>
           </div>
-        </div>
+        </button>
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
@@ -1324,10 +1327,10 @@ const Admin = () => {
             >
               <Menu className="w-5 h-5" />
             </Button>
-            {/* Logo — always visible, click to go back to Overview */}
+            {/* Logo — mobile only (desktop sidebar always shows it) */}
             <button
               onClick={() => setSection("overview")}
-              className="flex items-center gap-2 group"
+              className="flex items-center gap-2 group lg:hidden"
             >
               <img
                 src="/crevia-logo.png"
@@ -1336,7 +1339,7 @@ const Admin = () => {
               />
               <span className="font-vollkorn text-sm font-bold text-white/70 group-hover:text-white transition-colors hidden sm:block">Crevia</span>
             </button>
-            <div className="w-px h-4 bg-white/10 hidden sm:block" />
+            <div className="w-px h-4 bg-white/10 hidden sm:block lg:hidden" />
             <div>
               <h1 className="text-sm font-semibold text-white leading-none">{NAV.find(n => n.id === section)?.label}</h1>
             </div>
