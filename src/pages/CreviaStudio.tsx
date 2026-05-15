@@ -1,6 +1,4 @@
-import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Link2, MessageSquare, Sparkles, Settings, Receipt, FileSignature } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -15,27 +13,11 @@ import StudioWorkspacesHub from "@/components/studio/workspaces/StudioWorkspaces
 
 const CreviaStudio = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [loading, setLoading] = useState(true);
 
   const activeTab = searchParams.get("tab") || "link";
   const activeLinkSection = searchParams.get("section") || "profile";
   const activeWorkspace = searchParams.get("workspace") || undefined;
   const activeRoomId = searchParams.get("roomId") || undefined;
-
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("user_type")
-          .eq("id", session.user.id)
-          .single();
-      }
-      setLoading(false);
-    };
-    checkUser();
-  }, []);
 
   // Strict order: Link → Workspace → Invoice → Contracts → Settings
   const studioTabs = [
@@ -61,14 +43,6 @@ const CreviaStudio = () => {
   const handleLinkSectionChange = (sectionId: string) => {
     setSearchParams({ tab: "link", section: sectionId });
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground font-poppins">Loading...</div>
-      </div>
-    );
-  }
 
   const isChatTab = activeTab === "chat";
 

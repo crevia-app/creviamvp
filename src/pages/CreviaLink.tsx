@@ -67,21 +67,15 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    if (!session) { setLoading(false); return; }
 
-    const { data: userProfile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
+    // Run both queries in parallel instead of sequentially
+    const [{ data: userProfile }, { data: existingLink }] = await Promise.all([
+      supabase.from("profiles").select("*").eq("id", session.user.id).single(),
+      supabase.from("link_profiles").select("*").eq("user_id", session.user.id).single(),
+    ]);
 
     setProfile(userProfile);
-
-    const { data: existingLink } = await supabase
-      .from("link_profiles")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .single();
 
     if (existingLink) {
       setLinkProfile(existingLink);
@@ -97,7 +91,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
         })
         .select()
         .single();
-      
       setLinkProfile(newLink);
     }
 
