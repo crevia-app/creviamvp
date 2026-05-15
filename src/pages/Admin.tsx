@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  CartesianGrid, BarChart, Bar, Cell,
 } from "recharts";
 import {
-  LayoutDashboard, Users, CreditCard, FileText, MessageSquare, Settings,
-  Shield, CheckCircle, XCircle, Search, Receipt, FileCheck,
-  Menu, LogOut, Loader2, TrendingUp,
+  LayoutDashboard, Users, CreditCard, FileText, MessageSquare,
+  Settings, Shield, CheckCircle, XCircle, Search, Menu,
+  LogOut, Loader2, X, Receipt, FileCheck, ChevronRight,
+  TrendingUp, TrendingDown, Minus, ArrowUpRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,223 +18,550 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const KES = (n: number) =>
+  n >= 1_000_000
+    ? `KES ${(n / 1_000_000).toFixed(1)}M`
+    : n >= 1_000
+    ? `KES ${(n / 1_000).toFixed(1)}K`
+    : `KES ${Math.round(n).toLocaleString()}`;
+
+const fmt = (n: number) =>
+  n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M`
+  : n >= 1_000   ? `${(n / 1_000).toFixed(1)}K`
+  : String(n);
+
 type Section = "overview" | "users" | "billing" | "documents" | "support" | "settings";
-
-const NAV: { id: Section; label: string; icon: React.ElementType }[] = [
-  { id: "overview",  label: "Overview",  icon: LayoutDashboard },
-  { id: "users",     label: "Users",     icon: Users },
-  { id: "billing",   label: "Billing",   icon: CreditCard },
-  { id: "documents", label: "Documents", icon: FileText },
-  { id: "support",   label: "Support",   icon: MessageSquare },
-  { id: "settings",  label: "Settings",  icon: Settings },
-];
-
-const KES = (n: number) => "KES " + Math.round(n).toLocaleString();
 
 const planChip = (plan: string | null) => cn(
   "text-[10px] font-semibold px-2 py-0.5 rounded-full",
-  plan === "pro"        ? "bg-emerald-500/20 text-emerald-400"
-  : plan === "enterprise" ? "bg-purple-500/20 text-purple-400"
-  : "bg-white/[0.08] text-white/30"
+  plan === "pro"          ? "bg-emerald-500/20 text-emerald-400"
+  : plan === "enterprise" ? "bg-violet-500/20  text-violet-400"
+  : "bg-white/[0.07] text-white/30"
 );
 
 const statusChip = (s: string) => cn(
   "text-[10px] font-semibold px-2 py-0.5 rounded-full",
-  s === "paid" || s === "signed" || s === "completed" || s === "success" ? "bg-emerald-500/20 text-emerald-400"
-  : s === "overdue" || s === "cancelled" || s === "failed"               ? "bg-red-500/20 text-red-400"
-  : s === "sent"                                                          ? "bg-blue-500/20 text-blue-400"
+  s === "paid" || s === "signed" || s === "completed" || s === "success"
+    ? "bg-emerald-500/20 text-emerald-400"
+  : s === "overdue" || s === "cancelled" || s === "failed"
+    ? "bg-red-500/20 text-red-400"
+  : s === "sent"
+    ? "bg-blue-500/20 text-blue-400"
   : "bg-amber-500/20 text-amber-400"
 );
 
-const Avatar = ({ url, name }: { url?: string | null; name?: string | null }) => (
-  <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-xs text-white/60 flex-shrink-0 overflow-hidden">
+// ─── Shared UI ────────────────────────────────────────────────────────────────
+const Av = ({ url, name, size = "9" }: { url?: string | null; name?: string | null; size?: string }) => (
+  <div className={`w-${size} h-${size} rounded-full bg-white/10 flex items-center justify-center text-xs text-white/60 flex-shrink-0 overflow-hidden ring-1 ring-white/5`}>
     {url
       ? <img src={url} alt="" className="w-full h-full object-cover" />
-      : <span>{(name?.[0] || "?").toUpperCase()}</span>}
+      : <span className="font-semibold">{(name?.[0] || "?").toUpperCase()}</span>}
   </div>
 );
 
-const SectionLoader = () => (
+const Spin = () => (
   <div className="flex items-center justify-center h-64">
     <Loader2 className="w-5 h-5 text-bronze animate-spin" />
   </div>
 );
 
+const Trend = ({ pct }: { pct: number | null }) => {
+  if (pct === null) return <span className="text-[10px] text-white/20 font-medium">—</span>;
+  if (pct === 0)    return (
+    <span className="flex items-center gap-0.5 text-[10px] text-white/30 font-semibold">
+      <Minus className="w-3 h-3" /> 0%
+    </span>
+  );
+  const up = pct > 0;
+  return (
+    <span className={cn("flex items-center gap-0.5 text-[10px] font-semibold",
+      up ? "text-emerald-400" : "text-red-400")}>
+      {up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+      {up ? "+" : ""}{pct}%
+    </span>
+  );
+};
+
+// Custom tooltip shared across charts
+const ChartTooltip = ({ active, payload, label, prefix = "" }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-[#1c1c1c] border border-white/10 rounded-xl px-3 py-2 shadow-xl">
+      <p className="text-xs text-white/40 mb-1">{label}</p>
+      <p className="text-sm font-bold text-white">{prefix}{payload[0]?.value?.toLocaleString()}</p>
+    </div>
+  );
+};
+
+// ─── Stat Card ────────────────────────────────────────────────────────────────
+const StatCard = ({
+  label, value, sub, trend, icon: Icon, accent,
+}: {
+  label: string; value: string; sub?: string; trend?: number | null;
+  icon: React.ElementType; accent: string;
+}) => (
+  <div className="group relative bg-[#111111] border border-white/[0.06] rounded-2xl p-5 hover:border-white/[0.12] hover:bg-[#161616] transition-all duration-200 overflow-hidden">
+    {/* Subtle accent glow top-right */}
+    <div className={cn("absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl opacity-20", accent)} />
+    <div className="relative flex items-start justify-between mb-3">
+      <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center", accent, "bg-opacity-15")}>
+        <Icon className="w-4 h-4 text-white/70" />
+      </div>
+      {trend !== undefined && <Trend pct={trend ?? null} />}
+    </div>
+    <p className="text-2xl md:text-3xl font-bold text-white tabular-nums tracking-tight leading-none mb-1">{value}</p>
+    <p className="text-xs text-white/40 font-medium">{label}</p>
+    {sub && <p className="text-[11px] text-white/20 mt-1">{sub}</p>}
+  </div>
+);
+
 // ─── Overview ─────────────────────────────────────────────────────────────────
 const OverviewSection = () => {
-  const [stats, setStats] = useState({ total: 0, free: 0, pro: 0, enterprise: 0, invoices: 0, contracts: 0 });
-  const [mrr, setMrr] = useState(0);
-  const [chart, setChart] = useState<{ month: string; users: number }[]>([]);
-  const [recent, setRecent] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<{
+    total: number; free: number; pro: number; enterprise: number;
+    invoices: number; contracts: number;
+    mrr: number; arr: number;
+    userTrend: number | null; mrrTrend: number | null;
+    mrrChart: { month: string; mrr: number }[];
+    userChart: { month: string; users: number }[];
+    planChart: { plan: string; count: number; pct: number }[];
+    recent: any[];
+  } | null>(null);
 
   useEffect(() => { load(); }, []);
 
   const load = async () => {
     const [{ data: profiles }, { count: inv }, { count: con }] = await Promise.all([
-      supabase.from("profiles").select("id, display_name, handle, subscription_plan, created_at, avatar_url").order("created_at", { ascending: false }),
+      supabase.from("profiles")
+        .select("id, display_name, handle, subscription_plan, created_at, avatar_url")
+        .order("created_at", { ascending: false }),
       supabase.from("invoices").select("id", { count: "exact", head: true }),
       supabase.from("contracts").select("id", { count: "exact", head: true }),
     ]);
 
     const p = profiles ?? [];
-    const pro  = p.filter(u => u.subscription_plan === "pro").length;
-    const ent  = p.filter(u => u.subscription_plan === "enterprise").length;
+    const pro = p.filter(u => u.subscription_plan === "pro").length;
+    const ent = p.filter(u => u.subscription_plan === "enterprise").length;
     const free = p.length - pro - ent;
+    const mrr = pro * 1500 + ent * 5000;
+    const arr = mrr * 12;
 
-    setStats({ total: p.length, free, pro, enterprise: ent, invoices: inv ?? 0, contracts: con ?? 0 });
-    setMrr(pro * 1500 + ent * 5000);
-    setRecent(p.slice(0, 8));
-    setChart(
-      Array.from({ length: 6 }, (_, i) => {
-        const d = subMonths(new Date(), 5 - i);
-        const s = startOfMonth(d).toISOString();
-        const e = endOfMonth(d).toISOString();
-        return { month: format(d, "MMM"), users: p.filter(u => u.created_at && u.created_at >= s && u.created_at <= e).length };
-      })
-    );
-    setLoading(false);
+    // Trends — compare vs last month
+    const now = new Date();
+    const thisMonthStart = startOfMonth(now).toISOString();
+    const lastMonthStart = startOfMonth(subMonths(now, 1)).toISOString();
+    const lastMonthEnd   = endOfMonth(subMonths(now, 1)).toISOString();
+
+    const thisMonthUsers = p.filter(u => u.created_at && u.created_at >= thisMonthStart).length;
+    const lastMonthUsers = p.filter(u => u.created_at && u.created_at >= lastMonthStart && u.created_at <= lastMonthEnd).length;
+    const userTrend = lastMonthUsers > 0 ? Math.round(((thisMonthUsers - lastMonthUsers) / lastMonthUsers) * 100) : null;
+
+    const prevPro = p.filter(u => u.subscription_plan === "pro" && u.created_at && u.created_at <= lastMonthEnd).length;
+    const prevEnt = p.filter(u => u.subscription_plan === "enterprise" && u.created_at && u.created_at <= lastMonthEnd).length;
+    const prevMrr = prevPro * 1500 + prevEnt * 5000;
+    const mrrTrend = prevMrr > 0 ? Math.round(((mrr - prevMrr) / prevMrr) * 100) : null;
+
+    // MRR chart — cumulative by month (how MRR grew over time)
+    const mrrChart = Array.from({ length: 6 }, (_, i) => {
+      const d = subMonths(now, 5 - i);
+      const end = endOfMonth(d).toISOString();
+      const mPro = p.filter(u => u.subscription_plan === "pro" && u.created_at && u.created_at <= end).length;
+      const mEnt = p.filter(u => u.subscription_plan === "enterprise" && u.created_at && u.created_at <= end).length;
+      return { month: format(d, "MMM"), mrr: mPro * 1500 + mEnt * 5000 };
+    });
+
+    // User growth chart — new signups per month
+    const userChart = Array.from({ length: 6 }, (_, i) => {
+      const d = subMonths(now, 5 - i);
+      const s = startOfMonth(d).toISOString();
+      const e = endOfMonth(d).toISOString();
+      return { month: format(d, "MMM"), users: p.filter(u => u.created_at && u.created_at >= s && u.created_at <= e).length };
+    });
+
+    // Plan breakdown
+    const planChart = [
+      { plan: "Free",       count: free, pct: p.length ? Math.round((free / p.length) * 100) : 0 },
+      { plan: "Pro",        count: pro,  pct: p.length ? Math.round((pro  / p.length) * 100) : 0 },
+      { plan: "Enterprise", count: ent,  pct: p.length ? Math.round((ent  / p.length) * 100) : 0 },
+    ];
+
+    setData({ total: p.length, free, pro, enterprise: ent, invoices: inv ?? 0, contracts: con ?? 0, mrr, arr, userTrend, mrrTrend, mrrChart, userChart, planChart, recent: p.slice(0, 6) });
   };
 
-  if (loading) return <SectionLoader />;
+  if (!data) return <Spin />;
+
+  const { total, pro, enterprise, free, invoices, contracts, mrr, arr, userTrend, mrrTrend, mrrChart, userChart, planChart, recent } = data;
 
   return (
-    <div className="p-4 md:p-6 space-y-5">
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-3">
-        {[
-          { label: "Total Users",  value: String(stats.total),   sub: `${stats.free} free · ${stats.pro} pro · ${stats.enterprise} ent`,  color: "text-white" },
-          { label: "MRR",          value: KES(mrr),              sub: `ARR ${KES(mrr * 12)}`,                                              color: "text-bronze" },
-          { label: "Invoices",     value: String(stats.invoices), sub: "total generated",                                                  color: "text-blue-400" },
-          { label: "Contracts",    value: String(stats.contracts), sub: "total generated",                                                 color: "text-violet-400" },
-        ].map(c => (
-          <div key={c.label} className="bg-[#1a1a1a] rounded-2xl p-4 border border-white/5">
-            <p className="text-xs text-white/40 mb-1">{c.label}</p>
-            <p className={`text-2xl font-bold font-poppins ${c.color}`}>{c.value}</p>
-            <p className="text-xs text-white/25 mt-1">{c.sub}</p>
-          </div>
-        ))}
+    <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
+
+      {/* ── Top Stat Cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <StatCard
+          label="Total Users" value={fmt(total)} sub={`${free} free · ${pro} pro · ${enterprise} ent`}
+          trend={userTrend} icon={Users} accent="bg-blue-500"
+        />
+        <StatCard
+          label="MRR" value={KES(mrr)} sub="Monthly recurring revenue"
+          trend={mrrTrend} icon={CreditCard} accent="bg-bronze"
+        />
+        <StatCard
+          label="ARR" value={KES(arr)} sub="Projected annual revenue"
+          icon={TrendingUp} accent="bg-emerald-500"
+        />
+        <StatCard
+          label="Documents" value={fmt(invoices + contracts)} sub={`${invoices} invoices · ${contracts} contracts`}
+          icon={FileText} accent="bg-violet-500"
+        />
       </div>
 
-      {/* Chart */}
-      <div className="bg-[#1a1a1a] rounded-2xl border border-white/5 p-4">
-        <p className="text-sm font-semibold text-white/60 mb-4">User Growth — Last 6 Months</p>
-        <ResponsiveContainer width="100%" height={160}>
-          <LineChart data={chart}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-            <XAxis dataKey="month" tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
-            <Tooltip contentStyle={{ background: "#222", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 12 }} />
-            <Line type="monotone" dataKey="users" stroke="#c47d2a" strokeWidth={2.5} dot={{ fill: "#c47d2a", r: 3 }} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      {/* ── Charts Row ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-      {/* Recent signups */}
-      <div className="bg-[#1a1a1a] rounded-2xl border border-white/5 p-4">
-        <p className="text-sm font-semibold text-white/60 mb-3">Recent Signups</p>
-        <div className="space-y-3">
-          {recent.map(u => (
-            <div key={u.id} className="flex items-center gap-3">
-              <Avatar url={u.avatar_url} name={u.display_name || u.handle} />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-white/80 truncate">{u.display_name || u.handle}</p>
-                <p className="text-xs text-white/30 truncate">@{u.handle}</p>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <span className={planChip(u.subscription_plan)}>{u.subscription_plan || "free"}</span>
-                {u.created_at && <span className="text-[10px] text-white/20">{format(new Date(u.created_at), "dd MMM")}</span>}
-              </div>
+        {/* MRR Growth */}
+        <div className="bg-[#111111] border border-white/[0.06] rounded-2xl p-5">
+          <div className="flex items-start justify-between mb-1">
+            <div>
+              <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-1">MRR Growth</p>
+              <p className="text-2xl font-bold text-white tabular-nums">{KES(mrr)}</p>
             </div>
-          ))}
+            <div className="flex items-center gap-1 text-xs text-white/30 bg-white/5 px-2 py-1 rounded-lg">
+              <span>6 months</span>
+            </div>
+          </div>
+          <p className="text-xs text-white/25 mb-5">Cumulative monthly recurring revenue</p>
+          <ResponsiveContainer width="100%" height={160}>
+            <AreaChart data={mrrChart} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="mrrGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stopColor="#c47d2a" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#c47d2a" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+              <XAxis dataKey="month" tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} tickFormatter={v => v >= 1000 ? `${v/1000}K` : String(v)} />
+              <Tooltip content={<ChartTooltip prefix="KES " />} />
+              <Area type="monotone" dataKey="mrr" stroke="#c47d2a" strokeWidth={2} fill="url(#mrrGrad)" dot={false} activeDot={{ r: 4, fill: "#c47d2a", strokeWidth: 0 }} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* User Growth */}
+        <div className="bg-[#111111] border border-white/[0.06] rounded-2xl p-5">
+          <div className="flex items-start justify-between mb-1">
+            <div>
+              <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-1">User Growth</p>
+              <p className="text-2xl font-bold text-white tabular-nums">{fmt(total)} users</p>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-white/30 bg-white/5 px-2 py-1 rounded-lg">
+              <span>6 months</span>
+            </div>
+          </div>
+          <p className="text-xs text-white/25 mb-5">New signups per month</p>
+          <ResponsiveContainer width="100%" height={160}>
+            <AreaChart data={userChart} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="userGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stopColor="#6366f1" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+              <XAxis dataKey="month" tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <Tooltip content={<ChartTooltip />} />
+              <Area type="monotone" dataKey="users" stroke="#6366f1" strokeWidth={2} fill="url(#userGrad)" dot={false} activeDot={{ r: 4, fill: "#6366f1", strokeWidth: 0 }} />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
+
+      {/* ── Plan Breakdown + Recent ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        {/* Plan breakdown */}
+        <div className="bg-[#111111] border border-white/[0.06] rounded-2xl p-5">
+          <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-5">Plan Breakdown</p>
+          <div className="space-y-4">
+            {[
+              { label: "Free",       count: free,       pct: total ? Math.round((free / total) * 100) : 0,       color: "bg-white/20", text: "text-white/50" },
+              { label: "Pro",        count: pro,        pct: total ? Math.round((pro  / total) * 100) : 0,       color: "bg-emerald-500", text: "text-emerald-400" },
+              { label: "Enterprise", count: enterprise, pct: total ? Math.round((enterprise / total) * 100) : 0, color: "bg-violet-500",  text: "text-violet-400" },
+            ].map(row => (
+              <div key={row.label}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className={cn("w-2 h-2 rounded-full flex-shrink-0", row.color)} />
+                    <span className={cn("text-sm font-medium", row.text)}>{row.label}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-white tabular-nums">{row.count}</span>
+                    <span className="text-xs text-white/30 w-8 text-right tabular-nums">{row.pct}%</span>
+                  </div>
+                </div>
+                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <div
+                    className={cn("h-full rounded-full transition-all duration-700", row.color)}
+                    style={{ width: `${row.pct}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* MRR breakdown by plan */}
+          <div className="mt-6 pt-5 border-t border-white/5 space-y-2">
+            <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-3">MRR by Plan</p>
+            {[
+              { label: "Pro",        value: pro * 1500,        color: "text-emerald-400" },
+              { label: "Enterprise", value: enterprise * 5000, color: "text-violet-400" },
+            ].map(r => (
+              <div key={r.label} className="flex items-center justify-between">
+                <span className="text-sm text-white/40">{r.label}</span>
+                <span className={cn("text-sm font-bold tabular-nums", r.color)}>{KES(r.value)}</span>
+              </div>
+            ))}
+            <div className="flex items-center justify-between pt-2 border-t border-white/5">
+              <span className="text-sm text-white/60 font-medium">Total MRR</span>
+              <span className="text-sm font-bold text-bronze tabular-nums">{KES(mrr)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent signups */}
+        <div className="bg-[#111111] border border-white/[0.06] rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-5">
+            <p className="text-xs text-white/40 uppercase tracking-wider font-semibold">Recent Signups</p>
+            <span className="text-xs text-white/20">{format(new Date(), "dd MMM yyyy")}</span>
+          </div>
+          <div className="space-y-1">
+            {recent.length === 0 && <p className="text-sm text-white/20 text-center py-8">No signups yet</p>}
+            {recent.map(u => (
+              <div key={u.id} className="flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-white/[0.03] transition-colors group">
+                <Av url={u.avatar_url} name={u.display_name || u.handle} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white/80 font-medium truncate leading-tight">{u.display_name || u.handle}</p>
+                  <p className="text-xs text-white/30 truncate">@{u.handle}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className={planChip(u.subscription_plan)}>{u.subscription_plan || "free"}</span>
+                  {u.created_at && (
+                    <span className="text-[10px] text-white/20 hidden sm:block tabular-nums">{format(new Date(u.created_at), "dd MMM")}</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── ARR Callout ── */}
+      <div className="bg-gradient-to-r from-bronze/10 via-bronze/5 to-transparent border border-bronze/20 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <p className="text-xs text-bronze/70 uppercase tracking-wider font-semibold mb-1">Projected ARR</p>
+          <p className="text-3xl md:text-4xl font-bold text-white tabular-nums">{KES(arr)}</p>
+          <p className="text-xs text-white/30 mt-1">Based on current MRR of {KES(mrr)} × 12 months</p>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <div className="inline-flex items-center gap-2 bg-bronze/10 border border-bronze/20 px-4 py-2 rounded-xl">
+            <ArrowUpRight className="w-4 h-4 text-bronze" />
+            <span className="text-sm font-semibold text-bronze">Annual projection</span>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 };
 
 // ─── Users ────────────────────────────────────────────────────────────────────
 const UsersSection = () => {
-  const [users, setUsers] = useState<any[]>([]);
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "free" | "pro" | "enterprise">("all");
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers]           = useState<any[]>([]);
+  const [search, setSearch]         = useState("");
+  const [filter, setFilter]         = useState<"all" | "free" | "pro" | "enterprise">("all");
+  const [selected, setSelected]     = useState<any>(null);
+  const [selStats, setSelStats]     = useState<{ invoices: number; contracts: number; invoiceTotal: number } | null>(null);
+  const [loading, setLoading]       = useState(true);
+  const [detailLoad, setDetailLoad] = useState(false);
 
   useEffect(() => { load(); }, []);
 
   const load = async () => {
     const { data } = await supabase
       .from("profiles")
-      .select("id, display_name, handle, email, avatar_url, subscription_plan, subscription_status, created_at, is_verified, user_type")
+      .select("id, display_name, handle, email, avatar_url, subscription_plan, subscription_status, subscription_expires_at, created_at, is_verified, user_type")
       .order("created_at", { ascending: false });
     setUsers(data ?? []);
     setLoading(false);
   };
 
+  const openDetail = async (u: any) => {
+    setSelected(u);
+    setSelStats(null);
+    setDetailLoad(true);
+    const [{ count: inv }, { count: con }, { data: invData }] = await Promise.all([
+      supabase.from("invoices").select("id", { count: "exact", head: true }).eq("user_id", u.id),
+      supabase.from("contracts").select("id", { count: "exact", head: true }).eq("user_id", u.id),
+      supabase.from("invoices").select("total").eq("user_id", u.id),
+    ]);
+    const total = (invData ?? []).reduce((s: number, r: any) => s + (r.total ?? 0), 0);
+    setSelStats({ invoices: inv ?? 0, contracts: con ?? 0, invoiceTotal: total });
+    setDetailLoad(false);
+  };
+
   const filtered = users.filter(u => {
     const q = search.toLowerCase();
-    const match = !q || u.display_name?.toLowerCase().includes(q) || u.handle?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
+    const ok = !q || u.display_name?.toLowerCase().includes(q) || u.handle?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
     const plan = u.subscription_plan || "free";
-    return match && (filter === "all" || plan === filter);
+    return ok && (filter === "all" || plan === filter);
   });
 
-  if (loading) return <SectionLoader />;
+  if (loading) return <Spin />;
 
   return (
-    <div className="p-4 md:p-6 space-y-4">
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-          <Input
-            placeholder="Search by name, handle or email..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="pl-9 bg-[#1a1a1a] border-white/10 text-white placeholder:text-white/30 rounded-xl"
-          />
+    <div className="flex h-full min-h-0">
+      {/* ── List ── */}
+      <div className={cn("flex-1 min-w-0 overflow-y-auto", selected && "hidden md:block")}>
+        <div className="p-4 md:p-6 lg:p-8 space-y-4 max-w-4xl">
+          {/* Header */}
+          <div>
+            <h2 className="text-lg font-bold text-white">Users</h2>
+            <p className="text-sm text-white/30">{users.length} total accounts</p>
+          </div>
+
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
+              <Input
+                placeholder="Search by name, handle or email..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="pl-9 bg-[#111] border-white/[0.06] text-white placeholder:text-white/25 rounded-xl h-10 focus-visible:ring-bronze/30"
+              />
+            </div>
+            <select
+              value={filter}
+              onChange={e => setFilter(e.target.value as any)}
+              className="bg-[#111] border border-white/[0.06] text-white/60 text-sm rounded-xl px-3 h-10 outline-none cursor-pointer hover:border-white/10 transition-colors"
+            >
+              <option value="all">All plans</option>
+              <option value="free">Free</option>
+              <option value="pro">Pro</option>
+              <option value="enterprise">Enterprise</option>
+            </select>
+          </div>
+
+          <p className="text-xs text-white/25">{filtered.length} result{filtered.length !== 1 ? "s" : ""}</p>
+
+          {/* List */}
+          <div className="space-y-1.5">
+            {filtered.map(u => (
+              <button
+                key={u.id}
+                onClick={() => openDetail(u)}
+                className={cn(
+                  "w-full bg-[#111] border rounded-2xl p-4 flex items-center gap-3 transition-all text-left group",
+                  selected?.id === u.id
+                    ? "border-bronze/40 bg-bronze/5"
+                    : "border-white/[0.06] hover:border-white/[0.12] hover:bg-[#161616]"
+                )}
+              >
+                <Av url={u.avatar_url} name={u.display_name || u.handle} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white/80 font-medium truncate">{u.display_name || u.handle}</p>
+                  <p className="text-xs text-white/30 truncate">{u.email || `@${u.handle}`}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {u.is_verified && <span className="text-[10px] bg-blue-500/15 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full font-semibold hidden sm:block">Verified</span>}
+                  <span className={planChip(u.subscription_plan)}>{u.subscription_plan || "free"}</span>
+                  <ChevronRight className={cn("w-3.5 h-3.5 transition-colors", selected?.id === u.id ? "text-bronze" : "text-white/15 group-hover:text-white/30")} />
+                </div>
+              </button>
+            ))}
+            {filtered.length === 0 && (
+              <div className="text-center py-20 text-white/20 text-sm">No users match your search</div>
+            )}
+          </div>
         </div>
-        <select
-          value={filter}
-          onChange={e => setFilter(e.target.value as any)}
-          className="bg-[#1a1a1a] border border-white/10 text-white/70 text-sm rounded-xl px-3 py-2 outline-none cursor-pointer"
-        >
-          <option value="all">All plans</option>
-          <option value="free">Free</option>
-          <option value="pro">Pro</option>
-          <option value="enterprise">Enterprise</option>
-        </select>
       </div>
 
-      <p className="text-xs text-white/30">{filtered.length} user{filtered.length !== 1 ? "s" : ""}</p>
+      {/* ── Detail Panel ── */}
+      {selected && (
+        <div className="w-full md:w-80 lg:w-96 border-l border-white/[0.06] bg-[#0d0d0d] flex flex-col flex-shrink-0">
+          {/* Panel header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06] sticky top-0 bg-[#0d0d0d] z-10">
+            <p className="text-sm font-semibold text-white/60">User Detail</p>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-white/30 hover:text-white hover:bg-white/10 rounded-lg" onClick={() => setSelected(null)}>
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
 
-      <div className="space-y-2">
-        {filtered.map(u => (
-          <div key={u.id} className="bg-[#1a1a1a] border border-white/5 rounded-2xl p-4 flex items-center gap-3">
-            <Avatar url={u.avatar_url} name={u.display_name || u.handle} />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-white/80 font-medium truncate">{u.display_name || u.handle}</p>
-              <p className="text-xs text-white/30 truncate">{u.email || `@${u.handle}`}</p>
+          <div className="overflow-y-auto flex-1 p-5 space-y-5">
+            {/* Profile hero */}
+            <div className="flex items-center gap-3">
+              <Av url={selected.avatar_url} name={selected.display_name || selected.handle} size="12" />
+              <div className="min-w-0">
+                <p className="text-base font-bold text-white truncate">{selected.display_name || selected.handle}</p>
+                <p className="text-xs text-white/30 truncate">@{selected.handle}</p>
+                {selected.email && <p className="text-xs text-white/25 truncate mt-0.5">{selected.email}</p>}
+              </div>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
-              {u.is_verified && (
-                <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-semibold">Verified</span>
+
+            {/* Badges */}
+            <div className="flex flex-wrap gap-1.5">
+              <span className={planChip(selected.subscription_plan)}>{selected.subscription_plan || "free"}</span>
+              {selected.is_verified && <span className="text-[10px] bg-blue-500/15 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full font-semibold">Verified</span>}
+              <span className="text-[10px] bg-white/[0.05] text-white/30 border border-white/[0.06] px-2 py-0.5 rounded-full font-semibold capitalize">{selected.user_type}</span>
+            </div>
+
+            {/* Info rows */}
+            <div className="bg-[#111] border border-white/[0.06] rounded-xl overflow-hidden">
+              {[
+                { label: "Joined",      value: selected.created_at ? format(new Date(selected.created_at), "dd MMM yyyy") : "—" },
+                { label: "Sub status",  value: selected.subscription_status || "—" },
+                { label: "Expires",     value: selected.subscription_expires_at ? format(new Date(selected.subscription_expires_at), "dd MMM yyyy") : "—" },
+              ].map((r, i) => (
+                <div key={r.label} className={cn("flex items-center justify-between px-4 py-3", i !== 0 && "border-t border-white/[0.04]")}>
+                  <span className="text-xs text-white/35">{r.label}</span>
+                  <span className="text-xs text-white/70 font-medium">{r.value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Activity stats */}
+            <div>
+              <p className="text-xs text-white/35 uppercase tracking-wider font-semibold mb-3">Activity</p>
+              {detailLoad ? (
+                <div className="flex items-center justify-center py-6"><Loader2 className="w-4 h-4 text-bronze animate-spin" /></div>
+              ) : selStats && (
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { icon: Receipt,    label: "Invoices",  value: String(selStats.invoices), color: "text-blue-400" },
+                    { icon: FileCheck,  label: "Contracts", value: String(selStats.contracts), color: "text-violet-400" },
+                    { icon: CreditCard, label: "Billed",    value: KES(selStats.invoiceTotal), color: "text-bronze" },
+                  ].map(({ icon: Icon, label, value, color }) => (
+                    <div key={label} className="bg-[#111] border border-white/[0.06] rounded-xl p-3 text-center">
+                      <Icon className={cn("w-3.5 h-3.5 mx-auto mb-1.5", color)} />
+                      <p className={cn("text-sm font-bold leading-tight tabular-nums", color)}>{value}</p>
+                      <p className="text-[10px] text-white/25 mt-0.5">{label}</p>
+                    </div>
+                  ))}
+                </div>
               )}
-              <span className={planChip(u.subscription_plan)}>{u.subscription_plan || "free"}</span>
-              <span className="text-[10px] text-white/20">{u.user_type}</span>
             </div>
           </div>
-        ))}
-        {filtered.length === 0 && (
-          <div className="text-center py-16 text-white/30 text-sm">No users found</div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
 
 // ─── Billing ──────────────────────────────────────────────────────────────────
 const BillingSection = () => {
-  const [txns, setTxns] = useState<any[]>([]);
+  const [txns, setTxns]     = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { load(); }, []);
@@ -251,40 +580,47 @@ const BillingSection = () => {
   const completed = txns.filter(t => t.status === "completed" || t.status === "success").length;
   const failed    = txns.filter(t => t.status === "failed").length;
 
-  if (loading) return <SectionLoader />;
+  if (loading) return <Spin />;
 
   return (
-    <div className="p-4 md:p-6 space-y-5">
+    <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-4xl">
+      <div>
+        <h2 className="text-lg font-bold text-white">Billing</h2>
+        <p className="text-sm text-white/30">All payment transactions</p>
+      </div>
+
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Total Volume", value: KES(total),        color: "text-bronze" },
-          { label: "Completed",    value: String(completed), color: "text-emerald-400" },
-          { label: "Failed",       value: String(failed),    color: "text-red-400" },
+          { label: "Total Volume", value: KES(total),        color: "text-bronze",       accent: "bg-bronze" },
+          { label: "Completed",    value: String(completed), color: "text-emerald-400",  accent: "bg-emerald-500" },
+          { label: "Failed",       value: String(failed),    color: "text-red-400",      accent: "bg-red-500" },
         ].map(c => (
-          <div key={c.label} className="bg-[#1a1a1a] rounded-2xl p-4 border border-white/5">
-            <p className="text-xs text-white/40 mb-1">{c.label}</p>
-            <p className={`text-xl font-bold ${c.color}`}>{c.value}</p>
+          <div key={c.label} className="relative bg-[#111] border border-white/[0.06] rounded-2xl p-4 overflow-hidden">
+            <div className={cn("absolute -top-4 -right-4 w-12 h-12 rounded-full blur-xl opacity-20", c.accent)} />
+            <p className="text-[11px] text-white/35 font-medium mb-2">{c.label}</p>
+            <p className={cn("text-xl md:text-2xl font-bold tabular-nums leading-tight", c.color)}>{c.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="bg-[#1a1a1a] rounded-2xl border border-white/5 overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/5">
-          <p className="text-sm font-semibold text-white/60">Transactions</p>
+      <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
+          <p className="text-sm font-semibold text-white/70">Transactions</p>
+          <span className="text-xs text-white/25">{txns.length} total</span>
         </div>
-        <div className="divide-y divide-white/5">
+        <div className="divide-y divide-white/[0.04]">
           {txns.length === 0 && (
-            <p className="text-center py-12 text-white/30 text-sm">No transactions yet</p>
+            <p className="text-center py-16 text-white/20 text-sm">No transactions yet</p>
           )}
           {txns.map(t => (
-            <div key={t.id} className="px-4 py-3 flex items-center gap-3">
+            <div key={t.id} className="px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-white/70 truncate font-mono text-xs">{t.transaction_reference || t.id.slice(0, 16)}</p>
-                <p className="text-xs text-white/30">{t.payment_method || t.transaction_type} · {format(new Date(t.created_at), "dd MMM yyyy")}</p>
+                <p className="text-xs text-white/60 font-mono truncate">{t.transaction_reference || t.id.slice(0, 20)}</p>
+                <p className="text-xs text-white/25 mt-0.5">{t.payment_method || t.transaction_type} · {format(new Date(t.created_at), "dd MMM yyyy, HH:mm")}</p>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-2.5 flex-shrink-0">
                 <span className={statusChip(t.status || "pending")}>{t.status || "pending"}</span>
-                <p className="text-sm font-bold text-white/80">KES {(t.amount ?? 0).toLocaleString()}</p>
+                <p className="text-sm font-bold text-white/80 tabular-nums">KES {(t.amount ?? 0).toLocaleString()}</p>
               </div>
             </div>
           ))}
@@ -296,11 +632,11 @@ const BillingSection = () => {
 
 // ─── Documents ────────────────────────────────────────────────────────────────
 const DocumentsSection = () => {
-  const [tab, setTab] = useState<"invoices" | "contracts">("invoices");
+  const [tab, setTab]           = useState<"invoices" | "contracts">("invoices");
   const [invoices, setInvoices] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [search, setSearch]     = useState("");
+  const [loading, setLoading]   = useState(true);
 
   useEffect(() => { load(); }, []);
 
@@ -316,64 +652,87 @@ const DocumentsSection = () => {
 
   const docs = (tab === "invoices" ? invoices : contracts).filter(d => {
     const q = search.toLowerCase();
-    return !q
-      || d.client_name?.toLowerCase().includes(q)
+    return !q || d.client_name?.toLowerCase().includes(q)
       || (tab === "invoices" ? d.invoice_number?.toLowerCase().includes(q) : d.title?.toLowerCase().includes(q));
   });
 
-  if (loading) return <SectionLoader />;
+  const paid    = invoices.filter(i => i.status === "paid").length;
+  const pending = invoices.filter(i => i.status === "draft" || i.status === "sent").length;
+  const signed  = contracts.filter(c => c.status === "signed").length;
+
+  if (loading) return <Spin />;
 
   return (
-    <div className="p-4 md:p-6 space-y-4">
-      <div className="flex gap-1 p-1 bg-[#1a1a1a] rounded-xl border border-white/5 w-fit">
-        {(["invoices", "contracts"] as const).map(t => (
-          <button
-            key={t}
-            onClick={() => { setTab(t); setSearch(""); }}
-            className={cn(
-              "px-4 py-1.5 rounded-lg text-sm font-medium transition-all capitalize",
-              tab === t ? "bg-bronze text-white" : "text-white/40 hover:text-white/70"
-            )}
-          >
-            {t}
-          </button>
-        ))}
+    <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-4xl">
+      <div>
+        <h2 className="text-lg font-bold text-white">Documents</h2>
+        <p className="text-sm text-white/30">{invoices.length} invoices · {contracts.length} contracts</p>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-        <Input
-          placeholder={`Search ${tab}...`}
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="pl-9 bg-[#1a1a1a] border-white/10 text-white placeholder:text-white/30 rounded-xl"
-        />
-      </div>
-
-      <p className="text-xs text-white/30">{docs.length} {tab}</p>
-
-      <div className="space-y-2">
-        {docs.map(d => (
-          <div key={d.id} className="bg-[#1a1a1a] border border-white/5 rounded-2xl px-4 py-3 flex items-center gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-white/80 font-medium truncate">
-                {tab === "invoices" ? `#${d.invoice_number} · ${d.client_name}` : d.title}
-              </p>
-              <p className="text-xs text-white/30 truncate">
-                {tab === "contracts" ? `${d.client_name} · ${d.contract_type} · ` : ""}{format(new Date(d.created_at), "dd MMM yyyy")}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <span className={statusChip(d.status)}>{d.status}</span>
-              <p className="text-sm font-bold text-white/70">
-                {d.currency || "KES"} {((d.total ?? d.value) || 0).toLocaleString()}
-              </p>
-            </div>
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: "Paid invoices",    value: String(paid),    color: "text-emerald-400", accent: "bg-emerald-500" },
+          { label: "Pending invoices", value: String(pending), color: "text-amber-400",   accent: "bg-amber-500" },
+          { label: "Signed contracts", value: String(signed),  color: "text-violet-400",  accent: "bg-violet-500" },
+        ].map(c => (
+          <div key={c.label} className="relative bg-[#111] border border-white/[0.06] rounded-2xl p-4 overflow-hidden">
+            <div className={cn("absolute -top-4 -right-4 w-12 h-12 rounded-full blur-xl opacity-20", c.accent)} />
+            <p className="text-[11px] text-white/35 font-medium mb-2 leading-tight">{c.label}</p>
+            <p className={cn("text-xl md:text-2xl font-bold tabular-nums", c.color)}>{c.value}</p>
           </div>
         ))}
-        {docs.length === 0 && (
-          <div className="text-center py-16 text-white/30 text-sm">No {tab} found</div>
-        )}
+      </div>
+
+      {/* Toggle */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex gap-1 p-1 bg-[#111] rounded-xl border border-white/[0.06]">
+          {(["invoices", "contracts"] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => { setTab(t); setSearch(""); }}
+              className={cn("px-4 py-1.5 rounded-lg text-sm font-medium transition-all capitalize",
+                tab === t ? "bg-bronze text-white shadow-sm" : "text-white/40 hover:text-white/70"
+              )}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+        <div className="relative flex-1 min-w-48">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
+          <Input
+            placeholder={`Search ${tab}...`}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-9 bg-[#111] border-white/[0.06] text-white placeholder:text-white/25 rounded-xl h-9 focus-visible:ring-bronze/30"
+          />
+        </div>
+      </div>
+
+      <p className="text-xs text-white/25">{docs.length} {tab}</p>
+
+      <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+        <div className="divide-y divide-white/[0.04]">
+          {docs.length === 0 && <div className="text-center py-16 text-white/20 text-sm">No {tab} found</div>}
+          {docs.map(d => (
+            <div key={d.id} className="px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-white/75 font-medium truncate">
+                  {tab === "invoices" ? `#${d.invoice_number} · ${d.client_name}` : d.title}
+                </p>
+                <p className="text-xs text-white/25 truncate mt-0.5">
+                  {tab === "contracts" ? `${d.client_name} · ${d.contract_type} · ` : ""}{format(new Date(d.created_at), "dd MMM yyyy")}
+                </p>
+              </div>
+              <div className="flex items-center gap-2.5 flex-shrink-0">
+                <span className={statusChip(d.status)}>{d.status}</span>
+                <p className="text-sm font-bold text-white/70 tabular-nums">
+                  {d.currency || "KES"} {((d.total ?? d.value) || 0).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -381,11 +740,11 @@ const DocumentsSection = () => {
 
 // ─── Support ──────────────────────────────────────────────────────────────────
 const SupportSection = () => {
-  const [tab, setTab] = useState<"verifications" | "feedback">("verifications");
-  const [requests, setRequests] = useState<any[]>([]);
-  const [feedback, setFeedback] = useState<any[]>([]);
-  const [notes, setNotes] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
+  const [tab, setTab]             = useState<"verifications" | "feedback">("verifications");
+  const [requests, setRequests]   = useState<any[]>([]);
+  const [feedback, setFeedback]   = useState<any[]>([]);
+  const [notes, setNotes]         = useState<Record<string, string>>({});
+  const [loading, setLoading]     = useState(true);
 
   useEffect(() => { load(); }, []);
 
@@ -404,46 +763,43 @@ const SupportSection = () => {
     setLoading(false);
   };
 
-  const handleApprove = async (id: string) => {
+  const approve = async (id: string) => {
     const { error } = await supabase.rpc("approve_verification" as any, { p_request_id: id, p_notes: notes[id] || null });
     if (error) { toast.error(error.message); return; }
-    toast.success("Approved");
+    toast.success("Verification approved");
     load();
   };
 
-  const handleReject = async (id: string) => {
+  const reject = async (id: string) => {
     const { error } = await supabase.rpc("reject_verification" as any, { p_request_id: id, p_notes: notes[id] || null });
     if (error) { toast.error(error.message); return; }
-    toast.success("Rejected");
+    toast.success("Request rejected");
     load();
   };
-
-  const verificationStatusChip = (s: string) => cn(
-    "text-[10px] font-semibold px-2 py-0.5 rounded-full",
-    s === "approved" ? "bg-emerald-500/20 text-emerald-400"
-    : s === "rejected" ? "bg-red-500/20 text-red-400"
-    : "bg-amber-500/20 text-amber-400"
-  );
-
-  if (loading) return <SectionLoader />;
 
   const pending = requests.filter(r => r.status === "pending").length;
 
+  if (loading) return <Spin />;
+
   return (
-    <div className="p-4 md:p-6 space-y-4">
-      <div className="flex gap-1 p-1 bg-[#1a1a1a] rounded-xl border border-white/5 w-fit">
-        {(["verifications", "feedback"] as const).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={cn(
-              "px-4 py-1.5 rounded-lg text-sm font-medium transition-all capitalize flex items-center gap-2",
-              tab === t ? "bg-bronze text-white" : "text-white/40 hover:text-white/70"
-            )}
-          >
-            {t}
-            {t === "verifications" && pending > 0 && (
-              <span className="bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{pending}</span>
+    <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-3xl">
+      <div>
+        <h2 className="text-lg font-bold text-white">Support</h2>
+        <p className="text-sm text-white/30">{pending > 0 ? `${pending} pending verification${pending !== 1 ? "s" : ""}` : "All verifications reviewed"}</p>
+      </div>
+
+      <div className="flex gap-1 p-1 bg-[#111] rounded-xl border border-white/[0.06] w-fit">
+        {([
+          { id: "verifications" as const, label: "Verifications" },
+          { id: "feedback" as const,      label: "Feedback" },
+        ]).map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} className={cn(
+            "px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
+            tab === t.id ? "bg-bronze text-white shadow-sm" : "text-white/40 hover:text-white/70"
+          )}>
+            {t.label}
+            {t.id === "verifications" && pending > 0 && (
+              <span className="bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none">{pending}</span>
             )}
           </button>
         ))}
@@ -451,57 +807,60 @@ const SupportSection = () => {
 
       {tab === "verifications" && (
         <div className="space-y-3">
-          {requests.length === 0 && <div className="text-center py-16 text-white/30 text-sm">No verification requests</div>}
+          {requests.length === 0 && <div className="text-center py-20 text-white/20 text-sm">No verification requests</div>}
           {requests.map(r => (
-            <div key={r.id} className="bg-[#1a1a1a] border border-white/5 rounded-2xl p-4 space-y-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <Avatar url={r.profiles?.avatar_url} name={r.profiles?.display_name || r.profiles?.handle} />
-                  <div>
-                    <p className="text-sm font-medium text-white/80">{r.profiles?.display_name || r.profiles?.handle}</p>
-                    <p className="text-xs text-white/30">{r.profiles?.email}</p>
+            <div key={r.id} className="bg-[#111] border border-white/[0.06] rounded-2xl p-5 space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Av url={r.profiles?.avatar_url} name={r.profiles?.display_name || r.profiles?.handle} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-white/85 truncate">{r.profiles?.display_name || r.profiles?.handle}</p>
+                    <p className="text-xs text-white/30 truncate">{r.profiles?.email}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className={verificationStatusChip(r.status)}>{r.status}</span>
-                  <span className="text-xs text-white/20">{format(new Date(r.created_at), "dd MMM yyyy")}</span>
+                  <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full",
+                    r.status === "approved" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/20"
+                    : r.status === "rejected" ? "bg-red-500/20 text-red-400 border border-red-500/20"
+                    : "bg-amber-500/20 text-amber-400 border border-amber-500/20"
+                  )}>{r.status}</span>
+                  <span className="text-xs text-white/20">{format(new Date(r.created_at), "dd MMM")}</span>
                 </div>
               </div>
 
-              {/* Social handles */}
-              <div className="flex flex-wrap gap-2">
-                {r.instagram_handle && <span className="text-[11px] bg-white/5 text-white/50 px-2 py-1 rounded-lg">IG: {r.instagram_handle}</span>}
-                {r.tiktok_handle    && <span className="text-[11px] bg-white/5 text-white/50 px-2 py-1 rounded-lg">TT: {r.tiktok_handle}</span>}
-                {r.youtube_handle   && <span className="text-[11px] bg-white/5 text-white/50 px-2 py-1 rounded-lg">YT: {r.youtube_handle}</span>}
-                {r.twitter_handle   && <span className="text-[11px] bg-white/5 text-white/50 px-2 py-1 rounded-lg">X: {r.twitter_handle}</span>}
-                {r.follower_count   && <span className="text-[11px] bg-white/5 text-white/50 px-2 py-1 rounded-lg">{Number(r.follower_count).toLocaleString()} followers</span>}
+              <div className="flex flex-wrap gap-1.5">
+                {r.instagram_handle && <span className="text-[11px] bg-white/[0.04] border border-white/[0.06] text-white/40 px-2.5 py-1 rounded-lg">IG: {r.instagram_handle}</span>}
+                {r.tiktok_handle    && <span className="text-[11px] bg-white/[0.04] border border-white/[0.06] text-white/40 px-2.5 py-1 rounded-lg">TT: {r.tiktok_handle}</span>}
+                {r.youtube_handle   && <span className="text-[11px] bg-white/[0.04] border border-white/[0.06] text-white/40 px-2.5 py-1 rounded-lg">YT: {r.youtube_handle}</span>}
+                {r.twitter_handle   && <span className="text-[11px] bg-white/[0.04] border border-white/[0.06] text-white/40 px-2.5 py-1 rounded-lg">X: {r.twitter_handle}</span>}
+                {r.follower_count   && <span className="text-[11px] bg-white/[0.04] border border-white/[0.06] text-white/40 px-2.5 py-1 rounded-lg">{Number(r.follower_count).toLocaleString()} followers</span>}
               </div>
 
               {r.reason && (
-                <p className="text-sm text-white/50 bg-white/5 rounded-xl p-3 whitespace-pre-wrap">{r.reason}</p>
+                <p className="text-sm text-white/45 bg-white/[0.03] border border-white/[0.04] rounded-xl p-4 whitespace-pre-wrap leading-relaxed">{r.reason}</p>
               )}
 
               {r.status === "pending" && (
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <Textarea
                     rows={2}
                     placeholder="Reviewer notes (optional — shown to user if rejected)"
                     value={notes[r.id] ?? ""}
                     onChange={e => setNotes(p => ({ ...p, [r.id]: e.target.value }))}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30 resize-none rounded-xl text-sm"
+                    className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/20 resize-none rounded-xl text-sm focus-visible:ring-bronze/30"
                   />
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={() => handleApprove(r.id)} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg">
+                    <Button size="sm" onClick={() => approve(r.id)} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-9">
                       <CheckCircle className="h-3.5 w-3.5" /> Approve
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleReject(r.id)} className="gap-1.5 border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-lg">
+                    <Button size="sm" variant="outline" onClick={() => reject(r.id)} className="gap-1.5 border-red-500/25 text-red-400 hover:bg-red-500/10 hover:border-red-500/40 rounded-xl h-9">
                       <XCircle className="h-3.5 w-3.5" /> Reject
                     </Button>
                   </div>
                 </div>
               )}
               {r.status !== "pending" && r.reviewer_notes && (
-                <p className="text-xs text-white/30 italic">Notes: {r.reviewer_notes}</p>
+                <p className="text-xs text-white/25 italic border-t border-white/[0.04] pt-3">Notes: {r.reviewer_notes}</p>
               )}
             </div>
           ))}
@@ -510,23 +869,22 @@ const SupportSection = () => {
 
       {tab === "feedback" && (
         <div className="space-y-3">
-          {feedback.length === 0 && <div className="text-center py-16 text-white/30 text-sm">No feedback yet</div>}
+          {feedback.length === 0 && <div className="text-center py-20 text-white/20 text-sm">No feedback yet</div>}
           {feedback.map(fb => (
-            <div key={fb.id} className="bg-[#1a1a1a] border border-white/5 rounded-2xl p-4">
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <p className="text-sm font-medium text-white/70">{fb.profiles?.display_name || fb.profiles?.handle || "Anonymous"}</p>
+            <div key={fb.id} className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <p className="text-sm font-semibold text-white/70">{fb.profiles?.display_name || fb.profiles?.handle || "Anonymous"}</p>
                 <div className="flex items-center gap-2">
-                  <span className={cn(
-                    "text-[10px] font-semibold px-2 py-0.5 rounded-full",
-                    fb.type === "feature" ? "bg-blue-500/20 text-blue-400" : "bg-purple-500/20 text-purple-400"
-                  )}>
-                    {fb.type === "feature" ? "Feature" : "Thought"}
-                  </span>
-                  <span className="text-xs text-white/20">{format(new Date(fb.created_at), "dd MMM yyyy")}</span>
+                  <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                    fb.type === "feature"
+                      ? "bg-blue-500/15 text-blue-400 border-blue-500/20"
+                      : "bg-violet-500/15 text-violet-400 border-violet-500/20"
+                  )}>{fb.type === "feature" ? "Feature" : "Thought"}</span>
+                  <span className="text-xs text-white/20">{format(new Date(fb.created_at), "dd MMM")}</span>
                 </div>
               </div>
-              {fb.title && <p className="text-xs text-white/40 mb-1 font-medium">{fb.title}</p>}
-              <p className="text-sm text-white/50 whitespace-pre-wrap">{fb.message}</p>
+              {fb.title && <p className="text-xs text-white/40 mb-2 font-semibold">{fb.title}</p>}
+              <p className="text-sm text-white/45 whitespace-pre-wrap leading-relaxed">{fb.message}</p>
             </div>
           ))}
         </div>
@@ -537,159 +895,177 @@ const SupportSection = () => {
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
 const SettingsSection = () => {
-  const [stats, setStats] = useState({ users: 0, invoices: 0, contracts: 0 });
+  const [counts, setCounts] = useState({ users: 0, invoices: 0, contracts: 0 });
 
   useEffect(() => {
     Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase.from("invoices").select("id", { count: "exact", head: true }),
       supabase.from("contracts").select("id", { count: "exact", head: true }),
-    ]).then(([{ count: u }, { count: i }, { count: c }]) => {
-      setStats({ users: u ?? 0, invoices: i ?? 0, contracts: c ?? 0 });
-    });
+    ]).then(([{ count: u }, { count: i }, { count: c }]) => setCounts({ users: u ?? 0, invoices: i ?? 0, contracts: c ?? 0 }));
   }, []);
 
-  const rows = [
-    { label: "App",              value: "Crevia MVP" },
-    { label: "Stack",            value: "React · Supabase · Tailwind" },
-    { label: "Auth",             value: "Supabase Auth + MFA" },
-    { label: "Total Users",      value: String(stats.users) },
-    { label: "Total Invoices",   value: String(stats.invoices) },
-    { label: "Total Contracts",  value: String(stats.contracts) },
-    { label: "Admin access",     value: "is_admin = true on profiles" },
-  ];
-
-  const links = [
-    { label: "Supabase Studio",  hint: "DB · Auth · Storage · Edge Functions" },
-    { label: "Resend Dashboard", hint: "Transactional email / SMTP" },
-    { label: "Paystack",         hint: "Payments & subscriptions" },
-  ];
-
   return (
-    <div className="p-4 md:p-6 space-y-5">
-      <div className="bg-[#1a1a1a] rounded-2xl border border-white/5 p-5">
-        <p className="text-sm font-semibold text-white/60 mb-4">App Info</p>
-        <div className="space-y-0 divide-y divide-white/5">
-          {rows.map(r => (
-            <div key={r.label} className="flex items-center justify-between py-3">
-              <span className="text-sm text-white/40">{r.label}</span>
-              <span className="text-sm text-white/70 font-medium">{r.value}</span>
+    <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-2xl">
+      <div>
+        <h2 className="text-lg font-bold text-white">Settings</h2>
+        <p className="text-sm text-white/30">App configuration and info</p>
+      </div>
+
+      <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-white/[0.06]">
+          <p className="text-sm font-semibold text-white/60">App Info</p>
+        </div>
+        <div className="divide-y divide-white/[0.04]">
+          {[
+            { label: "App",             value: "Crevia MVP" },
+            { label: "Stack",           value: "React · Supabase · Tailwind" },
+            { label: "Auth",            value: "Supabase Auth + MFA" },
+            { label: "Total Users",     value: String(counts.users) },
+            { label: "Total Invoices",  value: String(counts.invoices) },
+            { label: "Total Contracts", value: String(counts.contracts) },
+            { label: "Admin gating",    value: "is_admin = true on profiles" },
+          ].map(r => (
+            <div key={r.label} className="flex items-center justify-between px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
+              <span className="text-sm text-white/35">{r.label}</span>
+              <span className="text-sm text-white/65 font-medium">{r.value}</span>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="bg-[#1a1a1a] rounded-2xl border border-white/5 p-5">
-        <p className="text-sm font-semibold text-white/60 mb-4">External Dashboards</p>
-        <div className="space-y-0 divide-y divide-white/5">
-          {links.map(l => (
-            <div key={l.label} className="flex items-center justify-between py-3">
+      <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-white/[0.06]">
+          <p className="text-sm font-semibold text-white/60">External Dashboards</p>
+        </div>
+        <div className="divide-y divide-white/[0.04]">
+          {[
+            { label: "Supabase Studio",  hint: "DB · Auth · Storage · Edge Functions" },
+            { label: "Resend",           hint: "Transactional email / SMTP" },
+            { label: "Paystack",         hint: "Payments & subscriptions" },
+          ].map(l => (
+            <div key={l.label} className="flex items-center justify-between px-5 py-4 hover:bg-white/[0.02] transition-colors">
               <div>
-                <p className="text-sm text-white/70">{l.label}</p>
-                <p className="text-xs text-white/30">{l.hint}</p>
+                <p className="text-sm text-white/65">{l.label}</p>
+                <p className="text-xs text-white/25 mt-0.5">{l.hint}</p>
               </div>
-              <span className="text-[10px] text-white/20 bg-white/5 px-2 py-1 rounded-lg">External</span>
+              <span className="text-[10px] text-white/20 bg-white/[0.04] border border-white/[0.06] px-2 py-1 rounded-lg">External</span>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-5">
-        <p className="text-sm font-semibold text-red-400 mb-1">Admin Access</p>
-        <p className="text-xs text-white/40 leading-relaxed">
-          Only accounts with <code className="bg-white/10 px-1 rounded text-white/60">is_admin = true</code> in the{" "}
-          <code className="bg-white/10 px-1 rounded text-white/60">profiles</code> table can access this dashboard.
-          Non-admin users are redirected silently.
+      <div className="bg-gradient-to-br from-red-500/8 to-transparent border border-red-500/15 rounded-2xl p-5">
+        <p className="text-sm font-semibold text-red-400 mb-1.5">Admin Access</p>
+        <p className="text-xs text-white/35 leading-relaxed">
+          Only accounts with <code className="bg-white/[0.07] px-1.5 py-0.5 rounded-md text-white/55 font-mono text-[11px]">is_admin = true</code> in the{" "}
+          <code className="bg-white/[0.07] px-1.5 py-0.5 rounded-md text-white/55 font-mono text-[11px]">profiles</code> table
+          can access this dashboard. All other users are silently redirected to the homepage with no error shown.
         </p>
       </div>
     </div>
   );
 };
 
-// ─── Root Admin Component ─────────────────────────────────────────────────────
+// ─── Root ─────────────────────────────────────────────────────────────────────
+const NAV: { id: Section; label: string; icon: React.ElementType }[] = [
+  { id: "overview",  label: "Overview",  icon: LayoutDashboard },
+  { id: "users",     label: "Users",     icon: Users },
+  { id: "billing",   label: "Billing",   icon: CreditCard },
+  { id: "documents", label: "Documents", icon: FileText },
+  { id: "support",   label: "Support",   icon: MessageSquare },
+  { id: "settings",  label: "Settings",  icon: Settings },
+];
+
 const Admin = () => {
   const navigate = useNavigate();
-  const [authed, setAuthed] = useState(false);
-  const [booting, setBooting] = useState(true);
-  const [section, setSection] = useState<Section>("overview");
+  const [authed, setAuthed]           = useState(false);
+  const [booting, setBooting]         = useState(true);
+  const [section, setSection]         = useState<Section>("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/"); return; }
+
       const { data: prof } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("id", session.user.id)
-        .single();
+        .from("profiles").select("is_admin").eq("id", session.user.id).single();
+
       if (!(prof as any)?.is_admin) { navigate("/"); return; }
+
+      const { count } = await supabase
+        .from("verification_requests" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+      setPendingCount(count ?? 0);
+
       setAuthed(true);
       setBooting(false);
     })();
   }, []);
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
-  };
-
   if (booting) return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
-      <Loader2 className="w-6 h-6 text-bronze animate-spin" />
+    <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+      <Loader2 className="w-5 h-5 text-bronze animate-spin" />
     </div>
   );
-
   if (!authed) return null;
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] flex">
+    <div className="min-h-screen bg-[#0a0a0a] flex font-sans">
+
       {/* Mobile overlay */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 z-20 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* ── Sidebar ── */}
       <aside className={cn(
-        "fixed top-0 left-0 h-full w-56 bg-[#141414] border-r border-white/5 z-30 flex flex-col transition-transform duration-300",
+        "fixed top-0 left-0 h-full w-[220px] bg-[#0d0d0d] border-r border-white/[0.05] z-30 flex flex-col transition-transform duration-300 ease-in-out",
         sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
-        {/* Logo */}
-        <div className="flex items-center gap-2.5 px-4 py-5 border-b border-white/5">
+        {/* Brand */}
+        <div className="flex items-center gap-3 px-5 py-5 border-b border-white/[0.05]">
           <img src="/crevia-logo.png" alt="Crevia" className="w-8 h-8 rounded-full ring-1 ring-white/10 flex-shrink-0" />
           <div>
-            <p className="font-vollkorn text-white font-bold text-sm leading-tight">Crevia</p>
-            <p className="text-[9px] text-white/30 font-poppins uppercase tracking-widest">Admin Dashboard</p>
+            <p className="font-vollkorn text-white font-bold text-sm leading-none">Crevia</p>
+            <p className="text-[9px] text-white/25 font-poppins uppercase tracking-[0.12em] mt-0.5">Admin</p>
           </div>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto">
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {NAV.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               onClick={() => { setSection(id); setSidebarOpen(false); }}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left",
+                "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left",
                 section === id
-                  ? "bg-bronze/15 text-bronze"
-                  : "text-white/50 hover:text-white/80 hover:bg-white/5"
+                  ? "bg-white/[0.07] text-white"
+                  : "text-white/40 hover:text-white/70 hover:bg-white/[0.04]"
               )}
             >
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              {label}
+              <div className="flex items-center gap-3">
+                <Icon className={cn("w-4 h-4 flex-shrink-0 transition-colors", section === id ? "text-bronze" : "")} />
+                {label}
+              </div>
+              {id === "support" && pendingCount > 0 && (
+                <span className="bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center leading-none">
+                  {pendingCount > 9 ? "9+" : pendingCount}
+                </span>
+              )}
             </button>
           ))}
         </nav>
 
         {/* Sign out */}
-        <div className="px-2 pb-4 pt-2 border-t border-white/5">
+        <div className="px-3 pb-5 pt-3 border-t border-white/[0.05]">
           <button
-            onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"
+            onClick={async () => { await supabase.auth.signOut(); navigate("/"); }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/30 hover:text-red-400 hover:bg-red-500/8 transition-all"
           >
             <LogOut className="w-4 h-4" />
             Sign Out
@@ -698,31 +1074,36 @@ const Admin = () => {
       </aside>
 
       {/* ── Main ── */}
-      <div className="flex-1 lg:ml-56 min-h-screen flex flex-col">
+      <div className="flex-1 lg:ml-[220px] min-h-screen flex flex-col">
         {/* Topbar */}
-        <header className="sticky top-0 z-10 bg-[#0f0f0f]/95 backdrop-blur border-b border-white/5 px-4 md:px-6 h-14 flex items-center justify-between flex-shrink-0">
+        <header className="sticky top-0 z-10 h-14 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/[0.05] px-4 md:px-6 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden h-9 w-9 text-white/60 hover:text-white hover:bg-white/10"
+              variant="ghost" size="icon"
+              className="lg:hidden h-9 w-9 text-white/40 hover:text-white hover:bg-white/8 rounded-xl"
               onClick={() => setSidebarOpen(true)}
             >
               <Menu className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-white font-semibold text-sm">{NAV.find(n => n.id === section)?.label}</h1>
-              <p className="text-[10px] text-white/30 hidden sm:block">Crevia Admin · Internal only</p>
+              <h1 className="text-sm font-semibold text-white leading-none">{NAV.find(n => n.id === section)?.label}</h1>
+              <p className="text-[10px] text-white/20 mt-0.5 hidden sm:block">Crevia Admin · Internal</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Shield className="w-3.5 h-3.5 text-bronze" />
-            <span className="text-xs text-white/30">Admin</span>
+            <div className="flex items-center gap-1.5 bg-white/[0.04] border border-white/[0.06] px-2.5 py-1.5 rounded-lg">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <Shield className="w-3 h-3 text-bronze" />
+              <span className="text-[10px] text-white/30 font-medium">Admin</span>
+            </div>
           </div>
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className={cn(
+          "flex-1 overflow-y-auto",
+          section === "users" && "flex flex-col overflow-hidden"
+        )}>
           {section === "overview"  && <OverviewSection />}
           {section === "users"     && <UsersSection />}
           {section === "billing"   && <BillingSection />}
