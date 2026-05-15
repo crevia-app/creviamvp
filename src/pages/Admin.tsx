@@ -1085,9 +1085,22 @@ const Admin = () => {
             >
               <Menu className="w-5 h-5" />
             </Button>
+            {/* Logo — always visible, click to go back to Overview */}
+            <button
+              onClick={() => setSection("overview")}
+              className="flex items-center gap-2 group"
+            >
+              <img
+                src="/crevia-logo.png"
+                alt="Crevia"
+                className="w-7 h-7 rounded-full ring-1 ring-white/10 transition-transform duration-200 group-hover:scale-105"
+              />
+              <span className="font-vollkorn text-sm font-bold text-white/70 group-hover:text-white transition-colors hidden sm:block">Crevia</span>
+            </button>
+            <div className="w-px h-4 bg-white/10 hidden sm:block" />
             <div>
               <h1 className="text-sm font-semibold text-white leading-none">{NAV.find(n => n.id === section)?.label}</h1>
-              <p className="text-[10px] text-white/20 mt-0.5 hidden sm:block">Crevia Admin · Internal</p>
+              <p className="text-[10px] text-white/20 mt-0.5 hidden sm:block">Admin · Internal</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
