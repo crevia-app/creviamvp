@@ -718,7 +718,7 @@ const DocumentsSection = () => {
         <div className="divide-y divide-white/[0.04]">
           {docs.length === 0 && <div className="text-center py-16 text-white/20 text-sm">No {tab} found</div>}
           {docs.map(d => (
-            <div key={d.id} className="px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
+            <div key={d.id} className="px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors group">
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-white/75 font-medium truncate">
                   {tab === "invoices" ? `#${d.invoice_number} · ${d.client_name}` : d.title}
@@ -732,6 +732,19 @@ const DocumentsSection = () => {
                 <p className="text-sm font-bold text-white/70 tabular-nums">
                   {d.currency || "KES"} {((d.total ?? d.value) || 0).toLocaleString()}
                 </p>
+                <button
+                  onClick={async () => {
+                    if (!confirm(`Delete this ${tab.slice(0, -1)}? This cannot be undone.`)) return;
+                    const { error } = await supabase.from(tab === "invoices" ? "invoices" : "contracts").delete().eq("id", d.id);
+                    if (error) { toast.error(error.message); return; }
+                    toast.success(`${tab.slice(0, -1)} deleted`);
+                    load();
+                  }}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400/60 hover:text-red-400 p-1 rounded-lg hover:bg-red-500/10"
+                  title="Delete"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
           ))}
@@ -898,7 +911,9 @@ const SupportSection = () => {
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
 const SettingsSection = () => {
-  const [counts, setCounts] = useState({ users: 0, invoices: 0, contracts: 0 });
+  const [counts, setCounts]         = useState({ users: 0, invoices: 0, contracts: 0 });
+  const [maintenance, setMaintenance] = useState(false);
+  const [maintenanceSaving, setMaintenanceSaving] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -906,7 +921,21 @@ const SettingsSection = () => {
       supabase.from("invoices").select("id", { count: "exact", head: true }),
       supabase.from("contracts").select("id", { count: "exact", head: true }),
     ]).then(([{ count: u }, { count: i }, { count: c }]) => setCounts({ users: u ?? 0, invoices: i ?? 0, contracts: c ?? 0 }));
+
+    // Load maintenance mode state from localStorage (admin-only flag)
+    setMaintenance(localStorage.getItem("crevia_maintenance") === "true");
   }, []);
+
+  const toggleMaintenance = async () => {
+    setMaintenanceSaving(true);
+    const next = !maintenance;
+    localStorage.setItem("crevia_maintenance", String(next));
+    setMaintenance(next);
+    setMaintenanceSaving(false);
+    toast(next ? "⚠️ Maintenance mode ON" : "✅ Maintenance mode OFF", {
+      description: next ? "Users will see a maintenance message" : "App is live for all users",
+    });
+  };
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-2xl">
@@ -955,6 +984,38 @@ const SettingsSection = () => {
               <span className="text-[10px] text-white/20 bg-white/[0.04] border border-white/[0.06] px-2 py-1 rounded-lg">External</span>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Maintenance mode */}
+      <div className={cn(
+        "border rounded-2xl p-5 transition-all",
+        maintenance ? "bg-amber-500/10 border-amber-500/30" : "bg-[#111] border-white/[0.06]"
+      )}>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className={cn("text-sm font-semibold mb-1", maintenance ? "text-amber-400" : "text-white/70")}>
+              Maintenance Mode
+            </p>
+            <p className="text-xs text-white/35 leading-relaxed">
+              {maintenance
+                ? "App is in maintenance — users see a maintenance message instead of the app."
+                : "App is live. Toggle to show a maintenance message to all non-admin users."}
+            </p>
+          </div>
+          <button
+            onClick={toggleMaintenance}
+            disabled={maintenanceSaving}
+            className={cn(
+              "relative flex-shrink-0 w-11 h-6 rounded-full transition-all duration-200",
+              maintenance ? "bg-amber-500" : "bg-white/10"
+            )}
+          >
+            <span className={cn(
+              "absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200",
+              maintenance && "translate-x-5"
+            )} />
+          </button>
         </div>
       </div>
 
@@ -1008,6 +1069,31 @@ const Admin = () => {
       setBooting(false);
     })();
   }, []);
+
+  // ── Realtime: toast + badge when new feedback or verification arrives ──
+  useEffect(() => {
+    if (!authed) return;
+    const channel = supabase
+      .channel("admin-live")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "feedback" }, (payload) => {
+        const type = (payload.new as any)?.type === "feature" ? "Feature request" : "New feedback";
+        toast(`📬 ${type} received`, {
+          description: "Check Support → Feedback",
+          action: { label: "View", onClick: () => setSection("support") },
+          duration: 8000,
+        });
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "verification_requests" }, () => {
+        setPendingCount(c => c + 1);
+        toast("🔖 New verification request", {
+          description: "Pending your review",
+          action: { label: "Review", onClick: () => setSection("support") },
+          duration: 8000,
+        });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [authed]);
 
   if (booting) return (
     <div className="min-h-screen bg-[#080808] flex items-center justify-center">

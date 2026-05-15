@@ -70,7 +70,7 @@ const Verification = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not logged in");
 
-      const { error } = await supabase.from("verification_requests" as any).insert({
+      const { data: created, error } = await supabase.from("verification_requests" as any).insert({
         user_id:          session.user.id,
         instagram_handle: instagram.trim() || null,
         tiktok_handle:    tiktok.trim()    || null,
@@ -78,8 +78,13 @@ const Verification = () => {
         twitter_handle:   twitter.trim()   || null,
         follower_count:   followerCount ? parseInt(followerCount) : null,
         reason:           reason.trim(),
-      });
+      }).select("id").single();
       if (error) throw error;
+
+      // Notify admin via email (fire-and-forget)
+      if ((created as any)?.id) {
+        supabase.functions.invoke("verification-notify", { body: { request_id: (created as any).id } }).catch(() => {});
+      }
 
       toast.success("Verification request submitted!", {
         description: "We'll review your request within 3–5 business days.",

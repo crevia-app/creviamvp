@@ -79,7 +79,7 @@ serve(async (req: Request) => {
           .eq("id", fb.user_id)
           .single();
         if (profile) {
-          submitterName = profile.full_name ?? "Unknown";
+          submitterName = (profile as any).display_name ?? (profile as any).full_name ?? "Unknown";
           submitterEmail = profile.email ?? "Unknown";
         }
       }
