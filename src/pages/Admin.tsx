@@ -112,7 +112,7 @@ const StatCard = ({
     </div>
     <p className="text-2xl md:text-3xl font-bold text-white tabular-nums tracking-tight leading-none mb-1">{value}</p>
     <p className="text-xs text-white/40 font-medium">{label}</p>
-    {sub && <p className="text-[11px] text-white/20 mt-1">{sub}</p>}
+    {sub && <p className="text-[11px] text-white/20 mt-1 truncate">{sub}</p>}
   </div>
 );
 
@@ -564,7 +564,8 @@ const UsersSection = () => {
 
 // ─── Billing ──────────────────────────────────────────────────────────────────
 const BillingSection = () => {
-  const [txns, setTxns]     = useState<any[]>([]);
+  const [txns, setTxns]       = useState<any[]>([]);
+  const [tab, setTab]         = useState<"transactions" | "refunds">("transactions");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { load(); }, []);
@@ -579,9 +580,20 @@ const BillingSection = () => {
     setLoading(false);
   };
 
-  const total     = txns.reduce((s, t) => s + (t.amount ?? 0), 0);
-  const completed = txns.filter(t => t.status === "completed" || t.status === "success").length;
-  const failed    = txns.filter(t => t.status === "failed").length;
+  const markRefunded = async (id: string) => {
+    if (!confirm("Mark this transaction as refunded? This updates the status in your records.")) return;
+    const { error } = await supabase.from("payment_transactions").update({ status: "refunded" }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Marked as refunded");
+    load();
+  };
+
+  const total        = txns.reduce((s, t) => s + (t.amount ?? 0), 0);
+  const completed    = txns.filter(t => t.status === "completed" || t.status === "success").length;
+  const failed       = txns.filter(t => t.status === "failed").length;
+  const refunded     = txns.filter(t => t.status === "refunded").length;
+  const refundable   = txns.filter(t => ["failed", "cancelled"].includes(t.status));
+  const refundedList = txns.filter(t => t.status === "refunded");
 
   if (loading) return <Spin />;
 
@@ -592,43 +604,117 @@ const BillingSection = () => {
         <p className="text-sm text-white/30">All payment transactions</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Total Volume", value: KES(total),        color: "text-bronze",       accent: "bg-bronze" },
-          { label: "Completed",    value: String(completed), color: "text-emerald-400",  accent: "bg-emerald-500" },
-          { label: "Failed",       value: String(failed),    color: "text-red-400",      accent: "bg-red-500" },
+          { label: "Total Volume", value: KES(total),        color: "text-bronze",      accent: "bg-bronze" },
+          { label: "Completed",    value: String(completed), color: "text-emerald-400", accent: "bg-emerald-500" },
+          { label: "Failed",       value: String(failed),    color: "text-red-400",     accent: "bg-red-500" },
+          { label: "Refunded",     value: String(refunded),  color: "text-amber-400",   accent: "bg-amber-500" },
         ].map(c => (
           <div key={c.label} className="relative bg-[#111] border border-white/[0.06] rounded-2xl p-4 overflow-hidden">
             <div className={cn("absolute -top-4 -right-4 w-12 h-12 rounded-full blur-xl opacity-20", c.accent)} />
-            <p className="text-[11px] text-white/35 font-medium mb-2">{c.label}</p>
-            <p className={cn("text-xl md:text-2xl font-bold tabular-nums leading-tight", c.color)}>{c.value}</p>
+            <p className="text-[10px] text-white/35 font-medium mb-2 truncate">{c.label}</p>
+            <p className={cn("text-lg md:text-2xl font-bold tabular-nums leading-tight", c.color)}>{c.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
-          <p className="text-sm font-semibold text-white/70">Transactions</p>
-          <span className="text-xs text-white/25">{txns.length} total</span>
-        </div>
-        <div className="divide-y divide-white/[0.04]">
-          {txns.length === 0 && (
-            <p className="text-center py-16 text-white/20 text-sm">No transactions yet</p>
-          )}
-          {txns.map(t => (
-            <div key={t.id} className="px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-white/60 font-mono truncate">{t.transaction_reference || t.id.slice(0, 20)}</p>
-                <p className="text-xs text-white/25 mt-0.5">{t.payment_method || t.transaction_type} · {format(new Date(t.created_at), "dd MMM yyyy, HH:mm")}</p>
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 bg-[#111] rounded-xl border border-white/[0.06] w-fit">
+        {(["transactions", "refunds"] as const).map(t => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={cn("px-4 py-1.5 rounded-lg text-sm font-medium transition-all capitalize flex items-center gap-1.5",
+              tab === t ? "bg-bronze text-white shadow-sm" : "text-white/40 hover:text-white/70"
+            )}
+          >
+            {t}
+            {t === "refunds" && refundable.length > 0 && (
+              <span className="bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none">{refundable.length}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {tab === "transactions" && (
+        <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
+            <p className="text-sm font-semibold text-white/70">Transactions</p>
+            <span className="text-xs text-white/25">{txns.length} total</span>
+          </div>
+          <div className="divide-y divide-white/[0.04]">
+            {txns.length === 0 && <p className="text-center py-16 text-white/20 text-sm">No transactions yet</p>}
+            {txns.map(t => (
+              <div key={t.id} className="px-4 md:px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-white/60 font-mono truncate">{t.transaction_reference || t.id.slice(0, 16)}</p>
+                  <p className="text-[11px] text-white/25 mt-0.5 truncate">{t.payment_method || t.transaction_type} · {format(new Date(t.created_at), "dd MMM yy")}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className={statusChip(t.status || "pending")}>{t.status || "pending"}</span>
+                  <p className="text-sm font-bold text-white/80 tabular-nums hidden sm:block">KES {(t.amount ?? 0).toLocaleString()}</p>
+                </div>
               </div>
-              <div className="flex items-center gap-2.5 flex-shrink-0">
-                <span className={statusChip(t.status || "pending")}>{t.status || "pending"}</span>
-                <p className="text-sm font-bold text-white/80 tabular-nums">KES {(t.amount ?? 0).toLocaleString()}</p>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tab === "refunds" && (
+        <div className="space-y-4">
+          {refundable.length === 0 && refundedList.length === 0 && (
+            <div className="text-center py-20 text-white/20 text-sm">No refund requests</div>
+          )}
+          {refundable.length > 0 && (
+            <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+              <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
+                <p className="text-sm font-semibold text-white/70">Needs Attention</p>
+                <span className="text-xs text-red-400">{refundable.length} failed / cancelled</span>
+              </div>
+              <div className="divide-y divide-white/[0.04]">
+                {refundable.map(t => (
+                  <div key={t.id} className="px-4 md:px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-white/60 font-mono truncate">{t.transaction_reference || t.id.slice(0, 16)}</p>
+                      <p className="text-[11px] text-white/25 mt-0.5 truncate">{format(new Date(t.created_at), "dd MMM yy, HH:mm")}</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={statusChip(t.status)}>{t.status}</span>
+                      <p className="text-sm font-bold text-white/80 tabular-nums hidden sm:block">KES {(t.amount ?? 0).toLocaleString()}</p>
+                      <Button size="sm" variant="outline" onClick={() => markRefunded(t.id)}
+                        className="h-7 text-[11px] border-amber-500/25 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/40 rounded-lg px-2.5 flex-shrink-0">
+                        Refund
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
+          )}
+          {refundedList.length > 0 && (
+            <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+              <div className="px-5 py-4 border-b border-white/[0.06]">
+                <p className="text-sm font-semibold text-white/70">Processed Refunds</p>
+              </div>
+              <div className="divide-y divide-white/[0.04]">
+                {refundedList.map(t => (
+                  <div key={t.id} className="px-4 md:px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-white/60 font-mono truncate">{t.transaction_reference || t.id.slice(0, 16)}</p>
+                      <p className="text-[11px] text-white/25 mt-0.5 truncate">{format(new Date(t.created_at), "dd MMM yy")}</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400">refunded</span>
+                      <p className="text-sm font-bold text-white/80 tabular-nums hidden sm:block">KES {(t.amount ?? 0).toLocaleString()}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 };
@@ -729,7 +815,7 @@ const DocumentsSection = () => {
               </div>
               <div className="flex items-center gap-2.5 flex-shrink-0">
                 <span className={statusChip(d.status)}>{d.status}</span>
-                <p className="text-sm font-bold text-white/70 tabular-nums">
+                <p className="text-sm font-bold text-white/70 tabular-nums hidden sm:block">
                   {d.currency || "KES"} {((d.total ?? d.value) || 0).toLocaleString()}
                 </p>
                 <button
@@ -756,16 +842,17 @@ const DocumentsSection = () => {
 
 // ─── Support ──────────────────────────────────────────────────────────────────
 const SupportSection = () => {
-  const [tab, setTab]             = useState<"verifications" | "feedback">("verifications");
-  const [requests, setRequests]   = useState<any[]>([]);
-  const [feedback, setFeedback]   = useState<any[]>([]);
-  const [notes, setNotes]         = useState<Record<string, string>>({});
-  const [loading, setLoading]     = useState(true);
+  const [tab, setTab]           = useState<"verifications" | "feedback" | "tickets">("verifications");
+  const [requests, setRequests] = useState<any[]>([]);
+  const [feedback, setFeedback] = useState<any[]>([]);
+  const [tickets, setTickets]   = useState<any[]>([]);
+  const [notes, setNotes]       = useState<Record<string, string>>({});
+  const [loading, setLoading]   = useState(true);
 
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    const [{ data: reqs }, { data: fb }] = await Promise.all([
+    const [{ data: reqs }, { data: fb }, { data: tix }] = await Promise.all([
       supabase.from("verification_requests" as any)
         .select("*, profiles:user_id(display_name, handle, avatar_url, email)")
         .order("created_at", { ascending: false }),
@@ -773,9 +860,14 @@ const SupportSection = () => {
         .select("*, profiles:user_id(display_name, handle)")
         .order("created_at", { ascending: false })
         .limit(50),
+      supabase.from("support_tickets" as any)
+        .select("*, profiles:user_id(display_name, handle, email)")
+        .order("created_at", { ascending: false })
+        .limit(100),
     ]);
     setRequests(reqs ?? []);
     setFeedback(fb ?? []);
+    setTickets(tix ?? []);
     setLoading(false);
   };
 
@@ -793,7 +885,15 @@ const SupportSection = () => {
     load();
   };
 
-  const pending = requests.filter(r => r.status === "pending").length;
+  const closeTicket = async (id: string) => {
+    const { error } = await supabase.from("support_tickets" as any).update({ status: "closed" }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Ticket closed");
+    load();
+  };
+
+  const pending     = requests.filter(r => r.status === "pending").length;
+  const openTickets = tickets.filter(t => t.status === "open").length;
 
   if (loading) return <Spin />;
 
@@ -801,21 +901,25 @@ const SupportSection = () => {
     <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-3xl">
       <div>
         <h2 className="text-lg font-bold text-white">Support</h2>
-        <p className="text-sm text-white/30">{pending > 0 ? `${pending} pending verification${pending !== 1 ? "s" : ""}` : "All verifications reviewed"}</p>
+        <p className="text-sm text-white/30">
+          {pending > 0 ? `${pending} pending verification${pending !== 1 ? "s" : ""}` : "All verifications reviewed"}
+          {openTickets > 0 ? ` · ${openTickets} open ticket${openTickets !== 1 ? "s" : ""}` : ""}
+        </p>
       </div>
 
-      <div className="flex gap-1 p-1 bg-[#111] rounded-xl border border-white/[0.06] w-fit">
+      <div className="flex flex-wrap gap-1 p-1 bg-[#111] rounded-xl border border-white/[0.06] w-fit">
         {([
-          { id: "verifications" as const, label: "Verifications" },
-          { id: "feedback" as const,      label: "Feedback" },
+          { id: "verifications" as const, label: "Verifications", badge: pending },
+          { id: "feedback" as const,      label: "Feedback",      badge: 0 },
+          { id: "tickets" as const,       label: "Tickets",       badge: openTickets },
         ]).map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} className={cn(
-            "px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
+            "px-3 sm:px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5",
             tab === t.id ? "bg-bronze text-white shadow-sm" : "text-white/40 hover:text-white/70"
           )}>
             {t.label}
-            {t.id === "verifications" && pending > 0 && (
-              <span className="bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none">{pending}</span>
+            {t.badge > 0 && (
+              <span className="bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none">{t.badge}</span>
             )}
           </button>
         ))}
@@ -840,7 +944,7 @@ const SupportSection = () => {
                     : r.status === "rejected" ? "bg-red-500/20 text-red-400 border border-red-500/20"
                     : "bg-amber-500/20 text-amber-400 border border-amber-500/20"
                   )}>{r.status}</span>
-                  <span className="text-xs text-white/20">{format(new Date(r.created_at), "dd MMM")}</span>
+                  <span className="text-xs text-white/20 hidden sm:block">{format(new Date(r.created_at), "dd MMM")}</span>
                 </div>
               </div>
 
@@ -888,9 +992,9 @@ const SupportSection = () => {
           {feedback.length === 0 && <div className="text-center py-20 text-white/20 text-sm">No feedback yet</div>}
           {feedback.map(fb => (
             <div key={fb.id} className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
-              <div className="flex items-center justify-between gap-2 mb-3">
+              <div className="flex items-start justify-between gap-2 mb-3 flex-wrap">
                 <p className="text-sm font-semibold text-white/70">{fb.profiles?.display_name || fb.profiles?.handle || "Anonymous"}</p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full border",
                     fb.type === "feature"
                       ? "bg-blue-500/15 text-blue-400 border-blue-500/20"
@@ -901,6 +1005,43 @@ const SupportSection = () => {
               </div>
               {fb.title && <p className="text-xs text-white/40 mb-2 font-semibold">{fb.title}</p>}
               <p className="text-sm text-white/45 whitespace-pre-wrap leading-relaxed">{fb.message}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === "tickets" && (
+        <div className="space-y-3">
+          {tickets.length === 0 && <div className="text-center py-20 text-white/20 text-sm">No support tickets yet</div>}
+          {tickets.map(tk => (
+            <div key={tk.id} className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Av url={null} name={tk.profiles?.display_name || tk.profiles?.handle} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-white/85 truncate">{tk.profiles?.display_name || tk.profiles?.handle || "Anonymous"}</p>
+                    <p className="text-xs text-white/30 truncate">{tk.profiles?.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                    tk.status === "closed"
+                      ? "bg-white/[0.05] text-white/30 border-white/[0.06]"
+                      : "bg-amber-500/20 text-amber-400 border-amber-500/20"
+                  )}>{tk.status}</span>
+                  <span className="text-xs text-white/20 hidden sm:block">{format(new Date(tk.created_at), "dd MMM")}</span>
+                </div>
+              </div>
+              <p className="text-xs text-white/50 font-semibold mb-2 truncate">{tk.subject}</p>
+              <p className="text-sm text-white/45 whitespace-pre-wrap leading-relaxed">{tk.message}</p>
+              {tk.status === "open" && (
+                <div className="mt-4 flex justify-end">
+                  <Button size="sm" variant="outline" onClick={() => closeTicket(tk.id)}
+                    className="h-7 text-[11px] border-white/10 text-white/40 hover:text-white hover:border-white/20 rounded-lg px-3">
+                    Close ticket
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
         </div>
