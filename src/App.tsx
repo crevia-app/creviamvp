@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -73,8 +73,8 @@ const queryClient = new QueryClient();
 // before any conditional returns — so React's rules of hooks are never violated.
 function AppContent() {
   const [userId, setUserId] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
   const [maintenance, setMaintenance] = useState(false);
+  const location = useLocation();
 
   // MUST be called before any early returns.
   // Receives "" until the auth state resolves, then fires the full init flow.
@@ -100,36 +100,26 @@ function AppContent() {
     // first tick in OAuth / server-redirect flows.
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const uid = session?.user?.id ?? "";
-      setUserId(uid);
-      if (uid) {
-        const { data } = await supabase.from("profiles").select("is_admin").eq("id", uid).single();
-        setIsAdmin((data as any)?.is_admin === true);
-      } else {
-        setIsAdmin(false);
-      }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id ?? "");
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
+  // Background maintenance check — never blocks render
   useEffect(() => {
-    supabase.from("app_settings" as any).select("value").eq("key", "maintenance_mode").single()
-      .then(({ data }) => setMaintenance((data as any)?.value === "true"));
-
-    const ch = supabase.channel("maintenance-gate")
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "app_settings" }, (payload) => {
-        if ((payload.new as any)?.key === "maintenance_mode") {
-          setMaintenance((payload.new as any)?.value === "true");
-        }
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(ch); };
+    supabase.from("app_settings" as any)
+      .select("value")
+      .eq("key", "maintenance_mode")
+      .single()
+      .then(({ data }) => {
+        if ((data as any)?.value === "true") setMaintenance(true);
+      });
   }, []);
 
-  if (maintenance && !isAdmin) return <MaintenancePage />;
+  // Admin path always bypasses maintenance so the toggle can be turned off
+  if (maintenance && !location.pathname.startsWith("/admin")) return <MaintenancePage />;
 
   return (
     <>
