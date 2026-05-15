@@ -75,7 +75,7 @@ const Home = () => {
                     size="lg"
                     className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-sm sm:text-base md:text-lg px-6 sm:px-10 py-5 sm:py-7 font-poppins font-semibold shadow-lg hover-scale"
                   >
-                    {isLoggedIn ? "Open Crevia" : "Start Free"} <ArrowRight className="ml-2 w-5 h-5" />
+                    {isLoggedIn ? "Own Your Story" : "Start Free"} <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
                 {!isLoggedIn && (
@@ -287,7 +287,7 @@ const Home = () => {
                 </p>
                 <Link to={isLoggedIn ? "/kira" : "/auth?mode=signup"}>
                   <Button className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold mt-2">
-                    {isLoggedIn ? "Open Crevia" : "Start Free"} <ArrowRight className="ml-2 w-4 h-4" />
+                    {isLoggedIn ? "Own Your Story" : "Start Free"} <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </Link>
               </div>
@@ -308,7 +308,7 @@ const Home = () => {
                 </p>
                 <Link to={isLoggedIn ? "/kira" : "/auth?mode=signup"}>
                   <Button className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold mt-2">
-                    {isLoggedIn ? "Open Crevia" : "Start Free"} <ArrowRight className="ml-2 w-4 h-4" />
+                    {isLoggedIn ? "Own Your Story" : "Start Free"} <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </Link>
               </div>
