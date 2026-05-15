@@ -96,12 +96,12 @@ const ChartTooltip = ({ active, payload, label, prefix = "" }: any) => {
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 const StatCard = ({
-  label, value, sub, trend, icon: Icon, accent,
+  label, value, sub, trend, icon: Icon, accent, onClick,
 }: {
   label: string; value: string; sub?: string; trend?: number | null;
-  icon: React.ElementType; accent: string;
+  icon: React.ElementType; accent: string; onClick?: () => void;
 }) => (
-  <div className="group relative bg-[#111111] border border-white/[0.06] rounded-2xl p-5 hover:border-white/[0.12] hover:bg-[#161616] transition-all duration-200 overflow-hidden">
+  <div onClick={onClick} className={cn("group relative bg-[#111111] border border-white/[0.06] rounded-2xl p-5 hover:border-white/[0.12] hover:bg-[#161616] transition-all duration-200 overflow-hidden", onClick && "cursor-pointer")}>
     {/* Subtle accent glow top-right */}
     <div className={cn("absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl opacity-20", accent)} />
     <div className="relative flex items-start justify-between mb-3">
@@ -117,7 +117,7 @@ const StatCard = ({
 );
 
 // ─── Overview ─────────────────────────────────────────────────────────────────
-const OverviewSection = () => {
+const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) => {
   const [data, setData] = useState<{
     total: number; free: number; pro: number; enterprise: number;
     invoices: number; contracts: number;
@@ -200,19 +200,19 @@ const OverviewSection = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <StatCard
           label="Total Users" value={fmt(total)} sub={`${free} free · ${pro} pro · ${enterprise} ent`}
-          trend={userTrend} icon={Users} accent="bg-blue-500"
+          trend={userTrend} icon={Users} accent="bg-blue-500" onClick={() => onNavigate("users")}
         />
         <StatCard
           label="MRR" value={KES(mrr)} sub="Monthly recurring revenue"
-          trend={mrrTrend} icon={CreditCard} accent="bg-bronze"
+          trend={mrrTrend} icon={CreditCard} accent="bg-bronze" onClick={() => onNavigate("billing")}
         />
         <StatCard
           label="ARR" value={KES(arr)} sub="Projected annual revenue"
-          icon={TrendingUp} accent="bg-emerald-500"
+          icon={TrendingUp} accent="bg-emerald-500" onClick={() => onNavigate("billing")}
         />
         <StatCard
           label="Documents" value={fmt(invoices + contracts)} sub={`${invoices} invoices · ${contracts} contracts`}
-          icon={FileText} accent="bg-violet-500"
+          icon={FileText} accent="bg-violet-500" onClick={() => onNavigate("documents")}
         />
       </div>
 
@@ -358,19 +358,22 @@ const OverviewSection = () => {
       </div>
 
       {/* ── ARR Callout ── */}
-      <div className="bg-gradient-to-r from-bronze/10 via-bronze/5 to-transparent border border-bronze/20 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <button
+        onClick={() => onNavigate("billing")}
+        className="w-full text-left bg-gradient-to-r from-bronze/10 via-bronze/5 to-transparent border border-bronze/20 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-bronze/40 hover:from-bronze/15 transition-all duration-200 group"
+      >
         <div>
           <p className="text-xs text-bronze/70 uppercase tracking-wider font-semibold mb-1">Projected ARR</p>
           <p className="text-3xl md:text-4xl font-bold text-white tabular-nums">{KES(arr)}</p>
           <p className="text-xs text-white/30 mt-1">Based on current MRR of {KES(mrr)} × 12 months</p>
         </div>
         <div className="text-right flex-shrink-0">
-          <div className="inline-flex items-center gap-2 bg-bronze/10 border border-bronze/20 px-4 py-2 rounded-xl">
+          <div className="inline-flex items-center gap-2 bg-bronze/10 border border-bronze/20 px-4 py-2 rounded-xl group-hover:bg-bronze/20 group-hover:border-bronze/40 transition-all">
             <ArrowUpRight className="w-4 h-4 text-bronze" />
             <span className="text-sm font-semibold text-bronze">Annual projection</span>
           </div>
         </div>
-      </div>
+      </button>
 
     </div>
   );
@@ -1100,7 +1103,6 @@ const Admin = () => {
             <div className="w-px h-4 bg-white/10 hidden sm:block" />
             <div>
               <h1 className="text-sm font-semibold text-white leading-none">{NAV.find(n => n.id === section)?.label}</h1>
-              <p className="text-[10px] text-white/20 mt-0.5 hidden sm:block">Admin · Internal</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -1117,7 +1119,7 @@ const Admin = () => {
           "flex-1 overflow-y-auto",
           section === "users" && "flex flex-col overflow-hidden"
         )}>
-          {section === "overview"  && <OverviewSection />}
+          {section === "overview"  && <OverviewSection onNavigate={setSection} />}
           {section === "users"     && <UsersSection />}
           {section === "billing"   && <BillingSection />}
           {section === "documents" && <DocumentsSection />}
