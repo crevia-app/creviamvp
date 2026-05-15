@@ -151,7 +151,7 @@ function AppContent() {
           <Route path="/profile/settings" element={<ProtectedRoute><AppLayout><Settings /></AppLayout></ProtectedRoute>} />
           <Route path="/profile/help" element={<ProtectedRoute><AppLayout><Help /></AppLayout></ProtectedRoute>} />
           <Route path="/profile/feedback" element={<ProtectedRoute><AppLayout><Feedback /></AppLayout></ProtectedRoute>} />
-          <Route path="/admin" element={<ProtectedRoute><AppLayout><Admin /></AppLayout></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
