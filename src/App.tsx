@@ -73,8 +73,8 @@ const queryClient = new QueryClient();
 // before any conditional returns — so React's rules of hooks are never violated.
 function AppContent() {
   const [userId, setUserId] = useState("");
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [maintenance, setMaintenance] = useState<boolean | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [maintenance, setMaintenance] = useState(false);
 
   // MUST be called before any early returns.
   // Receives "" until the auth state resolves, then fires the full init flow.
@@ -129,7 +129,6 @@ function AppContent() {
     return () => { supabase.removeChannel(ch); };
   }, []);
 
-  if (maintenance === null || isAdmin === null) return <PageLoader />;
   if (maintenance && !isAdmin) return <MaintenancePage />;
 
   return (
