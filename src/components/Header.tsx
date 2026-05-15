@@ -36,7 +36,7 @@ const Header = () => {
           <span className="text-[8px] font-poppins font-medium text-bronze bg-bronze/10 px-1 py-0.5 rounded-full uppercase tracking-wider">beta</span>
         </Link>
         
-        <div className="hidden lg:flex items-center gap-6 xl:gap-8">
+        <div className="hidden lg:flex items-center gap-10 xl:gap-14">
           <Link to="/" className="text-sm font-medium hover:text-bronze transition-all duration-300 bronze-underline">
             Home
           </Link>
