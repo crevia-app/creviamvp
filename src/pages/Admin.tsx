@@ -646,14 +646,14 @@ const BillingSection = () => {
           <div className="divide-y divide-white/[0.04]">
             {txns.length === 0 && <p className="text-center py-16 text-white/20 text-sm">No transactions yet</p>}
             {txns.map(t => (
-              <div key={t.id} className="px-4 md:px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
+              <div key={t.id} className="px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-white/60 font-mono truncate">{t.transaction_reference || t.id.slice(0, 16)}</p>
-                  <p className="text-[11px] text-white/25 mt-0.5 truncate">{t.payment_method || t.transaction_type} · {format(new Date(t.created_at), "dd MMM yy")}</p>
+                  <p className="text-xs text-white/60 font-mono truncate">{t.transaction_reference || t.id.slice(0, 20)}</p>
+                  <p className="text-xs text-white/25 mt-0.5">{t.payment_method || t.transaction_type} · {format(new Date(t.created_at), "dd MMM yyyy, HH:mm")}</p>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2.5 flex-shrink-0">
                   <span className={statusChip(t.status || "pending")}>{t.status || "pending"}</span>
-                  <p className="text-sm font-bold text-white/80 tabular-nums hidden sm:block">KES {(t.amount ?? 0).toLocaleString()}</p>
+                  <p className="text-sm font-bold text-white/80 tabular-nums">KES {(t.amount ?? 0).toLocaleString()}</p>
                 </div>
               </div>
             ))}
@@ -677,11 +677,11 @@ const BillingSection = () => {
                   <div key={t.id} className="px-4 md:px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-white/60 font-mono truncate">{t.transaction_reference || t.id.slice(0, 16)}</p>
-                      <p className="text-[11px] text-white/25 mt-0.5 truncate">{format(new Date(t.created_at), "dd MMM yy, HH:mm")}</p>
+                      <p className="text-[11px] text-white/25 mt-0.5 truncate">{format(new Date(t.created_at), "dd MMM yyyy, HH:mm")}</p>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2.5 flex-shrink-0">
                       <span className={statusChip(t.status)}>{t.status}</span>
-                      <p className="text-sm font-bold text-white/80 tabular-nums hidden sm:block">KES {(t.amount ?? 0).toLocaleString()}</p>
+                      <p className="text-sm font-bold text-white/80 tabular-nums">KES {(t.amount ?? 0).toLocaleString()}</p>
                       <Button size="sm" variant="outline" onClick={() => markRefunded(t.id)}
                         className="h-7 text-[11px] border-amber-500/25 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/40 rounded-lg px-2.5 flex-shrink-0">
                         Refund
@@ -706,7 +706,7 @@ const BillingSection = () => {
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400">refunded</span>
-                      <p className="text-sm font-bold text-white/80 tabular-nums hidden sm:block">KES {(t.amount ?? 0).toLocaleString()}</p>
+                      <p className="text-sm font-bold text-white/80 tabular-nums">KES {(t.amount ?? 0).toLocaleString()}</p>
                     </div>
                   </div>
                 ))}
@@ -815,7 +815,7 @@ const DocumentsSection = () => {
               </div>
               <div className="flex items-center gap-2.5 flex-shrink-0">
                 <span className={statusChip(d.status)}>{d.status}</span>
-                <p className="text-sm font-bold text-white/70 tabular-nums hidden sm:block">
+                <p className="text-sm font-bold text-white/70 tabular-nums">
                   {d.currency || "KES"} {((d.total ?? d.value) || 0).toLocaleString()}
                 </p>
                 <button
@@ -944,7 +944,7 @@ const SupportSection = () => {
                     : r.status === "rejected" ? "bg-red-500/20 text-red-400 border border-red-500/20"
                     : "bg-amber-500/20 text-amber-400 border border-amber-500/20"
                   )}>{r.status}</span>
-                  <span className="text-xs text-white/20 hidden sm:block">{format(new Date(r.created_at), "dd MMM")}</span>
+                  <span className="text-xs text-white/20">{format(new Date(r.created_at), "dd MMM")}</span>
                 </div>
               </div>
 
@@ -1029,7 +1029,7 @@ const SupportSection = () => {
                       ? "bg-white/[0.05] text-white/30 border-white/[0.06]"
                       : "bg-amber-500/20 text-amber-400 border-amber-500/20"
                   )}>{tk.status}</span>
-                  <span className="text-xs text-white/20 hidden sm:block">{format(new Date(tk.created_at), "dd MMM")}</span>
+                  <span className="text-xs text-white/20">{format(new Date(tk.created_at), "dd MMM")}</span>
                 </div>
               </div>
               <p className="text-xs text-white/50 font-semibold mb-2 truncate">{tk.subject}</p>
