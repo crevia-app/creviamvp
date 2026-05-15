@@ -56,6 +56,16 @@ const PageLoader = () => (
   </div>
 );
 
+const MaintenancePage = () => (
+  <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 text-center">
+    <img src="/crevia-logo.png" alt="Crevia" className="w-14 h-14 rounded-full ring-1 ring-border mb-8" />
+    <h1 className="font-vollkorn text-3xl md:text-4xl font-bold mb-3">Down for maintenance</h1>
+    <p className="text-muted-foreground text-sm max-w-sm leading-relaxed">
+      We're making some improvements to Crevia. We'll be back shortly — thank you for your patience.
+    </p>
+  </div>
+);
+
 const queryClient = new QueryClient();
 
 // AppContent lives inside BrowserRouter so routing hooks are available.
@@ -63,6 +73,8 @@ const queryClient = new QueryClient();
 // before any conditional returns — so React's rules of hooks are never violated.
 function AppContent() {
   const [userId, setUserId] = useState("");
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [maintenance, setMaintenance] = useState<boolean | null>(null);
 
   // MUST be called before any early returns.
   // Receives "" until the auth state resolves, then fires the full init flow.
@@ -88,12 +100,37 @@ function AppContent() {
     // first tick in OAuth / server-redirect flows.
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserId(session?.user?.id ?? "");
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const uid = session?.user?.id ?? "";
+      setUserId(uid);
+      if (uid) {
+        const { data } = await supabase.from("profiles").select("is_admin").eq("id", uid).single();
+        setIsAdmin((data as any)?.is_admin === true);
+      } else {
+        setIsAdmin(false);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    supabase.from("app_settings" as any).select("value").eq("key", "maintenance_mode").single()
+      .then(({ data }) => setMaintenance((data as any)?.value === "true"));
+
+    const ch = supabase.channel("maintenance-gate")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "app_settings" }, (payload) => {
+        if ((payload.new as any)?.key === "maintenance_mode") {
+          setMaintenance((payload.new as any)?.value === "true");
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(ch); };
+  }, []);
+
+  if (maintenance === null || isAdmin === null) return <PageLoader />;
+  if (maintenance && !isAdmin) return <MaintenancePage />;
 
   return (
     <>

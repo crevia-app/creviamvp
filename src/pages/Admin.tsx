@@ -920,16 +920,25 @@ const SettingsSection = () => {
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase.from("invoices").select("id", { count: "exact", head: true }),
       supabase.from("contracts").select("id", { count: "exact", head: true }),
-    ]).then(([{ count: u }, { count: i }, { count: c }]) => setCounts({ users: u ?? 0, invoices: i ?? 0, contracts: c ?? 0 }));
-
-    // Load maintenance mode state from localStorage (admin-only flag)
-    setMaintenance(localStorage.getItem("crevia_maintenance") === "true");
+      supabase.from("app_settings" as any).select("value").eq("key", "maintenance_mode").single(),
+    ]).then(([{ count: u }, { count: i }, { count: c }, { data: setting }]) => {
+      setCounts({ users: u ?? 0, invoices: i ?? 0, contracts: c ?? 0 });
+      setMaintenance((setting as any)?.value === "true");
+    });
   }, []);
 
   const toggleMaintenance = async () => {
     setMaintenanceSaving(true);
     const next = !maintenance;
-    localStorage.setItem("crevia_maintenance", String(next));
+    const { error } = await supabase
+      .from("app_settings" as any)
+      .update({ value: String(next), updated_at: new Date().toISOString() })
+      .eq("key", "maintenance_mode");
+    if (error) {
+      toast.error("Failed to update: " + error.message);
+      setMaintenanceSaving(false);
+      return;
+    }
     setMaintenance(next);
     setMaintenanceSaving(false);
     toast(next ? "⚠️ Maintenance mode ON" : "✅ Maintenance mode OFF", {
