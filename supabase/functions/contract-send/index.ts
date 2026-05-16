@@ -130,7 +130,16 @@ serve(async (req) => {
           <tr>
             <td style="background:#1a1a1a;padding:28px 40px;">
               <table width="100%"><tr>
-                <td><img src="https://creviamvp.vercel.app/crevia-logo.png" alt="Crevia" height="36" style="display:block;" /></td>
+                <td>
+                  <table cellpadding="0" cellspacing="0"><tr>
+                    <td style="vertical-align:middle;padding-right:10px;">
+                      <img src="https://creviamvp.vercel.app/crevia-logo.png" alt="Crevia" width="40" height="40" style="display:block;border-radius:50%;border:1px solid #333;" />
+                    </td>
+                    <td style="vertical-align:middle;">
+                      <span style="font-size:22px;font-weight:700;color:#c9a96e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">Crevia</span>
+                    </td>
+                  </tr></table>
+                </td>
                 <td align="right">
                   <p style="margin:0;font-size:13px;color:#888;">Contract</p>
                   <p style="margin:2px 0 0;font-size:16px;font-weight:700;color:#fff;">${contract.title}</p>

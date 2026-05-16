@@ -115,7 +115,14 @@ serve(async (req: Request) => {
 <body>
 <div class="card">
   <div class="header">
-    <img src="https://creviamvp.vercel.app/crevia-logo.png" alt="Crevia" height="32" style="display:block;margin-bottom:12px;" />
+    <table cellpadding="0" cellspacing="0" style="margin-bottom:12px;"><tr>
+      <td style="vertical-align:middle;padding-right:10px;">
+        <img src="https://creviamvp.vercel.app/crevia-logo.png" alt="Crevia" width="36" height="36" style="display:block;border-radius:50%;border:1px solid #444;" />
+      </td>
+      <td style="vertical-align:middle;">
+        <span style="font-size:20px;font-weight:700;color:#c9a96e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">Crevia</span>
+      </td>
+    </tr></table>
     <h1>New Feedback Received</h1>
     <p>Submitted via Crevia · ${formattedDate}</p>
   </div>
