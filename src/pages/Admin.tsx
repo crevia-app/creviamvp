@@ -1055,10 +1055,32 @@ const BillingSection = () => {
         <div className="space-y-5 max-w-2xl">
           <p className="text-xs text-white/30">Set monthly subscription prices. Values are stored in KES and shown to users on the pricing page.</p>
 
+          {/* Free plan — always free, no price input */}
+          <div className="border border-white/[0.08] rounded-2xl p-5 space-y-4 bg-white/[0.02]">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <p className="text-base font-bold text-white/50">Free</p>
+                <p className="text-xs text-white/25 mt-0.5">Always free · no credit card required</p>
+              </div>
+              <span className="text-sm font-bold text-white/30 tabular-nums">KES 0 / mo</span>
+            </div>
+            <div className="rounded-xl p-3 bg-white/[0.03]">
+              <p className="text-[10px] text-white/30 uppercase tracking-wider font-semibold mb-2">Included features</p>
+              <ul className="space-y-1.5">
+                {["5 invoices / month", "3 contracts / month", "Basic CreviaLink profile", "Standard messaging"].map(f => (
+                  <li key={f} className="flex items-center gap-2 text-xs text-white/35">
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-white/20" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
           {([
             {
               key: "pro" as const,
-              label: "Creative Pro",
+              label: "Pro",
               color: "text-emerald-400",
               border: "border-emerald-500/20",
               bg: "bg-emerald-500/5",
@@ -1067,12 +1089,12 @@ const BillingSection = () => {
             },
             {
               key: "enterprise" as const,
-              label: "Brand Workspace",
+              label: "Enterprise",
               color: "text-violet-400",
               border: "border-violet-500/20",
               bg: "bg-violet-500/5",
               accent: "bg-violet-500/10",
-              features: ["Everything in Creative Pro", "Multi-seat workspace", "Priority support", "Custom branding", "Advanced analytics"],
+              features: ["Everything in Pro", "Multi-seat workspace", "Priority support", "Custom branding", "Advanced analytics"],
             },
           ]).map(plan => (
             <div key={plan.key} className={cn("border rounded-2xl p-5 space-y-4", plan.border, plan.bg)}>
