@@ -398,6 +398,7 @@ const UsersSection = () => {
   const [filter, setFilter]         = useState<"all" | "free" | "pro" | "enterprise">("all");
   const [selected, setSelected]     = useState<any>(null);
   const [selStats, setSelStats]     = useState<{ invoices: number; contracts: number; invoiceTotal: number } | null>(null);
+  const [selTxns, setSelTxns]       = useState<any[]>([]);
   const [loading, setLoading]       = useState(true);
   const [detailLoad, setDetailLoad] = useState(false);
   const [actionLoad, setActionLoad] = useState(false);
@@ -416,14 +417,28 @@ const UsersSection = () => {
   const openDetail = async (u: any) => {
     setSelected(u);
     setSelStats(null);
+    setSelTxns([]);
     setDetailLoad(true);
-    const [{ count: inv }, { count: con }, { data: invData }] = await Promise.all([
+    const [{ count: inv }, { count: con }, { data: invData }, { data: brandEscrows }, { data: creatorEscrows }] = await Promise.all([
       supabase.from("invoices").select("id", { count: "exact", head: true }).eq("user_id", u.id),
       supabase.from("contracts").select("id", { count: "exact", head: true }).eq("user_id", u.id),
       supabase.from("invoices").select("total").eq("user_id", u.id),
+      supabase.from("escrow_payments" as any).select("id").eq("brand_id", u.id),
+      supabase.from("escrow_payments" as any).select("id").eq("creator_id", u.id),
     ]);
     const total = (invData ?? []).reduce((s: number, r: any) => s + (r.total ?? 0), 0);
     setSelStats({ invoices: inv ?? 0, contracts: con ?? 0, invoiceTotal: total });
+
+    const escrowIds = [...(brandEscrows ?? []), ...(creatorEscrows ?? [])].map((e: any) => e.id);
+    if (escrowIds.length > 0) {
+      const { data: txData } = await supabase
+        .from("payment_transactions")
+        .select("id, amount, status, payment_method, transaction_type, transaction_reference, created_at")
+        .in("escrow_id", escrowIds)
+        .order("created_at", { ascending: false })
+        .limit(15);
+      setSelTxns(txData ?? []);
+    }
     setDetailLoad(false);
   };
 
@@ -649,6 +664,33 @@ const UsersSection = () => {
 
               </div>
             </div>
+
+            {/* Payment history */}
+            <div>
+              <p className="text-xs text-white/35 uppercase tracking-wider font-semibold mb-3">Payment History</p>
+              {detailLoad ? (
+                <div className="flex items-center justify-center py-4"><Loader2 className="w-4 h-4 text-bronze animate-spin" /></div>
+              ) : selTxns.length === 0 ? (
+                <p className="text-xs text-white/20 text-center py-4">No transactions found</p>
+              ) : (
+                <div className="bg-[#111] border border-white/[0.06] rounded-xl overflow-hidden">
+                  <div className="divide-y divide-white/[0.04]">
+                    {selTxns.map(t => (
+                      <div key={t.id} className="px-3 py-2.5 flex items-center gap-2.5">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] text-white/60 font-mono truncate">{t.transaction_reference || t.id.slice(0, 16)}</p>
+                          <p className="text-[10px] text-white/25 mt-0.5">{t.payment_method || t.transaction_type} · {format(new Date(t.created_at), "dd MMM yy")}</p>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <span className={statusChip(t.status || "pending")}>{t.status || "pending"}</span>
+                          <p className="text-xs font-bold text-white/70 tabular-nums">KES {(t.amount ?? 0).toLocaleString()}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -658,15 +700,17 @@ const UsersSection = () => {
 
 // ─── Billing ──────────────────────────────────────────────────────────────────
 const BillingSection = () => {
-  const [txns, setTxns]         = useState<any[]>([]);
-  const [profiles, setProfiles] = useState<any[]>([]);
-  const [tab, setTab]           = useState<"transactions" | "refunds" | "analytics">("transactions");
-  const [loading, setLoading]   = useState(true);
+  const [txns, setTxns]               = useState<any[]>([]);
+  const [profiles, setProfiles]       = useState<any[]>([]);
+  const [tab, setTab]                 = useState<"transactions" | "refunds" | "analytics" | "plans">("transactions");
+  const [loading, setLoading]         = useState(true);
+  const [planPrices, setPlanPrices]   = useState({ pro: "1500", enterprise: "5000" });
+  const [planSaving, setPlanSaving]   = useState(false);
 
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    const [{ data: txnData }, { data: profData }] = await Promise.all([
+    const [{ data: txnData }, { data: profData }, { data: settingsData }] = await Promise.all([
       supabase
         .from("payment_transactions")
         .select(`
@@ -681,10 +725,34 @@ const BillingSection = () => {
       supabase
         .from("profiles")
         .select("id, subscription_plan, subscription_expires_at, created_at"),
+      supabase
+        .from("app_settings" as any)
+        .select("key, value")
+        .in("key", ["plan_price_pro", "plan_price_enterprise"]),
     ]);
     setTxns(txnData ?? []);
     setProfiles(profData ?? []);
+    if (settingsData) {
+      const prices = { pro: "1500", enterprise: "5000" };
+      (settingsData as any[]).forEach(s => {
+        if (s.key === "plan_price_pro") prices.pro = s.value;
+        if (s.key === "plan_price_enterprise") prices.enterprise = s.value;
+      });
+      setPlanPrices(prices);
+    }
     setLoading(false);
+  };
+
+  const savePlanPrices = async () => {
+    setPlanSaving(true);
+    const rows = [
+      { key: "plan_price_pro",        value: planPrices.pro },
+      { key: "plan_price_enterprise", value: planPrices.enterprise },
+    ];
+    const { error } = await (supabase.from("app_settings" as any) as any).upsert(rows, { onConflict: "key" });
+    if (error) { toast.error(error.message); }
+    else { toast.success("Plan prices saved"); }
+    setPlanSaving(false);
   };
 
   const markRefunded = async (id: string) => {
@@ -760,7 +828,7 @@ const BillingSection = () => {
 
       {/* Tabs */}
       <div className="flex gap-1 p-1 bg-[#111] rounded-xl border border-white/[0.06] w-fit flex-wrap">
-        {(["transactions", "refunds", "analytics"] as const).map(t => (
+        {(["transactions", "refunds", "analytics", "plans"] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -980,6 +1048,72 @@ const BillingSection = () => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {tab === "plans" && (
+        <div className="space-y-5 max-w-2xl">
+          <p className="text-xs text-white/30">Set monthly subscription prices. Values are stored in KES and shown to users on the pricing page.</p>
+
+          {([
+            {
+              key: "pro" as const,
+              label: "Creative Pro",
+              color: "text-emerald-400",
+              border: "border-emerald-500/20",
+              bg: "bg-emerald-500/5",
+              accent: "bg-emerald-500/10",
+              features: ["Unlimited invoices & contracts", "CreviaLink profile", "CreviaStudio access", "E2E encrypted messaging", "Escrow payments"],
+            },
+            {
+              key: "enterprise" as const,
+              label: "Brand Workspace",
+              color: "text-violet-400",
+              border: "border-violet-500/20",
+              bg: "bg-violet-500/5",
+              accent: "bg-violet-500/10",
+              features: ["Everything in Creative Pro", "Multi-seat workspace", "Priority support", "Custom branding", "Advanced analytics"],
+            },
+          ]).map(plan => (
+            <div key={plan.key} className={cn("border rounded-2xl p-5 space-y-4", plan.border, plan.bg)}>
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                  <p className={cn("text-base font-bold", plan.color)}>{plan.label}</p>
+                  <p className="text-xs text-white/30 mt-0.5">Monthly · billed per user</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-white/25">KES</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={planPrices[plan.key]}
+                    onChange={e => setPlanPrices(prev => ({ ...prev, [plan.key]: e.target.value }))}
+                    className="w-28 bg-[#111] border-white/[0.08] text-white text-right rounded-xl h-9 focus-visible:ring-bronze/30 tabular-nums"
+                  />
+                  <span className="text-xs text-white/25">/ mo</span>
+                </div>
+              </div>
+              <div className={cn("rounded-xl p-3", plan.accent)}>
+                <p className="text-[10px] text-white/30 uppercase tracking-wider font-semibold mb-2">Included features</p>
+                <ul className="space-y-1.5">
+                  {plan.features.map(f => (
+                    <li key={f} className="flex items-center gap-2 text-xs text-white/50">
+                      <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", plan.key === "pro" ? "bg-emerald-500" : "bg-violet-500")} />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ))}
+
+          <Button
+            onClick={savePlanPrices}
+            disabled={planSaving}
+            className="bg-bronze hover:bg-bronze/90 text-white h-9 px-6 rounded-xl"
+          >
+            {planSaving ? "Saving…" : "Save Prices"}
+          </Button>
         </div>
       )}
     </div>
