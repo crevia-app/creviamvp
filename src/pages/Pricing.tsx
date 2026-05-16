@@ -28,8 +28,8 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterpriseP
         "Crevia Link — basic templates",
         "10 Kira AI actions per day",
         "Unlimited bio links",
-        "20 invoices per month",
-        "20 contracts per month",
+        "2 invoices per month",
+        "2 contracts per month",
         "Standard chat interface",
         "Community support",
       ],
@@ -345,7 +345,7 @@ const Pricing = () => {
             {[
               {
                 q: "What's included in the free plan?",
-                a: "Crevia Link with basic templates, 10 Kira AI actions per day, 20 invoices and 20 contracts per month. No credit card required.",
+                a: "Crevia Link with basic templates, 10 Kira AI actions per day, 2 invoices and 2 contracts per month. No credit card required.",
               },
               {
                 q: "Can I switch plans anytime?",

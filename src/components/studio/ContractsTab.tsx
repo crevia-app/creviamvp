@@ -341,7 +341,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                   .from("contracts")
                   .select("*", { count: "exact", head: true });
                 if ((count || 0) >= limits.contractsPerMonth) {
-                  toast.error("You've reached your free plan limit of 5 contracts. Upgrade to Pro for unlimited contracts.");
+                  toast.error("You've reached your free plan limit of 2 contracts. Upgrade to Pro for unlimited contracts.");
                 return;
               }
             } 
@@ -461,7 +461,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                             .from("contracts")
                             .select("*", { count: "exact", head: true });
                          if ((count || 0) >= limits.contractsPerMonth) {
-                           toast.error("You've reached your free plan limit of 5 contracts. Upgrade to Pro for unlimited contracts.");
+                           toast.error("You've reached your free plan limit of 2 contracts. Upgrade to Pro for unlimited contracts.");
                            return;
                          }
                        }

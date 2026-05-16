@@ -79,7 +79,7 @@ serve(async (req) => {
     }
     // === END RATE LIMIT ===
 
-    // === PLAN LIMIT GATE (free: 5 contracts/month) ===
+    // === PLAN LIMIT GATE (free: 2 contracts/month) ===
     const { data: profile } = await supabase
       .from('profiles')
       .select('subscription_plan')
@@ -99,7 +99,7 @@ serve(async (req) => {
         .eq('user_id', userId)
         .gte('created_at', startOfMonth.toISOString());
 
-      if ((count ?? 0) >= 5) {
+      if ((count ?? 0) >= 2) {
         return new Response(JSON.stringify({
           error: 'Free plan limit reached. Upgrade to Pro for unlimited contracts.',
           code: 'PLAN_LIMIT_REACHED',
