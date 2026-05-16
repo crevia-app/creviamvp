@@ -18,10 +18,10 @@ import connectHero from "@/assets/crevia-connect-hero.jpg";
 const galleryImages = [gallery1, gallery2, gallery3, gallery4, connectHero];
 
 const OPS_CARDS = [
-  { icon: Link2,        label: "Crevia Link",         path: "/crevia-link" },
-  { icon: MessageCircle,label: "Crevia Chat",          path: "/crevia-studio" },
-  { icon: Receipt,      label: "Invoices & Receipts",  path: "/crevia-invoice" },
-  { icon: Shield,       label: "Contracts",            path: "/crevia-contracts" },
+  { icon: Link2,         label: "Crevia Link",         path: "/crevia-studio" },
+  { icon: MessageCircle, label: "Crevia Chat",          path: "/crevia-studio" },
+  { icon: Receipt,       label: "Invoices & Receipts",  path: "/crevia-invoice" },
+  { icon: Shield,        label: "Contracts",            path: "/crevia-contracts" },
 ];
 
 const Home = () => {
@@ -38,7 +38,7 @@ const Home = () => {
 
   const handleOpsClick = async (path: string) => {
     const { data: { session } } = await supabase.auth.getSession();
-    navigate(session ? path : "/auth?mode=signup");
+    navigate(session ? path : `/auth?mode=signup&redirect=${encodeURIComponent(path)}`);
   };
 
   return (

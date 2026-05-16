@@ -237,7 +237,7 @@ const Auth = () => {
         } else if (signUpData.session) {
           // User is immediately signed in (email confirmation disabled)
           // New accounts won't have 2FA enabled yet, so go straight to the app
-          navigate("/kira", { replace: true });
+          navigate(redirectTo, { replace: true });
         } else {
           // Email confirmation required — show dedicated screen
           setPendingEmail(email);
