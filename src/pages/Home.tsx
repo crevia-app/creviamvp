@@ -271,49 +271,46 @@ const Home = () => {
             </h2>
           </ScrollReveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-            <ScrollReveal delay={0} variant="fade-up">
-              <div className="p-5 sm:p-7 md:p-8 lg:p-10 rounded-2xl border border-border bg-card hover:border-bronze/30 card-interactive space-y-6 h-full">
+          <ScrollReveal delay={0} variant="fade-up">
+            <div className="p-8 sm:p-10 md:p-12 rounded-2xl border border-border bg-card hover:border-bronze/30 card-interactive">
+              <div className="max-w-3xl space-y-6">
                 <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase">
-                  For Creatives
+                  One platform. Every workflow.
                 </p>
-                <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">
-                  Stop freelancing. Start building a company.
+                <h3 className="font-vollkorn text-2xl sm:text-3xl md:text-4xl font-bold leading-tight">
+                  The operating system for the creative economy.
                 </h3>
-                <p className="text-muted-foreground text-base leading-relaxed">
-                  You're not "just a creator." You're a business. Crevia gives you
-                  the invoices, contracts, link-in-bio, and AI strategy to prove it —
-                  to clients, to brands, and to yourself.
+                <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
+                  Crevia brings together everything creative professionals and the people
+                  who hire them actually need — invoices, contracts, secure escrow payments,
+                  a public link profile, and encrypted collaboration — in a single,
+                  beautifully structured workspace.
                 </p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {[
+                    "Invoices & Contracts",
+                    "Escrow Payments",
+                    "Link Profile",
+                    "Encrypted Messaging",
+                    "AI Strategy (Kira)",
+                    "Document Analytics",
+                  ].map(f => (
+                    <span
+                      key={f}
+                      className="text-xs font-medium px-3 py-1.5 rounded-full border border-bronze/25 text-bronze/80 bg-bronze/5"
+                    >
+                      {f}
+                    </span>
+                  ))}
+                </div>
                 <Link to={isLoggedIn ? "/kira" : "/auth?mode=signup"}>
                   <Button className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold mt-2">
-                    {isLoggedIn ? "Own Your Story" : "Start Free"} <ArrowRight className="ml-2 w-4 h-4" />
+                    {isLoggedIn ? "Open Crevia" : "Get Started Free"} <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </Link>
               </div>
-            </ScrollReveal>
-
-            <ScrollReveal delay={0.12} variant="fade-up">
-              <div className="p-5 sm:p-7 md:p-8 lg:p-10 rounded-2xl border border-border bg-card hover:border-bronze/30 card-interactive space-y-6 h-full">
-                <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase">
-                  For Brands
-                </p>
-                <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">
-                  Turn creative chaos into structured operations.
-                </h3>
-                <p className="text-muted-foreground text-base leading-relaxed">
-                  Finding creatives is easy. Managing campaigns, contracts, payments,
-                  and deliverables at scale? That's where Crevia comes in. One platform.
-                  Zero chaos.
-                </p>
-                <Link to={isLoggedIn ? "/kira" : "/auth?mode=signup"}>
-                  <Button className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold mt-2">
-                    {isLoggedIn ? "Own Your Story" : "Start Free"} <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </Link>
-              </div>
-            </ScrollReveal>
-          </div>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
