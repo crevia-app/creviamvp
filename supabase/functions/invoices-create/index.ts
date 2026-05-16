@@ -70,6 +70,21 @@ serve(async (req) => {
     const userId = claimsData.claims.sub;
     // === END AUTH VALIDATION ===
 
+    // === RATE LIMIT (10 requests per 60 seconds per user) ===
+    const { data: allowed } = await supabase.rpc('check_rate_limit', {
+      p_user_id:     userId,
+      p_endpoint:    'invoices-create',
+      p_limit:       10,
+      p_window_secs: 60,
+    });
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: 'Too many requests. Please slow down.' }), {
+        status: 429,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+    // === END RATE LIMIT ===
+
     // === PLAN LIMIT GATE (free: 5 invoices/month) ===
     const { data: profile } = await supabase
       .from('profiles')

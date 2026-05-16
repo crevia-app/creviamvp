@@ -80,6 +80,16 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
+    // Audit log — record every verified webhook event
+    await supabase.from('webhook_events').insert({
+      source:      'paystack',
+      event_type:  event.event,
+      reference:   event.data?.reference ?? null,
+      email:       event.data?.customer?.email ?? null,
+      payload_hash: expectedSignature.slice(0, 16), // first 16 chars of HMAC as fingerprint
+      status:      'processed',
+    });
+
     // ✅ Handle successful charge(when a user successfully pays for subscription)
     if (event.event === 'charge.success') {
       const { customer, metadata, plan } = event.data;
