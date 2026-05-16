@@ -10,91 +10,110 @@ import ScrollReveal from "@/components/ui/ScrollReveal";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 
-const PLANS = (billingCycle: "monthly" | "yearly") => [
-  {
-    name: "Free",
-    badge: null,
-    priceMonthly: "KES 0",
-    priceYearly: "KES 0",
-    period: "",
-    usd: null,
-    description: "Everything you need to get started.",
-    features: [
-      "Crevia Link — basic templates",
-      "10 Kira AI actions per day",
-      "Unlimited bio links",
-      "20 invoices per month",
-      "20 contracts per month",
-      "Standard chat interface",
-      "Community support",
-    ],
-    cta: "Get Started",
-    highlighted: false,
-    planKey: null as "pro" | "business" | null,
-    monthlyAmount: 0,
-    yearlyAmount: 0,
-  },
-  {
-    name: "Pro",
-    badge: billingCycle === "yearly" ? "2 Months Free" : "Most Popular",
-    priceMonthly: "KES 1,949",
-    priceYearly: "KES 19,490",
-    period: billingCycle === "monthly" ? "/mo" : "/yr",
-    usd: billingCycle === "monthly" ? "$14.99/mo" : "$149.90/yr",
-    description: "Advanced tools for serious creators and businesses.",
-    features: [
-      "Verified badge on your profile",
-      "40 Kira AI actions per day",
-      "Crevia Link — all premium themes",
-      "Full visitor analytics",
-      "Unlimited invoices & tracking",
-      "Unlimited AI contract generation",
-      "E-Signatures inside the app",
-      "Client Portal access",
-      "Priority support",
-    ],
-    cta: "Go Pro",
-    highlighted: true,
-    planKey: "pro" as const,
-    monthlyAmount: 1949,
-    yearlyAmount: 19490,
-  },
-  {
-    name: "Enterprise",
-    badge: null,
-    priceMonthly: "Custom",
-    priceYearly: "Custom",
-    period: "",
-    usd: null,
-    description: "Custom limits, SSO, and a dedicated success team.",
-    features: [
-      "Everything in Business",
-      "Unlimited admin seats",
-      "Custom Kira AI action limits",
-      "Single Sign-On (SSO)",
-      "Custom integrations & API access",
-      "SLA guarantee",
-      "Dedicated success manager",
-      "Custom onboarding",
-    ],
-    cta: "Contact Sales",
-    highlighted: false,
-    planKey: null as "pro" | "business" | null,
-    monthlyAmount: 0,
-    yearlyAmount: 0,
-  },
-];
+const fmt = (n: number) => `KES ${n.toLocaleString()}`;
+
+const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterprisePrice: number) => {
+  const proYearly  = Math.round(proPrice * 10);
+  const entYearly  = Math.round(enterprisePrice * 10);
+  return [
+    {
+      name: "Free",
+      badge: null,
+      priceMonthly: "KES 0",
+      priceYearly: "KES 0",
+      period: "",
+      usd: null,
+      description: "Everything you need to get started.",
+      features: [
+        "Crevia Link — basic templates",
+        "10 Kira AI actions per day",
+        "Unlimited bio links",
+        "20 invoices per month",
+        "20 contracts per month",
+        "Standard chat interface",
+        "Community support",
+      ],
+      cta: "Get Started",
+      highlighted: false,
+      planKey: null as "pro" | "business" | null,
+      monthlyAmount: 0,
+      yearlyAmount: 0,
+    },
+    {
+      name: "Pro",
+      badge: billingCycle === "yearly" ? "2 Months Free" : "Most Popular",
+      priceMonthly: fmt(proPrice),
+      priceYearly: fmt(proYearly),
+      period: billingCycle === "monthly" ? "/mo" : "/yr",
+      usd: null,
+      description: "Advanced tools for serious creators and businesses.",
+      features: [
+        "Verified badge on your profile",
+        "40 Kira AI actions per day",
+        "Crevia Link — all premium themes",
+        "Full visitor analytics",
+        "Unlimited invoices & tracking",
+        "Unlimited AI contract generation",
+        "E-Signatures inside the app",
+        "Client Portal access",
+        "Priority support",
+      ],
+      cta: "Go Pro",
+      highlighted: true,
+      planKey: "pro" as const,
+      monthlyAmount: proPrice,
+      yearlyAmount: proYearly,
+    },
+    {
+      name: "Enterprise",
+      badge: null,
+      priceMonthly: enterprisePrice > 0 ? fmt(enterprisePrice) : "Custom",
+      priceYearly: enterprisePrice > 0 ? fmt(entYearly) : "Custom",
+      period: enterprisePrice > 0 ? (billingCycle === "monthly" ? "/mo" : "/yr") : "",
+      usd: null,
+      description: "Custom limits, SSO, and a dedicated success team.",
+      features: [
+        "Everything in Pro",
+        "Unlimited admin seats",
+        "Custom Kira AI action limits",
+        "Single Sign-On (SSO)",
+        "Custom integrations & API access",
+        "SLA guarantee",
+        "Dedicated success manager",
+        "Custom onboarding",
+      ],
+      cta: "Contact Sales",
+      highlighted: false,
+      planKey: null as "pro" | "business" | null,
+      monthlyAmount: enterprisePrice,
+      yearlyAmount: entYearly,
+    },
+  ];
+};
 
 const Pricing = () => {
   const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isPaystackLoading, setIsPaystackLoading] = useState<string | null>(null);
+  const [proPrice, setProPrice]             = useState(1500);
+  const [enterprisePrice, setEnterprisePrice] = useState(0);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsLoggedIn(!!session);
-    });
+    supabase.auth.getSession().then(({ data: { session } }) => setIsLoggedIn(!!session));
+    (supabase.from("app_settings" as any) as any)
+      .select("key, value")
+      .in("key", ["plan_price_pro", "plan_price_enterprise"])
+      .then(({ data }: { data: any[] | null }) => {
+        if (!data) return;
+        data.forEach(row => {
+          const n = parseInt(row.value, 10);
+          if (!isNaN(n)) {
+            if (row.key === "plan_price_pro")        setProPrice(n);
+            if (row.key === "plan_price_enterprise") setEnterprisePrice(n);
+          }
+        });
+      });
   }, []);
 
   const handleUpgrade = async (planKey: "pro" | "business", monthlyAmount: number, yearlyAmount: number) => {
@@ -124,7 +143,7 @@ const Pricing = () => {
     handler.openIframe();
   };
 
-  const plans = PLANS(billingCycle);
+  const plans = PLANS(billingCycle, proPrice, enterprisePrice);
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
