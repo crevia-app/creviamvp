@@ -79,6 +79,7 @@ serve(async (req: Request) => {
 
   <!-- Header -->
   <tr><td style="background:#1a1a1a;padding:28px 32px;">
+    <img src="https://creviamvp.vercel.app/crevia-logo.png" alt="Crevia" height="32" style="display:block;margin-bottom:12px;" />
     <p style="margin:0 0 4px;font-size:20px;font-weight:700;color:#fff;">New Verification Request</p>
     <p style="margin:0;font-size:13px;color:#888;">Submitted via Crevia · ${submittedAt}</p>
   </td></tr>

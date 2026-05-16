@@ -115,6 +115,7 @@ serve(async (req: Request) => {
 <body>
 <div class="card">
   <div class="header">
+    <img src="https://creviamvp.vercel.app/crevia-logo.png" alt="Crevia" height="32" style="display:block;margin-bottom:12px;" />
     <h1>New Feedback Received</h1>
     <p>Submitted via Crevia · ${formattedDate}</p>
   </div>

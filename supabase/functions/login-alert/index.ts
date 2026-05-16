@@ -106,7 +106,7 @@ serve(async (req) => {
           <!-- Header -->
           <tr>
             <td style="background:#1a1a1a;padding:28px 40px;">
-              <p style="margin:0;font-size:22px;font-weight:700;color:#c9a96e;letter-spacing:-0.3px;">Crevia</p>
+              <img src="https://creviamvp.vercel.app/crevia-logo.png" alt="Crevia" height="36" style="display:block;" />
             </td>
           </tr>
           <!-- Body -->

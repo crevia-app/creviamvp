@@ -130,7 +130,7 @@ serve(async (req) => {
           <tr>
             <td style="background:#1a1a1a;padding:28px 40px;">
               <table width="100%"><tr>
-                <td><p style="margin:0;font-size:22px;font-weight:700;color:#c9a96e;">Crevia</p></td>
+                <td><img src="https://creviamvp.vercel.app/crevia-logo.png" alt="Crevia" height="36" style="display:block;" /></td>
                 <td align="right">
                   <p style="margin:0;font-size:13px;color:#888;">Contract</p>
                   <p style="margin:2px 0 0;font-size:16px;font-weight:700;color:#fff;">${contract.title}</p>
@@ -207,7 +207,7 @@ serve(async (req) => {
           <tr>
             <td style="padding:28px 40px;">
               <table width="100%"><tr><td align="center">
-                <a href="https://creviamvp.vercel.app/received" style="display:inline-block;background:#c9a96e;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:15px;">
+                <a href="https://creviamvp.vercel.app/received?tab=contracts&id=${contract_id}" style="display:inline-block;background:#c9a96e;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:15px;">
                   View &amp; Sign Contract
                 </a>
               </td></tr></table>

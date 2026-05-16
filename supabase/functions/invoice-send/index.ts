@@ -148,7 +148,7 @@ serve(async (req) => {
           <tr>
             <td style="background:#1a1a1a;padding:28px 40px;display:flex;justify-content:space-between;align-items:center;">
               <table width="100%"><tr>
-                <td><p style="margin:0;font-size:22px;font-weight:700;color:#c9a96e;">Crevia</p></td>
+                <td><img src="https://creviamvp.vercel.app/crevia-logo.png" alt="Crevia" height="36" style="display:block;" /></td>
                 <td align="right"><p style="margin:0;font-size:13px;color:#888;">Invoice</p>
                   <p style="margin:2px 0 0;font-size:18px;font-weight:700;color:#fff;">${invoice.invoice_number}</p>
                 </td>

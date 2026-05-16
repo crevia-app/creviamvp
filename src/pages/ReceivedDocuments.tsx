@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,11 +26,13 @@ const CONTRACT_STATUS: Record<string, { label: string; color: string }> = {
 };
 
 const ReceivedDocuments = () => {
+  const [searchParams] = useSearchParams();
   const [invoices, setInvoices] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [selectedContract, setSelectedContract] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") ?? "invoices");
 
   useEffect(() => {
     const load = async () => {
@@ -55,6 +58,14 @@ const ReceivedDocuments = () => {
       setInvoices(inv ?? []);
       setContracts(con ?? []);
       setLoading(false);
+
+      const targetId = searchParams.get("id");
+      if (targetId) {
+        const matchContract = (con ?? []).find((c: any) => c.id === targetId);
+        if (matchContract) { setSelectedContract(matchContract); return; }
+        const matchInvoice = (inv ?? []).find((i: any) => i.id === targetId);
+        if (matchInvoice) setSelectedInvoice(matchInvoice);
+      }
     };
     load();
   }, []);
@@ -82,7 +93,7 @@ const ReceivedDocuments = () => {
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 py-8 max-w-4xl">
-        <Tabs defaultValue="invoices">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="h-10 mb-6">
             <TabsTrigger value="invoices" className="gap-1.5">
               <Receipt className="h-4 w-4" />
