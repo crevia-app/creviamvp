@@ -134,7 +134,7 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
   const load = async () => {
     const [{ data: profiles }, { count: inv }, { count: con }] = await Promise.all([
       supabase.from("profiles")
-        .select("id, display_name, handle, subscription_plan, created_at, avatar_url")
+        .select("id, display_name, handle, subscription_plan, subscription_expires_at, created_at, avatar_url")
         .order("created_at", { ascending: false }),
       supabase.from("invoices").select("id", { count: "exact", head: true }),
       supabase.from("contracts").select("id", { count: "exact", head: true }),
@@ -157,17 +157,28 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
     const lastMonthUsers = p.filter(u => u.created_at && u.created_at >= lastMonthStart && u.created_at <= lastMonthEnd).length;
     const userTrend = lastMonthUsers > 0 ? Math.round(((thisMonthUsers - lastMonthUsers) / lastMonthUsers) * 100) : null;
 
-    const prevPro = p.filter(u => u.subscription_plan === "pro" && u.created_at && u.created_at <= lastMonthEnd).length;
-    const prevEnt = p.filter(u => u.subscription_plan === "enterprise" && u.created_at && u.created_at <= lastMonthEnd).length;
+    // Was a user on a paid plan during a given period?
+    // Uses subscription_expires_at to catch churn: if it expired before the period, exclude them.
+    // Note: without a subscription_started_at field we can't detect mid-month upgrades,
+    // so users who upgraded this month may still appear in last month's count.
+    const wasActiveInPeriod = (u: any, plan: string, periodStart: string, periodEnd: string) =>
+      u.subscription_plan === plan &&
+      u.created_at &&
+      u.created_at <= periodEnd &&
+      (!u.subscription_expires_at || u.subscription_expires_at >= periodStart);
+
+    const prevPro = p.filter(u => wasActiveInPeriod(u, "pro",        lastMonthStart, lastMonthEnd)).length;
+    const prevEnt = p.filter(u => wasActiveInPeriod(u, "enterprise", lastMonthStart, lastMonthEnd)).length;
     const prevMrr = prevPro * 1500 + prevEnt * 5000;
     const mrrTrend = prevMrr > 0 ? Math.round(((mrr - prevMrr) / prevMrr) * 100) : null;
 
-    // MRR chart — cumulative by month (how MRR grew over time)
+    // MRR chart — active paid users per month (accounts for churn via subscription_expires_at)
     const mrrChart = Array.from({ length: 6 }, (_, i) => {
-      const d = subMonths(now, 5 - i);
-      const end = endOfMonth(d).toISOString();
-      const mPro = p.filter(u => u.subscription_plan === "pro" && u.created_at && u.created_at <= end).length;
-      const mEnt = p.filter(u => u.subscription_plan === "enterprise" && u.created_at && u.created_at <= end).length;
+      const d     = subMonths(now, 5 - i);
+      const start = startOfMonth(d).toISOString();
+      const end   = endOfMonth(d).toISOString();
+      const mPro  = p.filter(u => wasActiveInPeriod(u, "pro",        start, end)).length;
+      const mEnt  = p.filter(u => wasActiveInPeriod(u, "enterprise", start, end)).length;
       return { month: format(d, "MMM"), mrr: mPro * 1500 + mEnt * 5000 };
     });
 
@@ -388,13 +399,14 @@ const UsersSection = () => {
   const [selStats, setSelStats]     = useState<{ invoices: number; contracts: number; invoiceTotal: number } | null>(null);
   const [loading, setLoading]       = useState(true);
   const [detailLoad, setDetailLoad] = useState(false);
+  const [actionLoad, setActionLoad] = useState(false);
 
   useEffect(() => { load(); }, []);
 
   const load = async () => {
     const { data } = await supabase
       .from("profiles")
-      .select("id, display_name, handle, email, avatar_url, subscription_plan, subscription_status, subscription_expires_at, created_at, is_verified, user_type")
+      .select("id, display_name, handle, email, avatar_url, subscription_plan, subscription_status, subscription_expires_at, created_at, is_verified, is_admin, user_type")
       .order("created_at", { ascending: false });
     setUsers(data ?? []);
     setLoading(false);
@@ -412,6 +424,27 @@ const UsersSection = () => {
     const total = (invData ?? []).reduce((s: number, r: any) => s + (r.total ?? 0), 0);
     setSelStats({ invoices: inv ?? 0, contracts: con ?? 0, invoiceTotal: total });
     setDetailLoad(false);
+  };
+
+  const applyUpdate = async (userId: string, patch: Record<string, unknown>, successMsg: string) => {
+    setActionLoad(true);
+    const { error } = await supabase.from("profiles").update(patch).eq("id", userId);
+    if (error) { toast.error(error.message); setActionLoad(false); return; }
+    toast.success(successMsg);
+    setSelected((prev: any) => ({ ...prev, ...patch }));
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...patch } : u));
+    setActionLoad(false);
+  };
+
+  const changePlan = (plan: string) =>
+    applyUpdate(selected.id, { subscription_plan: plan || null }, `Plan changed to ${plan || "free"}`);
+
+  const toggleVerified = () =>
+    applyUpdate(selected.id, { is_verified: !selected.is_verified }, selected.is_verified ? "Verification removed" : "User verified");
+
+  const toggleAdmin = () => {
+    if (!confirm(`${selected.is_admin ? "Remove" : "Grant"} admin access for ${selected.display_name || selected.handle}?`)) return;
+    applyUpdate(selected.id, { is_admin: !selected.is_admin }, selected.is_admin ? "Admin access removed" : "Admin access granted");
   };
 
   const filtered = users.filter(u => {
@@ -555,6 +588,66 @@ const UsersSection = () => {
                 </div>
               )}
             </div>
+
+            {/* Admin actions */}
+            <div>
+              <p className="text-xs text-white/35 uppercase tracking-wider font-semibold mb-3">Actions</p>
+              <div className="space-y-2.5">
+
+                {/* Change plan */}
+                <div className="bg-[#111] border border-white/[0.06] rounded-xl p-3">
+                  <p className="text-[11px] text-white/35 mb-2">Subscription plan</p>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {["free", "pro", "enterprise"].map(plan => (
+                      <button
+                        key={plan}
+                        disabled={actionLoad || (selected.subscription_plan || "free") === plan}
+                        onClick={() => changePlan(plan === "free" ? "" : plan)}
+                        className={cn(
+                          "px-3 py-1 rounded-lg text-[11px] font-semibold transition-all capitalize",
+                          (selected.subscription_plan || "free") === plan
+                            ? plan === "pro" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                              : plan === "enterprise" ? "bg-violet-500/20 text-violet-400 border border-violet-500/30"
+                              : "bg-white/10 text-white/50 border border-white/10"
+                            : "bg-white/[0.04] text-white/30 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white/60"
+                        )}
+                      >{plan}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Toggle verified */}
+                <button
+                  disabled={actionLoad}
+                  onClick={toggleVerified}
+                  className={cn(
+                    "w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-sm font-medium transition-all",
+                    selected.is_verified
+                      ? "bg-blue-500/10 border-blue-500/25 text-blue-400 hover:bg-blue-500/20"
+                      : "bg-white/[0.03] border-white/[0.06] text-white/40 hover:bg-white/[0.07] hover:text-white/70"
+                  )}
+                >
+                  <span>{selected.is_verified ? "Verified" : "Not verified"}</span>
+                  <span className="text-[11px] opacity-60">{selected.is_verified ? "Remove badge" : "Grant badge"}</span>
+                </button>
+
+                {/* Toggle admin */}
+                <button
+                  disabled={actionLoad}
+                  onClick={toggleAdmin}
+                  className={cn(
+                    "w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-sm font-medium transition-all",
+                    selected.is_admin
+                      ? "bg-amber-500/10 border-amber-500/25 text-amber-400 hover:bg-red-500/10 hover:border-red-500/25 hover:text-red-400"
+                      : "bg-white/[0.03] border-white/[0.06] text-white/40 hover:bg-white/[0.07] hover:text-white/70"
+                  )}
+                >
+                  <span>{selected.is_admin ? "Admin" : "Not admin"}</span>
+                  <span className="text-[11px] opacity-60">{selected.is_admin ? "Revoke access" : "Grant access"}</span>
+                </button>
+
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -573,7 +666,13 @@ const BillingSection = () => {
   const load = async () => {
     const { data } = await supabase
       .from("payment_transactions")
-      .select("*")
+      .select(`
+        *,
+        escrow:escrow_id (
+          brand:profiles!escrow_payments_brand_id_fkey ( display_name, handle, avatar_url ),
+          creator:profiles!escrow_payments_creator_id_fkey ( display_name, handle, avatar_url )
+        )
+      `)
       .order("created_at", { ascending: false })
       .limit(150);
     setTxns(data ?? []);
@@ -645,18 +744,39 @@ const BillingSection = () => {
           </div>
           <div className="divide-y divide-white/[0.04]">
             {txns.length === 0 && <p className="text-center py-16 text-white/20 text-sm">No transactions yet</p>}
-            {txns.map(t => (
-              <div key={t.id} className="px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-white/60 font-mono truncate">{t.transaction_reference || t.id.slice(0, 20)}</p>
-                  <p className="text-xs text-white/25 mt-0.5">{t.payment_method || t.transaction_type} · {format(new Date(t.created_at), "dd MMM yyyy, HH:mm")}</p>
+            {txns.map(t => {
+              const brand   = t.escrow?.brand;
+              const creator = t.escrow?.creator;
+              return (
+                <div key={t.id} className="px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
+                  {brand ? (
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <Av url={brand.avatar_url} name={brand.display_name || brand.handle} size="7" />
+                      {creator && (
+                        <>
+                          <span className="text-[10px] text-white/15">→</span>
+                          <Av url={creator.avatar_url} name={creator.display_name || creator.handle} size="7" />
+                        </>
+                      )}
+                    </div>
+                  ) : null}
+                  <div className="flex-1 min-w-0">
+                    {brand && (
+                      <p className="text-xs text-white/70 font-medium truncate leading-tight">
+                        {brand.display_name || `@${brand.handle}`}
+                        {creator && <span className="text-white/25"> → {creator.display_name || `@${creator.handle}`}</span>}
+                      </p>
+                    )}
+                    <p className="text-xs text-white/60 font-mono truncate">{t.transaction_reference || t.id.slice(0, 20)}</p>
+                    <p className="text-[11px] text-white/25 mt-0.5">{t.payment_method || t.transaction_type} · {format(new Date(t.created_at), "dd MMM yyyy, HH:mm")}</p>
+                  </div>
+                  <div className="flex items-center gap-2.5 flex-shrink-0">
+                    <span className={statusChip(t.status || "pending")}>{t.status || "pending"}</span>
+                    <p className="text-sm font-bold text-white/80 tabular-nums">KES {(t.amount ?? 0).toLocaleString()}</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2.5 flex-shrink-0">
-                  <span className={statusChip(t.status || "pending")}>{t.status || "pending"}</span>
-                  <p className="text-sm font-bold text-white/80 tabular-nums">KES {(t.amount ?? 0).toLocaleString()}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -673,22 +793,27 @@ const BillingSection = () => {
                 <span className="text-xs text-red-400">{refundable.length} failed / cancelled</span>
               </div>
               <div className="divide-y divide-white/[0.04]">
-                {refundable.map(t => (
-                  <div key={t.id} className="px-4 md:px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-white/60 font-mono truncate">{t.transaction_reference || t.id.slice(0, 16)}</p>
-                      <p className="text-[11px] text-white/25 mt-0.5 truncate">{format(new Date(t.created_at), "dd MMM yyyy, HH:mm")}</p>
+                {refundable.map(t => {
+                  const brand = t.escrow?.brand;
+                  return (
+                    <div key={t.id} className="px-4 md:px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
+                      {brand && <Av url={brand.avatar_url} name={brand.display_name || brand.handle} size="7" />}
+                      <div className="flex-1 min-w-0">
+                        {brand && <p className="text-xs text-white/70 font-medium truncate leading-tight">{brand.display_name || `@${brand.handle}`}</p>}
+                        <p className="text-xs text-white/60 font-mono truncate">{t.transaction_reference || t.id.slice(0, 16)}</p>
+                        <p className="text-[11px] text-white/25 mt-0.5 truncate">{format(new Date(t.created_at), "dd MMM yyyy, HH:mm")}</p>
+                      </div>
+                      <div className="flex items-center gap-2.5 flex-shrink-0">
+                        <span className={statusChip(t.status)}>{t.status}</span>
+                        <p className="text-sm font-bold text-white/80 tabular-nums">KES {(t.amount ?? 0).toLocaleString()}</p>
+                        <Button size="sm" variant="outline" onClick={() => markRefunded(t.id)}
+                          className="h-7 text-[11px] border-amber-500/25 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/40 rounded-lg px-2.5 flex-shrink-0">
+                          Refund
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2.5 flex-shrink-0">
-                      <span className={statusChip(t.status)}>{t.status}</span>
-                      <p className="text-sm font-bold text-white/80 tabular-nums">KES {(t.amount ?? 0).toLocaleString()}</p>
-                      <Button size="sm" variant="outline" onClick={() => markRefunded(t.id)}
-                        className="h-7 text-[11px] border-amber-500/25 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/40 rounded-lg px-2.5 flex-shrink-0">
-                        Refund
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -698,18 +823,23 @@ const BillingSection = () => {
                 <p className="text-sm font-semibold text-white/70">Processed Refunds</p>
               </div>
               <div className="divide-y divide-white/[0.04]">
-                {refundedList.map(t => (
-                  <div key={t.id} className="px-4 md:px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-white/60 font-mono truncate">{t.transaction_reference || t.id.slice(0, 16)}</p>
-                      <p className="text-[11px] text-white/25 mt-0.5 truncate">{format(new Date(t.created_at), "dd MMM yy")}</p>
+                {refundedList.map(t => {
+                  const brand = t.escrow?.brand;
+                  return (
+                    <div key={t.id} className="px-4 md:px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
+                      {brand && <Av url={brand.avatar_url} name={brand.display_name || brand.handle} size="7" />}
+                      <div className="flex-1 min-w-0">
+                        {brand && <p className="text-xs text-white/70 font-medium truncate leading-tight">{brand.display_name || `@${brand.handle}`}</p>}
+                        <p className="text-xs text-white/60 font-mono truncate">{t.transaction_reference || t.id.slice(0, 16)}</p>
+                        <p className="text-[11px] text-white/25 mt-0.5 truncate">{format(new Date(t.created_at), "dd MMM yy")}</p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400">refunded</span>
+                        <p className="text-sm font-bold text-white/80 tabular-nums">KES {(t.amount ?? 0).toLocaleString()}</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400">refunded</span>
-                      <p className="text-sm font-bold text-white/80 tabular-nums">KES {(t.amount ?? 0).toLocaleString()}</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -841,13 +971,15 @@ const DocumentsSection = () => {
 };
 
 // ─── Support ──────────────────────────────────────────────────────────────────
-const SupportSection = () => {
+const SupportSection = ({ onTicketClosed, onVerificationResolved }: { onTicketClosed?: () => void; onVerificationResolved?: () => void }) => {
   const [tab, setTab]           = useState<"verifications" | "feedback" | "tickets">("verifications");
   const [requests, setRequests] = useState<any[]>([]);
   const [feedback, setFeedback] = useState<any[]>([]);
   const [tickets, setTickets]   = useState<any[]>([]);
-  const [notes, setNotes]       = useState<Record<string, string>>({});
-  const [loading, setLoading]   = useState(true);
+  const [notes, setNotes]         = useState<Record<string, string>>({});
+  const [replyText, setReplyText] = useState<Record<string, string>>({});
+  const [replying, setReplying]   = useState<string | null>(null);
+  const [loading, setLoading]     = useState(true);
 
   useEffect(() => { load(); }, []);
 
@@ -875,6 +1007,7 @@ const SupportSection = () => {
     const { error } = await supabase.rpc("approve_verification" as any, { p_request_id: id, p_notes: notes[id] || null });
     if (error) { toast.error(error.message); return; }
     toast.success("Verification approved");
+    onVerificationResolved?.();
     load();
   };
 
@@ -882,6 +1015,7 @@ const SupportSection = () => {
     const { error } = await supabase.rpc("reject_verification" as any, { p_request_id: id, p_notes: notes[id] || null });
     if (error) { toast.error(error.message); return; }
     toast.success("Request rejected");
+    onVerificationResolved?.();
     load();
   };
 
@@ -889,6 +1023,24 @@ const SupportSection = () => {
     const { error } = await supabase.from("support_tickets" as any).update({ status: "closed" }).eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success("Ticket closed");
+    onTicketClosed?.();
+    load();
+  };
+
+  const sendReply = async (id: string) => {
+    const reply = replyText[id]?.trim();
+    if (!reply) return;
+    setReplying(id);
+    const { error } = await supabase.from("support_tickets" as any).update({
+      admin_reply: reply,
+      replied_at: new Date().toISOString(),
+      status: "closed",
+    }).eq("id", id);
+    if (error) { toast.error(error.message); setReplying(null); return; }
+    toast.success("Reply sent and ticket closed");
+    setReplyText(p => ({ ...p, [id]: "" }));
+    onTicketClosed?.();
+    setReplying(null);
     load();
   };
 
@@ -1014,8 +1166,9 @@ const SupportSection = () => {
         <div className="space-y-3">
           {tickets.length === 0 && <div className="text-center py-20 text-white/20 text-sm">No support tickets yet</div>}
           {tickets.map(tk => (
-            <div key={tk.id} className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
-              <div className="flex items-start justify-between gap-3 mb-3">
+            <div key={tk.id} className="bg-[#111] border border-white/[0.06] rounded-2xl p-5 space-y-3">
+              {/* Header */}
+              <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <Av url={null} name={tk.profiles?.display_name || tk.profiles?.handle} />
                   <div className="min-w-0">
@@ -1032,14 +1185,48 @@ const SupportSection = () => {
                   <span className="text-xs text-white/20">{format(new Date(tk.created_at), "dd MMM")}</span>
                 </div>
               </div>
-              <p className="text-xs text-white/50 font-semibold mb-2 truncate">{tk.subject}</p>
-              <p className="text-sm text-white/45 whitespace-pre-wrap leading-relaxed">{tk.message}</p>
+
+              {/* Message */}
+              <div>
+                <p className="text-xs text-white/50 font-semibold mb-1.5 truncate">{tk.subject}</p>
+                <p className="text-sm text-white/45 whitespace-pre-wrap leading-relaxed">{tk.message}</p>
+              </div>
+
+              {/* Existing reply */}
+              {tk.admin_reply && (
+                <div className="bg-bronze/[0.06] border border-bronze/20 rounded-xl p-3.5">
+                  <p className="text-[10px] text-bronze/70 font-semibold uppercase tracking-wider mb-1.5">
+                    Crevia reply · {tk.replied_at ? format(new Date(tk.replied_at), "dd MMM yyyy") : ""}
+                  </p>
+                  <p className="text-sm text-white/60 whitespace-pre-wrap leading-relaxed">{tk.admin_reply}</p>
+                </div>
+              )}
+
+              {/* Reply composer (open tickets only) */}
               {tk.status === "open" && (
-                <div className="mt-4 flex justify-end">
-                  <Button size="sm" variant="outline" onClick={() => closeTicket(tk.id)}
-                    className="h-7 text-[11px] border-white/10 text-white/40 hover:text-white hover:border-white/20 rounded-lg px-3">
-                    Close ticket
-                  </Button>
+                <div className="pt-1 space-y-2">
+                  <Textarea
+                    rows={2}
+                    placeholder="Write a reply… (sends reply and closes ticket)"
+                    value={replyText[tk.id] ?? ""}
+                    onChange={e => setReplyText(p => ({ ...p, [tk.id]: e.target.value }))}
+                    className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/20 resize-none rounded-xl text-sm focus-visible:ring-bronze/30"
+                  />
+                  <div className="flex items-center justify-between gap-2">
+                    <Button
+                      size="sm"
+                      disabled={!replyText[tk.id]?.trim() || replying === tk.id}
+                      onClick={() => sendReply(tk.id)}
+                      className="bg-bronze hover:bg-bronze/90 text-white rounded-xl h-8 px-4 text-xs gap-1.5"
+                    >
+                      {replying === tk.id ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                      Send reply
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => closeTicket(tk.id)}
+                      className="h-8 text-[11px] border-white/10 text-white/30 hover:text-white/60 hover:border-white/20 rounded-xl px-3">
+                      Close without reply
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -1122,17 +1309,20 @@ const SettingsSection = () => {
         </div>
         <div className="divide-y divide-white/[0.04]">
           {[
-            { label: "Supabase Studio",  hint: "DB · Auth · Storage · Edge Functions" },
-            { label: "Resend",           hint: "Transactional email / SMTP" },
-            { label: "Paystack",         hint: "Payments & subscriptions" },
+            { label: "Supabase Studio",  hint: "DB · Auth · Storage · Edge Functions", href: "https://supabase.com/dashboard" },
+            { label: "Resend",           hint: "Transactional email / SMTP",            href: "https://resend.com/emails" },
+            { label: "Paystack",         hint: "Payments & subscriptions",              href: "https://dashboard.paystack.com" },
           ].map(l => (
-            <div key={l.label} className="flex items-center justify-between px-5 py-4 hover:bg-white/[0.02] transition-colors">
+            <a key={l.label} href={l.href} target="_blank" rel="noopener noreferrer"
+              className="flex items-center justify-between px-5 py-4 hover:bg-white/[0.02] transition-colors group">
               <div>
-                <p className="text-sm text-white/65">{l.label}</p>
+                <p className="text-sm text-white/65 group-hover:text-white/85 transition-colors">{l.label}</p>
                 <p className="text-xs text-white/25 mt-0.5">{l.hint}</p>
               </div>
-              <span className="text-[10px] text-white/20 bg-white/[0.04] border border-white/[0.06] px-2 py-1 rounded-lg">External</span>
-            </div>
+              <span className="flex items-center gap-1 text-[10px] text-white/30 group-hover:text-bronze bg-white/[0.04] border border-white/[0.06] group-hover:border-bronze/30 px-2 py-1 rounded-lg transition-colors">
+                <ArrowUpRight className="w-3 h-3" /> Open
+              </span>
+            </a>
           ))}
         </div>
       </div>
@@ -1197,7 +1387,8 @@ const Admin = () => {
   const [booting, setBooting]         = useState(true);
   const [section, setSection]         = useState<Section>("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [pendingCount, setPendingCount] = useState(0);
+  const [pendingCount, setPendingCount]         = useState(0);
+  const [openTicketsCount, setOpenTicketsCount] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -1209,11 +1400,12 @@ const Admin = () => {
 
       if (!(prof as any)?.is_admin) { navigate("/"); return; }
 
-      const { count } = await supabase
-        .from("verification_requests" as any)
-        .select("id", { count: "exact", head: true })
-        .eq("status", "pending");
-      setPendingCount(count ?? 0);
+      const [{ count: vCount }, { count: tCount }] = await Promise.all([
+        supabase.from("verification_requests" as any).select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("support_tickets" as any).select("id", { count: "exact", head: true }).eq("status", "open"),
+      ]);
+      setPendingCount(vCount ?? 0);
+      setOpenTicketsCount(tCount ?? 0);
 
       setAuthed(true);
       setBooting(false);
@@ -1238,6 +1430,14 @@ const Admin = () => {
         toast("🔖 New verification request", {
           description: "Pending your review",
           action: { label: "Review", onClick: () => setSection("support") },
+          duration: 8000,
+        });
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_tickets" }, (payload) => {
+        setOpenTicketsCount(c => c + 1);
+        toast("🎫 New support ticket", {
+          description: (payload.new as any)?.subject || "A user needs help",
+          action: { label: "View", onClick: () => setSection("support") },
           duration: 8000,
         });
       })
@@ -1294,9 +1494,9 @@ const Admin = () => {
                 <Icon className={cn("w-4 h-4 flex-shrink-0 transition-colors", section === id ? "text-bronze" : "")} />
                 {label}
               </div>
-              {id === "support" && pendingCount > 0 && (
+              {id === "support" && (pendingCount + openTicketsCount) > 0 && (
                 <span className="bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center leading-none">
-                  {pendingCount > 9 ? "9+" : pendingCount}
+                  {(pendingCount + openTicketsCount) > 9 ? "9+" : (pendingCount + openTicketsCount)}
                 </span>
               )}
             </button>
@@ -1362,7 +1562,7 @@ const Admin = () => {
           {section === "users"     && <UsersSection />}
           {section === "billing"   && <BillingSection />}
           {section === "documents" && <DocumentsSection />}
-          {section === "support"   && <SupportSection />}
+          {section === "support"   && <SupportSection onTicketClosed={() => setOpenTicketsCount(c => Math.max(0, c - 1))} onVerificationResolved={() => setPendingCount(c => Math.max(0, c - 1))} />}
           {section === "settings"  && <SettingsSection />}
         </main>
       </div>
