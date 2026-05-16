@@ -281,33 +281,23 @@ const Home = () => {
                   The operating system for the creative economy.
                 </h3>
                 <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
-                  Crevia brings together everything creative professionals and the people
-                  who hire them actually need — invoices, contracts, secure escrow payments,
-                  a public link profile, and encrypted collaboration — in a single,
-                  beautifully structured workspace.
+                  The creative economy is worth trillions — yet the infrastructure supporting
+                  it has barely evolved. Creatives still chase invoices over WhatsApp. Contracts
+                  get lost in email threads. Payments stall in trust gaps. Crevia changes that.
                 </p>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {[
-                    "Invoices & Contracts",
-                    "Escrow Payments",
-                    "Link Profile",
-                    "Encrypted Messaging",
-                    "AI Strategy (Kira)",
-                    "Document Analytics",
-                  ].map(f => (
-                    <span
-                      key={f}
-                      className="text-xs font-medium px-3 py-1.5 rounded-full border border-bronze/25 text-bronze/80 bg-bronze/5"
-                    >
-                      {f}
-                    </span>
-                  ))}
-                </div>
-                <Link to={isLoggedIn ? "/kira" : "/auth?mode=signup"}>
-                  <Button className="bg-bronze hover:bg-bronze-dark font-poppins font-semibold mt-2">
-                    {isLoggedIn ? "Open Crevia" : "Get Started Free"} <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </Link>
+                <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
+                  We built a single, structured workspace where creative professionals run
+                  their business with the same rigour as any high-growth company — professional
+                  invoicing, legally binding contracts, secure escrow payments, a public link
+                  profile that speaks for them, and end-to-end encrypted client collaboration.
+                  Everything connected. Nothing scattered.
+                </p>
+                <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
+                  Whether you're a solo creator turning a craft into a career, or a company
+                  coordinating campaigns across dozens of talents, Crevia gives you the tools,
+                  the clarity, and the credibility to operate at your best — from first brief
+                  to final payment.
+                </p>
               </div>
             </div>
           </ScrollReveal>
