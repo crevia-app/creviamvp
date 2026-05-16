@@ -4,13 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  CartesianGrid, BarChart, Bar, Cell,
+  CartesianGrid, BarChart, Bar, Cell, Legend,
 } from "recharts";
 import {
   LayoutDashboard, Users, CreditCard, FileText, MessageSquare,
   Settings, Shield, CheckCircle, XCircle, Search, Menu,
   LogOut, Loader2, X, Receipt, FileCheck, ChevronRight,
-  TrendingUp, TrendingDown, Minus, ArrowUpRight,
+  TrendingUp, TrendingDown, Minus, ArrowUpRight, Palette,
+  RotateCcw, Trash2, Copy, Mail, Database, Key, Bug,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +32,7 @@ const fmt = (n: number) =>
   : n >= 1_000   ? `${(n / 1_000).toFixed(1)}K`
   : String(n);
 
-type Section = "overview" | "users" | "billing" | "documents" | "support" | "settings";
+type Section = "overview" | "users" | "billing" | "documents" | "customization" | "support" | "settings";
 
 const planChip = (plan: string | null) => cn(
   "text-[10px] font-semibold px-2 py-0.5 rounded-full",
@@ -657,25 +658,32 @@ const UsersSection = () => {
 
 // ─── Billing ──────────────────────────────────────────────────────────────────
 const BillingSection = () => {
-  const [txns, setTxns]       = useState<any[]>([]);
-  const [tab, setTab]         = useState<"transactions" | "refunds">("transactions");
-  const [loading, setLoading] = useState(true);
+  const [txns, setTxns]         = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<any[]>([]);
+  const [tab, setTab]           = useState<"transactions" | "refunds" | "analytics">("transactions");
+  const [loading, setLoading]   = useState(true);
 
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    const { data } = await supabase
-      .from("payment_transactions")
-      .select(`
-        *,
-        escrow:escrow_id (
-          brand:profiles!escrow_payments_brand_id_fkey ( display_name, handle, avatar_url ),
-          creator:profiles!escrow_payments_creator_id_fkey ( display_name, handle, avatar_url )
-        )
-      `)
-      .order("created_at", { ascending: false })
-      .limit(150);
-    setTxns(data ?? []);
+    const [{ data: txnData }, { data: profData }] = await Promise.all([
+      supabase
+        .from("payment_transactions")
+        .select(`
+          *,
+          escrow:escrow_id (
+            brand:profiles!escrow_payments_brand_id_fkey ( display_name, handle, avatar_url ),
+            creator:profiles!escrow_payments_creator_id_fkey ( display_name, handle, avatar_url )
+          )
+        `)
+        .order("created_at", { ascending: false })
+        .limit(150),
+      supabase
+        .from("profiles")
+        .select("id, subscription_plan, subscription_expires_at, created_at"),
+    ]);
+    setTxns(txnData ?? []);
+    setProfiles(profData ?? []);
     setLoading(false);
   };
 
@@ -693,6 +701,38 @@ const BillingSection = () => {
   const refunded     = txns.filter(t => t.status === "refunded").length;
   const refundable   = txns.filter(t => ["failed", "cancelled"].includes(t.status));
   const refundedList = txns.filter(t => t.status === "refunded");
+
+  // ── Analytics ──
+  const now              = new Date();
+  const nowIso           = now.toISOString();
+  const successTxns      = txns.filter(t => t.status === "completed" || t.status === "success");
+  const successRevenue   = successTxns.reduce((s, t) => s + (t.amount ?? 0), 0);
+  const totalUsers       = profiles.length;
+  const paidUsers        = profiles.filter(p => p.subscription_plan === "pro" || p.subscription_plan === "enterprise").length;
+  const conversionRate   = totalUsers > 0 ? ((paidUsers / totalUsers) * 100).toFixed(1) : "0";
+  const arpu             = totalUsers > 0 ? Math.round(successRevenue / totalUsers) : 0;
+  const avgTxn           = completed > 0  ? Math.round(successRevenue / completed)  : 0;
+  // Churned: was paying (has an expiry) but now free/null and expiry is in the past
+  const churned = profiles.filter(p =>
+    (!p.subscription_plan || p.subscription_plan === "free") &&
+    p.subscription_expires_at && p.subscription_expires_at < nowIso
+  ).length;
+  // At risk: still paid but expiry within 7 days
+  const sevenDaysOut = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  const atRisk = profiles.filter(p =>
+    (p.subscription_plan === "pro" || p.subscription_plan === "enterprise") &&
+    p.subscription_expires_at && p.subscription_expires_at <= sevenDaysOut
+  ).length;
+  // Revenue by month (last 6)
+  const revenueByMonth = Array.from({ length: 6 }, (_, i) => {
+    const d     = subMonths(now, 5 - i);
+    const start = startOfMonth(d).toISOString();
+    const end   = endOfMonth(d).toISOString();
+    const rev   = successTxns
+      .filter(t => t.created_at >= start && t.created_at <= end)
+      .reduce((s, t) => s + (t.amount ?? 0), 0);
+    return { month: format(d, "MMM"), revenue: rev };
+  });
 
   if (loading) return <Spin />;
 
@@ -719,8 +759,8 @@ const BillingSection = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 bg-[#111] rounded-xl border border-white/[0.06] w-fit">
-        {(["transactions", "refunds"] as const).map(t => (
+      <div className="flex gap-1 p-1 bg-[#111] rounded-xl border border-white/[0.06] w-fit flex-wrap">
+        {(["transactions", "refunds", "analytics"] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -845,39 +885,192 @@ const BillingSection = () => {
           )}
         </div>
       )}
+
+      {tab === "analytics" && (
+        <div className="space-y-5">
+
+          {/* Stat cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: "Conversion Rate", value: `${conversionRate}%`,   sub: `${paidUsers} of ${totalUsers} users paid`,       color: "text-emerald-400", accent: "bg-emerald-500" },
+              { label: "ARPU",            value: KES(arpu),              sub: "Avg revenue per user",                            color: "text-bronze",      accent: "bg-bronze" },
+              { label: "Avg Transaction", value: KES(avgTxn),            sub: `${completed} completed payments`,                 color: "text-blue-400",    accent: "bg-blue-500" },
+              { label: "Churned",         value: String(churned),        sub: atRisk > 0 ? `${atRisk} expiring soon` : "0 at risk", color: "text-red-400",  accent: "bg-red-500" },
+            ].map(c => (
+              <div key={c.label} className="relative bg-[#111] border border-white/[0.06] rounded-2xl p-4 overflow-hidden">
+                <div className={cn("absolute -top-4 -right-4 w-12 h-12 rounded-full blur-xl opacity-20", c.accent)} />
+                <p className="text-[10px] text-white/35 font-medium mb-2 truncate">{c.label}</p>
+                <p className={cn("text-lg md:text-2xl font-bold tabular-nums leading-tight", c.color)}>{c.value}</p>
+                <p className="text-[10px] text-white/20 mt-1 truncate">{c.sub}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Revenue by month chart */}
+          <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
+            <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-1">Revenue by Month</p>
+            <p className="text-xs text-white/25 mb-5">Completed / successful transactions only</p>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={revenueByMonth} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                <XAxis dataKey="month" tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} tickFormatter={v => v >= 1000 ? `${v / 1000}K` : String(v)} />
+                <Tooltip content={<ChartTooltip prefix="KES " />} />
+                <Bar dataKey="revenue" fill="#c47d2a" radius={[4, 4, 0, 0]}>
+                  {revenueByMonth.map((_, i) => (
+                    <Cell key={i} fill={i === revenueByMonth.length - 1 ? "#c47d2a" : "rgba(196,125,42,0.45)"} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Conversion + churn breakdown */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            {/* Plan distribution */}
+            <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
+              <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-5">User Plan Distribution</p>
+              <div className="space-y-3">
+                {[
+                  { label: "Free",       count: totalUsers - paidUsers,                                                             color: "bg-white/20",    text: "text-white/50" },
+                  { label: "Pro",        count: profiles.filter(p => p.subscription_plan === "pro").length,        color: "bg-emerald-500", text: "text-emerald-400" },
+                  { label: "Enterprise", count: profiles.filter(p => p.subscription_plan === "enterprise").length, color: "bg-violet-500",  text: "text-violet-400" },
+                ].map(row => (
+                  <div key={row.label}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className={cn("w-2 h-2 rounded-full", row.color)} />
+                        <span className={cn("text-sm font-medium", row.text)}>{row.label}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-white tabular-nums">{row.count}</span>
+                        <span className="text-xs text-white/25 w-8 text-right tabular-nums">
+                          {totalUsers > 0 ? Math.round((row.count / totalUsers) * 100) : 0}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <div className={cn("h-full rounded-full", row.color)}
+                        style={{ width: `${totalUsers > 0 ? Math.round((row.count / totalUsers) * 100) : 0}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Churn & retention */}
+            <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
+              <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-5">Retention Signals</p>
+              <div className="space-y-3">
+                {[
+                  { label: "Active paid",      value: paidUsers,                    color: "text-emerald-400", bg: "bg-emerald-500/10", note: "currently on paid plan" },
+                  { label: "Churned",          value: churned,                      color: "text-red-400",     bg: "bg-red-500/10",     note: "expired, now on free" },
+                  { label: "Expiring ≤7 days", value: atRisk,                       color: "text-amber-400",   bg: "bg-amber-500/10",   note: "at risk of churn" },
+                  { label: "Never paid",       value: totalUsers - paidUsers - churned, color: "text-white/30", bg: "bg-white/[0.04]",  note: "always been free" },
+                ].map(row => (
+                  <div key={row.label} className={cn("flex items-center justify-between px-3 py-2 rounded-xl", row.bg)}>
+                    <div>
+                      <p className={cn("text-xs font-semibold", row.color)}>{row.label}</p>
+                      <p className="text-[10px] text-white/20 mt-0.5">{row.note}</p>
+                    </div>
+                    <p className={cn("text-lg font-bold tabular-nums", row.color)}>{row.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 // ─── Documents ────────────────────────────────────────────────────────────────
 const DocumentsSection = () => {
-  const [tab, setTab]           = useState<"invoices" | "contracts">("invoices");
-  const [invoices, setInvoices] = useState<any[]>([]);
-  const [contracts, setContracts] = useState<any[]>([]);
-  const [search, setSearch]     = useState("");
-  const [loading, setLoading]   = useState(true);
+  const [view, setView]             = useState<"invoices" | "contracts" | "analytics" | "trash">("invoices");
+  const [invoices, setInvoices]     = useState<any[]>([]);
+  const [contracts, setContracts]   = useState<any[]>([]);
+  const [trashInv, setTrashInv]     = useState<any[]>([]);
+  const [trashCon, setTrashCon]     = useState<any[]>([]);
+  const [search, setSearch]         = useState("");
+  const [loading, setLoading]       = useState(true);
 
   useEffect(() => { load(); }, []);
 
+  const SEL_INV = "id, invoice_number, client_name, total, status, currency, created_at, deleted_at";
+  const SEL_CON = "id, title, client_name, value, status, currency, created_at, contract_type, deleted_at";
+
   const load = async () => {
-    const [{ data: inv }, { data: con }] = await Promise.all([
-      supabase.from("invoices").select("id, invoice_number, client_name, total, status, currency, created_at").order("created_at", { ascending: false }).limit(200),
-      supabase.from("contracts").select("id, title, client_name, value, status, currency, created_at, contract_type").order("created_at", { ascending: false }).limit(200),
+    const [{ data: allInv }, { data: allCon }] = await Promise.all([
+      (supabase.from("invoices") as any).select(SEL_INV).order("created_at", { ascending: false }).limit(300),
+      (supabase.from("contracts") as any).select(SEL_CON).order("created_at", { ascending: false }).limit(300),
     ]);
-    setInvoices(inv ?? []);
-    setContracts(con ?? []);
+    const inv = (allInv ?? []);
+    const con = (allCon ?? []);
+    setInvoices(inv.filter((d: any) => !d.deleted_at));
+    setContracts(con.filter((d: any) => !d.deleted_at));
+    setTrashInv(inv.filter((d: any) => d.deleted_at));
+    setTrashCon(con.filter((d: any) => d.deleted_at));
     setLoading(false);
   };
 
-  const docs = (tab === "invoices" ? invoices : contracts).filter(d => {
-    const q = search.toLowerCase();
-    return !q || d.client_name?.toLowerCase().includes(q)
-      || (tab === "invoices" ? d.invoice_number?.toLowerCase().includes(q) : d.title?.toLowerCase().includes(q));
-  });
+  const softDelete = async (table: "invoices" | "contracts", id: string) => {
+    if (!confirm(`Move to trash? You can restore it later.`)) return;
+    const { error } = await (supabase.from(table) as any).update({ deleted_at: new Date().toISOString() }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Moved to trash");
+    load();
+  };
 
+  const restore = async (table: "invoices" | "contracts", id: string) => {
+    const { error } = await (supabase.from(table) as any).update({ deleted_at: null }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Restored");
+    load();
+  };
+
+  const permanentDelete = async (table: "invoices" | "contracts", id: string) => {
+    if (!confirm("Permanently delete? This cannot be undone.")) return;
+    const { error } = await supabase.from(table).delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Permanently deleted");
+    load();
+  };
+
+  // ── Derived stats ──
   const paid    = invoices.filter(i => i.status === "paid").length;
   const pending = invoices.filter(i => i.status === "draft" || i.status === "sent").length;
   const signed  = contracts.filter(c => c.status === "signed").length;
+  const trashCount = trashInv.length + trashCon.length;
+
+  // ── Analytics ──
+  const now = new Date();
+  const paidRevenue  = invoices.filter(i => i.status === "paid").reduce((s: number, i: any) => s + (i.total ?? 0), 0);
+  const outstanding  = invoices.filter(i => ["sent", "draft"].includes(i.status)).reduce((s: number, i: any) => s + (i.total ?? 0), 0);
+  const totalInvVal  = invoices.reduce((s: number, i: any) => s + (i.total ?? 0), 0);
+  const docsPerMonth = Array.from({ length: 6 }, (_, i) => {
+    const d     = subMonths(now, 5 - i);
+    const start = startOfMonth(d).toISOString();
+    const end   = endOfMonth(d).toISOString();
+    return {
+      month:     format(d, "MMM"),
+      invoices:  invoices.filter((r: any) => r.created_at >= start && r.created_at <= end).length,
+      contracts: contracts.filter((r: any) => r.created_at >= start && r.created_at <= end).length,
+    };
+  });
+  const clientMap: Record<string, number> = {};
+  [...invoices, ...contracts].forEach((d: any) => {
+    if (d.client_name) clientMap[d.client_name] = (clientMap[d.client_name] || 0) + 1;
+  });
+  const topClients = Object.entries(clientMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const maxClient  = Math.max(1, ...topClients.map(([, c]) => c));
+
+  const filtered = (view === "invoices" ? invoices : contracts).filter((d: any) => {
+    const q = search.toLowerCase();
+    return !q || d.client_name?.toLowerCase().includes(q)
+      || (view === "invoices" ? d.invoice_number?.toLowerCase().includes(q) : d.title?.toLowerCase().includes(q));
+  });
 
   if (loading) return <Spin />;
 
@@ -888,6 +1081,7 @@ const DocumentsSection = () => {
         <p className="text-sm text-white/30">{invoices.length} invoices · {contracts.length} contracts</p>
       </div>
 
+      {/* Stat cards */}
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: "Paid invoices",    value: String(paid),    color: "text-emerald-400", accent: "bg-emerald-500" },
@@ -902,77 +1096,180 @@ const DocumentsSection = () => {
         ))}
       </div>
 
-      {/* Toggle */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex gap-1 p-1 bg-[#111] rounded-xl border border-white/[0.06]">
-          {(["invoices", "contracts"] as const).map(t => (
-            <button
-              key={t}
-              onClick={() => { setTab(t); setSearch(""); }}
-              className={cn("px-4 py-1.5 rounded-lg text-sm font-medium transition-all capitalize",
-                tab === t ? "bg-bronze text-white shadow-sm" : "text-white/40 hover:text-white/70"
-              )}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-        <div className="relative flex-1 min-w-48">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
-          <Input
-            placeholder={`Search ${tab}...`}
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="pl-9 bg-[#111] border-white/[0.06] text-white placeholder:text-white/25 rounded-xl h-9 focus-visible:ring-bronze/30"
-          />
-        </div>
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 bg-[#111] rounded-xl border border-white/[0.06] w-fit flex-wrap">
+        {([
+          { id: "invoices"   as const, label: "Invoices" },
+          { id: "contracts"  as const, label: "Contracts" },
+          { id: "analytics"  as const, label: "Analytics" },
+          { id: "trash"      as const, label: "Trash", badge: trashCount },
+        ]).map(t => (
+          <button key={t.id} onClick={() => { setView(t.id); setSearch(""); }}
+            className={cn("px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5",
+              view === t.id ? "bg-bronze text-white shadow-sm" : "text-white/40 hover:text-white/70"
+            )}>
+            {t.label}
+            {"badge" in t && t.badge > 0 && (
+              <span className="bg-amber-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none">{t.badge}</span>
+            )}
+          </button>
+        ))}
       </div>
 
-      <p className="text-xs text-white/25">{docs.length} {tab}</p>
+      {/* ── Invoices / Contracts list ── */}
+      {(view === "invoices" || view === "contracts") && (
+        <>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
+            <Input placeholder={`Search ${view}...`} value={search} onChange={e => setSearch(e.target.value)}
+              className="pl-9 bg-[#111] border-white/[0.06] text-white placeholder:text-white/25 rounded-xl h-9 focus-visible:ring-bronze/30" />
+          </div>
+          <p className="text-xs text-white/25">{filtered.length} {view}</p>
+          <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+            <div className="divide-y divide-white/[0.04]">
+              {filtered.length === 0 && <div className="text-center py-16 text-white/20 text-sm">No {view} found</div>}
+              {filtered.map((d: any) => (
+                <div key={d.id} className="px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors group">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-white/75 font-medium truncate">
+                      {view === "invoices" ? `#${d.invoice_number} · ${d.client_name}` : d.title}
+                    </p>
+                    <p className="text-xs text-white/25 truncate mt-0.5">
+                      {view === "contracts" ? `${d.client_name} · ${d.contract_type} · ` : ""}{format(new Date(d.created_at), "dd MMM yyyy")}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2.5 flex-shrink-0">
+                    <span className={statusChip(d.status)}>{d.status}</span>
+                    <p className="text-sm font-bold text-white/70 tabular-nums">
+                      {d.currency || "KES"} {((d.total ?? d.value) || 0).toLocaleString()}
+                    </p>
+                    <button onClick={() => softDelete(view === "invoices" ? "invoices" : "contracts", d.id)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400/60 hover:text-red-400 p-1 rounded-lg hover:bg-red-500/10" title="Move to trash">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
-      <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
-        <div className="divide-y divide-white/[0.04]">
-          {docs.length === 0 && <div className="text-center py-16 text-white/20 text-sm">No {tab} found</div>}
-          {docs.map(d => (
-            <div key={d.id} className="px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors group">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-white/75 font-medium truncate">
-                  {tab === "invoices" ? `#${d.invoice_number} · ${d.client_name}` : d.title}
-                </p>
-                <p className="text-xs text-white/25 truncate mt-0.5">
-                  {tab === "contracts" ? `${d.client_name} · ${d.contract_type} · ` : ""}{format(new Date(d.created_at), "dd MMM yyyy")}
-                </p>
+      {/* ── Analytics ── */}
+      {view === "analytics" && (
+        <div className="space-y-5">
+
+          {/* Invoice value summary */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: "Total invoice value", value: KES(totalInvVal), color: "text-white/70",    accent: "bg-white/20" },
+              { label: "Collected (paid)",     value: KES(paidRevenue), color: "text-emerald-400", accent: "bg-emerald-500" },
+              { label: "Outstanding",          value: KES(outstanding), color: "text-amber-400",   accent: "bg-amber-500" },
+            ].map(c => (
+              <div key={c.label} className="relative bg-[#111] border border-white/[0.06] rounded-2xl p-4 overflow-hidden">
+                <div className={cn("absolute -top-4 -right-4 w-12 h-12 rounded-full blur-xl opacity-15", c.accent)} />
+                <p className="text-[10px] text-white/30 font-medium mb-2 leading-tight">{c.label}</p>
+                <p className={cn("text-lg md:text-xl font-bold tabular-nums", c.color)}>{c.value}</p>
               </div>
-              <div className="flex items-center gap-2.5 flex-shrink-0">
-                <span className={statusChip(d.status)}>{d.status}</span>
-                <p className="text-sm font-bold text-white/70 tabular-nums">
-                  {d.currency || "KES"} {((d.total ?? d.value) || 0).toLocaleString()}
-                </p>
-                <button
-                  onClick={async () => {
-                    if (!confirm(`Delete this ${tab.slice(0, -1)}? This cannot be undone.`)) return;
-                    const { error } = await supabase.from(tab === "invoices" ? "invoices" : "contracts").delete().eq("id", d.id);
-                    if (error) { toast.error(error.message); return; }
-                    toast.success(`${tab.slice(0, -1)} deleted`);
-                    load();
-                  }}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400/60 hover:text-red-400 p-1 rounded-lg hover:bg-red-500/10"
-                  title="Delete"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+            ))}
+          </div>
+
+          {/* Docs per month chart */}
+          <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
+            <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-1">Documents Created</p>
+            <p className="text-xs text-white/25 mb-4">Invoices and contracts per month (last 6 months)</p>
+            <div className="flex items-center gap-4 mb-4">
+              {[{ color: "#6366f1", label: "Invoices" }, { color: "#8b5cf6", label: "Contracts" }].map(l => (
+                <div key={l.label} className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: l.color }} />
+                  <span className="text-[11px] text-white/40">{l.label}</span>
+                </div>
+              ))}
+            </div>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={docsPerMonth} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barGap={3}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                <XAxis dataKey="month" tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip contentStyle={{ background: "#1c1c1c", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12 }} labelStyle={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }} itemStyle={{ color: "#fff", fontSize: 12 }} />
+                <Bar dataKey="invoices"  fill="#6366f1" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="contracts" fill="#8b5cf6" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Top clients */}
+          <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
+            <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-5">Top Clients by Document Count</p>
+            {topClients.length === 0
+              ? <p className="text-sm text-white/20 text-center py-6">No documents yet</p>
+              : <div className="space-y-3">
+                  {topClients.map(([name, count]) => (
+                    <div key={name} className="flex items-center gap-3">
+                      <p className="text-sm text-white/60 w-36 flex-shrink-0 truncate">{name}</p>
+                      <div className="h-1.5 bg-white/5 rounded-full overflow-hidden flex-1">
+                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.round((count / maxClient) * 100)}%` }} />
+                      </div>
+                      <span className="text-xs text-white/30 tabular-nums w-6 text-right flex-shrink-0">{count}</span>
+                    </div>
+                  ))}
+                </div>
+            }
+          </div>
+        </div>
+      )}
+
+      {/* ── Trash ── */}
+      {view === "trash" && (
+        <div className="space-y-4">
+          {trashCount === 0 && (
+            <div className="text-center py-20 text-white/20 text-sm">Trash is empty</div>
+          )}
+          {[
+            { label: "Invoices",  items: trashInv, table: "invoices"  as const },
+            { label: "Contracts", items: trashCon, table: "contracts" as const },
+          ].filter(g => g.items.length > 0).map(group => (
+            <div key={group.label} className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-white/[0.04] flex items-center justify-between">
+                <p className="text-sm font-semibold text-white/50">{group.label}</p>
+                <span className="text-xs text-amber-400">{group.items.length} in trash</span>
+              </div>
+              <div className="divide-y divide-white/[0.04]">
+                {group.items.map((d: any) => (
+                  <div key={d.id} className="px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors group">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white/50 font-medium truncate">
+                        {group.table === "invoices" ? `#${d.invoice_number} · ${d.client_name}` : d.title}
+                      </p>
+                      <p className="text-xs text-white/20 mt-0.5 truncate">
+                        Deleted {format(new Date(d.deleted_at), "dd MMM yyyy")} · originally created {format(new Date(d.created_at), "dd MMM yyyy")}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={statusChip(d.status)}>{d.status}</span>
+                      <button onClick={() => restore(group.table, d.id)}
+                        className="flex items-center gap-1 text-[11px] text-emerald-400/70 hover:text-emerald-400 px-2 py-1 rounded-lg hover:bg-emerald-500/10 transition-all border border-transparent hover:border-emerald-500/20">
+                        <RotateCcw className="w-3 h-3" /> Restore
+                      </button>
+                      <button onClick={() => permanentDelete(group.table, d.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400/60 hover:text-red-400 p-1 rounded-lg hover:bg-red-500/10" title="Delete permanently">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
         </div>
-      </div>
+      )}
     </div>
   );
 };
 
 // ─── Support ──────────────────────────────────────────────────────────────────
 const SupportSection = ({ onTicketClosed, onVerificationResolved }: { onTicketClosed?: () => void; onVerificationResolved?: () => void }) => {
-  const [tab, setTab]           = useState<"verifications" | "feedback" | "tickets">("verifications");
+  const [tab, setTab]           = useState<"verifications" | "feedback" | "tickets" | "bugs">("verifications");
   const [requests, setRequests] = useState<any[]>([]);
   const [feedback, setFeedback] = useState<any[]>([]);
   const [tickets, setTickets]   = useState<any[]>([]);
@@ -1044,8 +1341,11 @@ const SupportSection = ({ onTicketClosed, onVerificationResolved }: { onTicketCl
     load();
   };
 
-  const pending     = requests.filter(r => r.status === "pending").length;
-  const openTickets = tickets.filter(t => t.status === "open").length;
+  const pending        = requests.filter(r => r.status === "pending").length;
+  const generalTickets = tickets.filter(t => !t.type || t.type === "general");
+  const bugTickets     = tickets.filter(t => t.type === "bug");
+  const openTickets    = generalTickets.filter(t => t.status === "open").length;
+  const openBugs       = bugTickets.filter(t => t.status === "open").length;
 
   if (loading) return <Spin />;
 
@@ -1064,6 +1364,7 @@ const SupportSection = ({ onTicketClosed, onVerificationResolved }: { onTicketCl
           { id: "verifications" as const, label: "Verifications", badge: pending },
           { id: "feedback" as const,      label: "Feedback",      badge: 0 },
           { id: "tickets" as const,       label: "Tickets",       badge: openTickets },
+          { id: "bugs" as const,          label: "Bugs",          badge: openBugs },
         ]).map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} className={cn(
             "px-3 sm:px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5",
@@ -1162,10 +1463,14 @@ const SupportSection = ({ onTicketClosed, onVerificationResolved }: { onTicketCl
         </div>
       )}
 
-      {tab === "tickets" && (
+      {(tab === "tickets" || tab === "bugs") && (
         <div className="space-y-3">
-          {tickets.length === 0 && <div className="text-center py-20 text-white/20 text-sm">No support tickets yet</div>}
-          {tickets.map(tk => (
+          {(tab === "tickets" ? generalTickets : bugTickets).length === 0 && (
+            <div className="text-center py-20 text-white/20 text-sm">
+              {tab === "bugs" ? "No bug reports yet" : "No support tickets yet"}
+            </div>
+          )}
+          {(tab === "tickets" ? generalTickets : bugTickets).map(tk => (
             <div key={tk.id} className="bg-[#111] border border-white/[0.06] rounded-2xl p-5 space-y-3">
               {/* Header */}
               <div className="flex items-start justify-between gap-3">
@@ -1177,6 +1482,11 @@ const SupportSection = ({ onTicketClosed, onVerificationResolved }: { onTicketCl
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
+                  {tk.type === "bug" && tab === "tickets" && (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/20 flex items-center gap-1">
+                      <Bug className="w-2.5 h-2.5" /> Bug
+                    </span>
+                  )}
                   <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full border",
                     tk.status === "closed"
                       ? "bg-white/[0.05] text-white/30 border-white/[0.06]"
@@ -1237,42 +1547,310 @@ const SupportSection = ({ onTicketClosed, onVerificationResolved }: { onTicketCl
   );
 };
 
+// ─── Templates & Customization ───────────────────────────────────────────────
+const CONTRACT_TYPES: Record<string, { label: string; icon: string }> = {
+  sponsorship:      { label: "Sponsorship",    icon: "💎" },
+  content_creation: { label: "Content",        icon: "🎬" },
+  brand_ambassador: { label: "Ambassador",     icon: "🤝" },
+  ugc:              { label: "UGC",            icon: "📱" },
+  affiliate:        { label: "Affiliate",      icon: "🔗" },
+  custom:           { label: "Custom",         icon: "📄" },
+  uploaded:         { label: "Uploaded",       icon: "📎" },
+};
+
+const FONTS: Record<string, string> = {
+  poppins:  "Poppins",
+  vollkorn: "Vollkorn",
+  inter:    "Inter",
+  playfair: "Playfair Display",
+};
+
+const PLAN_FEATURES = [
+  { label: "Kira AI actions / day",  free: "10",        pro: "40",         ent: "40"         },
+  { label: "Invoices / month",       free: "20",        pro: "Unlimited",  ent: "Unlimited"  },
+  { label: "Contracts / month",      free: "20",        pro: "Unlimited",  ent: "Unlimited"  },
+  { label: "E-Signature",            free: false,       pro: true,         ent: true         },
+  { label: "Premium Themes",         free: false,       pro: true,         ent: true         },
+  { label: "Client Portal",          free: false,       pro: true,         ent: true         },
+  { label: "Verified Badge",         free: false,       pro: true,         ent: true         },
+  { label: "Full Analytics",         free: false,       pro: true,         ent: true         },
+];
+
+const UsageBar = ({ pct, color = "bg-bronze" }: { pct: number; color?: string }) => (
+  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden flex-1">
+    <div className={cn("h-full rounded-full transition-all duration-700", color)} style={{ width: `${pct}%` }} />
+  </div>
+);
+
+const TemplatesSection = () => {
+  const [tab, setTab] = useState<"templates" | "themes" | "features">("templates");
+  const [loading, setLoading] = useState(true);
+  const [invoiceColors, setInvoiceColors] = useState<{ color: string; count: number }[]>([]);
+  const [contractTypes, setContractTypes] = useState<{ type: string; count: number }[]>([]);
+  const [themes, setThemes]               = useState<{ theme: string; count: number }[]>([]);
+  const [fonts, setFonts]                 = useState<{ font: string; count: number }[]>([]);
+
+  useEffect(() => { load(); }, []);
+
+  const load = async () => {
+    const [{ data: invData }, { data: conData }, { data: lpData }] = await Promise.all([
+      supabase.from("invoices").select("accent_color"),
+      supabase.from("contracts").select("contract_type"),
+      supabase.from("link_profiles").select("theme, background"),
+    ]);
+
+    // Invoice accent colors
+    const colorMap: Record<string, number> = {};
+    (invData ?? []).forEach((r: any) => {
+      const c = r.accent_color || "#B07D3A";
+      colorMap[c] = (colorMap[c] || 0) + 1;
+    });
+    setInvoiceColors(Object.entries(colorMap).sort((a, b) => b[1] - a[1]).map(([color, count]) => ({ color, count })));
+
+    // Contract types
+    const typeMap: Record<string, number> = {};
+    (conData ?? []).forEach((r: any) => {
+      const t = r.contract_type || "custom";
+      typeMap[t] = (typeMap[t] || 0) + 1;
+    });
+    setContractTypes(Object.entries(typeMap).sort((a, b) => b[1] - a[1]).map(([type, count]) => ({ type, count })));
+
+    // CreviaLink themes
+    const themeMap: Record<string, number> = {};
+    const fontMap: Record<string, number> = {};
+    (lpData ?? []).forEach((r: any) => {
+      const th = r.theme || "dark";
+      themeMap[th] = (themeMap[th] || 0) + 1;
+      const fn = (r.background as any)?.font_family || "poppins";
+      fontMap[fn] = (fontMap[fn] || 0) + 1;
+    });
+    setThemes(Object.entries(themeMap).sort((a, b) => b[1] - a[1]).map(([theme, count]) => ({ theme, count })));
+    setFonts(Object.entries(fontMap).sort((a, b) => b[1] - a[1]).map(([font, count]) => ({ font, count })));
+
+    setLoading(false);
+  };
+
+  if (loading) return <Spin />;
+
+  const maxCon   = Math.max(1, ...contractTypes.map(r => r.count));
+  const maxColor = Math.max(1, ...invoiceColors.map(r => r.count));
+  const maxTheme = Math.max(1, ...themes.map(r => r.count));
+  const maxFont  = Math.max(1, ...fonts.map(r => r.count));
+
+  return (
+    <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-4xl">
+      <div>
+        <h2 className="text-lg font-bold text-white">Templates & Customization</h2>
+        <p className="text-sm text-white/30">Usage analytics and feature access overview</p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 bg-[#111] rounded-xl border border-white/[0.06] w-fit flex-wrap">
+        {([
+          { id: "templates" as const, label: "Templates" },
+          { id: "themes"    as const, label: "Themes & Fonts" },
+          { id: "features"  as const, label: "Feature Access" },
+        ]).map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            className={cn("px-4 py-1.5 rounded-lg text-sm font-medium transition-all",
+              tab === t.id ? "bg-bronze text-white shadow-sm" : "text-white/40 hover:text-white/70"
+            )}>{t.label}</button>
+        ))}
+      </div>
+
+      {/* ── Templates ── */}
+      {tab === "templates" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Contract type usage */}
+          <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
+            <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-5">Contract Templates Used</p>
+            {contractTypes.length === 0
+              ? <p className="text-sm text-white/20 text-center py-8">No contracts yet</p>
+              : <div className="space-y-3">
+                  {contractTypes.map(({ type, count }) => {
+                    const info = CONTRACT_TYPES[type] || { label: type, icon: "📄" };
+                    return (
+                      <div key={type} className="flex items-center gap-3">
+                        <span className="text-base w-5 flex-shrink-0">{info.icon}</span>
+                        <span className="text-sm text-white/60 w-24 flex-shrink-0 truncate">{info.label}</span>
+                        <UsageBar pct={Math.round((count / maxCon) * 100)} color="bg-violet-500" />
+                        <span className="text-xs text-white/30 tabular-nums w-6 text-right flex-shrink-0">{count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+            }
+          </div>
+
+          {/* Invoice accent colors */}
+          <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
+            <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-5">Invoice Accent Colors</p>
+            {invoiceColors.length === 0
+              ? <p className="text-sm text-white/20 text-center py-8">No invoices yet</p>
+              : <div className="space-y-3">
+                  {invoiceColors.slice(0, 8).map(({ color, count }) => (
+                    <div key={color} className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-md flex-shrink-0 ring-1 ring-white/10" style={{ backgroundColor: color }} />
+                      <span className="text-xs text-white/40 font-mono w-20 flex-shrink-0">{color}</span>
+                      <UsageBar pct={Math.round((count / maxColor) * 100)} color="bg-bronze" />
+                      <span className="text-xs text-white/30 tabular-nums w-6 text-right flex-shrink-0">{count}</span>
+                    </div>
+                  ))}
+                </div>
+            }
+          </div>
+        </div>
+      )}
+
+      {/* ── Themes & Fonts ── */}
+      {tab === "themes" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Theme distribution */}
+          <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
+            <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-5">
+              CreviaLink Themes <span className="normal-case font-normal text-white/20 ml-1">({themes.length} used)</span>
+            </p>
+            {themes.length === 0
+              ? <p className="text-sm text-white/20 text-center py-8">No profiles yet</p>
+              : <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                  {themes.map(({ theme, count }) => (
+                    <div key={theme} className="flex items-center gap-3">
+                      <span className="text-sm text-white/60 w-24 flex-shrink-0 capitalize truncate">{theme}</span>
+                      <UsageBar pct={Math.round((count / maxTheme) * 100)} color="bg-blue-500" />
+                      <span className="text-xs text-white/30 tabular-nums w-6 text-right flex-shrink-0">{count}</span>
+                    </div>
+                  ))}
+                </div>
+            }
+          </div>
+
+          {/* Font distribution */}
+          <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
+            <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-5">Font Preferences</p>
+            {fonts.length === 0
+              ? <p className="text-sm text-white/20 text-center py-8">No profiles yet</p>
+              : <div className="space-y-3">
+                  {fonts.map(({ font, count }) => (
+                    <div key={font} className="flex items-center gap-3">
+                      <span className="text-sm text-white/60 w-32 flex-shrink-0 truncate">{FONTS[font] || font}</span>
+                      <UsageBar pct={Math.round((count / maxFont) * 100)} color="bg-emerald-500" />
+                      <span className="text-xs text-white/30 tabular-nums w-6 text-right flex-shrink-0">{count}</span>
+                    </div>
+                  ))}
+                </div>
+            }
+          </div>
+        </div>
+      )}
+
+      {/* ── Feature Access ── */}
+      {tab === "features" && (
+        <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+          <div className="grid grid-cols-4 px-5 py-3 border-b border-white/[0.06] bg-white/[0.02]">
+            <span className="text-xs text-white/40 font-semibold uppercase tracking-wider">Feature</span>
+            {["Free", "Creative Pro", "Brand Workspace"].map(p => (
+              <span key={p} className="text-xs font-semibold text-center"
+                style={{ color: p === "Free" ? "rgba(255,255,255,0.3)" : p === "Creative Pro" ? "#10b981" : "#8b5cf6" }}>
+                {p}
+              </span>
+            ))}
+          </div>
+          <div className="divide-y divide-white/[0.04]">
+            {PLAN_FEATURES.map((row, i) => (
+              <div key={i} className="grid grid-cols-4 px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
+                <span className="text-sm text-white/55">{row.label}</span>
+                {[row.free, row.pro, row.ent].map((val, j) => (
+                  <div key={j} className="flex justify-center items-center">
+                    {typeof val === "boolean" ? (
+                      val
+                        ? <CheckCircle className="w-4 h-4 text-emerald-400" />
+                        : <XCircle    className="w-4 h-4 text-white/15" />
+                    ) : (
+                      <span className={cn("text-xs font-semibold tabular-nums",
+                        val === "Unlimited" ? "text-emerald-400" : "text-white/40"
+                      )}>{val}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Settings ─────────────────────────────────────────────────────────────────
 const SettingsSection = () => {
-  const [counts, setCounts]         = useState({ users: 0, invoices: 0, contracts: 0 });
-  const [maintenance, setMaintenance] = useState(false);
+  const [settingsTab, setSettingsTab]   = useState<"general" | "email" | "storage" | "apikeys">("general");
+  const [counts, setCounts]             = useState({ users: 0, invoices: 0, contracts: 0 });
+  const [maintenance, setMaintenance]   = useState(false);
   const [maintenanceSaving, setMaintenanceSaving] = useState(false);
+  const [emailFromName, setEmailFromName] = useState("Crevia");
+  const [emailReplyTo, setEmailReplyTo]   = useState("");
+  const [emailSaving, setEmailSaving]     = useState(false);
+  const [copied, setCopied]               = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase.from("invoices").select("id", { count: "exact", head: true }),
       supabase.from("contracts").select("id", { count: "exact", head: true }),
-      supabase.from("app_settings" as any).select("value").eq("key", "maintenance_mode").single(),
-    ]).then(([{ count: u }, { count: i }, { count: c }, { data: setting }]) => {
+      (supabase.from("app_settings") as any).select("key, value").in("key", ["maintenance_mode", "email_from_name", "email_reply_to"]),
+    ]).then(([{ count: u }, { count: i }, { count: c }, { data: settings }]) => {
       setCounts({ users: u ?? 0, invoices: i ?? 0, contracts: c ?? 0 });
-      setMaintenance((setting as any)?.value === "true");
+      const s: any[] = settings ?? [];
+      setMaintenance(s.find(r => r.key === "maintenance_mode")?.value === "true");
+      setEmailFromName(s.find(r => r.key === "email_from_name")?.value || "Crevia");
+      setEmailReplyTo(s.find(r => r.key === "email_reply_to")?.value  || "");
     });
   }, []);
 
   const toggleMaintenance = async () => {
     setMaintenanceSaving(true);
     const next = !maintenance;
-    const { error } = await supabase
-      .from("app_settings" as any)
+    const { error } = await (supabase.from("app_settings") as any)
       .update({ value: String(next), updated_at: new Date().toISOString() })
       .eq("key", "maintenance_mode");
-    if (error) {
-      toast.error("Failed to update: " + error.message);
-      setMaintenanceSaving(false);
-      return;
-    }
+    if (error) { toast.error("Failed: " + error.message); setMaintenanceSaving(false); return; }
     setMaintenance(next);
     setMaintenanceSaving(false);
     toast(next ? "⚠️ Maintenance mode ON" : "✅ Maintenance mode OFF", {
       description: next ? "Users will see a maintenance message" : "App is live for all users",
     });
   };
+
+  const saveEmail = async () => {
+    setEmailSaving(true);
+    const { error } = await (supabase.from("app_settings") as any)
+      .upsert([
+        { key: "email_from_name", value: emailFromName, updated_at: new Date().toISOString() },
+        { key: "email_reply_to",  value: emailReplyTo,  updated_at: new Date().toISOString() },
+      ], { onConflict: "key" });
+    if (error) { toast.error(error.message); setEmailSaving(false); return; }
+    toast.success("Email settings saved");
+    setEmailSaving(false);
+  };
+
+  const copyText = (text: string, key: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(key);
+      setTimeout(() => setCopied(null), 2000);
+    });
+  };
+
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string || "";
+  const anonKey     = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string || "";
+  const maskKey     = (k: string) => k ? `${k.slice(0, 10)}••••••••••••••••${k.slice(-4)}` : "—";
+
+  const STORAGE_BUCKETS = [
+    { name: "avatars",     desc: "User profile & CreviaLink images", public: true },
+    { name: "chat-files",  desc: "Workspace chat file attachments",  public: false },
+    { name: "deliverables",desc: "Campaign deliverable uploads",     public: false },
+  ];
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-2xl">
@@ -1281,104 +1859,242 @@ const SettingsSection = () => {
         <p className="text-sm text-white/30">App configuration and info</p>
       </div>
 
-      <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/[0.06]">
-          <p className="text-sm font-semibold text-white/60">App Info</p>
-        </div>
-        <div className="divide-y divide-white/[0.04]">
-          {[
-            { label: "App",             value: "Crevia MVP" },
-            { label: "Stack",           value: "React · Supabase · Tailwind" },
-            { label: "Auth",            value: "Supabase Auth + MFA" },
-            { label: "Total Users",     value: String(counts.users) },
-            { label: "Total Invoices",  value: String(counts.invoices) },
-            { label: "Total Contracts", value: String(counts.contracts) },
-            { label: "Admin gating",    value: "is_admin = true on profiles" },
-          ].map(r => (
-            <div key={r.label} className="flex items-center justify-between px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
-              <span className="text-sm text-white/35">{r.label}</span>
-              <span className="text-sm text-white/65 font-medium">{r.value}</span>
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 bg-[#111] rounded-xl border border-white/[0.06] w-fit flex-wrap">
+        {([
+          { id: "general"  as const, label: "General",   icon: Settings },
+          { id: "email"    as const, label: "Email",      icon: Mail },
+          { id: "storage"  as const, label: "Storage",    icon: Database },
+          { id: "apikeys"  as const, label: "API Keys",   icon: Key },
+        ]).map(t => (
+          <button key={t.id} onClick={() => setSettingsTab(t.id)}
+            className={cn("px-3 sm:px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5",
+              settingsTab === t.id ? "bg-bronze text-white shadow-sm" : "text-white/40 hover:text-white/70"
+            )}>
+            <t.icon className="w-3.5 h-3.5" />{t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── General ── */}
+      {settingsTab === "general" && (
+        <div className="space-y-5">
+          <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-white/[0.06]">
+              <p className="text-sm font-semibold text-white/60">App Info</p>
             </div>
-          ))}
-        </div>
-      </div>
+            <div className="divide-y divide-white/[0.04]">
+              {[
+                { label: "App",             value: "Crevia MVP" },
+                { label: "Stack",           value: "React · Supabase · Tailwind" },
+                { label: "Auth",            value: "Supabase Auth + MFA" },
+                { label: "Total Users",     value: String(counts.users) },
+                { label: "Total Invoices",  value: String(counts.invoices) },
+                { label: "Total Contracts", value: String(counts.contracts) },
+                { label: "Admin gating",    value: "is_admin = true on profiles" },
+              ].map(r => (
+                <div key={r.label} className="flex items-center justify-between px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
+                  <span className="text-sm text-white/35">{r.label}</span>
+                  <span className="text-sm text-white/65 font-medium">{r.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-      <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-white/[0.06]">
-          <p className="text-sm font-semibold text-white/60">External Dashboards</p>
-        </div>
-        <div className="divide-y divide-white/[0.04]">
-          {[
-            { label: "Supabase Studio",  hint: "DB · Auth · Storage · Edge Functions", href: "https://supabase.com/dashboard" },
-            { label: "Resend",           hint: "Transactional email / SMTP",            href: "https://resend.com/emails" },
-            { label: "Paystack",         hint: "Payments & subscriptions",              href: "https://dashboard.paystack.com" },
-          ].map(l => (
-            <a key={l.label} href={l.href} target="_blank" rel="noopener noreferrer"
-              className="flex items-center justify-between px-5 py-4 hover:bg-white/[0.02] transition-colors group">
+          <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-white/[0.06]">
+              <p className="text-sm font-semibold text-white/60">External Dashboards</p>
+            </div>
+            <div className="divide-y divide-white/[0.04]">
+              {[
+                { label: "Supabase Studio", hint: "DB · Auth · Storage · Edge Functions", href: "https://supabase.com/dashboard" },
+                { label: "Resend",          hint: "Transactional email / SMTP",            href: "https://resend.com/emails" },
+                { label: "Paystack",        hint: "Payments & subscriptions",              href: "https://dashboard.paystack.com" },
+              ].map(l => (
+                <a key={l.label} href={l.href} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center justify-between px-5 py-4 hover:bg-white/[0.02] transition-colors group">
+                  <div>
+                    <p className="text-sm text-white/65 group-hover:text-white/85 transition-colors">{l.label}</p>
+                    <p className="text-xs text-white/25 mt-0.5">{l.hint}</p>
+                  </div>
+                  <span className="flex items-center gap-1 text-[10px] text-white/30 group-hover:text-bronze bg-white/[0.04] border border-white/[0.06] group-hover:border-bronze/30 px-2 py-1 rounded-lg transition-colors">
+                    <ArrowUpRight className="w-3 h-3" /> Open
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Maintenance mode */}
+          <div className={cn("border rounded-2xl p-5 transition-all", maintenance ? "bg-amber-500/10 border-amber-500/30" : "bg-[#111] border-white/[0.06]")}>
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm text-white/65 group-hover:text-white/85 transition-colors">{l.label}</p>
-                <p className="text-xs text-white/25 mt-0.5">{l.hint}</p>
+                <p className={cn("text-sm font-semibold mb-1", maintenance ? "text-amber-400" : "text-white/70")}>Maintenance Mode</p>
+                <p className="text-xs text-white/35 leading-relaxed">
+                  {maintenance ? "App is in maintenance — users see a maintenance message." : "App is live. Toggle to put it in maintenance."}
+                </p>
               </div>
-              <span className="flex items-center gap-1 text-[10px] text-white/30 group-hover:text-bronze bg-white/[0.04] border border-white/[0.06] group-hover:border-bronze/30 px-2 py-1 rounded-lg transition-colors">
-                <ArrowUpRight className="w-3 h-3" /> Open
-              </span>
-            </a>
-          ))}
-        </div>
-      </div>
+              <button onClick={toggleMaintenance} disabled={maintenanceSaving}
+                className={cn("relative flex-shrink-0 w-11 h-6 rounded-full transition-all duration-200", maintenance ? "bg-amber-500" : "bg-white/10")}>
+                <span className={cn("absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200", maintenance && "translate-x-5")} />
+              </button>
+            </div>
+          </div>
 
-      {/* Maintenance mode */}
-      <div className={cn(
-        "border rounded-2xl p-5 transition-all",
-        maintenance ? "bg-amber-500/10 border-amber-500/30" : "bg-[#111] border-white/[0.06]"
-      )}>
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className={cn("text-sm font-semibold mb-1", maintenance ? "text-amber-400" : "text-white/70")}>
-              Maintenance Mode
-            </p>
+          <div className="bg-gradient-to-br from-red-500/8 to-transparent border border-red-500/15 rounded-2xl p-5">
+            <p className="text-sm font-semibold text-red-400 mb-1.5">Admin Access</p>
             <p className="text-xs text-white/35 leading-relaxed">
-              {maintenance
-                ? "App is in maintenance — users see a maintenance message instead of the app."
-                : "App is live. Toggle to show a maintenance message to all non-admin users."}
+              Only accounts with <code className="bg-white/[0.07] px-1.5 py-0.5 rounded-md text-white/55 font-mono text-[11px]">is_admin = true</code> in the{" "}
+              <code className="bg-white/[0.07] px-1.5 py-0.5 rounded-md text-white/55 font-mono text-[11px]">profiles</code> table can access this dashboard.
             </p>
           </div>
-          <button
-            onClick={toggleMaintenance}
-            disabled={maintenanceSaving}
-            className={cn(
-              "relative flex-shrink-0 w-11 h-6 rounded-full transition-all duration-200",
-              maintenance ? "bg-amber-500" : "bg-white/10"
-            )}
-          >
-            <span className={cn(
-              "absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200",
-              maintenance && "translate-x-5"
-            )} />
-          </button>
         </div>
-      </div>
+      )}
 
-      <div className="bg-gradient-to-br from-red-500/8 to-transparent border border-red-500/15 rounded-2xl p-5">
-        <p className="text-sm font-semibold text-red-400 mb-1.5">Admin Access</p>
-        <p className="text-xs text-white/35 leading-relaxed">
-          Only accounts with <code className="bg-white/[0.07] px-1.5 py-0.5 rounded-md text-white/55 font-mono text-[11px]">is_admin = true</code> in the{" "}
-          <code className="bg-white/[0.07] px-1.5 py-0.5 rounded-md text-white/55 font-mono text-[11px]">profiles</code> table
-          can access this dashboard. All other users are silently redirected to the homepage with no error shown.
-        </p>
-      </div>
+      {/* ── Email ── */}
+      {settingsTab === "email" && (
+        <div className="space-y-5">
+          <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-5 space-y-4">
+            <p className="text-xs text-white/40 uppercase tracking-wider font-semibold">Sender Configuration</p>
+            <div className="space-y-1">
+              <label className="text-xs text-white/40">From name</label>
+              <Input value={emailFromName} onChange={e => setEmailFromName(e.target.value)}
+                placeholder="Crevia"
+                className="bg-[#0d0d0d] border-white/[0.08] text-white placeholder:text-white/20 rounded-xl focus-visible:ring-bronze/30" />
+              <p className="text-[11px] text-white/20">Displayed as the sender name in all outgoing emails</p>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-white/40">Reply-to email</label>
+              <Input value={emailReplyTo} onChange={e => setEmailReplyTo(e.target.value)}
+                placeholder="support@crevia.app"
+                className="bg-[#0d0d0d] border-white/[0.08] text-white placeholder:text-white/20 rounded-xl focus-visible:ring-bronze/30" />
+              <p className="text-[11px] text-white/20">Users replying to emails will reach this address</p>
+            </div>
+            <Button onClick={saveEmail} disabled={emailSaving}
+              className="bg-bronze hover:bg-bronze/90 text-white rounded-xl h-9 px-5 text-sm">
+              {emailSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Save"}
+            </Button>
+          </div>
+
+          <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-white/[0.06]">
+              <p className="text-sm font-semibold text-white/60">SMTP Provider</p>
+            </div>
+            <div className="divide-y divide-white/[0.04]">
+              {[
+                { label: "Provider",  value: "Resend" },
+                { label: "Host",      value: "smtp.resend.com" },
+                { label: "Port",      value: "465 (SSL)" },
+                { label: "Username",  value: "resend" },
+                { label: "Configured via", value: "Supabase Auth → SMTP settings" },
+              ].map(r => (
+                <div key={r.label} className="flex items-center justify-between px-5 py-3 hover:bg-white/[0.02] transition-colors">
+                  <span className="text-xs text-white/35">{r.label}</span>
+                  <span className="text-xs text-white/60 font-mono">{r.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Storage ── */}
+      {settingsTab === "storage" && (
+        <div className="space-y-4">
+          <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
+              <p className="text-sm font-semibold text-white/60">Storage Buckets</p>
+              <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1 text-[10px] text-white/30 hover:text-bronze bg-white/[0.04] border border-white/[0.06] hover:border-bronze/30 px-2 py-1 rounded-lg transition-colors">
+                <ArrowUpRight className="w-3 h-3" /> Manage in Supabase
+              </a>
+            </div>
+            <div className="divide-y divide-white/[0.04]">
+              {STORAGE_BUCKETS.map(b => (
+                <div key={b.name} className="px-5 py-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors">
+                  <div>
+                    <p className="text-sm text-white/70 font-mono font-medium">{b.name}</p>
+                    <p className="text-xs text-white/30 mt-0.5">{b.desc}</p>
+                  </div>
+                  <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                    b.public
+                      ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20"
+                      : "bg-white/[0.05] text-white/30 border-white/[0.06]"
+                  )}>{b.public ? "Public" : "Private"}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className="text-xs text-white/20 px-1">Bucket policies and file management are handled in Supabase Storage dashboard.</p>
+        </div>
+      )}
+
+      {/* ── API Keys ── */}
+      {settingsTab === "apikeys" && (
+        <div className="space-y-4">
+          <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-white/[0.06]">
+              <p className="text-sm font-semibold text-white/60">Supabase</p>
+            </div>
+            <div className="divide-y divide-white/[0.04]">
+              {[
+                { label: "Project URL", value: supabaseUrl,  key: "url" },
+                { label: "Anon Key",    value: anonKey,      key: "anon" },
+              ].map(r => (
+                <div key={r.label} className="px-5 py-3.5 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs text-white/35 mb-0.5">{r.label}</p>
+                    <p className="text-xs text-white/55 font-mono truncate">{maskKey(r.value)}</p>
+                  </div>
+                  <button onClick={() => copyText(r.value, r.key)}
+                    className="flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-lg border transition-all flex-shrink-0"
+                    style={{ color: copied === r.key ? "#10b981" : "rgba(255,255,255,0.3)", borderColor: copied === r.key ? "rgba(16,185,129,0.3)" : "rgba(255,255,255,0.06)" }}>
+                    {copied === r.key ? <CheckCircle className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                    {copied === r.key ? "Copied" : "Copy"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-white/[0.06]">
+              <p className="text-sm font-semibold text-white/60">External Services</p>
+            </div>
+            <div className="divide-y divide-white/[0.04]">
+              {[
+                { label: "Resend API Key",    hint: "Manage in Resend dashboard",    href: "https://resend.com/api-keys" },
+                { label: "Paystack Secret",   hint: "Manage in Paystack dashboard",  href: "https://dashboard.paystack.com/#/settings/developer" },
+              ].map(l => (
+                <a key={l.label} href={l.href} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center justify-between px-5 py-4 hover:bg-white/[0.02] transition-colors group">
+                  <div>
+                    <p className="text-sm text-white/60 group-hover:text-white/80 transition-colors">{l.label}</p>
+                    <p className="text-xs text-white/25 mt-0.5">{l.hint}</p>
+                  </div>
+                  <span className="flex items-center gap-1 text-[10px] text-white/25 group-hover:text-bronze bg-white/[0.03] border border-white/[0.06] group-hover:border-bronze/30 px-2 py-1 rounded-lg transition-colors">
+                    <ArrowUpRight className="w-3 h-3" /> Open
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+          <p className="text-[11px] text-white/15 px-1">Secret keys are never stored in the browser. They live in Supabase Edge Function secrets and your CI/CD environment.</p>
+        </div>
+      )}
     </div>
   );
 };
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 const NAV: { id: Section; label: string; icon: React.ElementType }[] = [
-  { id: "overview",  label: "Overview",  icon: LayoutDashboard },
-  { id: "users",     label: "Users",     icon: Users },
-  { id: "billing",   label: "Billing",   icon: CreditCard },
-  { id: "documents", label: "Documents", icon: FileText },
-  { id: "support",   label: "Support",   icon: MessageSquare },
-  { id: "settings",  label: "Settings",  icon: Settings },
+  { id: "overview",       label: "Overview",     icon: LayoutDashboard },
+  { id: "users",          label: "Users",        icon: Users },
+  { id: "billing",        label: "Billing",      icon: CreditCard },
+  { id: "documents",      label: "Documents",    icon: FileText },
+  { id: "customization",  label: "Templates",    icon: Palette },
+  { id: "support",        label: "Support",      icon: MessageSquare },
+  { id: "settings",       label: "Settings",     icon: Settings },
 ];
 
 const Admin = () => {
@@ -1558,12 +2274,13 @@ const Admin = () => {
           "flex-1 overflow-y-auto",
           section === "users" && "flex flex-col overflow-hidden"
         )}>
-          {section === "overview"  && <OverviewSection onNavigate={setSection} />}
-          {section === "users"     && <UsersSection />}
-          {section === "billing"   && <BillingSection />}
-          {section === "documents" && <DocumentsSection />}
-          {section === "support"   && <SupportSection onTicketClosed={() => setOpenTicketsCount(c => Math.max(0, c - 1))} onVerificationResolved={() => setPendingCount(c => Math.max(0, c - 1))} />}
-          {section === "settings"  && <SettingsSection />}
+          {section === "overview"       && <OverviewSection onNavigate={setSection} />}
+          {section === "users"          && <UsersSection />}
+          {section === "billing"        && <BillingSection />}
+          {section === "documents"      && <DocumentsSection />}
+          {section === "customization"  && <TemplatesSection />}
+          {section === "support"        && <SupportSection onTicketClosed={() => setOpenTicketsCount(c => Math.max(0, c - 1))} onVerificationResolved={() => setPendingCount(c => Math.max(0, c - 1))} />}
+          {section === "settings"       && <SettingsSection />}
         </main>
       </div>
     </div>

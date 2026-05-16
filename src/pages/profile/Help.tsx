@@ -12,10 +12,11 @@ import { cn } from "@/lib/utils";
 
 const Help = () => {
   const { t } = useLanguage();
-  const [subject, setSubject]       = useState("");
-  const [message, setMessage]       = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted]   = useState(false);
+  const [subject, setSubject]         = useState("");
+  const [message, setMessage]         = useState("");
+  const [ticketType, setTicketType]   = useState<"general" | "bug">("general");
+  const [submitting, setSubmitting]   = useState(false);
+  const [submitted, setSubmitted]     = useState(false);
   const [tickets, setTickets]       = useState<any[]>([]);
 
   useEffect(() => { loadTickets(); }, []);
@@ -46,6 +47,7 @@ const Help = () => {
         user_id: session.user.id,
         subject: subject.trim(),
         message: message.trim(),
+        type: ticketType,
       });
       if (error) throw error;
 
@@ -88,6 +90,21 @@ const Help = () => {
             </div>
           ) : (
             <div className="space-y-4">
+              {/* Ticket type */}
+              <div className="flex gap-2">
+                {([
+                  { id: "general" as const, label: "General support" },
+                  { id: "bug"     as const, label: "Bug report" },
+                ]).map(opt => (
+                  <button key={opt.id} type="button" onClick={() => setTicketType(opt.id)}
+                    className={cn(
+                      "px-4 py-1.5 rounded-lg text-sm font-medium border transition-all",
+                      ticketType === opt.id
+                        ? "bg-bronze/10 border-bronze/40 text-bronze"
+                        : "border-border text-muted-foreground hover:border-bronze/20"
+                    )}>{opt.label}</button>
+                ))}
+              </div>
               <Input
                 placeholder={t("help.subject")}
                 value={subject}
@@ -124,6 +141,9 @@ const Help = () => {
                   <div className="flex items-start justify-between gap-2 flex-wrap">
                     <p className="text-sm font-semibold">{tk.subject}</p>
                     <div className="flex items-center gap-2 flex-shrink-0">
+                      {tk.type === "bug" && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 border border-red-500/20">Bug</span>
+                      )}
                       <span className={cn(
                         "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
                         tk.status === "closed"
