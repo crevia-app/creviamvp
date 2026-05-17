@@ -100,7 +100,7 @@ function DesktopChatItem({
   return (
     <div
       onClick={() => { if (!isRenaming) onSelect(); }}
-      className={`group flex items-center gap-2 ${indent ? 'p-2 pl-7' : 'p-2.5'} rounded-lg cursor-pointer transition-all ${
+      className={`group flex items-center gap-2 ${indent ? 'py-2 px-2 pl-7' : 'py-3 px-2.5'} rounded-lg cursor-pointer transition-all ${
         isActive ? 'bg-bronze/10 text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
       }`}
     >
@@ -125,10 +125,8 @@ function DesktopChatItem({
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-          <button className={`p-1 rounded flex-shrink-0 hover:text-foreground hover:bg-muted/80 transition-all ${
-            isActive
-              ? 'text-muted-foreground opacity-100'
-              : 'text-muted-foreground opacity-0 group-hover:opacity-100'
+          <button className={`p-1.5 rounded-md flex-shrink-0 transition-all hover:bg-muted/80 ${
+            isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
           }`}>
             <MoreVertical className="w-3.5 h-3.5" />
           </button>
@@ -1251,10 +1249,10 @@ const Kira = () => {
             feature="Kira AI actions"
           />
             <ScrollArea className="flex-1">
-              <div className="min-h-full flex flex-col justify-center px-4 py-8">
-                <div className="max-w-2xl mx-auto w-full">
+              <div className="min-h-full flex flex-col px-4 py-6">
+                <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col">
                   {messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 md:py-24 text-center">
+                    <div className="flex-1 flex flex-col items-center justify-center py-12 text-center">
                       <h1 className="font-vollkorn text-2xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-bronze to-bronze-dark bg-clip-text text-transparent">
                         {activeProject ? `Working on ${activeProject.name}` : currentGreeting}
                       </h1>
