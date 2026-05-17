@@ -97,10 +97,15 @@ function DesktopChatItem({
   chat, isActive, isRenaming, renameValue, indent = false,
   onSelect, onRenameChange, onRenameSubmit, onRenameCancel, onStartRename, onPin, onDelete,
 }: DesktopChatItemProps) {
+  const [hovered, setHovered] = React.useState(false);
+  const showDots = isActive || hovered;
+
   return (
     <div
       onClick={() => { if (!isRenaming) onSelect(); }}
-      className={`group flex items-center gap-2 ${indent ? 'py-2.5 px-2 pl-7' : 'py-3.5 px-2.5'} rounded-lg cursor-pointer transition-all ${
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className={`flex items-center gap-2 ${indent ? 'py-2.5 px-2 pl-7' : 'py-3.5 px-2.5'} rounded-lg cursor-pointer transition-all ${
         isActive ? 'bg-bronze/10 text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
       }`}
     >
@@ -125,11 +130,12 @@ function DesktopChatItem({
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-          <button className={`flex-shrink-0 w-6 h-6 rounded flex items-center justify-center transition-opacity duration-150 hover:bg-muted/80 ${
-            isActive
-              ? 'opacity-100 text-foreground'
-              : 'opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground'
-          }`}>
+          <button
+            style={{ opacity: showDots ? 1 : 0, pointerEvents: showDots ? 'auto' : 'none' }}
+            className={`flex-shrink-0 w-6 h-6 rounded flex items-center justify-center transition-opacity duration-150 hover:bg-muted/80 ${
+              isActive ? 'text-foreground' : 'text-muted-foreground'
+            }`}
+          >
             <MoreVertical className="w-4 h-4" />
           </button>
         </DropdownMenuTrigger>
