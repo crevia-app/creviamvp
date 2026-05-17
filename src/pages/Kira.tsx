@@ -125,10 +125,10 @@ function DesktopChatItem({
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-          <button className={`flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center transition-all border ${
+          <button className={`flex-shrink-0 w-6 h-6 rounded flex items-center justify-center transition-opacity duration-150 hover:bg-muted/80 ${
             isActive
-              ? 'text-foreground bg-muted border-border/60 hover:bg-muted/80'
-              : 'text-foreground/60 bg-muted/60 border-border/40 hover:bg-muted hover:text-foreground'
+              ? 'opacity-100 text-foreground'
+              : 'opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground'
           }`}>
             <MoreVertical className="w-4 h-4" />
           </button>
