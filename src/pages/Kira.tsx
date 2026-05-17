@@ -100,7 +100,7 @@ function DesktopChatItem({
   return (
     <div
       onClick={() => { if (!isRenaming) onSelect(); }}
-      className={`group flex items-center gap-2 ${indent ? 'py-2 px-2 pl-7' : 'py-3 px-2.5'} rounded-lg cursor-pointer transition-all ${
+      className={`group flex items-center gap-2 ${indent ? 'py-2.5 px-2 pl-7' : 'py-3.5 px-2.5'} rounded-lg cursor-pointer transition-all ${
         isActive ? 'bg-bronze/10 text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
       }`}
     >
