@@ -17,16 +17,16 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/use-subscription";
 import UsageLimitBanner from "@/components/subscription/UsageLimitBanner";
-import { 
-  Lightbulb, 
-  Users, 
-  FileText, 
-  BarChart3, 
-  TrendingUp, 
-  Send, 
-  MessageSquare, 
-  Plus, 
-  Search, 
+import {
+  Lightbulb,
+  Users,
+  FileText,
+  BarChart3,
+  TrendingUp,
+  Send,
+  MessageSquare,
+  Plus,
+  Search,
   Paperclip,
   Trash2,
   PanelLeftClose,
@@ -46,7 +46,7 @@ import {
   Check,
   Pencil,
   RotateCcw,
-  Brain,
+  Settings,
   MoreVertical,
   Pin,
   PinOff,
@@ -65,7 +65,7 @@ import { VoiceChatDialog } from "@/components/kira/VoiceChatDialog";
 import CreateContractDialog from "@/components/studio/CreateContractDialog";
 import CreateInvoiceDialog from "@/components/studio/CreateInvoiceDialog";
 import { ApproveActionDialog } from "@/components/kira/ApproveActionDialog";
-import { KiraMemoryPanel } from "@/components/kira/KiraMemoryPanel";
+import { KiraSettingsPanel } from "@/components/kira/KiraSettingsPanel";
 import { motion, AnimatePresence } from "framer-motion";
 
 
@@ -915,10 +915,10 @@ const Kira = () => {
                 variant="ghost"
                 size="icon"
                 onClick={() => setMemoryPanelOpen(true)}
-                title="Tell Kira about you"
+                title="Kira settings"
                 className="h-8 w-8 text-muted-foreground hover:text-foreground"
               >
-                <Brain className="h-4 w-4" />
+                <Settings className="h-4 w-4" />
               </Button>
             )}
             <Button
@@ -1102,7 +1102,7 @@ const Kira = () => {
             <Button variant="ghost" size="icon" onClick={() => { setSidebarCollapsed(false); setViewMode("projects"); }} className="w-10 h-10 text-muted-foreground hover:text-foreground">
               <FolderOpen className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => setMemoryPanelOpen(true)} title="Tell Kira about you" className="w-10 h-10 text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="icon" onClick={() => setMemoryPanelOpen(true)} title="Kira settings" className="w-10 h-10 text-muted-foreground hover:text-foreground">
               <Brain className="h-4 w-4" />
             </Button>
           </div>
@@ -1222,7 +1222,7 @@ const Kira = () => {
               </div>
               <span className="font-poppins font-semibold text-sm">Kira</span>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => setMemoryPanelOpen(true)} title="Tell Kira about you" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="icon" onClick={() => setMemoryPanelOpen(true)} title="Kira settings" className="h-8 w-8 text-muted-foreground hover:text-foreground">
               <Brain className="h-4 w-4" />
             </Button>
           </div>
@@ -1573,7 +1573,7 @@ const Kira = () => {
       />
 
       {userId && (
-        <KiraMemoryPanel
+        <KiraSettingsPanel
           open={memoryPanelOpen}
           onOpenChange={setMemoryPanelOpen}
           userId={userId}

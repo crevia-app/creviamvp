@@ -157,34 +157,42 @@ serve(async (req) => {
     const brandProfile = (profile as any)?.brand_profiles;
     const isCreator = profile?.user_type === 'creator';
 
-    const contextLines: string[] = [
-      `- Name: ${profile?.display_name || 'not set'}`,
-      `- Type: ${isCreator ? 'Creator' : 'Brand'}`,
-    ];
-    if (profile?.bio) contextLines.push(`- Bio: ${profile.bio}`);
-    if (isCreator && Array.isArray(creatorProfile?.creator_types) && creatorProfile.creator_types.length > 0) {
-      contextLines.push(`- Niche: ${(creatorProfile.creator_types as string[]).join(', ')}`);
-    }
-    if (isCreator && Array.isArray(creatorProfile?.goals) && creatorProfile.goals.length > 0) {
-      contextLines.push(`- Goals: ${(creatorProfile.goals as string[]).join(', ')}`);
-    }
-    if (!isCreator && brandProfile?.business_type) {
-      contextLines.push(`- Business type: ${brandProfile.business_type}`);
-    }
-    if (!isCreator && brandProfile?.company_description) {
-      contextLines.push(`- Company: ${brandProfile.company_description}`);
-    }
-    contextLines.push(`- Standard rate: ${(memory.standard_rate as string) || 'not set — ask if relevant'}`);
-    contextLines.push(`- Currency: ${(memory.currency as string) || 'KES (assumed)'}`);
-    const clients = Array.isArray(memory.clients) && (memory.clients as string[]).length > 0
-      ? (memory.clients as string[]).join(', ')
-      : 'none on file';
-    contextLines.push(`- Regular clients: ${clients}`);
-    contextLines.push(`- Payment terms: ${(memory.payment_terms as string) || 'not set'}`);
-    if (memory.notes) contextLines.push(`- Notes: ${memory.notes}`);
+    const referenceMemories = memory.reference_saved_memories !== false;
+    const referenceChatHistory = memory.reference_chat_history !== false;
 
-    const userContextBlock = `USER CONTEXT (use this to personalise every response — do not repeat it back verbatim):\n${contextLines.join('\n')}`;
-    const systemPrompt = `${KIRA_SYSTEM_PROMPT}\n\n${userContextBlock}`;
+    // If user has disabled chat history, ignore the history array
+    const activeHistory = referenceChatHistory ? conversationHistory : [];
+
+    let systemPrompt = KIRA_SYSTEM_PROMPT;
+
+    if (referenceMemories) {
+      const contextLines: string[] = [
+        `- Name: ${(memory.nickname as string) || profile?.display_name || 'not set'}`,
+        `- Type: ${isCreator ? 'Creator' : 'Brand'}`,
+      ];
+      if (profile?.bio) contextLines.push(`- Bio: ${profile.bio}`);
+      if (memory.occupation) contextLines.push(`- Occupation: ${memory.occupation}`);
+      if (isCreator && Array.isArray(creatorProfile?.creator_types) && creatorProfile.creator_types.length > 0) {
+        contextLines.push(`- Niche: ${(creatorProfile.creator_types as string[]).join(', ')}`);
+      }
+      if (isCreator && Array.isArray(creatorProfile?.goals) && creatorProfile.goals.length > 0) {
+        contextLines.push(`- Goals: ${(creatorProfile.goals as string[]).join(', ')}`);
+      }
+      if (!isCreator && brandProfile?.business_type) {
+        contextLines.push(`- Business type: ${brandProfile.business_type}`);
+      }
+      if (!isCreator && brandProfile?.company_description) {
+        contextLines.push(`- Company: ${brandProfile.company_description}`);
+      }
+      if (memory.more_about_you) contextLines.push(`- About: ${memory.more_about_you}`);
+
+      const userContextBlock = `USER CONTEXT (use this to personalise every response — do not repeat it back verbatim):\n${contextLines.join('\n')}`;
+      systemPrompt = `${KIRA_SYSTEM_PROMPT}\n\n${userContextBlock}`;
+
+      if (memory.custom_instructions) {
+        systemPrompt += `\n\nUSER INSTRUCTIONS (follow these in all responses):\n${memory.custom_instructions}`;
+      }
+    }
 
     const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -198,7 +206,7 @@ serve(async (req) => {
         stream: true,
         messages: [
           { role: "system", content: systemPrompt },
-          ...conversationHistory,
+          ...activeHistory,
           { role: "user", content: sanitizedPrompt }
         ],
       }),
