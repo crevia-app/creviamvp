@@ -29,10 +29,22 @@ export class ErrorBoundary extends React.Component<
       const reloadKey = "crevia_chunk_reload";
       const last = sessionStorage.getItem(reloadKey);
       const now = Date.now();
-      // Guard against reload loops: only auto-reload once per 10 seconds
       if (!last || now - Number(last) > 10_000) {
         sessionStorage.setItem(reloadKey, String(now));
-        window.location.reload();
+        // Unregister stale service workers and wipe all caches before reloading
+        // so the browser fetches fresh assets from the CDN rather than the old SW cache.
+        const cleanup = async () => {
+          if ("serviceWorker" in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map((r) => r.unregister()));
+          }
+          if ("caches" in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map((k) => caches.delete(k)));
+          }
+          window.location.reload();
+        };
+        cleanup().catch(() => window.location.reload());
       }
     }
   }
