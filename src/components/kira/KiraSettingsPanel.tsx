@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ChevronRight, ChevronLeft, Brain, Mail,
-  Palette, Loader2, Trash2, Pencil, Sparkles,
+  Palette, Loader2, Trash2, Pencil, Sparkles, X,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -23,15 +23,6 @@ interface KiraMemory {
   more_about_you: string;
   custom_instructions: string;
 }
-
-const DEFAULT_MEMORY: KiraMemory = {
-  reference_chat_history: true,
-  reference_saved_memories: true,
-  nickname: "",
-  occupation: "",
-  more_about_you: "",
-  custom_instructions: "",
-};
 
 interface Props {
   open: boolean;
@@ -55,10 +46,16 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
   const [view, setView] = useState<PanelView>("main");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
-  const [memory, setMemory] = useState<KiraMemory>(DEFAULT_MEMORY);
+  const [memory, setMemory] = useState<KiraMemory>({
+    reference_chat_history: true,
+    reference_saved_memories: true,
+    nickname: "",
+    occupation: "",
+    more_about_you: "",
+    custom_instructions: "",
+  });
 
   useEffect(() => {
     if (open) setView("main");
@@ -92,15 +89,16 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
     await supabase.from("profiles").update({ kira_memory: updated }).eq("id", userId);
   }, [userId]);
 
-  // Toggles auto-save immediately
-  const handleToggle = async (field: "reference_chat_history" | "reference_saved_memories", val: boolean) => {
+  const handleToggle = async (
+    field: "reference_chat_history" | "reference_saved_memories",
+    val: boolean,
+  ) => {
     const updated = { ...memory, [field]: val };
     setMemory(updated);
     await persistMemory(updated);
     toast({ title: val ? "Enabled" : "Disabled", description: "Kira updated." });
   };
 
-  // Text fields save on button click
   const saveTextFields = async () => {
     setIsSaving(true);
     await persistMemory(memory);
@@ -124,7 +122,10 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-0 gap-0 max-w-sm w-full rounded-2xl overflow-hidden border border-border/50 bg-card shadow-2xl">
+      <DialogContent
+        hideClose
+        className="p-0 gap-0 max-w-sm w-full rounded-2xl overflow-hidden border border-border/50 bg-card shadow-2xl flex flex-col max-h-[85vh]"
+      >
         <DialogTitle className="sr-only">Kira Settings</DialogTitle>
 
         {isLoading ? (
@@ -135,127 +136,134 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
           <>
             {/* ── MAIN VIEW ── */}
             {view === "main" && (
-              <ScrollArea className="max-h-[80vh]">
-                <div className="p-6 space-y-6">
-                  {/* Avatar + name */}
-                  <div className="flex flex-col items-center gap-3 pt-2">
-                    <div className="relative">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-bronze to-bronze-dark flex items-center justify-center text-background font-bold text-xl select-none shadow-lg">
-                        {getInitials(displayName) || <Sparkles className="w-6 h-6" />}
+              <>
+                {/* Header row — close button */}
+                <div className="flex justify-end px-4 pt-4">
+                  <button
+                    onClick={() => onOpenChange(false)}
+                    className="w-9 h-9 rounded-full border border-border bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+                  >
+                    <X className="w-4 h-4 text-foreground" />
+                  </button>
+                </div>
+
+                <ScrollArea className="flex-1">
+                  <div className="px-6 pb-6 space-y-6">
+                    {/* Avatar + name */}
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="relative">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-bronze to-bronze-dark flex items-center justify-center text-background font-bold text-xl select-none shadow-lg">
+                          {getInitials(displayName) || <Sparkles className="w-6 h-6" />}
+                        </div>
+                        <button
+                          onClick={() => { onOpenChange(false); navigate("/profile/settings"); }}
+                          className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-background border border-border flex items-center justify-center shadow hover:bg-muted transition-colors"
+                        >
+                          <Pencil className="w-3 h-3 text-foreground" />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => { onOpenChange(false); navigate("/profile/settings"); }}
-                        className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-background border border-border flex items-center justify-center shadow-sm hover:bg-muted transition-colors"
-                      >
-                        <Pencil className="w-3 h-3 text-foreground" />
-                      </button>
+                      <span className="font-poppins font-semibold text-base">{displayName || "Your name"}</span>
                     </div>
-                    <span className="font-poppins font-semibold text-base">{displayName || "Your name"}</span>
-                  </div>
 
-                  {/* Customize Kira */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-poppins font-medium text-muted-foreground uppercase tracking-wider px-1">
-                      Customize Kira
-                    </p>
-                    <div className="rounded-xl border border-border/50 bg-background divide-y divide-border/50 overflow-hidden">
-                      <SettingsRow
-                        icon={<Palette className="w-4 h-4 text-bronze" />}
-                        label="Personalization"
-                        onClick={() => setView("personalization")}
-                        hasChevron
-                      />
-                      <SettingsRow
-                        icon={<Brain className="w-4 h-4 text-bronze" />}
-                        label="Memory"
-                        onClick={() => setView("memory")}
-                        hasChevron
-                      />
+                    {/* Customize Kira */}
+                    <div className="space-y-2">
+                      <p className="text-xs font-poppins font-medium text-muted-foreground uppercase tracking-wider px-1">
+                        Customize Kira
+                      </p>
+                      <div className="rounded-xl border border-border/50 bg-background divide-y divide-border/50 overflow-hidden">
+                        <SettingsRow
+                          icon={<Palette className="w-4 h-4 text-bronze" />}
+                          label="Personalization"
+                          onClick={() => setView("personalization")}
+                          hasChevron
+                        />
+                        <SettingsRow
+                          icon={<Brain className="w-4 h-4 text-bronze" />}
+                          label="Memory"
+                          onClick={() => setView("memory")}
+                          hasChevron
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Account */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-poppins font-medium text-muted-foreground uppercase tracking-wider px-1">
-                      Account
-                    </p>
-                    <div className="rounded-xl border border-border/50 bg-background overflow-hidden">
-                      <div className="flex items-center gap-3 px-4 py-3.5">
-                        <Mail className="w-4 h-4 text-bronze flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-muted-foreground mb-0.5">Email</p>
-                          <p className="text-sm font-medium truncate">{email || "—"}</p>
+                    {/* Account */}
+                    <div className="space-y-2">
+                      <p className="text-xs font-poppins font-medium text-muted-foreground uppercase tracking-wider px-1">
+                        Account
+                      </p>
+                      <div className="rounded-xl border border-border/50 bg-background overflow-hidden">
+                        <div className="flex items-center gap-3 px-4 py-4">
+                          <div className="w-8 h-8 rounded-lg bg-bronze/10 flex items-center justify-center flex-shrink-0">
+                            <Mail className="w-4 h-4 text-bronze" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide mb-0.5">Email</p>
+                            <p className="text-sm font-semibold break-all">{email || "—"}</p>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </ScrollArea>
+                </ScrollArea>
+              </>
             )}
 
             {/* ── MEMORY VIEW ── */}
             {view === "memory" && (
-              <div className="flex flex-col max-h-[80vh]">
-                <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border/50 flex-shrink-0">
+              <>
+                {/* Header */}
+                <div className="flex items-center gap-2 px-4 py-3.5 border-b border-border/50 flex-shrink-0">
                   <button
                     onClick={() => setView("main")}
                     className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted transition-colors"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <span className="font-poppins font-semibold text-base flex-1">Memory</span>
-                  <Button
-                    size="sm"
-                    onClick={saveTextFields}
-                    disabled={isSaving}
-                    className="h-8 px-4 rounded-lg bg-bronze hover:bg-bronze/90 text-background font-poppins text-xs font-semibold"
-                  >
-                    {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : "Save"}
-                  </Button>
+                  <span className="font-poppins font-semibold text-base flex-1 text-center pr-8">Memory</span>
                 </div>
 
                 <ScrollArea className="flex-1">
                   <div className="p-4 space-y-4">
-                    {/* Reference chat history */}
-                    <div className="rounded-xl border border-border/50 bg-background p-4 space-y-2">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm font-medium">Reference chat history</span>
+                    {/* Toggles */}
+                    <div className="rounded-xl border border-border/50 bg-background divide-y divide-border/50 overflow-hidden">
+                      <div className="flex items-center gap-3 px-4 py-4">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">Reference chat history</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                            Lets Kira reference recent conversations when responding.
+                          </p>
+                        </div>
                         <Switch
                           checked={memory.reference_chat_history}
                           onCheckedChange={(val) => handleToggle("reference_chat_history", val)}
                           className="data-[state=checked]:bg-green-500 flex-shrink-0"
                         />
                       </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        Lets Kira reference recent conversations when responding.
-                      </p>
-                    </div>
-
-                    {/* Reference saved memories */}
-                    <div className="rounded-xl border border-border/50 bg-background p-4 space-y-2">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm font-medium">Reference saved memories</span>
+                      <div className="flex items-center gap-3 px-4 py-4">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">Reference saved memories</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                            Lets Kira save and use memories when responding.
+                          </p>
+                        </div>
                         <Switch
                           checked={memory.reference_saved_memories}
                           onCheckedChange={(val) => handleToggle("reference_saved_memories", val)}
                           className="data-[state=checked]:bg-green-500 flex-shrink-0"
                         />
                       </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        Lets Kira save and use memories when responding.
-                      </p>
                     </div>
 
                     {/* Saved memories link */}
                     <div className="rounded-xl border border-border/50 bg-background overflow-hidden">
                       <button
                         onClick={() => setView("saved-memories")}
-                        className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-muted/50 transition-colors"
+                        className="w-full flex items-center px-4 py-3.5 hover:bg-muted/50 transition-colors"
                       >
-                        <span className="text-sm font-medium">Saved memories</span>
+                        <span className="text-sm font-medium flex-1 text-left">Saved memories</span>
                         <div className="flex items-center gap-2">
                           {savedItems.length > 0 && (
-                            <span className="text-xs bg-bronze/10 text-bronze px-2 py-0.5 rounded-full font-medium">
+                            <span className="text-xs bg-bronze/10 text-bronze px-2 py-0.5 rounded-full font-poppins font-medium">
                               {savedItems.length}
                             </span>
                           )}
@@ -266,7 +274,7 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
 
                     {/* Text fields */}
                     <div className="space-y-1.5">
-                      <p className="text-xs font-poppins font-medium text-muted-foreground px-1">Your nickname</p>
+                      <p className="text-xs font-poppins font-medium text-muted-foreground uppercase tracking-wider px-1">Your nickname</p>
                       <Input
                         value={memory.nickname}
                         onChange={(e) => setMemory((m) => ({ ...m, nickname: e.target.value }))}
@@ -274,9 +282,8 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
                         className="rounded-xl bg-background border-border/50 h-11"
                       />
                     </div>
-
                     <div className="space-y-1.5">
-                      <p className="text-xs font-poppins font-medium text-muted-foreground px-1">Your occupation</p>
+                      <p className="text-xs font-poppins font-medium text-muted-foreground uppercase tracking-wider px-1">Your occupation</p>
                       <Input
                         value={memory.occupation}
                         onChange={(e) => setMemory((m) => ({ ...m, occupation: e.target.value }))}
@@ -284,33 +291,43 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
                         className="rounded-xl bg-background border-border/50 h-11"
                       />
                     </div>
-
                     <div className="space-y-1.5">
-                      <p className="text-xs font-poppins font-medium text-muted-foreground px-1">More about you</p>
+                      <p className="text-xs font-poppins font-medium text-muted-foreground uppercase tracking-wider px-1">More about you</p>
                       <Textarea
                         value={memory.more_about_you}
                         onChange={(e) => setMemory((m) => ({ ...m, more_about_you: e.target.value }))}
                         placeholder="Interests, values, or preferences to keep..."
-                        rows={4}
+                        rows={3}
                         className="rounded-xl bg-background border-border/50 resize-none"
                       />
                     </div>
                   </div>
                 </ScrollArea>
-              </div>
+
+                {/* Save pinned to bottom */}
+                <div className="px-4 py-4 border-t border-border/50 flex-shrink-0">
+                  <Button
+                    onClick={saveTextFields}
+                    disabled={isSaving}
+                    className="w-full h-11 rounded-xl bg-bronze hover:bg-bronze/90 text-background font-poppins font-semibold"
+                  >
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+                  </Button>
+                </div>
+              </>
             )}
 
             {/* ── SAVED MEMORIES VIEW ── */}
             {view === "saved-memories" && (
-              <div className="flex flex-col max-h-[80vh]">
-                <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border/50 flex-shrink-0">
+              <>
+                <div className="flex items-center gap-2 px-4 py-3.5 border-b border-border/50 flex-shrink-0">
                   <button
                     onClick={() => setView("memory")}
                     className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted transition-colors"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <span className="font-poppins font-semibold text-base flex-1">Saved Memories</span>
+                  <span className="font-poppins font-semibold text-base flex-1 text-center pr-8">Saved Memories</span>
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="p-4 space-y-3">
@@ -319,7 +336,7 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
                         <div className="w-12 h-12 rounded-2xl bg-bronze/10 flex items-center justify-center">
                           <Brain className="w-5 h-5 text-bronze" />
                         </div>
-                        <p className="text-sm font-medium">No saved memories yet</p>
+                        <p className="text-sm font-semibold">No saved memories yet</p>
                         <p className="text-xs text-muted-foreground max-w-[200px]">
                           Fill in your details in Memory to help Kira personalise responses.
                         </p>
@@ -331,7 +348,7 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
                           className="rounded-xl border border-border/50 bg-background px-4 py-3 flex items-start gap-3"
                         >
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs text-muted-foreground mb-1">{item.label}</p>
+                            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide mb-1">{item.label}</p>
                             <p className="text-sm leading-snug break-words">{item.value}</p>
                           </div>
                           <button
@@ -345,36 +362,28 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
                     )}
                   </div>
                 </ScrollArea>
-              </div>
+              </>
             )}
 
             {/* ── PERSONALIZATION VIEW ── */}
             {view === "personalization" && (
-              <div className="flex flex-col max-h-[80vh]">
-                <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border/50 flex-shrink-0">
+              <>
+                <div className="flex items-center gap-2 px-4 py-3.5 border-b border-border/50 flex-shrink-0">
                   <button
                     onClick={() => setView("main")}
                     className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-muted transition-colors"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <span className="font-poppins font-semibold text-base flex-1">Personalization</span>
-                  <Button
-                    size="sm"
-                    onClick={saveTextFields}
-                    disabled={isSaving}
-                    className="h-8 px-4 rounded-lg bg-bronze hover:bg-bronze/90 text-background font-poppins text-xs font-semibold"
-                  >
-                    {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : "Save"}
-                  </Button>
+                  <span className="font-poppins font-semibold text-base flex-1 text-center pr-8">Personalization</span>
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="p-4 space-y-4">
                     <div className="rounded-xl border border-border/50 bg-background p-4 space-y-3">
                       <div>
-                        <p className="text-sm font-medium">Custom instructions for Kira</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Kira will follow these in every conversation.
+                        <p className="text-sm font-semibold">Custom instructions for Kira</p>
+                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                          Kira will follow these in every conversation on Crevia.
                         </p>
                       </div>
                       <Textarea
@@ -386,11 +395,22 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
                       />
                     </div>
                     <p className="text-xs text-muted-foreground px-1 leading-relaxed">
-                      Be specific — the more context you give, the sharper Kira's responses across all your chats on Crevia.
+                      Be specific — the more context you give, the sharper Kira's responses.
                     </p>
                   </div>
                 </ScrollArea>
-              </div>
+
+                {/* Save pinned to bottom */}
+                <div className="px-4 py-4 border-t border-border/50 flex-shrink-0">
+                  <Button
+                    onClick={saveTextFields}
+                    disabled={isSaving}
+                    className="w-full h-11 rounded-xl bg-bronze hover:bg-bronze/90 text-background font-poppins font-semibold"
+                  >
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+                  </Button>
+                </div>
+              </>
             )}
           </>
         )}
@@ -399,7 +419,6 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
   );
 }
 
-// Reusable row
 interface SettingsRowProps {
   icon: React.ReactNode;
   label: string;
@@ -417,7 +436,9 @@ function SettingsRow({ icon, label, value, onClick, hasChevron }: SettingsRowPro
         onClick ? "hover:bg-muted/50 cursor-pointer" : ""
       }`}
     >
-      <span className="flex-shrink-0">{icon}</span>
+      <div className="w-8 h-8 rounded-lg bg-bronze/10 flex items-center justify-center flex-shrink-0">
+        {icon}
+      </div>
       <span className="flex-1 text-sm font-medium">{label}</span>
       {value && <span className="flex-shrink-0">{value}</span>}
       {hasChevron && <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
