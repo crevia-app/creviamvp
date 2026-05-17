@@ -1103,7 +1103,7 @@ const Kira = () => {
               <FolderOpen className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="icon" onClick={() => setMemoryPanelOpen(true)} title="Kira settings" className="w-10 h-10 text-muted-foreground hover:text-foreground">
-              <Brain className="h-4 w-4" />
+              <Settings className="h-4 w-4" />
             </Button>
           </div>
         )}
@@ -1223,7 +1223,7 @@ const Kira = () => {
               <span className="font-poppins font-semibold text-sm">Kira</span>
             </div>
             <Button variant="ghost" size="icon" onClick={() => setMemoryPanelOpen(true)} title="Kira settings" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-              <Brain className="h-4 w-4" />
+              <Settings className="h-4 w-4" />
             </Button>
           </div>
 
