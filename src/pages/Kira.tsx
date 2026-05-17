@@ -577,7 +577,7 @@ const Kira = () => {
           'Authorization': `Bearer ${token}`,
           'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
-        body: JSON.stringify({ prompt: lastUserContent, history }),
+        body: JSON.stringify({ prompt: lastUserContent, history, conversationId }),
       }
     );
 

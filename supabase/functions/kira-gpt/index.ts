@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { ChatOpenAI, OpenAIEmbeddings } from "npm:@langchain/openai";
+import { HumanMessage, AIMessage, SystemMessage } from "npm:@langchain/core/messages";
 
 const ALLOWED_ORIGINS = [
   'https://crevia.app',
@@ -24,7 +26,7 @@ function sanitizePrompt(prompt: string): string {
     .trim()
     .slice(0, 2000)
     .replace(/<[^>]*>/g, '')
-    .replace(/[^\x20-\x7E\n\r\t\u00C0-\u024F\u0400-\u04FF]/g, '');
+    .replace(/[^\x20-\x7E\n\r\tÀ-ɏЀ-ӿ]/g, '');
 }
 
 function isPromptAbuse(prompt: string): boolean {
@@ -59,6 +61,145 @@ FORMATTING (MUST FOLLOW)
 4. Use numbered lists only when listing 2 or more distinct actionable items.
 5. No lengthy intros or pleasantries — get straight to the point.`;
 
+// Initialise once per warm instance — stateless config objects, safe to share across requests
+const openaiApiKey = Deno.env.get("OPENAI_API_KEY")!;
+
+const llm = new ChatOpenAI({
+  model: "gpt-4o-mini",
+  maxTokens: 1000,
+  openAIApiKey,
+});
+
+const embeddings = new OpenAIEmbeddings({
+  model: "text-embedding-3-small",
+  openAIApiKey,
+});
+
+// ── Helper: fetch top similar memories via pgvector RPC ───────────────────────
+// deno-lint-ignore no-explicit-any
+async function fetchSimilarMemories(prompt: string, userId: string, supabase: any): Promise<string> {
+  try {
+    const queryVector = await embeddings.embedQuery(prompt);
+    const { data: memories, error } = await supabase.rpc('match_kira_memories', {
+      query_embedding: queryVector,
+      match_count: 4,
+      filter: { user_id: userId },
+    });
+    if (error || !memories?.length) return '';
+
+    const lines = (memories as Array<{ content: string; similarity: number }>)
+      .filter(m => m.similarity > 0.72)
+      .map(m => `- ${m.content.slice(0, 150)}`);
+
+    return lines.length > 0 ? `WHAT I REMEMBER ABOUT YOU:\n${lines.join('\n')}` : '';
+  } catch (e) {
+    console.warn('[Kira] Memory fetch error:', e);
+    return '';
+  }
+}
+
+// ── Helper: fetch conversation summary (compressed chat history) ──────────────
+// deno-lint-ignore no-explicit-any
+async function fetchConversationSummary(conversationId: string, supabase: any): Promise<string> {
+  try {
+    const { data } = await supabase
+      .from('conversation_summaries')
+      .select('summary')
+      .eq('conversation_id', conversationId)
+      .single();
+    return data?.summary ? `CONVERSATION SO FAR:\n${data.summary.slice(0, 500)}` : '';
+  } catch {
+    return '';
+  }
+}
+
+// ── Fire-and-forget: extract key facts and store as long-term memories ─────────
+async function extractAndStoreMemories(
+  userMessage: string,
+  assistantResponse: string,
+  userId: string,
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+): Promise<void> {
+  const extractLlm = new ChatOpenAI({
+    model: "gpt-4o-mini",
+    temperature: 0,
+    maxTokens: 150,
+    openAIApiKey,
+  });
+
+  const result = await extractLlm.invoke([
+    new SystemMessage(
+      "Extract 1-3 important facts about the user from this exchange. " +
+      "Focus on their work, goals, rates, clients, or preferences. " +
+      "Output one fact per line starting with '-'. If none, output NONE."
+    ),
+    new HumanMessage(
+      `User: "${userMessage.slice(0, 600)}"\nKira: "${assistantResponse.slice(0, 400)}"`
+    ),
+  ]);
+
+  const content = typeof result.content === 'string' ? result.content.trim() : '';
+  if (!content || content.toUpperCase() === 'NONE') return;
+
+  const facts = content
+    .split('\n')
+    .filter(l => l.trim().startsWith('-'))
+    .map(l => l.slice(l.indexOf('-') + 1).trim())
+    .filter(f => f.length > 10)
+    .slice(0, 3);
+
+  for (const fact of facts) {
+    const vector = await embeddings.embedQuery(fact);
+    await supabase.from('kira_memories').insert({
+      user_id: userId,
+      content: fact,
+      embedding: vector,
+      metadata: { source: 'conversation', extracted_at: new Date().toISOString() },
+    });
+  }
+}
+
+// ── Fire-and-forget: summarise conversation and upsert ────────────────────────
+async function updateConversationSummary(
+  conversationId: string,
+  userId: string,
+  messages: Array<{ role: string; content: string }>,
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+): Promise<void> {
+  const summaryLlm = new ChatOpenAI({
+    model: "gpt-4o-mini",
+    temperature: 0,
+    maxTokens: 250,
+    openAIApiKey,
+  });
+
+  const transcript = messages
+    .map(m => `${m.role === 'user' ? 'User' : 'Kira'}: ${m.content.slice(0, 400)}`)
+    .join('\n');
+
+  const result = await summaryLlm.invoke([
+    new SystemMessage(
+      "Summarise this conversation in 2-3 sentences. " +
+      "Focus on: what the user is working on, key questions or decisions, and next steps if any."
+    ),
+    new HumanMessage(transcript.slice(0, 3000)),
+  ]);
+
+  const summary = typeof result.content === 'string' ? result.content.trim() : '';
+  if (!summary) return;
+
+  await supabase.from('conversation_summaries').upsert({
+    conversation_id: conversationId,
+    user_id: userId,
+    summary,
+    message_count: messages.length,
+    updated_at: new Date().toISOString(),
+  });
+}
+
+// ── Main handler ──────────────────────────────────────────────────────────────
 serve(async (req) => {
   const cors = getCorsHeaders(req);
   if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
@@ -92,16 +233,14 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400, headers: cors });
     }
 
-    const { prompt, history } = body;
+    const { prompt, history, conversationId } = body;
 
     if (!prompt || typeof prompt !== 'string') {
       return new Response(JSON.stringify({ error: 'Prompt is required' }), { status: 400, headers: cors });
     }
-
     if (prompt.trim().length < 2) {
       return new Response(JSON.stringify({ error: 'Prompt is too short' }), { status: 400, headers: cors });
     }
-
     if (isPromptAbuse(prompt)) {
       return new Response(JSON.stringify({
         reply: "I am Kira, built specifically for the creative economy. I cannot help with that, but I am here to help you grow your creative business. What do you need?"
@@ -110,16 +249,15 @@ serve(async (req) => {
 
     const sanitizedPrompt = sanitizePrompt(prompt);
 
-    // Conversation history — last 10 turns, each message capped at 1500 chars
+    // Last 8 turns, each message capped to keep token budget in check
     const conversationHistory = Array.isArray(history)
-      ? history.slice(-10).map((m: { role: string; content: string }) => ({
+      ? history.slice(-8).map((m: { role: string; content: string }) => ({
           role: m.role === 'assistant' ? 'assistant' : 'user',
-          content: String(m.content || '').slice(0, 1500),
+          content: String(m.content || '').slice(0, 1200),
         }))
       : [];
 
-    // Atomic server-side gate — checks limit and increments in one locked transaction.
-    // Returns false if the user has hit their daily cap. Cannot be bypassed from the client.
+    // Atomic rate-limit gate
     const { data: allowed, error: gateError } = await supabase
       .rpc('consume_kira_action', { p_user_id: user.id });
 
@@ -129,14 +267,13 @@ serve(async (req) => {
         status: 500, headers: cors
       });
     }
-
     if (!allowed) {
       return new Response(JSON.stringify({
         error: 'Daily Kira limit reached. Upgrade to Pro for 40 actions per day.'
       }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
-    // Fetch profile context to personalise every response
+    // Fetch profile
     const { data: profile } = await supabase
       .from('profiles')
       .select(`
@@ -150,19 +287,28 @@ serve(async (req) => {
       .eq('id', user.id)
       .single();
 
-    const memory = (profile?.kira_memory as Record<string, unknown>) || {};
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const memory = (profile?.kira_memory as Record<string, unknown>) ?? {};
+    // deno-lint-ignore no-explicit-any
     const creatorProfile = (profile as any)?.creator_profiles;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // deno-lint-ignore no-explicit-any
     const brandProfile = (profile as any)?.brand_profiles;
     const isCreator = profile?.user_type === 'creator';
 
     const referenceMemories = memory.reference_saved_memories !== false;
     const referenceChatHistory = memory.reference_chat_history !== false;
-
-    // If user has disabled chat history, ignore the history array
     const activeHistory = referenceChatHistory ? conversationHistory : [];
 
+    // Parallel: fetch similar memories + conversation summary (only when enabled)
+    const [memoryContext, summaryContext] = await Promise.all([
+      referenceMemories
+        ? fetchSimilarMemories(sanitizedPrompt, user.id, supabase)
+        : Promise.resolve(''),
+      referenceChatHistory && conversationId
+        ? fetchConversationSummary(conversationId, supabase)
+        : Promise.resolve(''),
+    ]);
+
+    // Build system prompt
     let systemPrompt = KIRA_SYSTEM_PROMPT;
 
     if (referenceMemories) {
@@ -186,63 +332,68 @@ serve(async (req) => {
       }
       if (memory.more_about_you) contextLines.push(`- About: ${memory.more_about_you}`);
 
-      const userContextBlock = `USER CONTEXT (use this to personalise every response — do not repeat it back verbatim):\n${contextLines.join('\n')}`;
-      systemPrompt = `${KIRA_SYSTEM_PROMPT}\n\n${userContextBlock}`;
+      systemPrompt += `\n\nUSER CONTEXT (personalise every response — do not repeat verbatim):\n${contextLines.join('\n')}`;
 
+      if (memoryContext) systemPrompt += `\n\n${memoryContext}`;
       if (memory.custom_instructions) {
-        systemPrompt += `\n\nUSER INSTRUCTIONS (follow these in all responses):\n${memory.custom_instructions}`;
+        systemPrompt += `\n\nUSER INSTRUCTIONS (follow in all responses):\n${memory.custom_instructions}`;
       }
     }
 
-    const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${Deno.env.get("OPENAI_API_KEY")}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        max_tokens: 1000,
-        stream: true,
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...activeHistory,
-          { role: "user", content: sanitizedPrompt }
-        ],
-      }),
-    });
-
-    if (!openaiResponse.ok) {
-      throw new Error("OpenAI API error: " + openaiResponse.status);
+    // Compressed chat history replaces long raw history when summary is available
+    if (summaryContext && activeHistory.length > 4) {
+      systemPrompt += `\n\n${summaryContext}`;
     }
 
-    // Parse OpenAI SSE stream and pipe plain text tokens to the client
+    // Build LangChain message list
+    const langchainMessages = [
+      new SystemMessage(systemPrompt),
+      ...(summaryContext && activeHistory.length > 4
+        ? activeHistory.slice(-4)   // keep only 4 most recent turns when summary covers the rest
+        : activeHistory
+      ).map(m => m.role === 'user' ? new HumanMessage(m.content) : new AIMessage(m.content)),
+      new HumanMessage(sanitizedPrompt),
+    ];
+
+    // Stream response
     const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
     const writer = writable.getWriter();
     const encoder = new TextEncoder();
 
+    let fullResponse = '';
+
     const pump = async () => {
-      const reader = openaiResponse.body!.getReader();
-      const decoder = new TextDecoder();
       try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
-          for (const line of chunk.split('\n')) {
-            const trimmed = line.trim();
-            if (!trimmed.startsWith('data: ')) continue;
-            const data = trimmed.slice(6);
-            if (data === '[DONE]') return;
-            try {
-              const parsed = JSON.parse(data);
-              const token = parsed.choices?.[0]?.delta?.content;
-              if (token) await writer.write(encoder.encode(token));
-            } catch { /* skip malformed SSE lines */ }
+        const stream = await llm.stream(langchainMessages);
+        for await (const chunk of stream) {
+          const token = typeof chunk.content === 'string' ? chunk.content : '';
+          if (token) {
+            fullResponse += token;
+            await writer.write(encoder.encode(token));
           }
         }
       } finally {
         await writer.close().catch(() => {});
+
+        // Fire-and-forget: extract long-term memories from this exchange
+        if (referenceMemories && fullResponse) {
+          extractAndStoreMemories(sanitizedPrompt, fullResponse, user.id, supabase)
+            .catch(e => console.warn('[Kira] Memory extraction failed:', e));
+        }
+
+        // Fire-and-forget: update conversation summary when there are enough turns
+        if (conversationId && fullResponse && activeHistory.length >= 4) {
+          updateConversationSummary(
+            conversationId,
+            user.id,
+            [
+              ...activeHistory,
+              { role: 'user', content: sanitizedPrompt },
+              { role: 'assistant', content: fullResponse },
+            ],
+            supabase
+          ).catch(e => console.warn('[Kira] Summary update failed:', e));
+        }
       }
     };
 
