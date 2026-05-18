@@ -50,7 +50,7 @@ const CreateContractDialog = ({
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { toast.error("Please log in"); return; }
 
-      const autoTitle = `Contract – ${new Date().toLocaleDateString()}`;
+      const autoTitle = `Canvas – ${new Date().toLocaleDateString()}`;
       const contractData = {
         user_id: session.user.id,
         title: editingContract?.title?.trim() || autoTitle,
@@ -62,16 +62,16 @@ const CreateContractDialog = ({
 
       if (editingContract) {
         const { error } = await supabase
-          .from("contracts")
+          .from("canvases")
           .update(contractData)
           .eq("id", editingContract.id);
         if (error) throw error;
         onSuccess();
         onOpenChange(false);
-        toast.success("Contract updated");
+        toast.success("Canvas updated");
       } else {
         const { data: created, error } = await supabase
-          .from("contracts")
+          .from("canvases")
           .insert(contractData)
           .select("id")
           .single();
@@ -83,10 +83,10 @@ const CreateContractDialog = ({
     } catch (error: any) {
       if (error.message?.includes("contract_limit_reached")) {
         toast.error("Monthly limit reached", {
-          description: "Free plan allows 2 contracts per month. Upgrade to Pro for unlimited.",
+          description: "Free plan allows 2 Canvas per month. Upgrade to Pro for unlimited.",
         });
       } else {
-        toast.error(error.message || "Failed to save contract");
+        toast.error(error.message || "Failed to save Canvas");
       }
     } finally {
       setLoading(false);
@@ -97,8 +97,8 @@ const CreateContractDialog = ({
     <>
       <SuccessOverlay
         show={showSuccess}
-        title="Contract Created"
-        subtitle="Your contract is ready to sign"
+        title="Canvas Created"
+        subtitle="Your Canvas is ready to sign"
         onComplete={() => { setShowSuccess(false); onSuccess(); }}
       />
 
@@ -111,7 +111,7 @@ const CreateContractDialog = ({
                 <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
                   <FileSignature className="h-4 w-4 text-primary" />
                 </div>
-                {editingContract ? "Edit Contract" : "New Contract"}
+                {editingContract ? "Edit Canvas" : "New Canvas"}
               </DialogTitle>
             </DialogHeader>
           </div>
@@ -121,7 +121,7 @@ const CreateContractDialog = ({
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Start writing your contract here…"
+              placeholder="Start writing your Canvas here…"
               className="rounded-xl font-mono text-sm leading-relaxed min-h-[520px] resize-none bg-background border-border/60 focus:border-primary/30 focus-visible:ring-primary/20"
               spellCheck={false}
               autoFocus
@@ -138,7 +138,7 @@ const CreateContractDialog = ({
               disabled={loading}
               className="rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
             >
-              {loading ? "Saving…" : editingContract ? "Update Contract" : "Save Contract"}
+              {loading ? "Saving…" : editingContract ? "Update Canvas" : "Save Canvas"}
             </Button>
           </div>
         </DialogContent>

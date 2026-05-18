@@ -114,7 +114,7 @@ const PaymentsBilling = () => {
     "Crevia Link — basic templates",
     "Unlimited bio links",
     "2 invoices per month",
-    "2 contracts per month",
+    "2 Canvas per month",
     "Standard chat interface",
   ];
 
@@ -124,7 +124,7 @@ const PaymentsBilling = () => {
     "Crevia Link — all premium themes",
     "Full visitor analytics",
     "Unlimited invoices & tracking",
-    "Unlimited AI contract generation",
+    "Unlimited AI Canvas generation",
     "E-Signatures inside the app",
     "Client Portal access",
     "Priority support",

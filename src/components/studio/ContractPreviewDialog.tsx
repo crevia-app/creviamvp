@@ -160,7 +160,7 @@ const ContractPreviewDialog = ({
   const textDivRef = useRef<HTMLDivElement>(null);
 
   const { ref: docRef, download, downloading } = useDownloadPDF(
-    contract ? `Contract-${contract.title?.replace(/\s+/g, "-")}` : "Contract"
+    contract ? `Canvas-${contract.title?.replace(/\s+/g, "-")}` : "Canvas"
   );
 
   useEffect(() => {
@@ -264,7 +264,7 @@ const ContractPreviewDialog = ({
     setSavingSignature(true);
     const { signature, signedAt, pos } = placementMode;
     const { error } = await supabase
-      .from("contracts")
+      .from("canvases")
       .update({
         creator_signature:  signature,
         creator_signed_at:  signedAt,
@@ -283,7 +283,7 @@ const ContractPreviewDialog = ({
   const handleSaveDetails = async () => {
     if (!localContract) return;
     setSavingDetails(true);
-    const { error } = await supabase.from("contracts").update({ content: editableContent || null }).eq("id", localContract.id);
+    const { error } = await supabase.from("canvases").update({ content: editableContent || null }).eq("id", localContract.id);
     setSavingDetails(false);
     if (error) { toast.error("Failed to save changes"); return; }
     setLocalContract({ ...localContract, content: editableContent || null });
@@ -368,7 +368,7 @@ const ContractPreviewDialog = ({
                 <div className="h-1 bg-gradient-to-r from-primary via-primary/60 to-primary/20" />
                 <div className="p-6 md:p-10 space-y-6">
                   <div className="flex items-center justify-between">
-                    <h2 className="font-vollkorn text-xl font-bold text-foreground">Edit Contract</h2>
+                    <h2 className="font-vollkorn text-xl font-bold text-foreground">Edit Canvas</h2>
                     <div className="flex gap-1.5">
                       <Button size="sm" variant="ghost"
                         onClick={() => { setIsEditingDetails(false); setEditableContent(localContract.content || ""); }}
@@ -388,7 +388,7 @@ const ContractPreviewDialog = ({
                     <Textarea
                       value={editableContent}
                       onChange={e => setEditableContent(e.target.value)}
-                      placeholder="Write your contract terms here…"
+                      placeholder="Write your Canvas terms here…"
                       className="min-h-[380px] font-mono text-sm leading-relaxed rounded-xl resize-none"
                       autoFocus
                     />
@@ -458,7 +458,7 @@ const ContractPreviewDialog = ({
                         </div>
                       ) : (
                         <div className="text-sm text-muted-foreground/40 italic p-8 rounded-xl bg-muted/20 border border-dashed border-border/30 text-center">
-                          No content yet — tap <strong>Edit</strong> to add your contract text.
+                          No content yet — tap <strong>Edit</strong> to add your Canvas text.
                         </div>
                       )}
                     </div>
@@ -564,7 +564,7 @@ const ContractPreviewDialog = ({
     <SendDocumentDialog
       open={showSendDialog}
       onOpenChange={setShowSendDialog}
-      type="contract"
+      type="canvas"
       documentId={localContract.id}
       defaultEmail={localContract.client_email || ""}
       documentLabel={localContract.title}

@@ -15,7 +15,7 @@ import {
 
 const DEAL_STAGES = [
   { id: "negotiating", label: "Negotiating" },
-  { id: "contract_signed", label: "Contract Signed" },
+  { id: "contract_signed", label: "Canvas Signed" },
   { id: "invoice_paid", label: "Invoice Paid" },
   { id: "complete", label: "Complete" },
 ];
@@ -30,7 +30,7 @@ const CreviaWorkspace = () => {
 
   const fetchData = async () => {
     const [{ data: contractsData }, { data: invoicesData }] = await Promise.all([
-      supabase.from("contracts").select("id, title, client_name, status, value, currency").order("created_at", { ascending: false }).limit(3),
+      supabase.from("canvases").select("id, title, client_name, status, value, currency").order("created_at", { ascending: false }).limit(3),
       supabase.from("invoices").select("id, invoice_number, client_name, total, currency, status").order("created_at", { ascending: false }).limit(3),
     ]);
     setContracts(contractsData || []);
@@ -93,7 +93,7 @@ const CreviaWorkspace = () => {
               </div>
               <div>
                 <h3 className="font-poppins font-semibold text-sm">Action Vault</h3>
-                <p className="text-[10px] text-muted-foreground">Active contract & invoice</p>
+                <p className="text-[10px] text-muted-foreground">Active Canvas & invoice</p>
               </div>
             </div>
           </div>
@@ -103,13 +103,13 @@ const CreviaWorkspace = () => {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <FileSignature className="w-3.5 h-3.5 text-bronze" />
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Contract</span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Canvas</span>
               </div>
               {loading ? <div className="h-20 bg-muted/50 rounded-xl animate-pulse" /> :
                contracts.length === 0 ? (
                 <div className="p-4 rounded-xl border border-dashed border-border text-center">
                   <FileSignature className="w-6 h-6 text-muted-foreground/40 mx-auto mb-1" />
-                  <p className="text-xs text-muted-foreground">No contracts yet</p>
+                  <p className="text-xs text-muted-foreground">No Canvas yet</p>
                 </div>
               ) : contracts.slice(0, 2).map((c) => (
                 <motion.div key={c.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="p-3 rounded-xl border border-border/50 bg-background hover:border-bronze/30 transition-all mb-2">
@@ -120,7 +120,7 @@ const CreviaWorkspace = () => {
                   <p className="text-[10px] text-muted-foreground truncate mb-2">{c.client_name}</p>
                   {c.status !== "signed" ? (
                     <Button size="sm" className="w-full h-7 text-[10px] bg-bronze hover:bg-bronze/90 text-background">
-                      <FileSignature className="w-3 h-3 mr-1" /> Sign Contract
+                      <FileSignature className="w-3 h-3 mr-1" /> Sign Canvas
                     </Button>
                   ) : (
                     <div className="flex items-center gap-1">
@@ -173,7 +173,7 @@ const CreviaWorkspace = () => {
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Quick Actions</p>
               <div className="space-y-1.5">
                 <Button variant="ghost" size="sm" className="w-full justify-start h-8 text-xs gap-2 text-muted-foreground hover:text-foreground" onClick={() => window.location.href = "/crevia-studio?tab=contracts"}>
-                  <FileSignature className="w-3.5 h-3.5" /> View all contracts <ArrowRight className="w-3 h-3 ml-auto" />
+                  <FileSignature className="w-3.5 h-3.5" /> View all Canvas <ArrowRight className="w-3 h-3 ml-auto" />
                 </Button>
                 <Button variant="ghost" size="sm" className="w-full justify-start h-8 text-xs gap-2 text-muted-foreground hover:text-foreground" onClick={() => window.location.href = "/crevia-studio?tab=invoices"}>
                   <Receipt className="w-3.5 h-3.5" /> View all invoices <ArrowRight className="w-3 h-3 ml-auto" />

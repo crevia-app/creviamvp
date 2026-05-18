@@ -94,14 +94,14 @@ serve(async (req) => {
       startOfMonth.setHours(0, 0, 0, 0);
 
       const { count } = await supabase
-        .from('contracts')
+        .from('canvases')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', userId)
         .gte('created_at', startOfMonth.toISOString());
 
       if ((count ?? 0) >= 2) {
         return new Response(JSON.stringify({
-          error: 'Free plan limit reached. Upgrade to Pro for unlimited contracts.',
+          error: 'Free plan limit reached. Upgrade to Pro for unlimited Canvas.',
           code: 'PLAN_LIMIT_REACHED',
         }), {
           status: 403,
@@ -148,7 +148,7 @@ serve(async (req) => {
     // === END INPUT VALIDATION ===
 
     const { data: contract, error: insertError } = await supabase
-      .from('contracts')
+      .from('canvases')
       .insert({
         user_id: userId,
         title: (title as string).trim(),
@@ -173,7 +173,7 @@ serve(async (req) => {
 
     if (insertError) {
       console.error('contracts-create insert error:', insertError);
-      return new Response(JSON.stringify({ error: 'Failed to create contract' }), {
+      return new Response(JSON.stringify({ error: 'Failed to create Canvas' }), {
         status: 500,
         headers: { ...cors, 'Content-Type': 'application/json' },
       });

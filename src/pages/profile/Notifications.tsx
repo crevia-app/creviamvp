@@ -15,7 +15,7 @@ const notificationGroups = [
     title: "Crevia Studio",
     items: [
       { id: "chat",     icon: MessageSquare, label: "Chat Messages",        desc: "New messages in Crevia Chat" },
-      { id: "invoices", icon: FileText,      label: "Invoices & Contracts", desc: "Status updates on invoices and contracts" },
+      { id: "invoices", icon: FileText,      label: "Invoices & Canvas", desc: "Status updates on invoices and Canvas" },
     ],
   },
   {

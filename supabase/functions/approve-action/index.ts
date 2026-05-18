@@ -92,8 +92,8 @@ serve(async (req) => {
 
     const { document_type, document_id, new_status } = body as Record<string, unknown>;
 
-    if (document_type !== 'contract' && document_type !== 'invoice') {
-      return new Response(JSON.stringify({ error: 'document_type must be "contract" or "invoice"' }), {
+    if (document_type !== 'canvas' && document_type !== 'invoice') {
+      return new Response(JSON.stringify({ error: 'document_type must be "canvas" or "invoice"' }), {
         status: 400,
         headers: { ...cors, 'Content-Type': 'application/json' },
       });
@@ -114,8 +114,8 @@ serve(async (req) => {
     }
     // === END INPUT VALIDATION ===
 
-    const table = document_type === 'contract' ? 'contracts' : 'invoices';
-    const transitions = document_type === 'contract' ? CONTRACT_TRANSITIONS : INVOICE_TRANSITIONS;
+    const table = document_type === 'canvas' ? 'canvases' : 'invoices';
+    const transitions = document_type === 'canvas' ? CONTRACT_TRANSITIONS : INVOICE_TRANSITIONS;
 
     // Fetch the current record (RLS ensures it belongs to this user)
     const { data: record, error: fetchError } = await supabase

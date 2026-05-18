@@ -122,7 +122,7 @@ const en = {
   "payments.creviaChat": "Basic Kira AI assistant",
   "payments.priorityPlacement": "Kira AI-powered insights & suggestions",
   "payments.unlimitedCampaigns": "Kira AI-powered insights & suggestions",
-  "payments.advancedAnalytics": "Smart Contracts & advanced invoicing",
+  "payments.advancedAnalytics": "Smart Canvas & advanced invoicing",
   "payments.customThemes": "Custom Crevia Link themes & analytics",
   "payments.creatorDiscovery": "Custom Crevia Link themes & detailed reports",
 

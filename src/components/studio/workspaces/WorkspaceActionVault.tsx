@@ -134,7 +134,7 @@ const WorkspaceActionVault = ({
       room_id: roomId,
       sender_id: userId,
       message_type: "contract",
-      content: "Contract attached",
+      content: "Canvas attached",
       contract_id: contractId,
       is_encrypted: false,
     });
@@ -166,9 +166,9 @@ const WorkspaceActionVault = ({
     if (!confirmDeleteContract) return;
     setDeleting(true);
     await supabase.from("chat_messages").delete().eq("room_id", roomId).eq("contract_id", confirmDeleteContract.id);
-    const { error } = await supabase.from("contracts").delete().eq("id", confirmDeleteContract.id);
-    if (error) toast.error("Failed to delete contract");
-    else { toast.success("Contract deleted"); setConfirmDeleteContract(null); onRefresh?.(); }
+    const { error } = await supabase.from("canvases").delete().eq("id", confirmDeleteContract.id);
+    if (error) toast.error("Failed to delete Canvas");
+    else { toast.success("Canvas deleted"); setConfirmDeleteContract(null); onRefresh?.(); }
     setDeleting(false);
   };
 
@@ -200,7 +200,7 @@ const WorkspaceActionVault = ({
               </div>
               <div>
                 <h3 className="font-semibold text-[12px] tracking-tight">Action Vault</h3>
-                <p className="text-[10px] text-muted-foreground/70">Contracts & invoices</p>
+                <p className="text-[10px] text-muted-foreground/70">Canvas & invoices</p>
               </div>
             </div>
             <Button
@@ -223,7 +223,7 @@ const WorkspaceActionVault = ({
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5">
                   <FileSignature className="w-3 h-3 text-bronze/80" />
-                  <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider">Contracts</span>
+                  <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider">Canvas</span>
                 </div>
                 <button
                   onClick={() => setCreateContractOpen(true)}
@@ -235,12 +235,12 @@ const WorkspaceActionVault = ({
               {contracts.length === 0 ? (
                 <div className="p-3.5 rounded-xl border border-dashed border-gray-200 dark:border-border/50 text-center">
                   <FileSignature className="w-5 h-5 text-muted-foreground/20 mx-auto mb-1.5" />
-                  <p className="text-[10px] text-muted-foreground/60">No contracts yet</p>
+                  <p className="text-[10px] text-muted-foreground/60">No Canvas yet</p>
                   <button
                     onClick={() => setCreateContractOpen(true)}
                     className="mt-1.5 text-[10px] text-bronze/70 hover:text-bronze font-medium transition-colors"
                   >
-                    + Add contract
+                    + Add Canvas
                   </button>
                 </div>
               ) : (
@@ -270,7 +270,7 @@ const WorkspaceActionVault = ({
                         <Button size="sm" onClick={() => setContractDialog(c)}
                           className="w-full h-7 text-[10px] bg-bronze hover:bg-bronze/90 text-background font-semibold gap-1.5 shadow-sm">
                           <FileSignature className="w-3 h-3" />
-                          Sign Contract
+                          Sign Canvas
                         </Button>
                       ) : (
                         <div className="flex items-center gap-1.5">
@@ -397,7 +397,7 @@ const WorkspaceActionVault = ({
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/crevia-studio?tab=contracts&workspace=${roomId}`)}
                   className="w-full justify-start h-8 text-[11px] gap-2 text-muted-foreground hover:text-foreground px-2 font-medium">
                   <FileSignature className="w-3.5 h-3.5 text-muted-foreground/60" />
-                  All contracts
+                  All Canvas
                   <ArrowRight className="w-3 h-3 ml-auto text-muted-foreground/40" />
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/crevia-studio?tab=invoices&workspace=${roomId}`)}
@@ -514,7 +514,7 @@ const WorkspaceActionVault = ({
       <AlertDialog open={!!confirmDeleteContract} onOpenChange={(o) => { if (!o) setConfirmDeleteContract(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-sm font-semibold">Delete Contract</AlertDialogTitle>
+            <AlertDialogTitle className="text-sm font-semibold">Delete Canvas</AlertDialogTitle>
             <AlertDialogDescription className="text-xs">
               Permanently delete <strong>{confirmDeleteContract?.title}</strong>? This cannot be undone.
             </AlertDialogDescription>

@@ -11,7 +11,7 @@ import { ArrowLeft, CheckCircle2, Clock, FileSignature, Receipt, Sparkles, Arrow
 
 const DEAL_STAGES = [
   { id: "negotiating", label: "Negotiating" },
-  { id: "contract_signed", label: "Contract Signed" },
+  { id: "contract_signed", label: "Canvas Signed" },
   { id: "invoice_paid", label: "Invoice Paid" },
   { id: "complete", label: "Complete" },
 ];
@@ -29,7 +29,7 @@ const ActionVaultContent = ({ contracts, invoices, loading, onNavigate }: VaultP
     <div>
       <div className="flex items-center gap-2 mb-2">
         <FileSignature className="w-3.5 h-3.5 text-bronze" />
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Contract</span>
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Canvas</span>
       </div>
       {loading ? (
         <div className="space-y-2">
@@ -38,7 +38,7 @@ const ActionVaultContent = ({ contracts, invoices, loading, onNavigate }: VaultP
       ) : contracts.length === 0 ? (
         <div className="p-4 rounded-xl border border-dashed border-border text-center">
           <FileSignature className="w-6 h-6 text-muted-foreground/40 mx-auto mb-1" />
-          <p className="text-xs text-muted-foreground">No contracts yet</p>
+          <p className="text-xs text-muted-foreground">No Canvas yet</p>
         </div>
       ) : contracts.slice(0, 2).map((c) => (
         <motion.div key={c.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -50,7 +50,7 @@ const ActionVaultContent = ({ contracts, invoices, loading, onNavigate }: VaultP
           <p className="text-[10px] text-muted-foreground truncate mb-2">{c.client_name}</p>
           {c.status !== "signed" ? (
             <Button size="sm" className="w-full h-7 text-[10px] bg-bronze hover:bg-bronze/90 text-background">
-              <FileSignature className="w-3 h-3 mr-1" /> Sign Contract
+              <FileSignature className="w-3 h-3 mr-1" /> Sign Canvas
             </Button>
           ) : (
             <div className="flex items-center gap-1">
@@ -108,7 +108,7 @@ const ActionVaultContent = ({ contracts, invoices, loading, onNavigate }: VaultP
       <div className="space-y-1.5">
         <Button variant="ghost" size="sm" className="w-full justify-start h-8 text-xs gap-2 text-muted-foreground hover:text-foreground"
           onClick={() => onNavigate("/crevia-studio?tab=contracts")}>
-          <FileSignature className="w-3.5 h-3.5" /> All contracts <ArrowRight className="w-3 h-3 ml-auto" />
+          <FileSignature className="w-3.5 h-3.5" /> All Canvas <ArrowRight className="w-3 h-3 ml-auto" />
         </Button>
         <Button variant="ghost" size="sm" className="w-full justify-start h-8 text-xs gap-2 text-muted-foreground hover:text-foreground"
           onClick={() => onNavigate("/crevia-studio?tab=invoices")}>
@@ -140,7 +140,7 @@ const WorkspacePage = () => {
 
     const [{ data: room }, { data: contractsData }, { data: invoicesData }, { count }] = await Promise.all([
       supabase.from("chat_rooms").select("*").eq("id", id).single(),
-      supabase.from("contracts").select("*").order("created_at", { ascending: false }).limit(3),
+      supabase.from("canvases").select("*").order("created_at", { ascending: false }).limit(3),
       supabase.from("invoices").select("*").order("created_at", { ascending: false }).limit(3),
       supabase.from("chat_room_members").select("*", { count: "exact", head: true }).eq("room_id", id),
     ]);
@@ -253,7 +253,7 @@ const WorkspacePage = () => {
               </div>
               <div>
                 <h3 className="font-poppins font-semibold text-sm">Action Vault</h3>
-                <p className="text-[10px] text-muted-foreground">Active contract & invoice</p>
+                <p className="text-[10px] text-muted-foreground">Active Canvas & invoice</p>
               </div>
             </div>
           </div>

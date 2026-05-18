@@ -218,7 +218,7 @@ const StudioSettingsTab = () => {
           Studio Settings
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Configure your business details for invoices, receipts, and contracts
+          Configure your business details for invoices, receipts, and Canvas
         </p>
       </div>
 
@@ -262,7 +262,7 @@ const StudioSettingsTab = () => {
             </div>
             <div>
               <p className="font-medium text-foreground">Business Logo</p>
-              <p className="text-xs text-muted-foreground">Appears on invoices, receipts & contracts. Max 5MB.</p>
+              <p className="text-xs text-muted-foreground">Appears on invoices, receipts & Canvas. Max 5MB.</p>
             </div>
           </div>
 

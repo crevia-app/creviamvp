@@ -31,7 +31,7 @@ const PrivacyPolicy = () => {
               </div>
               <div>
                 <h3 className="font-poppins font-semibold text-foreground mb-2">2.2 Business Data</h3>
-                <p>Information related to your business activities, contracts, invoices, and client lists uploaded to Crevia Studio.</p>
+                <p>Information related to your business activities, Canvas, invoices, and client lists uploaded to Crevia Studio.</p>
               </div>
               <div>
                 <h3 className="font-poppins font-semibold text-foreground mb-2">2.3 AI Interactions</h3>
@@ -54,7 +54,7 @@ const PrivacyPolicy = () => {
                 <li>Improve, personalize, and expand our Service.</li>
                 <li>Process your transactions and manage your orders.</li>
                 <li>Send you emails, push notifications, and other communications.</li>
-                <li><strong>Train Kira AI:</strong> We use anonymized and aggregated interaction data to improve the Kira model's understanding of the African context. We do NOT use your confidential contracts or private documents to train our public models.</li>
+                <li><strong>Train Kira AI:</strong> We use anonymized and aggregated interaction data to improve the Kira model's understanding of the African context. We do NOT use your confidential Canvas or private documents to train our public models.</li>
               </ul>
             </div>
           </section>

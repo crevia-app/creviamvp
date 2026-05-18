@@ -308,7 +308,7 @@ const ChatMediaPanel = ({ roomId }: ChatMediaPanelProps) => {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-medium truncate">
-                                  {isInvoice ? "Invoice" : isContract ? "Contract" : item.file_name || "File"}
+                                  {isInvoice ? "Invoice" : isContract ? "Canvas" : item.file_name || "File"}
                                 </p>
                                 <p className="text-[10px] text-muted-foreground">
                                   {item.file_size ? formatFileSize(item.file_size) + " • " : ""}

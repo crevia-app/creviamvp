@@ -245,7 +245,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
                   Not content calendars. Not vanity metrics. Real business infrastructure — 
-                  intelligence, invoicing, contracts, communication, and payments — in one place.
+                  intelligence, invoicing, Canvas, communication, and payments — in one place.
                 </p>
               </div>
             </ScrollReveal>

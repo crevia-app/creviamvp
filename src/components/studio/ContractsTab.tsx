@@ -119,21 +119,21 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
         .not("contract_id", "is", null);
       const ids = [...new Set((msgs || []).map((m: any) => m.contract_id).filter(Boolean))];
       if (ids.length === 0) { setContracts([]); setLoading(false); return; }
-      const { data, error } = await supabase.from("contracts").select("*").in("id", ids).order("created_at", { ascending: false });
-      if (error) { toast.error("Failed to load contracts"); return; }
+      const { data, error } = await supabase.from("canvases").select("*").in("id", ids).order("created_at", { ascending: false });
+      if (error) { toast.error("Failed to load Canvas"); return; }
       setContracts(data || []);
       setLoading(false);
       return;
     }
 
     const { data, error } = await supabase
-      .from("contracts")
+      .from("canvases")
       .select("*")
       .eq("user_id", session.user.id)
       .order("created_at", { ascending: false });
 
     if (error) {
-      toast.error("Failed to load contracts");
+      toast.error("Failed to load Canvas");
       return;
     }
 
@@ -148,20 +148,20 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   const handleRename = async (id: string) => {
     const trimmed = renameValue.trim();
     if (!trimmed) { toast.error("Title cannot be empty"); return; }
-    const { error } = await supabase.from("contracts").update({ title: trimmed }).eq("id", id);
-    if (error) { toast.error("Failed to rename contract"); return; }
+    const { error } = await supabase.from("canvases").update({ title: trimmed }).eq("id", id);
+    if (error) { toast.error("Failed to rename Canvas"); return; }
     setRenamingId(null);
     fetchContracts();
-    toast.success("Contract renamed");
+    toast.success("Canvas renamed");
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("contracts").delete().eq("id", id);
+    const { error } = await supabase.from("canvases").delete().eq("id", id);
     if (error) {
-      toast.error("Failed to delete contract");
+      toast.error("Failed to delete Canvas");
       return;
     }
-    toast.success("Contract deleted");
+    toast.success("Canvas deleted");
     fetchContracts();
   };
 
@@ -169,7 +169,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
-    const { error } = await supabase.from("contracts").insert({
+    const { error } = await supabase.from("canvases").insert({
       user_id: session.user.id,
       title: `${contract.title} (Copy)`,
       client_name: contract.client_name,
@@ -188,10 +188,10 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     });
 
     if (error) {
-      toast.error("Failed to duplicate contract");
+      toast.error("Failed to duplicate Canvas");
       return;
     }
-    toast.success("Contract duplicated");
+    toast.success("Canvas duplicated");
     fetchContracts();
   };
 
@@ -236,7 +236,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       content = `[Original file: ${file.name}]\n[File type: ${file.type || fileExt}]\n[Uploaded: ${new Date().toLocaleString()}]\n\n---\n\nYou can edit this contract content below. The original document has been securely stored.\n\n---\n\n[Add or paste your contract terms here]`;
     }
 
-    const { data, error } = await supabase.from("contracts").insert({
+    const { data, error } = await supabase.from("canvases").insert({
       user_id: session.user.id,
       title,
       client_name: "To be specified",
@@ -251,7 +251,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       return;
     }
 
-    toast.success("Contract uploaded! You can now edit all details.");
+    toast.success("Canvas uploaded! You can now edit all details.");
     fetchContracts();
     
     // Open the edit dialog immediately so user can fill in details
@@ -318,7 +318,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       >
         <div>
           <h2 className="font-vollkorn text-2xl md:text-4xl font-bold text-foreground tracking-tight">
-            Contracts
+            Canvas
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
             Professional agreements, e-signatures & document management
@@ -338,19 +338,19 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
             onClick={async () => {
               if (isFree) {
                 const { count } = await supabase
-                  .from("contracts")
+                  .from("canvases")
                   .select("*", { count: "exact", head: true });
-                if ((count || 0) >= limits.contractsPerMonth) {
-                  toast.error("You've reached your free plan limit of 2 contracts. Upgrade to Pro for unlimited contracts.");
+                if ((count || 0) >= limits.canvasesPerMonth) {
+                  toast.error("You've reached your free plan limit of 2 Canvas. Upgrade to Pro for unlimited Canvas.");
                 return;
               }
-            } 
+            }
             setCreateDialogOpen(true);
           }}
             className="gap-2 h-10 rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30 flex-1 md:flex-none"
           >
             <Plus className="h-4 w-4" />
-            New Contract
+            New Canvas
           </Button>
         </div>
       </motion.div>
@@ -395,7 +395,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search contracts, clients..."
+            placeholder="Search Canvas, clients..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 h-10 rounded-xl bg-muted/50 border-0 focus:bg-background focus:ring-1 focus:ring-primary/20 transition-all"
@@ -444,12 +444,12 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                 <FileSignature className="h-9 w-9 text-primary" />
               </div>
               <h3 className="font-vollkorn text-2xl font-bold text-foreground mb-2">
-                {searchQuery || statusFilter !== "all" ? "No contracts found" : "Create your first contract"}
+                {searchQuery || statusFilter !== "all" ? "No Canvas found" : "Create your first Canvas"}
               </h3>
               <p className="text-muted-foreground mb-8 max-w-md mx-auto text-sm leading-relaxed">
-                {searchQuery || statusFilter !== "all" 
-                  ? "Try adjusting your search or filters" 
-                  : "Build professional contracts with templates, e-signatures, and document management — all in one place."}
+                {searchQuery || statusFilter !== "all"
+                  ? "Try adjusting your search or filters"
+                  : "Build professional Canvas with templates, e-signatures, and document management — all in one place."}
               </p>
               {!searchQuery && statusFilter === "all" && (
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -458,10 +458,10 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                     onClick={async () => {
                       if (isFree) {
                          const { count } = await supabase
-                            .from("contracts")
+                            .from("canvases")
                             .select("*", { count: "exact", head: true });
-                         if ((count || 0) >= limits.contractsPerMonth) {
-                           toast.error("You've reached your free plan limit of 2 contracts. Upgrade to Pro for unlimited contracts.");
+                         if ((count || 0) >= limits.canvasesPerMonth) {
+                           toast.error("You've reached your free plan limit of 2 Canvas. Upgrade to Pro for unlimited Canvas.");
                            return;
                          }
                        }

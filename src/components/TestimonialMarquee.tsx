@@ -26,7 +26,7 @@ const TESTIMONIALS: Testimonial[] = [
   },
   {
     quote:
-      "The e-signature contract flow is insane. Brands used to ghost me on NDAs for weeks. Now they sign in the thread, same day. Signed PDF before the call ends.",
+      "The e-signature Canvas flow is insane. Brands used to ghost me on NDAs for weeks. Now they sign in the thread, same day. Signed PDF before the call ends.",
     name: "Zinhle Dlamini",
     role: "Brand Photographer · Cape Town",
     initials: "ZD",

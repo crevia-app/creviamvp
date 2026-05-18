@@ -30,7 +30,7 @@ const contractTypes = [
   { id: "brand_ambassador", label: "Brand Ambassador", desc: "Long-term brand representation", icon: "🤝" },
   { id: "ugc", label: "UGC", desc: "User-generated content deal", icon: "📱" },
   { id: "affiliate", label: "Affiliate", desc: "Commission-based partnership", icon: "🔗" },
-  { id: "custom", label: "Custom", desc: "Other contract type", icon: "✏️" },
+  { id: "custom", label: "Custom", desc: "Other Canvas type", icon: "✏️" },
 ];
 
 const UploadContractDialog = ({ open, onOpenChange, onUpload }: UploadContractDialogProps) => {
@@ -80,10 +80,10 @@ const UploadContractDialog = ({ open, onOpenChange, onUpload }: UploadContractDi
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-vollkorn text-xl">
             <Upload className="h-5 w-5 text-bronze" />
-            Upload Contract
+            Upload Canvas
           </DialogTitle>
           <DialogDescription>
-            Upload an existing contract and choose how to categorize it
+            Upload an existing Canvas and choose how to categorize it
           </DialogDescription>
         </DialogHeader>
 
@@ -140,7 +140,7 @@ const UploadContractDialog = ({ open, onOpenChange, onUpload }: UploadContractDi
           {selectedFile && (
             <>
               <div>
-                <Label className="text-sm font-medium">Contract Title</Label>
+                <Label className="text-sm font-medium">Canvas Title</Label>
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -151,7 +151,7 @@ const UploadContractDialog = ({ open, onOpenChange, onUpload }: UploadContractDi
 
               {/* Contract Type Selection */}
               <div>
-                <Label className="text-sm font-medium">Contract Type</Label>
+                <Label className="text-sm font-medium">Canvas Type</Label>
                 <p className="text-xs text-muted-foreground mb-2">Choose a category or keep it plain</p>
                 <div className="grid grid-cols-2 gap-2">
                   {contractTypes.map((type) => (
@@ -186,7 +186,7 @@ const UploadContractDialog = ({ open, onOpenChange, onUpload }: UploadContractDi
                 className="w-full bg-bronze hover:bg-bronze/90 gap-2 h-11 rounded-xl"
               >
                 <Sparkles className="h-4 w-4" />
-                Upload & Edit Contract
+                Upload & Edit Canvas
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </>

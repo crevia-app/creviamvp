@@ -24,7 +24,7 @@ const CreviaStudio = () => {
     { id: "link",      label: "Crevia Link", icon: Link2 },
     { id: "chat",      label: "Workspace",   icon: MessageSquare },
     { id: "invoices",  label: "Invoice",     icon: Receipt },
-    { id: "contracts", label: "Contracts",   icon: FileSignature },
+    { id: "contracts", label: "Canvas",       icon: FileSignature },
     { id: "settings",  label: "Settings",    icon: Settings },
   ];
 

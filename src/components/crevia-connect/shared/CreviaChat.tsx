@@ -1066,7 +1066,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const sendContractAttachment = async (contract: AttachableContract) => {
     if (!selectedRoom || !currentUserId) return;
 
-    const plainContent = `📋 Contract: ${contract.title} — ${contract.client_name} (${contract.status})`;
+    const plainContent = `📋 Canvas: ${contract.title} — ${contract.client_name} (${contract.status})`;
     const { content, is_encrypted } = await encryptContent(plainContent, selectedRoom.id);
 
     await supabase.from("chat_messages").insert({
@@ -1080,7 +1080,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
 
     await supabase.from("chat_rooms").update({ updated_at: new Date().toISOString() }).eq("id", selectedRoom.id);
     setShowContractPicker(false);
-    toast.success("Contract attached!");
+    toast.success("Canvas attached!");
   };
 
   const sendVoiceNote = async (blob: Blob, duration: number) => {
@@ -1134,7 +1134,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
 
   const fetchContracts = async () => {
     const { data } = await supabase
-      .from("contracts")
+      .from("canvases")
       .select("id, title, client_name, status, value, currency")
       .order("created_at", { ascending: false })
       .limit(20);
@@ -2342,7 +2342,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                             }}
                           >
                             <FileSignature className="h-4 w-4 mr-2" />
-                            Attach Contract
+                            Attach Canvas
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -2640,12 +2640,12 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileSignature className="h-5 w-5 text-bronze" />
-              Attach Contract
+              Attach Canvas
             </DialogTitle>
           </DialogHeader>
           <ScrollArea className="h-[350px]">
             {contracts.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">No contracts found</div>
+              <div className="text-center py-8 text-muted-foreground text-sm">No Canvas found</div>
             ) : (
               <div className="space-y-2">
                 {contracts.map((c) => (

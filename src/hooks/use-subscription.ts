@@ -6,14 +6,14 @@ export type SubscriptionPlan = "free" | "creative_pro" | "brand_workspace";
 export interface SubscriptionLimits {
   kiraActionsPerDay: number;
   invoicesPerMonth: number;
-  contractsPerMonth: number;
+  canvasesPerMonth: number;
   hasESignature: boolean;
   hasPremiumThemes: boolean;
   hasClientPortal: boolean;
   hasVerifiedBadge: boolean;
   hasFullAnalytics: boolean;
   hasUnlimitedInvoices: boolean;
-  hasUnlimitedContracts: boolean;
+  hasUnlimitedCanvases: boolean;
 }
 
 export interface SubscriptionState {
@@ -27,45 +27,45 @@ export interface SubscriptionState {
   kiraActionsToday: number;
   kiraActionsLimit: number;
   invoicesUsedThisMonth: number;
-  contractsUsedThisMonth: number;
+  canvasesUsedThisMonth: number;
 }
 
 const PLAN_LIMITS: Record<SubscriptionPlan, SubscriptionLimits> = {
   free: {
     kiraActionsPerDay: 10,
     invoicesPerMonth: 2,
-    contractsPerMonth: 2,
+    canvasesPerMonth: 2,
     hasESignature: false,
     hasPremiumThemes: false,
     hasClientPortal: false,
     hasVerifiedBadge: false,
     hasFullAnalytics: false,
     hasUnlimitedInvoices: false,
-    hasUnlimitedContracts: false,
+    hasUnlimitedCanvases: false,
   },
   creative_pro: {
     kiraActionsPerDay: 40,
     invoicesPerMonth: Infinity,
-    contractsPerMonth: Infinity,
+    canvasesPerMonth: Infinity,
     hasESignature: true,
     hasPremiumThemes: true,
     hasClientPortal: true,
     hasVerifiedBadge: true,
     hasFullAnalytics: true,
     hasUnlimitedInvoices: true,
-    hasUnlimitedContracts: true,
+    hasUnlimitedCanvases: true,
   },
   brand_workspace: {
     kiraActionsPerDay: 40,
     invoicesPerMonth: Infinity,
-    contractsPerMonth: Infinity,
+    canvasesPerMonth: Infinity,
     hasESignature: true,
     hasPremiumThemes: true,
     hasClientPortal: true,
     hasVerifiedBadge: true,
     hasFullAnalytics: true,
     hasUnlimitedInvoices: true,
-    hasUnlimitedContracts: true,
+    hasUnlimitedCanvases: true,
   },
 };
 
@@ -79,7 +79,7 @@ export const useSubscription = (): SubscriptionState => {
   const [kiraActionsToday, setKiraActionsToday] = useState(0);
   const [kiraActionsLimit, setKiraActionsLimit] = useState(10);
   const [invoicesUsedThisMonth, setInvoicesUsedThisMonth] = useState(0);
-  const [contractsUsedThisMonth, setContractsUsedThisMonth] = useState(0);
+  const [canvasesUsedThisMonth, setCanvasesUsedThisMonth] = useState(0);
 
   const applyProfile = (profile: Record<string, unknown>) => {
     setPlan((profile.subscription_plan as SubscriptionPlan) || "free");
@@ -87,7 +87,7 @@ export const useSubscription = (): SubscriptionState => {
     setKiraActionsToday((profile.kira_actions_used as number) || 0);
     setKiraActionsLimit((profile.kira_actions_limit as number) || 10);
     setInvoicesUsedThisMonth((profile.invoices_used_this_month as number) || 0);
-    setContractsUsedThisMonth((profile.contracts_used_this_month as number) || 0);
+    setCanvasesUsedThisMonth((profile.canvases_used_this_month as number) || 0);
   };
 
   useEffect(() => {
@@ -102,7 +102,7 @@ export const useSubscription = (): SubscriptionState => {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("subscription_plan, subscription_status, kira_actions_used, kira_actions_limit, invoices_used_this_month, contracts_used_this_month")
+        .select("subscription_plan, subscription_status, kira_actions_used, kira_actions_limit, invoices_used_this_month, canvases_used_this_month")
         .eq("id", user.id)
         .single();
 
@@ -149,6 +149,6 @@ export const useSubscription = (): SubscriptionState => {
     kiraActionsToday,
     kiraActionsLimit,
     invoicesUsedThisMonth,
-    contractsUsedThisMonth,
+    canvasesUsedThisMonth,
   };
 };

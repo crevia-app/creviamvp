@@ -45,7 +45,7 @@ export default function AttachmentBubble({ type, attachmentId, isMine }: Attachm
         setData(inv);
       } else {
         const { data: contract } = await supabase
-          .from("contracts")
+          .from("canvases")
           .select("*")
           .eq("id", attachmentId)
           .single();
@@ -59,7 +59,7 @@ export default function AttachmentBubble({ type, attachmentId, isMine }: Attachm
 
   const isInvoice = type === "invoice";
   const Icon = isInvoice ? Receipt : FileSignature;
-  const label = isInvoice ? "Invoice" : "Contract";
+  const label = isInvoice ? "Invoice" : "Canvas";
 
   const statusMap = isInvoice ? INVOICE_STATUS_CONFIG : CONTRACT_STATUS_CONFIG;
   const statusCfg = data ? (statusMap[data.status] ?? statusMap.draft) : null;

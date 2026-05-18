@@ -37,7 +37,7 @@ const TermsOfService = () => {
                 <h3 className="font-poppins font-semibold text-foreground mb-2">2.1 Account Types</h3>
                 <ul className="list-disc pl-6 space-y-1">
                   <li><strong>"Creative":</strong> Individuals using the Service for portfolios, link-in-bio, or freelance management.</li>
-                  <li><strong>"Brand/Business":</strong> Entities using the Service for hiring, contract management, or enterprise API access.</li>
+                  <li><strong>"Brand/Business":</strong> Entities using the Service for hiring, Canvas management, or enterprise API access.</li>
                 </ul>
               </div>
               <div>
@@ -85,7 +85,7 @@ const TermsOfService = () => {
               </div>
               <div>
                 <h3 className="font-poppins font-semibold text-foreground mb-2">4.3 Liability Shield</h3>
-                <p>Crevia shall not be liable for any damages, losses, or legal consequences resulting from your use of or reliance on Kira, including but not limited to business failures, contract disputes, or financial losses.</p>
+                <p>Crevia shall not be liable for any damages, losses, or legal consequences resulting from your use of or reliance on Kira, including but not limited to business failures, Canvas disputes, or financial losses.</p>
               </div>
             </div>
           </section>
@@ -154,7 +154,7 @@ const TermsOfService = () => {
               </div>
               <div>
                 <h3 className="font-poppins font-semibold text-foreground mb-2">9.2 Arbitration</h3>
-                <p>Any dispute arising out of or in connection with this contract shall be referred to and finally resolved by arbitration under the Arbitration Act of Kenya (1995). The seat of arbitration shall be Nairobi, Kenya. The language of the arbitration shall be English.</p>
+                <p>Any dispute arising out of or in connection with these Terms shall be referred to and finally resolved by arbitration under the Arbitration Act of Kenya (1995). The seat of arbitration shall be Nairobi, Kenya. The language of the arbitration shall be English.</p>
               </div>
               <div>
                 <h3 className="font-poppins font-semibold text-foreground mb-2">9.3 Class Action Waiver</h3>

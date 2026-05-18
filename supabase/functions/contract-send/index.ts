@@ -79,19 +79,19 @@ serve(async (req) => {
 
     // Fetch contract as the authenticated user — RLS ensures they can only see their own
     const { data: contract, error: conErr } = await userClient
-      .from("contracts")
+      .from("canvases")
       .select("*")
       .eq("id", contract_id)
       .single();
 
     if (conErr || !contract) {
-      return new Response(JSON.stringify({ error: "Contract not found" }), {
+      return new Response(JSON.stringify({ error: "Canvas not found" }), {
         status: 404, headers: { ...cors, "Content-Type": "application/json" },
       });
     }
 
     if (!contract.client_email) {
-      return new Response(JSON.stringify({ error: "No client email on this contract" }), {
+      return new Response(JSON.stringify({ error: "No client email on this Canvas" }), {
         status: 400, headers: { ...cors, "Content-Type": "application/json" },
       });
     }
@@ -118,7 +118,7 @@ serve(async (req) => {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Contract: ${contract.title}</title>
+  <title>Canvas: ${contract.title}</title>
 </head>
 <body style="margin:0;padding:0;background:#f5f4f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f4f0;padding:40px 16px;">
@@ -141,7 +141,7 @@ serve(async (req) => {
                   </tr></table>
                 </td>
                 <td align="right">
-                  <p style="margin:0;font-size:13px;color:#888;">Contract</p>
+                  <p style="margin:0;font-size:13px;color:#888;">Canvas</p>
                   <p style="margin:2px 0 0;font-size:16px;font-weight:700;color:#fff;">${contract.title}</p>
                 </td>
               </tr></table>
@@ -183,7 +183,7 @@ serve(async (req) => {
                           <p style="margin:0;font-size:14px;font-weight:600;color:#c9a96e;">${formatDate(contract.end_date)}</p>
                         </td>` : ""}
                         ${contract.value ? `<td align="right">
-                          <p style="margin:0 0 2px;font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:0.7px;">Contract Value</p>
+                          <p style="margin:0 0 2px;font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:0.7px;">Canvas Value</p>
                           <p style="margin:0;font-size:18px;font-weight:700;color:#111;">${formatCurrency(contract.value, currency)}</p>
                         </td>` : ""}
                       </tr>
@@ -217,7 +217,7 @@ serve(async (req) => {
             <td style="padding:28px 40px;">
               <table width="100%"><tr><td align="center">
                 <a href="https://creviamvp.vercel.app/received?tab=contracts&id=${contract_id}" style="display:inline-block;background:#c9a96e;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:15px;">
-                  View &amp; Sign Contract
+                  View &amp; Sign Canvas
                 </a>
               </td></tr></table>
             </td>
@@ -227,7 +227,7 @@ serve(async (req) => {
           <tr>
             <td style="padding:0 40px 32px;border-top:1px solid #f0ede8;">
               <p style="margin:16px 0 0;font-size:12px;color:#aaa;line-height:1.7;">
-                This contract was sent via <strong style="color:#c9a96e;">Crevia</strong> · creviamvp.vercel.app<br/>
+                This Canvas was sent via <strong style="color:#c9a96e;">Crevia</strong> · creviamvp.vercel.app<br/>
                 Log in to your Crevia account to review and sign.
               </p>
             </td>
@@ -251,7 +251,7 @@ serve(async (req) => {
         from: `${senderName} via Crevia <contracts@crevia.app>`,
         to: contract.client_email,
         reply_to: senderEmail || undefined,
-        subject: `Contract from ${senderName}: ${contract.title}`,
+        subject: `Canvas from ${senderName}: ${contract.title}`,
         html,
       }),
     });
@@ -268,7 +268,7 @@ serve(async (req) => {
 
     // Mark contract as sent
     await adminClient
-      .from("contracts")
+      .from("canvases")
       .update({ status: "sent" })
       .eq("id", contract_id);
 
@@ -282,9 +282,9 @@ serve(async (req) => {
     if (clientProfile?.id) {
       await adminClient.from("notifications").insert({
         user_id: clientProfile.id,
-        type: "contract_received",
-        title: `Contract from ${senderName}`,
-        body: `You have received a contract: "${contract.title}". Review and sign it on Crevia.`,
+        type: "canvas_received",
+        title: `Canvas from ${senderName}`,
+        body: `You have received a Canvas: "${contract.title}". Review and sign it on Crevia.`,
         data: { contract_id, link: "/received" },
       });
     }

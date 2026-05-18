@@ -21,7 +21,7 @@ const OPS_CARDS = [
   { icon: Link2,         label: "Crevia Link",         path: "/crevia-studio" },
   { icon: MessageCircle, label: "Crevia Chat",          path: "/crevia-studio" },
   { icon: Receipt,       label: "Invoices & Receipts",  path: "/crevia-invoice" },
-  { icon: Shield,        label: "Contracts",            path: "/crevia-contracts" },
+  { icon: Shield,        label: "Canvas",               path: "/crevia-contracts" },
 ];
 
 const Home = () => {
@@ -163,7 +163,7 @@ const Home = () => {
           <ScrollReveal delay={0.12}>
             <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
               You don't need another content calendar. You need an operating system —
-              one place to price, scope, invoice, contract, communicate, and get paid.
+              one place to price, scope, invoice, build Canvas, communicate, and get paid.
               That's Crevia.
             </p>
           </ScrollReveal>
@@ -236,7 +236,7 @@ const Home = () => {
                   <span className="text-gradient-bronze">Run everything.</span>
                 </h3>
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  Links, contracts, invoices, and communication — all moving in one flow.
+                  Links, Canvas, invoices, and communication — all moving in one flow.
                   For creatives, it turns individuals into companies. For brands,
                   it turns chaos into structured creative operations.
                 </p>
@@ -282,13 +282,13 @@ const Home = () => {
                 </h3>
                 <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
                   The creative economy is worth trillions — yet the infrastructure supporting
-                  it has barely evolved. Creatives still chase invoices over WhatsApp. Contracts
+                  it has barely evolved. Creatives still chase invoices over WhatsApp. Canvas
                   get lost in email threads. Payments stall in trust gaps. Crevia changes that.
                 </p>
                 <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
                   We built a single, structured workspace where creative professionals run
                   their business with the same rigour as any high-growth company — professional
-                  invoicing, legally binding contracts, secure escrow payments, a public link
+                  invoicing, legally binding Canvas, secure escrow payments, a public link
                   profile that speaks for them, and end-to-end encrypted client collaboration.
                   Everything connected. Nothing scattered.
                 </p>

@@ -56,7 +56,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export function ApproveActionDialog({ open, onOpenChange }: ApproveActionDialogProps) {
-  const [docType, setDocType] = useState<'contract' | 'invoice'>('contract');
+  const [docType, setDocType] = useState<'canvas' | 'invoice'>('canvas');
   const [contracts, setContracts] = useState<Document[]>([]);
   const [invoices, setInvoices] = useState<Document[]>([]);
   const [selectedId, setSelectedId] = useState<string>('');
@@ -78,7 +78,7 @@ export function ApproveActionDialog({ open, onOpenChange }: ApproveActionDialogP
   const fetchDocuments = async () => {
     setIsFetching(true);
     const [contractsRes, invoicesRes] = await Promise.all([
-      supabase.from('contracts').select('id, title, client_name, status').not('status', 'in', '("completed","cancelled")').order('updated_at', { ascending: false }),
+      supabase.from('canvases').select('id, title, client_name, status').not('status', 'in', '("completed","cancelled")').order('updated_at', { ascending: false }),
       supabase.from('invoices').select('id, invoice_number, client_name, status').not('status', 'in', '("paid","cancelled")').order('updated_at', { ascending: false }),
     ]);
     if (contractsRes.data) setContracts(contractsRes.data);
@@ -86,10 +86,10 @@ export function ApproveActionDialog({ open, onOpenChange }: ApproveActionDialogP
     setIsFetching(false);
   };
 
-  const docs = docType === 'contract' ? contracts : invoices;
+  const docs = docType === 'canvas' ? contracts : invoices;
   const selectedDoc = docs.find(d => d.id === selectedId);
   const transitions = selectedDoc
-    ? (docType === 'contract' ? CONTRACT_TRANSITIONS : INVOICE_TRANSITIONS)[selectedDoc.status] ?? []
+    ? (docType === 'canvas' ? CONTRACT_TRANSITIONS : INVOICE_TRANSITIONS)[selectedDoc.status] ?? []
     : [];
 
   const handleApprove = async () => {
@@ -113,7 +113,7 @@ export function ApproveActionDialog({ open, onOpenChange }: ApproveActionDialogP
             Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
-            document_type: docType,
+            document_type: docType === 'canvas' ? 'canvas' : 'invoice',
             document_id: selectedId,
             new_status: selectedStatus,
           }),
@@ -125,7 +125,7 @@ export function ApproveActionDialog({ open, onOpenChange }: ApproveActionDialogP
         toast.error(json.error || 'Failed to update status');
       } else {
         setDone(true);
-        toast.success(`${docType === 'contract' ? 'Contract' : 'Invoice'} updated to "${selectedStatus}"`);
+        toast.success(`${docType === 'canvas' ? 'Canvas' : 'Invoice'} updated to "${selectedStatus}"`);
         // Refresh lists
         await fetchDocuments();
       }
@@ -142,7 +142,7 @@ export function ApproveActionDialog({ open, onOpenChange }: ApproveActionDialogP
         <DialogHeader>
           <DialogTitle>Approve or Update a Document</DialogTitle>
           <DialogDescription>
-            Select a contract or invoice and move it to the next stage.
+            Select a Canvas or invoice and move it to the next stage.
           </DialogDescription>
         </DialogHeader>
 
@@ -159,13 +159,13 @@ export function ApproveActionDialog({ open, onOpenChange }: ApproveActionDialogP
             {/* Document type toggle */}
             <div className="flex rounded-lg border border-border/50 overflow-hidden">
               <button
-                onClick={() => { setDocType('contract'); setSelectedId(''); setSelectedStatus(''); }}
+                onClick={() => { setDocType('canvas'); setSelectedId(''); setSelectedStatus(''); }}
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-colors ${
-                  docType === 'contract' ? 'bg-bronze text-background' : 'hover:bg-muted/50 text-muted-foreground'
+                  docType === 'canvas' ? 'bg-bronze text-background' : 'hover:bg-muted/50 text-muted-foreground'
                 }`}
               >
                 <FileSignature className="w-4 h-4" />
-                Contracts
+                Canvas
               </button>
               <button
                 onClick={() => { setDocType('invoice'); setSelectedId(''); setSelectedStatus(''); }}
@@ -184,23 +184,23 @@ export function ApproveActionDialog({ open, onOpenChange }: ApproveActionDialogP
               </div>
             ) : docs.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                No active {docType}s found.
+                No active {docType === 'canvas' ? 'Canvas' : 'invoices'} found.
               </p>
             ) : (
               <>
                 {/* Document select */}
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Select {docType}</label>
+                  <label className="text-sm font-medium">Select {docType === 'canvas' ? 'Canvas' : 'Invoice'}</label>
                   <Select value={selectedId} onValueChange={(v) => { setSelectedId(v); setSelectedStatus(''); }}>
                     <SelectTrigger>
-                      <SelectValue placeholder={`Choose a ${docType}...`} />
+                      <SelectValue placeholder={`Choose a ${docType === 'canvas' ? 'Canvas' : 'invoice'}...`} />
                     </SelectTrigger>
                     <SelectContent>
                       {docs.map(doc => (
                         <SelectItem key={doc.id} value={doc.id}>
                           <div className="flex items-center gap-2">
                             <span className="font-medium">
-                              {docType === 'contract' ? doc.title : doc.invoice_number}
+                              {docType === 'canvas' ? doc.title : doc.invoice_number}
                             </span>
                             <span className="text-muted-foreground text-xs">— {doc.client_name}</span>
                             <span className={`text-xs capitalize ml-auto ${STATUS_COLORS[doc.status]}`}>
@@ -232,7 +232,7 @@ export function ApproveActionDialog({ open, onOpenChange }: ApproveActionDialogP
 
                 {selectedId && transitions.length === 0 && (
                   <p className="text-sm text-muted-foreground">
-                    This {docType} is already in a final state and cannot be updated.
+                    This {docType === 'canvas' ? 'Canvas' : 'invoice'} is already in a final state and cannot be updated.
                   </p>
                 )}
 

@@ -157,7 +157,7 @@ export function SendDocumentDialog({
     setSending(true);
     try {
       if (trimmed !== defaultEmail) {
-        const table = type === "invoice" ? "invoices" : "contracts";
+        const table = type === "invoice" ? "invoices" : "canvases";
         await supabase.from(table).update({ client_email: trimmed }).eq("id", documentId);
       }
 
@@ -175,7 +175,7 @@ export function SendDocumentDialog({
       }
       if (data?.error) throw new Error(data.error);
 
-      toast.success(`${type === "invoice" ? "Invoice" : "Contract"} sent!`, {
+      toast.success(`${type === "invoice" ? "Invoice" : "Canvas"} sent!`, {
         description: `Sent to ${trimmed}. They'll receive an email and an in-app notification if they have a Crevia account.`,
       });
       onSent?.();
@@ -195,7 +195,7 @@ export function SendDocumentDialog({
 
     setDmSending(true);
     try {
-      const label = type === "invoice" ? "Invoice" : "Contract";
+      const label = type === "invoice" ? "Invoice" : "Canvas";
       const content = type === "invoice"
         ? `📄 Sent ${label}: ${documentLabel}`
         : `📋 Sent ${label}: ${documentLabel}`;
@@ -245,7 +245,7 @@ export function SendDocumentDialog({
               <Icon className="w-4 h-4 text-bronze" />
             </div>
             <DialogTitle className="font-vollkorn text-lg">
-              Send {type === "invoice" ? "Invoice" : "Contract"}
+              Send {type === "invoice" ? "Invoice" : "Canvas"}
             </DialogTitle>
           </div>
           <DialogDescription className="text-sm text-muted-foreground">

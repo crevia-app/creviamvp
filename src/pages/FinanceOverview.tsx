@@ -14,7 +14,7 @@ const FinanceOverview = () => {
 
   const fetchData = async () => {
     const [{ data: contractsData }, { data: invoicesData }] = await Promise.all([
-      supabase.from("contracts").select("*").order("created_at", { ascending: false }),
+      supabase.from("canvases").select("*").order("created_at", { ascending: false }),
       supabase.from("invoices").select("*").order("created_at", { ascending: false }),
     ]);
     setContracts(contractsData || []);
@@ -61,7 +61,7 @@ const FinanceOverview = () => {
                 { label: "Total Revenue", value: formatCurrency(totalPaid), icon: TrendingUp, color: "text-green-500 bg-green-500/10" },
                 { label: "Pending", value: formatCurrency(totalPending), icon: Clock, color: "text-amber-500 bg-amber-500/10" },
                 { label: "Active Workspaces", value: activeWorkspaces.toString(), icon: Sparkles, color: "text-bronze bg-bronze/10" },
-                { label: "Signed Contracts", value: signedContracts.toString(), icon: FileSignature, color: "text-blue-500 bg-blue-500/10" },
+                { label: "Signed Canvas", value: signedContracts.toString(), icon: FileSignature, color: "text-blue-500 bg-blue-500/10" },
               ].map((stat, idx) => (
                 <motion.div
                   key={stat.label}
@@ -146,7 +146,7 @@ const FinanceOverview = () => {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <FileSignature className="w-4 h-4 text-bronze" />
-                <h2 className="font-vollkorn text-xl font-bold">Contracts</h2>
+                <h2 className="font-vollkorn text-xl font-bold">Canvas</h2>
                 <Badge variant="outline" className="text-[10px] border-bronze/30 text-bronze ml-auto">
                   {contracts.length} total
                 </Badge>
@@ -154,7 +154,7 @@ const FinanceOverview = () => {
               {contracts.length === 0 ? (
                 <Card className="p-8 text-center border-dashed">
                   <FileSignature className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">No contracts yet</p>
+                  <p className="text-sm text-muted-foreground">No Canvas yet</p>
                 </Card>
               ) : (
                 <div className="space-y-2">

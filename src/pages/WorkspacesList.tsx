@@ -119,7 +119,7 @@ const WorkspacesList = () => {
                     </div>
                     <div className="flex items-center gap-1.5 text-muted-foreground">
                       <FileSignature className="w-3.5 h-3.5" />
-                      <span className="text-xs">Contract</span>
+                      <span className="text-xs">Canvas</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-muted-foreground">
                       <Receipt className="w-3.5 h-3.5" />

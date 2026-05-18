@@ -138,7 +138,7 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
         .select("id, display_name, handle, subscription_plan, subscription_expires_at, created_at, avatar_url")
         .order("created_at", { ascending: false }),
       supabase.from("invoices").select("id", { count: "exact", head: true }),
-      supabase.from("contracts").select("id", { count: "exact", head: true }),
+      supabase.from("canvases").select("id", { count: "exact", head: true }),
     ]);
 
     const p = profiles ?? [];
@@ -223,7 +223,7 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
           icon={TrendingUp} accent="bg-emerald-500" onClick={() => onNavigate("billing")}
         />
         <StatCard
-          label="Documents" value={fmt(invoices + contracts)} sub={`${invoices} invoices · ${contracts} contracts`}
+          label="Documents" value={fmt(invoices + contracts)} sub={`${invoices} invoices · ${contracts} Canvas`}
           icon={FileText} accent="bg-violet-500" onClick={() => onNavigate("documents")}
         />
       </div>
@@ -421,7 +421,7 @@ const UsersSection = () => {
     setDetailLoad(true);
     const [{ count: inv }, { count: con }, { data: invData }, { data: brandEscrows }, { data: creatorEscrows }] = await Promise.all([
       supabase.from("invoices").select("id", { count: "exact", head: true }).eq("user_id", u.id),
-      supabase.from("contracts").select("id", { count: "exact", head: true }).eq("user_id", u.id),
+      supabase.from("canvases").select("id", { count: "exact", head: true }).eq("user_id", u.id),
       supabase.from("invoices").select("total").eq("user_id", u.id),
       supabase.from("escrow_payments" as any).select("id").eq("brand_id", u.id),
       supabase.from("escrow_payments" as any).select("id").eq("creator_id", u.id),
@@ -592,7 +592,7 @@ const UsersSection = () => {
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { icon: Receipt,    label: "Invoices",  value: String(selStats.invoices), color: "text-blue-400" },
-                    { icon: FileCheck,  label: "Contracts", value: String(selStats.contracts), color: "text-violet-400" },
+                    { icon: FileCheck,  label: "Canvas", value: String(selStats.contracts), color: "text-violet-400" },
                     { icon: CreditCard, label: "Billed",    value: KES(selStats.invoiceTotal), color: "text-bronze" },
                   ].map(({ icon: Icon, label, value, color }) => (
                     <div key={label} className="bg-[#111] border border-white/[0.06] rounded-xl p-3 text-center">
@@ -1067,7 +1067,7 @@ const BillingSection = () => {
             <div className="rounded-xl p-3 bg-white/[0.03]">
               <p className="text-[10px] text-white/30 uppercase tracking-wider font-semibold mb-2">Included features</p>
               <ul className="space-y-1.5">
-                {["5 invoices / month", "3 contracts / month", "Basic CreviaLink profile", "Standard messaging"].map(f => (
+                {["5 invoices / month", "3 Canvas / month", "Basic CreviaLink profile", "Standard messaging"].map(f => (
                   <li key={f} className="flex items-center gap-2 text-xs text-white/35">
                     <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-white/20" />
                     {f}
@@ -1085,7 +1085,7 @@ const BillingSection = () => {
               border: "border-emerald-500/20",
               bg: "bg-emerald-500/5",
               accent: "bg-emerald-500/10",
-              features: ["Unlimited invoices & contracts", "CreviaLink profile", "CreviaStudio access", "E2E encrypted messaging", "Escrow payments"],
+              features: ["Unlimited invoices & Canvas", "CreviaLink profile", "CreviaStudio access", "E2E encrypted messaging", "Escrow payments"],
             },
             {
               key: "enterprise" as const,
@@ -1144,7 +1144,7 @@ const BillingSection = () => {
 
 // ─── Documents ────────────────────────────────────────────────────────────────
 const DocumentsSection = () => {
-  const [view, setView]             = useState<"invoices" | "contracts" | "analytics" | "trash">("invoices");
+  const [view, setView]             = useState<"invoices" | "canvases" | "analytics" | "trash">("invoices");
   const [invoices, setInvoices]     = useState<any[]>([]);
   const [contracts, setContracts]   = useState<any[]>([]);
   const [trashInv, setTrashInv]     = useState<any[]>([]);
@@ -1160,7 +1160,7 @@ const DocumentsSection = () => {
   const load = async () => {
     const [{ data: allInv }, { data: allCon }] = await Promise.all([
       (supabase.from("invoices") as any).select(SEL_INV).order("created_at", { ascending: false }).limit(300),
-      (supabase.from("contracts") as any).select(SEL_CON).order("created_at", { ascending: false }).limit(300),
+      (supabase.from("canvases") as any).select(SEL_CON).order("created_at", { ascending: false }).limit(300),
     ]);
     const inv = (allInv ?? []);
     const con = (allCon ?? []);
@@ -1171,7 +1171,7 @@ const DocumentsSection = () => {
     setLoading(false);
   };
 
-  const softDelete = async (table: "invoices" | "contracts", id: string) => {
+  const softDelete = async (table: "invoices" | "canvases", id: string) => {
     if (!confirm(`Move to trash? You can restore it later.`)) return;
     const { error } = await (supabase.from(table) as any).update({ deleted_at: new Date().toISOString() }).eq("id", id);
     if (error) { toast.error(error.message); return; }
@@ -1179,14 +1179,14 @@ const DocumentsSection = () => {
     load();
   };
 
-  const restore = async (table: "invoices" | "contracts", id: string) => {
+  const restore = async (table: "invoices" | "canvases", id: string) => {
     const { error } = await (supabase.from(table) as any).update({ deleted_at: null }).eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success("Restored");
     load();
   };
 
-  const permanentDelete = async (table: "invoices" | "contracts", id: string) => {
+  const permanentDelete = async (table: "invoices" | "canvases", id: string) => {
     if (!confirm("Permanently delete? This cannot be undone.")) return;
     const { error } = await supabase.from(table).delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
@@ -1234,7 +1234,7 @@ const DocumentsSection = () => {
     <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-4xl">
       <div>
         <h2 className="text-lg font-bold text-white">Documents</h2>
-        <p className="text-sm text-white/30">{invoices.length} invoices · {contracts.length} contracts</p>
+        <p className="text-sm text-white/30">{invoices.length} invoices · {contracts.length} Canvas</p>
       </div>
 
       {/* Stat cards */}
@@ -1242,7 +1242,7 @@ const DocumentsSection = () => {
         {[
           { label: "Paid invoices",    value: String(paid),    color: "text-emerald-400", accent: "bg-emerald-500" },
           { label: "Pending invoices", value: String(pending), color: "text-amber-400",   accent: "bg-amber-500" },
-          { label: "Signed contracts", value: String(signed),  color: "text-violet-400",  accent: "bg-violet-500" },
+          { label: "Signed Canvas",    value: String(signed),  color: "text-violet-400",  accent: "bg-violet-500" },
         ].map(c => (
           <div key={c.label} className="relative bg-[#111] border border-white/[0.06] rounded-2xl p-4 overflow-hidden">
             <div className={cn("absolute -top-4 -right-4 w-12 h-12 rounded-full blur-xl opacity-20", c.accent)} />
@@ -1256,7 +1256,7 @@ const DocumentsSection = () => {
       <div className="flex gap-1 p-1 bg-[#111] rounded-xl border border-white/[0.06] w-fit flex-wrap">
         {([
           { id: "invoices"   as const, label: "Invoices" },
-          { id: "contracts"  as const, label: "Contracts" },
+          { id: "canvases"  as const, label: "Canvas" },
           { id: "analytics"  as const, label: "Analytics" },
           { id: "trash"      as const, label: "Trash", badge: trashCount },
         ]).map(t => (
@@ -1273,7 +1273,7 @@ const DocumentsSection = () => {
       </div>
 
       {/* ── Invoices / Contracts list ── */}
-      {(view === "invoices" || view === "contracts") && (
+      {(view === "invoices" || view === "canvases") && (
         <>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
@@ -1291,7 +1291,7 @@ const DocumentsSection = () => {
                       {view === "invoices" ? `#${d.invoice_number} · ${d.client_name}` : d.title}
                     </p>
                     <p className="text-xs text-white/25 truncate mt-0.5">
-                      {view === "contracts" ? `${d.client_name} · ${d.contract_type} · ` : ""}{format(new Date(d.created_at), "dd MMM yyyy")}
+                      {view === "canvases" ? `${d.client_name} · ${d.contract_type} · ` : ""}{format(new Date(d.created_at), "dd MMM yyyy")}
                     </p>
                   </div>
                   <div className="flex items-center gap-2.5 flex-shrink-0">
@@ -1299,7 +1299,7 @@ const DocumentsSection = () => {
                     <p className="text-sm font-bold text-white/70 tabular-nums">
                       {d.currency || "KES"} {((d.total ?? d.value) || 0).toLocaleString()}
                     </p>
-                    <button onClick={() => softDelete(view === "invoices" ? "invoices" : "contracts", d.id)}
+                    <button onClick={() => softDelete(view === "invoices" ? "invoices" : "canvases", d.id)}
                       className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400/60 hover:text-red-400 p-1 rounded-lg hover:bg-red-500/10" title="Move to trash">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -1333,9 +1333,9 @@ const DocumentsSection = () => {
           {/* Docs per month chart */}
           <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
             <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-1">Documents Created</p>
-            <p className="text-xs text-white/25 mb-4">Invoices and contracts per month (last 6 months)</p>
+            <p className="text-xs text-white/25 mb-4">Invoices and Canvas per month (last 6 months)</p>
             <div className="flex items-center gap-4 mb-4">
-              {[{ color: "#6366f1", label: "Invoices" }, { color: "#8b5cf6", label: "Contracts" }].map(l => (
+              {[{ color: "#6366f1", label: "Invoices" }, { color: "#8b5cf6", label: "Canvas" }].map(l => (
                 <div key={l.label} className="flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: l.color }} />
                   <span className="text-[11px] text-white/40">{l.label}</span>
@@ -1383,7 +1383,7 @@ const DocumentsSection = () => {
           )}
           {[
             { label: "Invoices",  items: trashInv, table: "invoices"  as const },
-            { label: "Contracts", items: trashCon, table: "contracts" as const },
+            { label: "Canvas", items: trashCon, table: "canvases" as const },
           ].filter(g => g.items.length > 0).map(group => (
             <div key={group.label} className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
               <div className="px-5 py-3.5 border-b border-white/[0.04] flex items-center justify-between">
@@ -1724,7 +1724,7 @@ const FONTS: Record<string, string> = {
 const PLAN_FEATURES = [
   { label: "Kira AI actions / day",  free: "10",        pro: "40",         ent: "40"         },
   { label: "Invoices / month",       free: "20",        pro: "Unlimited",  ent: "Unlimited"  },
-  { label: "Contracts / month",      free: "20",        pro: "Unlimited",  ent: "Unlimited"  },
+  { label: "Canvas / month",         free: "20",        pro: "Unlimited",  ent: "Unlimited"  },
   { label: "E-Signature",            free: false,       pro: true,         ent: true         },
   { label: "Premium Themes",         free: false,       pro: true,         ent: true         },
   { label: "Client Portal",          free: false,       pro: true,         ent: true         },
@@ -1751,7 +1751,7 @@ const TemplatesSection = () => {
   const load = async () => {
     const [{ data: invData }, { data: conData }, { data: lpData }] = await Promise.all([
       supabase.from("invoices").select("accent_color"),
-      supabase.from("contracts").select("contract_type"),
+      supabase.from("canvases").select("contract_type"),
       supabase.from("link_profiles").select("theme, background"),
     ]);
 
@@ -1820,9 +1820,9 @@ const TemplatesSection = () => {
 
           {/* Contract type usage */}
           <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
-            <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-5">Contract Templates Used</p>
+            <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-5">Canvas Templates Used</p>
             {contractTypes.length === 0
-              ? <p className="text-sm text-white/20 text-center py-8">No contracts yet</p>
+              ? <p className="text-sm text-white/20 text-center py-8">No Canvas yet</p>
               : <div className="space-y-3">
                   {contractTypes.map(({ type, count }) => {
                     const info = CONTRACT_TYPES[type] || { label: type, icon: "📄" };
@@ -1954,7 +1954,7 @@ const SettingsSection = () => {
     Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase.from("invoices").select("id", { count: "exact", head: true }),
-      supabase.from("contracts").select("id", { count: "exact", head: true }),
+      supabase.from("canvases").select("id", { count: "exact", head: true }),
       (supabase.from("app_settings") as any).select("key, value").in("key", ["maintenance_mode", "email_from_name", "email_reply_to"]),
     ]).then(([{ count: u }, { count: i }, { count: c }, { data: settings }]) => {
       setCounts({ users: u ?? 0, invoices: i ?? 0, contracts: c ?? 0 });
@@ -2046,7 +2046,7 @@ const SettingsSection = () => {
                 { label: "Auth",            value: "Supabase Auth + MFA" },
                 { label: "Total Users",     value: String(counts.users) },
                 { label: "Total Invoices",  value: String(counts.invoices) },
-                { label: "Total Contracts", value: String(counts.contracts) },
+                { label: "Total Canvas", value: String(counts.contracts) },
                 { label: "Admin gating",    value: "is_admin = true on profiles" },
               ].map(r => (
                 <div key={r.label} className="flex items-center justify-between px-5 py-3.5 hover:bg-white/[0.02] transition-colors">

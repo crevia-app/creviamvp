@@ -49,7 +49,7 @@ const ReceivedDocuments = () => {
           .eq("client_email", email)
           .order("created_at", { ascending: false }),
         supabase
-          .from("contracts")
+          .from("canvases")
           .select("*")
           .eq("client_email", email)
           .order("created_at", { ascending: false }),
@@ -87,7 +87,7 @@ const ReceivedDocuments = () => {
         <div className="container mx-auto px-4 sm:px-6 py-8 max-w-4xl">
           <h1 className="font-vollkorn text-2xl sm:text-3xl font-bold mb-1">Received</h1>
           <p className="text-muted-foreground text-sm">
-            Invoices and contracts sent to you.
+            Invoices and Canvas sent to you.
           </p>
         </div>
       </div>
@@ -101,7 +101,7 @@ const ReceivedDocuments = () => {
             </TabsTrigger>
             <TabsTrigger value="contracts" className="gap-1.5">
               <FileSignature className="h-4 w-4" />
-              Contracts ({contracts.length})
+              Canvas ({contracts.length})
             </TabsTrigger>
           </TabsList>
 
@@ -153,7 +153,7 @@ const ReceivedDocuments = () => {
             {contracts.length === 0 ? (
               <Card className="p-12 text-center">
                 <FileSignature className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground text-sm">No contracts received yet.</p>
+                <p className="text-muted-foreground text-sm">No Canvas received yet.</p>
               </Card>
             ) : (
               <div className="space-y-3">
