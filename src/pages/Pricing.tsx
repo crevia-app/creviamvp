@@ -10,17 +10,17 @@ import ScrollReveal from "@/components/ui/ScrollReveal";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 
-const fmt = (n: number) => `KES ${n.toLocaleString()}`;
+const fmt = (n: number) => n === 0 ? "$0" : `$${n % 1 === 0 ? n.toLocaleString() : n.toFixed(2)}`;
 
 const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterprisePrice: number) => {
-  const proYearly  = Math.round(proPrice * 10);
-  const entYearly  = Math.round(enterprisePrice * 10);
+  const proYearly  = parseFloat((proPrice * 10).toFixed(2));
+  const entYearly  = parseFloat((enterprisePrice * 10).toFixed(2));
   return [
     {
       name: "Free",
       badge: null,
-      priceMonthly: "KES 0",
-      priceYearly: "KES 0",
+      priceMonthly: "$0",
+      priceYearly: "$0",
       period: "",
       usd: null,
       description: "Everything you need to get started.",
@@ -96,7 +96,7 @@ const Pricing = () => {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isPaystackLoading, setIsPaystackLoading] = useState<string | null>(null);
-  const [proPrice, setProPrice]             = useState(1500);
+  const [proPrice, setProPrice]             = useState(14.99);
   const [enterprisePrice, setEnterprisePrice] = useState(0);
 
   useEffect(() => {
@@ -107,8 +107,9 @@ const Pricing = () => {
       .then(({ data }: { data: any[] | null }) => {
         if (!data) return;
         data.forEach(row => {
-          const n = parseInt(row.value, 10);
-          if (!isNaN(n)) {
+          const n = parseFloat(row.value);
+          // Only accept values in a sensible USD range — guards against stale KES values in app_settings
+          if (!isNaN(n) && n > 0 && n < 999) {
             if (row.key === "plan_price_pro")        setProPrice(n);
             if (row.key === "plan_price_enterprise") setEnterprisePrice(n);
           }
@@ -132,7 +133,7 @@ const Pricing = () => {
       key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
       email,
       amount: amount * 100,
-      currency: "KES",
+      currency: "USD",
       metadata: { plan: planKey, billing_cycle: billingCycle },
       callback: () => {
         navigate("/profile/payments-billing");
