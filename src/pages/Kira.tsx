@@ -97,7 +97,7 @@ function DesktopChatItem({
   chat, isActive, isRenaming, renameValue, indent = false,
   onSelect, onRenameChange, onRenameSubmit, onRenameCancel, onStartRename, onPin, onDelete,
 }: DesktopChatItemProps) {
-  const [hovered, setHovered] = React.useState(false);
+  const [hovered, setHovered] = useState(false);
   const showDots = isActive || hovered;
 
   return (
