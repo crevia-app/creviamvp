@@ -1741,14 +1741,14 @@ const FONTS: Record<string, string> = {
 };
 
 const PLAN_FEATURES = [
-  { label: "Kira AI actions / day",  free: "10",        pro: "40",         ent: "40"         },
-  { label: "Invoices / month",       free: "20",        pro: "Unlimited",  ent: "Unlimited"  },
-  { label: "Canvas / month",         free: "20",        pro: "Unlimited",  ent: "Unlimited"  },
-  { label: "E-Signature",            free: false,       pro: true,         ent: true         },
-  { label: "Premium Themes",         free: false,       pro: true,         ent: true         },
-  { label: "Client Portal",          free: false,       pro: true,         ent: true         },
-  { label: "Verified Badge",         free: false,       pro: true,         ent: true         },
-  { label: "Full Analytics",         free: false,       pro: true,         ent: true         },
+  { label: "Kira AI actions / day",  free: "10",   pro: "40",        biz: "200",       ent: "Unlimited" },
+  { label: "Invoices / month",       free: "2",    pro: "Unlimited", biz: "Unlimited", ent: "Unlimited" },
+  { label: "Canvas / month",         free: "2",    pro: "Unlimited", biz: "Unlimited", ent: "Unlimited" },
+  { label: "E-Signature",            free: false,  pro: true,        biz: true,        ent: true        },
+  { label: "Premium Themes",         free: false,  pro: true,        biz: true,        ent: true        },
+  { label: "Client Portal",          free: false,  pro: true,        biz: true,        ent: true        },
+  { label: "Verified Badge",         free: false,  pro: true,        biz: true,        ent: true        },
+  { label: "Full Analytics",         free: false,  pro: true,        biz: true,        ent: true        },
 ];
 
 const UsageBar = ({ pct, color = "bg-bronze" }: { pct: number; color?: string }) => (
@@ -1923,20 +1923,20 @@ const TemplatesSection = () => {
       {/* ── Feature Access ── */}
       {tab === "features" && (
         <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
-          <div className="grid grid-cols-4 px-5 py-3 border-b border-white/[0.06] bg-white/[0.02]">
+          <div className="grid grid-cols-5 px-5 py-3 border-b border-white/[0.06] bg-white/[0.02]">
             <span className="text-xs text-white/40 font-semibold uppercase tracking-wider">Feature</span>
-            {["Free", "Creative Pro", "Brand Workspace"].map(p => (
+            {(["Free", "Creative Pro", "Brand Workspace", "Enterprise"] as const).map(p => (
               <span key={p} className="text-xs font-semibold text-center"
-                style={{ color: p === "Free" ? "rgba(255,255,255,0.3)" : p === "Creative Pro" ? "#10b981" : "#8b5cf6" }}>
+                style={{ color: p === "Free" ? "rgba(255,255,255,0.3)" : p === "Creative Pro" ? "#10b981" : p === "Brand Workspace" ? "#8b5cf6" : "#f59e0b" }}>
                 {p}
               </span>
             ))}
           </div>
           <div className="divide-y divide-white/[0.04]">
             {PLAN_FEATURES.map((row, i) => (
-              <div key={i} className="grid grid-cols-4 px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
+              <div key={i} className="grid grid-cols-5 px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
                 <span className="text-sm text-white/55">{row.label}</span>
-                {[row.free, row.pro, row.ent].map((val, j) => (
+                {[row.free, row.pro, row.biz, row.ent].map((val, j) => (
                   <div key={j} className="flex justify-center items-center">
                     {typeof val === "boolean" ? (
                       val
