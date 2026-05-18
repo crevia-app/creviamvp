@@ -131,7 +131,7 @@ function DesktopChatItem({
       <DropdownMenu>
         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
           <button
-            style={{ opacity: showDots ? 1 : 0, pointerEvents: showDots ? 'auto' : 'none' }}
+            style={{ opacity: showDots ? 1 : 0.25 }}
             className={`flex-shrink-0 w-6 h-6 rounded flex items-center justify-center transition-opacity duration-150 hover:bg-muted/80 ${
               isActive ? 'text-foreground' : 'text-muted-foreground'
             }`}
