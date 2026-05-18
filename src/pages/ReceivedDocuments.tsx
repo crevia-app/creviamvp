@@ -99,7 +99,7 @@ const ReceivedDocuments = () => {
               <Receipt className="h-4 w-4" />
               Invoices ({invoices.length})
             </TabsTrigger>
-            <TabsTrigger value="contracts" className="gap-1.5">
+            <TabsTrigger value="canvases" className="gap-1.5">
               <FileSignature className="h-4 w-4" />
               Canvas ({contracts.length})
             </TabsTrigger>
@@ -149,7 +149,7 @@ const ReceivedDocuments = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="contracts">
+          <TabsContent value="canvases">
             {contracts.length === 0 ? (
               <Card className="p-12 text-center">
                 <FileSignature className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />

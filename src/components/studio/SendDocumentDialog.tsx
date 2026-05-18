@@ -60,7 +60,7 @@ export function SendDocumentDialog({
   const [dmSending, setDmSending] = useState(false);
 
   const Icon = type === "invoice" ? Receipt : FileSignature;
-  const fnName = type === "invoice" ? "invoice-send" : "contract-send";
+  const fnName = type === "invoice" ? "invoice-send" : "canvas-send";
   const bodyKey = type === "invoice" ? "invoice_id" : "contract_id";
 
   // Reset on open/close
