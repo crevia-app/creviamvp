@@ -11,7 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Users, Search, UserPlus, X, Loader2, Crown, Link2, Copy, Check, ShieldCheck, ShieldOff } from "lucide-react";
+import { Users, Search, UserPlus, X, Loader2, Crown, Link2, Copy, Check, ShieldCheck, ShieldOff, Lock } from "lucide-react";
+
+const getSeatLimit = (plan: string | null): number => {
+  if (plan === "business" || plan === "brand_workspace") return 3;
+  if (plan === "enterprise") return 100;
+  return 1; // free, pro, creative_pro
+};
 
 interface Member {
   user_id: string;
@@ -49,16 +55,30 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
   const [promotingId, setPromotingId] = useState<string | null>(null);
   const [generatingLink, setGeneratingLink] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [creatorPlan, setCreatorPlan] = useState<string | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isCreator = currentUserId === createdBy;
+
+  const seatLimit = getSeatLimit(creatorPlan);
+  const atSeatLimit = members.length >= seatLimit;
 
   useEffect(() => {
     if (open) {
       fetchMembers();
+      fetchCreatorPlan();
       setSearch("");
       setSearchResults([]);
     }
   }, [open, roomId]);
+
+  const fetchCreatorPlan = async () => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("subscription_plan")
+      .eq("id", createdBy)
+      .single();
+    setCreatorPlan(data?.subscription_plan ?? "free");
+  };
 
   const fetchMembers = async () => {
     setLoadingMembers(true);
@@ -111,6 +131,15 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
   };
 
   const addMember = async (user: SearchResult) => {
+    if (members.length >= seatLimit) {
+      const planLabel = creatorPlan === "business" || creatorPlan === "brand_workspace" ? "Business" : "Pro";
+      toast.error(`Seat limit reached (${seatLimit}/${seatLimit})`, {
+        description: creatorPlan === "enterprise"
+          ? "Contact support to increase your seat limit."
+          : `Upgrade to ${planLabel === "Pro" ? "Business" : "Enterprise"} to add more seats.`,
+      });
+      return;
+    }
     setAddingId(user.id);
     const { error } = await supabase
       .from("chat_room_members")
@@ -164,6 +193,12 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
   };
 
   const generateInviteLink = async () => {
+    if (members.length >= seatLimit) {
+      toast.error(`Seat limit reached (${seatLimit}/${seatLimit})`, {
+        description: "Remove a member or upgrade your plan to invite more people.",
+      });
+      return;
+    }
     setGeneratingLink(true);
     try {
       const { data, error } = await supabase
@@ -205,21 +240,30 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
           {isCreator && (
             <button
               onClick={generateInviteLink}
-              disabled={generatingLink}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-dashed border-bronze/30 bg-bronze/5 hover:bg-bronze/10 hover:border-bronze/50 transition-all text-left group"
+              disabled={generatingLink || atSeatLimit}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-dashed transition-all text-left group ${
+                atSeatLimit
+                  ? "border-muted-foreground/20 bg-muted/30 cursor-not-allowed opacity-60"
+                  : "border-bronze/30 bg-bronze/5 hover:bg-bronze/10 hover:border-bronze/50"
+              }`}
             >
-              <div className="w-7 h-7 rounded-lg bg-bronze/15 flex items-center justify-center flex-shrink-0">
-                <Link2 className="w-3.5 h-3.5 text-bronze" />
+              <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${atSeatLimit ? "bg-muted" : "bg-bronze/15"}`}>
+                {atSeatLimit
+                  ? <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+                  : <Link2 className="w-3.5 h-3.5 text-bronze" />
+                }
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-foreground">Share Invite Link</p>
-                <p className="text-[10px] text-muted-foreground">Anyone with the link can join</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {atSeatLimit ? "Seat limit reached — upgrade to add more" : "Anyone with the link can join"}
+                </p>
               </div>
               {generatingLink
                 ? <Loader2 className="w-3.5 h-3.5 animate-spin text-bronze flex-shrink-0" />
                 : copiedLink
                 ? <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                : <Copy className="w-3.5 h-3.5 text-bronze/60 group-hover:text-bronze flex-shrink-0 transition-colors" />
+                : <Copy className={`w-3.5 h-3.5 flex-shrink-0 transition-colors ${atSeatLimit ? "text-muted-foreground/30" : "text-bronze/60 group-hover:text-bronze"}`} />
               }
             </button>
           )}
@@ -279,9 +323,20 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
 
           {/* Current members */}
           <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-              Members · {members.length}
-            </p>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Members · {members.length}
+              </p>
+              {seatLimit < 100 && (
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                  atSeatLimit
+                    ? "bg-red-500/10 text-red-400"
+                    : "bg-muted text-muted-foreground"
+                }`}>
+                  {members.length} / {seatLimit} seats
+                </span>
+              )}
+            </div>
             {loadingMembers ? (
               <div className="space-y-2">
                 {[...Array(2)].map((_, i) => (
