@@ -1741,14 +1741,20 @@ const FONTS: Record<string, string> = {
 };
 
 const PLAN_FEATURES = [
+  { label: "Seats",                  free: "1",    pro: "1",         biz: "3+",        ent: "Custom"    },
   { label: "Kira AI actions / day",  free: "10",   pro: "40",        biz: "200",       ent: "Unlimited" },
   { label: "Invoices / month",       free: "2",    pro: "Unlimited", biz: "Unlimited", ent: "Unlimited" },
   { label: "Canvas / month",         free: "2",    pro: "Unlimited", biz: "Unlimited", ent: "Unlimited" },
+  { label: "Workspaces",             free: "1",    pro: "Unlimited", biz: "Unlimited", ent: "Custom"    },
+  { label: "No invoice watermark",   free: false,  pro: true,        biz: true,        ent: true        },
   { label: "E-Signature",            free: false,  pro: true,        biz: true,        ent: true        },
+  { label: "Verified Badge",         free: false,  pro: true,        biz: true,        ent: true        },
   { label: "Premium Themes",         free: false,  pro: true,        biz: true,        ent: true        },
   { label: "Client Portal",          free: false,  pro: true,        biz: true,        ent: true        },
-  { label: "Verified Badge",         free: false,  pro: true,        biz: true,        ent: true        },
-  { label: "Full Analytics",         free: false,  pro: true,        biz: true,        ent: true        },
+  { label: "Team RBAC",              free: false,  pro: false,       biz: true,        ent: true        },
+  { label: "Priority Support",       free: false,  pro: true,        biz: true,        ent: true        },
+  { label: "White-labeling",         free: false,  pro: false,       biz: false,       ent: true        },
+  { label: "SLA + SSO",              free: false,  pro: false,       biz: false,       ent: true        },
 ];
 
 const UsageBar = ({ pct, color = "bg-bronze" }: { pct: number; color?: string }) => (
@@ -2262,9 +2268,12 @@ const SettingsSection = () => {
 };
 
 // ─── Security Section ─────────────────────────────────────────────────────────
+type SecurityFilter = "all" | "signups" | "logins" | "failed";
+
 const SecuritySection = () => {
-  const [data, setData]       = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData]         = useState<any>(null);
+  const [loading, setLoading]   = useState(true);
+  const [filter, setFilter]     = useState<SecurityFilter | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -2279,9 +2288,21 @@ const SecuritySection = () => {
   const events: any[] = data?.recent_auth_events || [];
   const admins: any[] = data?.admin_users || [];
 
-  const failed   = events.filter(e => e.action?.includes("failed") || e.action?.includes("invalid"));
-  const signups  = events.filter(e => e.action === "user_signedup");
-  const logins   = events.filter(e => e.action === "login");
+  const failed  = events.filter(e => e.action?.includes("failed") || e.action?.includes("invalid"));
+  const signups = events.filter(e => e.action === "user_signedup");
+  const logins  = events.filter(e => e.action === "login");
+
+  const filteredEvents = filter === "signups" ? signups
+    : filter === "logins"  ? logins
+    : filter === "failed"  ? failed
+    : events;
+
+  const stats = [
+    { key: "all" as SecurityFilter,     label: "Total Users",      value: data?.total_users ?? 0,       color: "text-white",        border: "border-white/20"       },
+    { key: "signups" as SecurityFilter, label: "New Signups (7d)", value: data?.recent_signups_7d ?? 0, color: "text-emerald-400",  border: "border-emerald-400/40" },
+    { key: "logins" as SecurityFilter,  label: "Logins (7d)",      value: logins.length,                color: "text-blue-400",     border: "border-blue-400/40"    },
+    { key: "failed" as SecurityFilter,  label: "Failed Attempts",  value: failed.length,                color: failed.length > 0 ? "text-red-400" : "text-white/30", border: "border-red-400/40" },
+  ];
 
   return (
     <div className="p-4 md:p-6 space-y-6 max-w-4xl">
@@ -2290,18 +2311,21 @@ const SecuritySection = () => {
         <p className="text-xs text-white/30 mt-0.5">Last 7 days · Live from auth logs</p>
       </div>
 
-      {/* Stats row */}
+      {/* Stats row — clickable */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: "Total Users",      value: data?.total_users ?? 0,       color: "text-white" },
-          { label: "New Signups (7d)", value: data?.recent_signups_7d ?? 0, color: "text-emerald-400" },
-          { label: "Logins (7d)",      value: logins.length,                color: "text-blue-400" },
-          { label: "Failed Attempts",  value: failed.length,                color: failed.length > 0 ? "text-red-400" : "text-white/30" },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4">
+        {stats.map(({ key, label, value, color, border }) => (
+          <button
+            key={key}
+            onClick={() => setFilter(f => f === key ? null : key)}
+            className={cn(
+              "bg-white/[0.03] border rounded-xl p-4 text-left transition-all hover:bg-white/[0.06]",
+              filter === key ? border : "border-white/[0.06]"
+            )}
+          >
             <p className="text-[11px] text-white/30 font-medium mb-1">{label}</p>
             <p className={cn("text-2xl font-bold tabular-nums", color)}>{value}</p>
-          </div>
+            {filter === key && <p className="text-[10px] text-white/30 mt-1">Filtering below ↓</p>}
+          </button>
         ))}
       </div>
 
@@ -2330,16 +2354,26 @@ const SecuritySection = () => {
         )}
       </div>
 
-      {/* Recent auth events */}
+      {/* Auth events — filtered */}
       <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/[0.05]">
-          <p className="text-xs font-semibold text-white/50 uppercase tracking-wider">Recent Auth Events (7d)</p>
+        <div className="px-4 py-3 border-b border-white/[0.05] flex items-center justify-between">
+          <p className="text-xs font-semibold text-white/50 uppercase tracking-wider">
+            {filter === "signups" ? "New Signups"
+              : filter === "logins" ? "Logins"
+              : filter === "failed" ? "Failed Attempts"
+              : "Auth Events"} ({filteredEvents.length})
+          </p>
+          {filter && filter !== "all" && (
+            <button onClick={() => setFilter(null)} className="text-[10px] text-white/30 hover:text-white/60 transition-colors">
+              Clear filter ✕
+            </button>
+          )}
         </div>
-        {events.length === 0 ? (
-          <p className="px-4 py-4 text-sm text-white/30">No auth events in the last 7 days.</p>
+        {filteredEvents.length === 0 ? (
+          <p className="px-4 py-6 text-sm text-white/30 text-center">No events found.</p>
         ) : (
           <div className="divide-y divide-white/[0.04] max-h-80 overflow-y-auto">
-            {events.slice(0, 30).map((e: any) => {
+            {filteredEvents.slice(0, 30).map((e: any) => {
               const isFail = e.action?.includes("failed") || e.action?.includes("invalid");
               return (
                 <div key={e.id} className="flex items-center gap-3 px-4 py-2.5">
