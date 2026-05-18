@@ -12,6 +12,14 @@ import {
 import { FileSignature } from "lucide-react";
 import { toast } from "sonner";
 
+export interface ApplicationContext {
+  campaignTitle: string;
+  creatorName: string;
+  creatorEmail: string | null;
+  proposedPrice: number;
+  deliverables: string[];
+}
+
 interface CreateContractDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -19,7 +27,74 @@ interface CreateContractDialogProps {
   onSuccess: () => void;
   onCreated?: (id: string) => void;
   kiraContext?: Record<string, unknown> | null;
+  applicationContext?: ApplicationContext | null;
 }
+
+const buildTemplate = (ctx: ApplicationContext): string => {
+  const today = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  const price = Number(ctx.proposedPrice || 0).toLocaleString();
+  const half = (Number(ctx.proposedPrice || 0) / 2).toLocaleString();
+  const deliverableLines = ctx.deliverables?.length
+    ? ctx.deliverables.map(d => `  • ${d}`).join("\n")
+    : "  • As agreed between parties";
+  return `CANVAS AGREEMENT
+Campaign: ${ctx.campaignTitle}
+Date: ${today}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PARTIES
+Brand (Client):  [Your Brand / Company Name]
+Creator:         ${ctx.creatorName}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+DELIVERABLES
+${deliverableLines}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+COMPENSATION
+Total:                    KES ${price}
+  Phase 1 (on start):     KES ${half}
+  Phase 2 (on delivery):  KES ${half}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TERMS & CONDITIONS
+
+1. SCOPE OF WORK
+   The Creator agrees to deliver the content described above in accordance
+   with the campaign brief.
+
+2. CONTENT RIGHTS
+   Upon full payment, the Brand receives a non-exclusive licence to use
+   the content across agreed platforms for the campaign duration.
+
+3. TIMELINE
+   Deliverables shall be submitted within a timeframe agreed by both parties.
+
+4. REVISIONS
+   The Creator will provide up to [2] rounds of revisions upon request.
+
+5. CONFIDENTIALITY
+   Both parties agree to keep the terms of this agreement confidential.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SIGNATURES
+
+Brand (Client)
+Signature: ________________________________
+Name:      ________________________________
+Date:      ________________________________
+
+Creator
+Signature: ________________________________
+Name:      ${ctx.creatorName}
+Date:      ________________________________
+`;
+};
 
 const CreateContractDialog = ({
   open,
@@ -28,6 +103,7 @@ const CreateContractDialog = ({
   onSuccess,
   onCreated,
   kiraContext,
+  applicationContext,
 }: CreateContractDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -37,12 +113,14 @@ const CreateContractDialog = ({
     if (!open) return;
     if (editingContract) {
       setContent(editingContract.content ?? "");
+    } else if (applicationContext) {
+      setContent(buildTemplate(applicationContext));
     } else if (kiraContext) {
       if (kiraContext.content) setContent(kiraContext.content as string);
     } else {
       setContent("");
     }
-  }, [editingContract, kiraContext, open]);
+  }, [editingContract, kiraContext, applicationContext, open]);
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -50,12 +128,16 @@ const CreateContractDialog = ({
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { toast.error("Please log in"); return; }
 
-      const autoTitle = `Canvas – ${new Date().toLocaleDateString()}`;
+      const autoTitle = applicationContext
+        ? `Canvas – ${applicationContext.campaignTitle}`
+        : `Canvas – ${new Date().toLocaleDateString()}`;
       const contractData = {
         user_id: session.user.id,
         title: editingContract?.title?.trim() || autoTitle,
-        client_name: editingContract?.client_name?.trim() || "",
-        client_email: editingContract?.client_email?.trim() || null,
+        client_name: applicationContext?.creatorName || editingContract?.client_name?.trim() || "",
+        client_email: applicationContext?.creatorEmail || editingContract?.client_email?.trim() || null,
+        value: applicationContext?.proposedPrice || null,
+        deliverables: applicationContext?.deliverables?.length ? applicationContext.deliverables : null,
         contract_type: "custom",
         content: content || null,
       };
@@ -111,7 +193,7 @@ const CreateContractDialog = ({
                 <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
                   <FileSignature className="h-4 w-4 text-primary" />
                 </div>
-                {editingContract ? "Edit Canvas" : "New Canvas"}
+                {editingContract ? "Edit Canvas" : applicationContext ? `Canvas – ${applicationContext.campaignTitle}` : "New Canvas"}
               </DialogTitle>
             </DialogHeader>
           </div>
