@@ -97,10 +97,16 @@ function DesktopChatItem({
   chat, isActive, isRenaming, renameValue, indent = false,
   onSelect, onRenameChange, onRenameSubmit, onRenameCancel, onStartRename, onPin, onDelete,
 }: DesktopChatItemProps) {
+  const [hovered, setHovered] = useState(false);
+  const showMenu = isActive || hovered;
+
   return (
     <div
       onClick={() => { if (!isRenaming) onSelect(); }}
-      className={`group flex items-center gap-2 ${indent ? 'py-2.5 px-2 pl-7' : 'py-3.5 px-2.5'} rounded-lg cursor-pointer transition-all ${
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ position: 'relative' }}
+      className={`flex items-center gap-2 ${indent ? 'py-2.5 pl-7 pr-8' : 'py-3.5 pl-2.5 pr-8'} rounded-lg cursor-pointer transition-all ${
         isActive ? 'bg-bronze/10 text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
       }`}
     >
@@ -126,11 +132,24 @@ function DesktopChatItem({
       <DropdownMenu>
         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
           <button
-            className={`flex-shrink-0 w-6 h-6 rounded flex items-center justify-center transition-opacity duration-150 hover:bg-muted/80 text-muted-foreground hover:text-foreground ${
-              isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-            }`}
+            style={{
+              position: 'absolute',
+              right: '4px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              opacity: showMenu ? 1 : 0,
+              pointerEvents: showMenu ? 'auto' : 'none',
+              width: '24px',
+              height: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '4px',
+              transition: 'opacity 0.15s',
+              color: 'inherit',
+            }}
           >
-            <MoreVertical className="w-4 h-4" />
+            <MoreVertical style={{ width: '14px', height: '14px' }} />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
