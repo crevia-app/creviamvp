@@ -187,7 +187,7 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     if (error || !newInvoice) {
       if (error?.message?.includes("invoice_limit_reached")) {
         toast.error("Monthly limit reached", {
-          description: `Free plan allows ${limits.invoicesPerMonth} invoices per month. Upgrade to Pro for unlimited.`,
+          description: `Free plan allows ${limits.invoicesPerMonth} invoices per month. Upgrade to Pro or Business for unlimited.`,
         });
       } else {
         toast.error("Failed to duplicate invoice");
@@ -309,7 +309,7 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
           onClick={() => {
             if (invoiceLimitReached) {
               toast.error("Monthly limit reached", {
-                description: `Free plan allows ${limits.invoicesPerMonth} invoices per month. Upgrade to Pro for unlimited.`,
+                description: `Free plan allows ${limits.invoicesPerMonth} invoices per month. Upgrade to Pro or Business for unlimited.`,
               });
               return;
             }
@@ -483,7 +483,7 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
               onClick={() => {
                 if (invoiceLimitReached) {
                   toast.error("Monthly limit reached", {
-                    description: `Free plan allows ${limits.invoicesPerMonth} invoices per month. Upgrade to Pro for unlimited.`,
+                    description: `Free plan allows ${limits.invoicesPerMonth} invoices per month. Upgrade to Pro or Business for unlimited.`,
                   });
                   return;
                 }

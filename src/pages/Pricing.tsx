@@ -12,9 +12,12 @@ import { supabase } from "@/integrations/supabase/client";
 
 const fmt = (n: number) => n === 0 ? "$0" : `$${n % 1 === 0 ? n.toLocaleString() : n.toFixed(2)}`;
 
+const BUSINESS_PRICE = 79;
+
 const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterprisePrice: number) => {
-  const proYearly  = parseFloat((proPrice * 10).toFixed(2));
-  const entYearly  = parseFloat((enterprisePrice * 10).toFixed(2));
+  const proYearly      = parseFloat((proPrice * 10).toFixed(2));
+  const businessYearly = parseFloat((BUSINESS_PRICE * 10).toFixed(2));
+  const entYearly      = parseFloat((enterprisePrice * 10).toFixed(2));
   return [
     {
       name: "Free",
@@ -22,15 +25,15 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterpriseP
       priceMonthly: "$0",
       priceYearly: "$0",
       period: "",
-      usd: null,
+      seatNote: null,
       description: "Everything you need to get started.",
       features: [
+        "1 seat",
         "Crevia Link — basic templates",
         "10 Kira AI actions per day",
-        "Unlimited bio links",
-        "2 invoices per month",
-        "2 Canvas per month",
-        "Standard chat interface",
+        "1 active workspace",
+        "5 Canvas per month (basic editing)",
+        "3 invoices per month (Crevia watermark)",
         "Community support",
       ],
       cta: "Get Started",
@@ -45,16 +48,16 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterpriseP
       priceMonthly: fmt(proPrice),
       priceYearly: fmt(proYearly),
       period: billingCycle === "monthly" ? "/mo" : "/yr",
-      usd: null,
-      description: "Advanced tools for serious creators and businesses.",
+      seatNote: null,
+      description: "Advanced tools for independent professionals.",
       features: [
+        "1 seat",
         "Verified badge on your profile",
         "40 Kira AI actions per day",
-        "Crevia Link — all premium themes",
-        "Full visitor analytics",
-        "Unlimited invoices & tracking",
-        "Unlimited AI Canvas generation",
-        "E-Signatures inside the app",
+        "Crevia Link — all premium themes & analytics",
+        "Unlimited workspaces",
+        "Unlimited Canvas with full E-Signatures",
+        "Unlimited invoices — no watermark",
         "Client Portal access",
         "Priority support",
       ],
@@ -65,22 +68,46 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterpriseP
       yearlyAmount: proYearly,
     },
     {
+      name: "Business",
+      badge: billingCycle === "yearly" ? "2 Months Free" : "For Teams",
+      priceMonthly: fmt(BUSINESS_PRICE),
+      priceYearly: fmt(businessYearly),
+      period: billingCycle === "monthly" ? "/mo" : "/yr",
+      seatNote: "+ $14.99 per extra seat",
+      description: "Built for brands, agencies, and B2B teams.",
+      features: [
+        "3 seats included",
+        "200 Kira AI actions/day — multi-workspace context",
+        "Crevia Link — advanced customization & analytics",
+        "Team roles & permissions (RBAC)",
+        "Unlimited Canvas + custom brand MSAs & clause library",
+        "Unlimited invoices — no watermark",
+        "E-Signatures inside the app",
+        "Priority support",
+      ],
+      cta: "Get Business",
+      highlighted: false,
+      planKey: "business" as const,
+      monthlyAmount: BUSINESS_PRICE,
+      yearlyAmount: businessYearly,
+    },
+    {
       name: "Enterprise",
       badge: null,
       priceMonthly: enterprisePrice > 0 ? fmt(enterprisePrice) : "Custom",
       priceYearly: enterprisePrice > 0 ? fmt(entYearly) : "Custom",
       period: enterprisePrice > 0 ? (billingCycle === "monthly" ? "/mo" : "/yr") : "",
-      usd: null,
-      description: "Custom limits, SSO, and a dedicated success team.",
+      seatNote: "Custom volume",
+      description: "For large agencies and high-volume brands.",
       features: [
-        "Everything in Pro",
-        "Unlimited admin seats",
-        "Custom Kira AI action limits",
-        "Single Sign-On (SSO)",
-        "Custom integrations & API access",
-        "SLA guarantee",
-        "Dedicated success manager",
-        "Custom onboarding",
+        "Custom seats",
+        "Priority Kira processing — no throttling",
+        "Custom domain mapping & white-labeling",
+        "Dedicated account manager",
+        "Concierge Canvas onboarding",
+        "Consolidated master billing",
+        "SLA guarantee + SSO",
+        "Custom API limits",
       ],
       cta: "Contact Sales",
       highlighted: false,
@@ -217,7 +244,7 @@ const Pricing = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6"
             >
               {plans.map((plan, i) => (
                 <motion.div
@@ -256,17 +283,17 @@ const Pricing = () => {
                     )}
                   </div>
 
-                  {plan.usd && (
-                    <p className="text-xs text-muted-foreground font-poppins mb-1">{plan.usd}</p>
+                  {plan.seatNote && (
+                    <p className="text-xs text-muted-foreground font-poppins mb-1">{plan.seatNote}</p>
                   )}
 
                   <div className="mb-6 h-5">
-                    {plan.highlighted && billingCycle === "yearly" && (
+                    {billingCycle === "yearly" && (plan.planKey === "pro" || plan.planKey === "business") && (
                       <p className="text-xs text-bronze font-poppins font-semibold">
-                        Saves ~KES 3,898 vs monthly
+                        2 months free vs monthly
                       </p>
                     )}
-                    {plan.highlighted && billingCycle === "monthly" && (
+                    {billingCycle === "monthly" && (plan.planKey === "pro" || plan.planKey === "business") && (
                       <p className="text-xs text-muted-foreground font-poppins">
                         Switch to yearly and save 2 months
                       </p>

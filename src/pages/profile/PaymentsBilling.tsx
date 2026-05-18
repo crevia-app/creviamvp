@@ -7,43 +7,58 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import {
   CreditCard, ArrowRight, Check, Sparkles,
-  Receipt, Calendar, Smartphone,
+  Receipt, Calendar, Smartphone, Users,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
-const isProPlan = (plan: string) =>
-  plan === "pro" || plan === "creative_pro" || plan === "brand_workspace";
+const planLabel = (plan: string) => {
+  if (plan === "business" || plan === "brand_workspace") return "Business";
+  if (plan === "pro" || plan === "creative_pro") return "Pro";
+  return "Free";
+};
 
-// $14.99 USD · KES equivalent at ~130 KES/USD
-const USD_AMOUNT_CENTS = 1499;       // $14.99 in cents
-const KES_AMOUNT_CENTS = 194900;     // KES 1,949 in cents
+const planPrice = (plan: string) => {
+  if (plan === "business" || plan === "brand_workspace") return "$79 / month";
+  if (plan === "pro" || plan === "creative_pro") return "$14.99 / month";
+  return "Free — no billing required";
+};
 
-const PAYMENT_METHODS = [
-  {
-    id: "card",
-    label: "Credit / Debit Card",
-    providers: "Visa · Mastercard · Verve",
-    price: "$14.99",
-    note: "Billed in USD",
-    currency: "USD",
-    amount: USD_AMOUNT_CENTS,
-    channels: ["card"],
-    icon: CreditCard,
-    badge: null,
-  },
-  {
-    id: "mobile_money",
-    label: "Mobile Money",
-    providers: "M-Pesa · Airtel Money · MTN",
-    price: "KES 1,949",
-    note: "≈ $14.99 · Billed in KES",
-    currency: "KES",
-    amount: KES_AMOUNT_CENTS,
-    channels: ["mobile_money"],
-    icon: Smartphone,
-    badge: "Popular in Kenya",
-  },
-];
+const isPaidPlan = (plan: string) =>
+  ["pro", "creative_pro", "brand_workspace", "business"].includes(plan);
+
+// Payment method definitions — amount changes per target plan
+const buildMethods = (planKey: "pro" | "business") => {
+  const usdAmount = planKey === "business" ? 7900 : 1499;
+  const kesAmount = planKey === "business" ? 1027100 : 194900; // ~$79 ≈ KES 10,271
+  const usdLabel  = planKey === "business" ? "$79" : "$14.99";
+  const kesLabel  = planKey === "business" ? "KES 10,271" : "KES 1,949";
+  return [
+    {
+      id: "card",
+      label: "Credit / Debit Card",
+      providers: "Visa · Mastercard · Verve",
+      price: usdLabel,
+      note: "Billed in USD",
+      currency: "USD",
+      amount: usdAmount,
+      channels: ["card"],
+      badge: null,
+      icon: CreditCard,
+    },
+    {
+      id: "mobile_money",
+      label: "Mobile Money",
+      providers: "M-Pesa · Airtel Money · MTN",
+      price: kesLabel,
+      note: "≈ " + usdLabel + " · Billed in KES",
+      currency: "KES",
+      amount: kesAmount,
+      channels: ["mobile_money"],
+      badge: "Popular in Kenya",
+      icon: Smartphone,
+    },
+  ];
+};
 
 const PaymentsBilling = () => {
   const { t } = useLanguage();
@@ -51,6 +66,7 @@ const PaymentsBilling = () => {
   const [subscription, setSubscription] = useState<string>("free");
   const [loading, setLoading]         = useState(false);
   const [showDialog, setShowDialog]   = useState(false);
+  const [targetPlan, setTargetPlan]   = useState<"pro" | "business">("pro");
 
   useEffect(() => { checkAuth(); }, []);
 
@@ -83,7 +99,12 @@ const PaymentsBilling = () => {
     setSubscription(profile?.subscription_plan || "free");
   };
 
-  const pay = async (method: typeof PAYMENT_METHODS[number]) => {
+  const openUpgrade = (plan: "pro" | "business") => {
+    setTargetPlan(plan);
+    setShowDialog(true);
+  };
+
+  const pay = async (method: ReturnType<typeof buildMethods>[number]) => {
     setShowDialog(false);
     setLoading(true);
 
@@ -100,39 +121,53 @@ const PaymentsBilling = () => {
       amount:   method.amount,
       currency: method.currency,
       channels: method.channels,
-      metadata: { plan: "pro" },
+      metadata: { plan: targetPlan },
       callback: () => setLoading(false),
       onClose:  () => setLoading(false),
     });
     handler.openIframe();
   };
 
-  const isPro = isProPlan(subscription);
+  const isBusiness = subscription === "business" || subscription === "brand_workspace";
+  const isPro      = subscription === "pro" || subscription === "creative_pro";
+  const isFree     = !isPaidPlan(subscription);
 
   const starterFeatures = [
+    "1 seat",
     "10 Kira AI actions per day",
     "Crevia Link — basic templates",
-    "Unlimited bio links",
-    "2 invoices per month",
-    "2 Canvas per month",
-    "Standard chat interface",
+    "1 active workspace",
+    "5 Canvas per month (basic editing)",
+    "3 invoices per month (Crevia watermark)",
   ];
 
   const proFeatures = [
-    "Verified badge on your profile",
+    "1 seat",
     "40 Kira AI actions per day",
-    "Crevia Link — all premium themes",
-    "Full visitor analytics",
-    "Unlimited invoices & tracking",
-    "Unlimited AI Canvas generation",
-    "E-Signatures inside the app",
+    "Crevia Link — all premium themes & analytics",
+    "Unlimited workspaces",
+    "Unlimited Canvas with full E-Signatures",
+    "Unlimited invoices — no watermark",
     "Client Portal access",
     "Priority support",
   ];
 
+  const businessFeatures = [
+    "3 seats included (+$14.99/extra seat)",
+    "200 Kira AI actions/day",
+    "Multi-workspace Kira context",
+    "Team roles & permissions (RBAC)",
+    "Unlimited Canvas + clause library",
+    "Unlimited invoices — no watermark",
+    "E-Signatures inside the app",
+    "Priority support",
+  ];
+
+  const methods = buildMethods(targetPlan);
+
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-6 py-12 max-w-4xl">
+      <div className="container mx-auto px-6 py-12 max-w-5xl">
 
         <div className="mb-10">
           <h1 className="font-vollkorn text-4xl font-bold mb-2">Payments & Billing</h1>
@@ -144,26 +179,24 @@ const PaymentsBilling = () => {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-xl bg-bronze/10 flex items-center justify-center">
-                <Sparkles className="h-6 w-6 text-bronze" />
+                {isBusiness ? <Users className="h-6 w-6 text-bronze" /> : <Sparkles className="h-6 w-6 text-bronze" />}
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="font-vollkorn text-xl font-bold">
-                    {isPro ? "Pro" : "Free Plan"}
+                    {planLabel(subscription)} {isFree ? "Plan" : ""}
                   </h2>
                   <Badge variant="outline" className="text-bronze border-bronze/40">
-                    {isPro ? "Active" : "Free"}
+                    {isFree ? "Free" : "Active"}
                   </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {isPro ? "$14.99 / month" : "Free — no billing required"}
-                </p>
+                <p className="text-sm text-muted-foreground">{planPrice(subscription)}</p>
               </div>
             </div>
-            {!isPro && (
+            {isFree && (
               <Link to="/pricing">
                 <Button className="bg-bronze hover:bg-bronze/90 text-white">
-                  Upgrade to Pro <ArrowRight className="w-4 h-4 ml-1" />
+                  Upgrade <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
               </Link>
             )}
@@ -180,14 +213,10 @@ const PaymentsBilling = () => {
             <div>
               <p className="font-medium">No payment method on file</p>
               <p className="text-sm text-muted-foreground">
-                Add a card or mobile money to subscribe to Pro
+                Add a card or mobile money to subscribe
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowDialog(true)}
-            >
+            <Button variant="outline" size="sm" onClick={() => openUpgrade("pro")}>
               Add Method
             </Button>
           </div>
@@ -195,7 +224,7 @@ const PaymentsBilling = () => {
 
         {/* Compare Plans */}
         <h2 className="font-vollkorn text-2xl font-bold mb-5">Compare Plans</h2>
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
 
           {/* Free */}
           <Card className="p-6 border-border/40">
@@ -204,7 +233,7 @@ const PaymentsBilling = () => {
               <span className="text-3xl font-bold">$0</span>
               <span className="text-muted-foreground text-sm">/month</span>
             </div>
-            <ul className="space-y-3 mb-6">
+            <ul className="space-y-3 mb-6 flex-1">
               {starterFeatures.map((f) => (
                 <li key={f} className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-bronze mt-0.5 shrink-0" />
@@ -212,22 +241,22 @@ const PaymentsBilling = () => {
                 </li>
               ))}
             </ul>
-            <Button variant="outline" className="w-full" disabled={!isPro}>
-              {!isPro ? "Current Plan" : "Downgrade"}
+            <Button variant="outline" className="w-full mt-auto" disabled={isFree}>
+              {isFree ? "Current Plan" : "Downgrade"}
             </Button>
           </Card>
 
           {/* Pro */}
           <Card className="p-6 border-bronze/50 relative">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <Badge className="bg-bronze text-white border-0">Recommended</Badge>
+              <Badge className="bg-bronze text-white border-0">Most Popular</Badge>
             </div>
             <h3 className="font-vollkorn text-xl font-bold mb-1">Pro</h3>
             <div className="flex items-baseline gap-1 mb-1">
               <span className="text-3xl font-bold">$14.99</span>
               <span className="text-muted-foreground text-sm">/month</span>
             </div>
-            <p className="text-xs text-muted-foreground mb-5">≈ KES 1,949 when paying via M-Pesa</p>
+            <p className="text-xs text-muted-foreground mb-5">≈ KES 1,949 via M-Pesa</p>
             <ul className="space-y-3 mb-6">
               {proFeatures.map((f) => (
                 <li key={f} className="flex items-start gap-2">
@@ -237,11 +266,40 @@ const PaymentsBilling = () => {
               ))}
             </ul>
             <Button
-              onClick={() => setShowDialog(true)}
-              disabled={loading || isPro}
+              onClick={() => openUpgrade("pro")}
+              disabled={loading || isPro || isBusiness}
               className="w-full bg-bronze hover:bg-bronze/90 text-white"
             >
-              {loading ? "Processing..." : isPro ? "Current Plan" : "Upgrade Now"}
+              {loading ? "Processing..." : isPro ? "Current Plan" : isBusiness ? "Downgrade" : "Upgrade to Pro"}
+            </Button>
+          </Card>
+
+          {/* Business */}
+          <Card className="p-6 border-border/40 relative">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <Badge className="bg-foreground text-background border-0">For Teams</Badge>
+            </div>
+            <h3 className="font-vollkorn text-xl font-bold mb-1">Business</h3>
+            <div className="flex items-baseline gap-1 mb-1">
+              <span className="text-3xl font-bold">$79</span>
+              <span className="text-muted-foreground text-sm">/month</span>
+            </div>
+            <p className="text-xs text-muted-foreground mb-5">3 seats · +$14.99/extra seat</p>
+            <ul className="space-y-3 mb-6">
+              {businessFeatures.map((f) => (
+                <li key={f} className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-bronze mt-0.5 shrink-0" />
+                  <span className="text-sm">{f}</span>
+                </li>
+              ))}
+            </ul>
+            <Button
+              onClick={() => openUpgrade("business")}
+              disabled={loading || isBusiness}
+              variant="outline"
+              className="w-full"
+            >
+              {loading ? "Processing..." : isBusiness ? "Current Plan" : "Upgrade to Business"}
             </Button>
           </Card>
         </div>
@@ -268,25 +326,22 @@ const PaymentsBilling = () => {
           <DialogHeader>
             <DialogTitle className="font-vollkorn text-xl">Choose Payment Method</DialogTitle>
             <p className="text-sm text-muted-foreground">
-              All methods unlock the same Pro features
+              Upgrading to <span className="font-semibold capitalize">{targetPlan}</span> —{" "}
+              {targetPlan === "business" ? "$79/mo · 3 seats" : "$14.99/mo · 1 seat"}
             </p>
           </DialogHeader>
-
           <div className="grid gap-3 mt-1">
-            {PAYMENT_METHODS.map((method) => {
+            {methods.map((method) => {
               const Icon = method.icon;
               return (
                 <button
                   key={method.id}
                   onClick={() => pay(method)}
-                  className="group relative flex items-center gap-4 p-4 rounded-xl border border-border hover:border-bronze/60 hover:bg-bronze/5 transition-all text-left"
+                  className="group flex items-center gap-4 p-4 rounded-xl border border-border hover:border-bronze/60 hover:bg-bronze/5 transition-all text-left"
                 >
-                  {/* Icon */}
                   <div className="h-11 w-11 rounded-xl bg-muted flex items-center justify-center shrink-0 group-hover:bg-bronze/10 transition-colors">
                     <Icon className="w-5 h-5 text-muted-foreground group-hover:text-bronze transition-colors" />
                   </div>
-
-                  {/* Text */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold text-sm">{method.label}</p>
@@ -298,19 +353,15 @@ const PaymentsBilling = () => {
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">{method.providers}</p>
                   </div>
-
-                  {/* Price */}
                   <div className="text-right shrink-0">
                     <p className="font-bold text-sm">{method.price}</p>
                     <p className="text-[11px] text-muted-foreground">{method.note}</p>
                   </div>
-
                   <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-bronze ml-1 transition-colors shrink-0" />
                 </button>
               );
             })}
           </div>
-
           <p className="text-center text-xs text-muted-foreground mt-2">
             Secured by <span className="font-semibold">Paystack</span> · Cancel anytime
           </p>

@@ -55,8 +55,8 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
   const [savingColor, setSavingColor]           = useState(false);
   const [showPalette, setShowPalette]           = useState(false);
 
-  const { isPro, isBrandWorkspace } = useSubscription();
-  const isProUser = isPro || isBrandWorkspace;
+  const { isPro, isBrandWorkspace, isBusiness } = useSubscription();
+  const isProUser = isPro || isBrandWorkspace || isBusiness;
 
   const { ref: docRef, download, downloading } = useDownloadPDF(
     invoice ? `Invoice-${invoice.invoice_number}` : "Invoice"

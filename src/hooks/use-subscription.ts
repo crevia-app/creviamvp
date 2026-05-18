@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export type SubscriptionPlan = "free" | "creative_pro" | "brand_workspace";
+export type SubscriptionPlan = "free" | "pro" | "creative_pro" | "brand_workspace" | "business";
 
 export interface SubscriptionLimits {
   kiraActionsPerDay: number;
@@ -14,6 +14,12 @@ export interface SubscriptionLimits {
   hasFullAnalytics: boolean;
   hasUnlimitedInvoices: boolean;
   hasUnlimitedCanvases: boolean;
+  hasInvoiceWatermark: boolean;
+  hasMultiSeat: boolean;
+  hasRBAC: boolean;
+  hasClauseLibrary: boolean;
+  maxWorkspaces: number;
+  baseSeats: number;
 }
 
 export interface SubscriptionState {
@@ -21,6 +27,7 @@ export interface SubscriptionState {
   status: string;
   isLoading: boolean;
   isPro: boolean;
+  isBusiness: boolean;
   isBrandWorkspace: boolean;
   isFree: boolean;
   limits: SubscriptionLimits;
@@ -30,11 +37,49 @@ export interface SubscriptionState {
   canvasesUsedThisMonth: number;
 }
 
+const PRO_LIMITS: SubscriptionLimits = {
+  kiraActionsPerDay: 40,
+  invoicesPerMonth: Infinity,
+  canvasesPerMonth: Infinity,
+  hasESignature: true,
+  hasPremiumThemes: true,
+  hasClientPortal: true,
+  hasVerifiedBadge: true,
+  hasFullAnalytics: true,
+  hasUnlimitedInvoices: true,
+  hasUnlimitedCanvases: true,
+  hasInvoiceWatermark: false,
+  hasMultiSeat: false,
+  hasRBAC: false,
+  hasClauseLibrary: false,
+  maxWorkspaces: Infinity,
+  baseSeats: 1,
+};
+
+const BUSINESS_LIMITS: SubscriptionLimits = {
+  kiraActionsPerDay: 200,
+  invoicesPerMonth: Infinity,
+  canvasesPerMonth: Infinity,
+  hasESignature: true,
+  hasPremiumThemes: true,
+  hasClientPortal: true,
+  hasVerifiedBadge: true,
+  hasFullAnalytics: true,
+  hasUnlimitedInvoices: true,
+  hasUnlimitedCanvases: true,
+  hasInvoiceWatermark: false,
+  hasMultiSeat: true,
+  hasRBAC: true,
+  hasClauseLibrary: true,
+  maxWorkspaces: Infinity,
+  baseSeats: 3,
+};
+
 const PLAN_LIMITS: Record<SubscriptionPlan, SubscriptionLimits> = {
   free: {
     kiraActionsPerDay: 10,
-    invoicesPerMonth: 2,
-    canvasesPerMonth: 2,
+    invoicesPerMonth: 3,
+    canvasesPerMonth: 5,
     hasESignature: false,
     hasPremiumThemes: false,
     hasClientPortal: false,
@@ -42,34 +87,19 @@ const PLAN_LIMITS: Record<SubscriptionPlan, SubscriptionLimits> = {
     hasFullAnalytics: false,
     hasUnlimitedInvoices: false,
     hasUnlimitedCanvases: false,
+    hasInvoiceWatermark: true,
+    hasMultiSeat: false,
+    hasRBAC: false,
+    hasClauseLibrary: false,
+    maxWorkspaces: 1,
+    baseSeats: 1,
   },
-  creative_pro: {
-    kiraActionsPerDay: 40,
-    invoicesPerMonth: Infinity,
-    canvasesPerMonth: Infinity,
-    hasESignature: true,
-    hasPremiumThemes: true,
-    hasClientPortal: true,
-    hasVerifiedBadge: true,
-    hasFullAnalytics: true,
-    hasUnlimitedInvoices: true,
-    hasUnlimitedCanvases: true,
-  },
-  brand_workspace: {
-    kiraActionsPerDay: 40,
-    invoicesPerMonth: Infinity,
-    canvasesPerMonth: Infinity,
-    hasESignature: true,
-    hasPremiumThemes: true,
-    hasClientPortal: true,
-    hasVerifiedBadge: true,
-    hasFullAnalytics: true,
-    hasUnlimitedInvoices: true,
-    hasUnlimitedCanvases: true,
-  },
+  pro:           PRO_LIMITS,
+  creative_pro:  PRO_LIMITS,
+  business:      BUSINESS_LIMITS,
+  brand_workspace: BUSINESS_LIMITS,
 };
 
-// A plan only grants Pro/Workspace features when the subscription is active or trialing.
 const ACTIVE_STATUSES = new Set(["active", "trialing"]);
 
 export const useSubscription = (): SubscriptionState => {
@@ -109,7 +139,6 @@ export const useSubscription = (): SubscriptionState => {
       if (profile) applyProfile(profile as Record<string, unknown>);
       setIsLoading(false);
 
-      // Real-time listener: fires the moment the Paystack webhook updates the profile row.
       channel = supabase
         .channel(`subscription:${user.id}`)
         .on(
@@ -135,16 +164,17 @@ export const useSubscription = (): SubscriptionState => {
   }, []);
 
   const currentPlan = plan || "free";
-  const limits = PLAN_LIMITS[currentPlan];
+  const limits = PLAN_LIMITS[currentPlan] ?? PLAN_LIMITS["free"];
   const isActiveStatus = ACTIVE_STATUSES.has(status);
 
   return {
     plan: currentPlan,
     status,
     isLoading,
-    isPro: currentPlan === "creative_pro" && isActiveStatus,
-    isBrandWorkspace: currentPlan === "brand_workspace" && isActiveStatus,
-    isFree: currentPlan === "free" || !isActiveStatus,
+    isPro: (currentPlan === "pro" || currentPlan === "creative_pro") && isActiveStatus,
+    isBusiness: (currentPlan === "business" || currentPlan === "brand_workspace") && isActiveStatus,
+    isBrandWorkspace: (currentPlan === "brand_workspace" || currentPlan === "business") && isActiveStatus,
+    isFree: (currentPlan === "free") || !isActiveStatus,
     limits,
     kiraActionsToday,
     kiraActionsLimit,
