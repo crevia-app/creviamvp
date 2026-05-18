@@ -6,12 +6,15 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { Plus, MessageSquare, FileSignature, Receipt, ArrowRight, Sparkles, Users } from "lucide-react";
+import { useSubscription } from "@/hooks/use-subscription";
+import { toast } from "sonner";
 
 const WorkspacesList = () => {
   const navigate = useNavigate();
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const { isFree, limits } = useSubscription();
 
   useEffect(() => { fetchWorkspaces(); }, []);
 
@@ -31,6 +34,17 @@ const WorkspacesList = () => {
 
   const createWorkspace = async () => {
     if (!userId) return;
+
+    if (isFree) {
+      const ownedCount = workspaces.filter(w => w.created_by === userId).length;
+      if (ownedCount >= limits.maxWorkspaces) {
+        toast.error("Workspace limit reached", {
+          description: "Free plan allows 1 workspace. Upgrade to Pro or Business for unlimited workspaces.",
+        });
+        return;
+      }
+    }
+
     const { data, error } = await supabase
       .from("chat_rooms")
       .insert({ created_by: userId, is_group: false, name: "New Workspace" })

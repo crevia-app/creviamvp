@@ -21,6 +21,7 @@ import LivePreview from "@/components/crevia-link/LivePreview";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useSubscription } from "@/hooks/use-subscription";
 
 interface CreviaLinkProps {
   isEmbedded?: boolean;
@@ -41,10 +42,14 @@ const validateUsername = (username: string): string | null => {
   return null;
 };
 
+const PREMIUM_THEMES = new Set(["onyx","electric","velvet","terra","glacier","dusk","citrus","ash","graphite","blush"]);
+
 const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { isPro, isBusiness, isBrandWorkspace } = useSubscription();
+  const isProUser = isPro || isBusiness || isBrandWorkspace;
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [linkProfile, setLinkProfile] = useState<any>(null);
@@ -719,22 +724,30 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                           { value: "ash", label: "Ash", gradient: "from-stone-600 to-stone-900" },
                           { value: "graphite", label: "Graphite", gradient: "from-zinc-600 via-zinc-700 to-zinc-900" },
                           { value: "blush", label: "Blush", gradient: "from-pink-100 via-rose-100 to-fuchsia-50" },
-                        ].map((theme) => (
+                        ].map((theme) => {
+                          const isPremium = PREMIUM_THEMES.has(theme.value);
+                          const locked = isPremium && !isProUser;
+                          return (
                           <div key={theme.value} className="relative">
-                            <RadioGroupItem value={theme.value} id={`embedded-${theme.value}`} className="peer sr-only" />
+                            <RadioGroupItem value={theme.value} id={`embedded-${theme.value}`} className="peer sr-only" disabled={locked} />
                             <Label
                               htmlFor={`embedded-${theme.value}`}
-                               className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-card p-4 hover:bg-muted peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
+                              onClick={locked ? () => toast({ title: "Pro feature", description: "Upgrade to Pro to unlock premium themes." }) : undefined}
+                               className={cn("flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-card p-4 peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 transition-all", locked ? "cursor-not-allowed opacity-60" : "hover:bg-muted cursor-pointer")}
                             >
-                              <div 
-                                className={cn("w-full h-16 rounded-lg mb-3 shadow-sm", 
-                                  theme.gradient && (theme.value === "minimal" ? theme.gradient : `bg-gradient-to-br ${theme.gradient}`)
-                                )}
-                              />
+                              <div className="relative w-full">
+                                <div
+                                  className={cn("w-full h-16 rounded-lg mb-3 shadow-sm",
+                                    theme.gradient && (theme.value === "minimal" ? theme.gradient : `bg-gradient-to-br ${theme.gradient}`)
+                                  )}
+                                />
+                                {locked && <div className="absolute inset-0 flex items-center justify-center"><span className="text-xs bg-black/60 text-white px-2 py-0.5 rounded-full font-semibold">Pro</span></div>}
+                              </div>
                               <span className="text-sm font-medium">{theme.label}</span>
                             </Label>
                           </div>
-                        ))}
+                          );
+                        })}
                       </RadioGroup>
                     </div>
 
@@ -1285,22 +1298,30 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         { value: "ash", label: "Ash", gradient: "from-stone-600 to-stone-900" },
                         { value: "graphite", label: "Graphite", gradient: "from-zinc-600 via-zinc-700 to-zinc-900" },
                         { value: "blush", label: "Blush", gradient: "from-pink-100 via-rose-100 to-fuchsia-50" },
-                      ].map((theme) => (
+                      ].map((theme) => {
+                        const isPremium = PREMIUM_THEMES.has(theme.value);
+                        const locked = isPremium && !isProUser;
+                        return (
                         <div key={theme.value} className="relative">
-                          <RadioGroupItem value={theme.value} id={theme.value} className="peer sr-only" />
+                          <RadioGroupItem value={theme.value} id={theme.value} className="peer sr-only" disabled={locked} />
                           <Label
                             htmlFor={theme.value}
-                            className="flex flex-col items-center justify-between rounded-lg md:rounded-xl border-2 border-muted bg-card p-3 sm:p-4 md:p-6 hover:bg-muted hover:text-foreground peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 cursor-pointer transition-all"
+                            onClick={locked ? () => toast({ title: "Pro feature", description: "Upgrade to Pro to unlock premium themes." }) : undefined}
+                            className={cn("flex flex-col items-center justify-between rounded-lg md:rounded-xl border-2 border-muted bg-card p-3 sm:p-4 md:p-6 peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 transition-all", locked ? "cursor-not-allowed opacity-60" : "hover:bg-muted hover:text-foreground cursor-pointer")}
                           >
-                            <div 
-                              className={cn("w-full h-16 sm:h-20 md:h-28 rounded-md md:rounded-lg mb-2 sm:mb-3 md:mb-4 shadow-sm", 
-                                theme.gradient && (theme.value === "minimal" ? theme.gradient : `bg-gradient-to-br ${theme.gradient}`)
-                              )}
-                            />
+                            <div className="relative w-full">
+                              <div
+                                className={cn("w-full h-16 sm:h-20 md:h-28 rounded-md md:rounded-lg mb-2 sm:mb-3 md:mb-4 shadow-sm",
+                                  theme.gradient && (theme.value === "minimal" ? theme.gradient : `bg-gradient-to-br ${theme.gradient}`)
+                                )}
+                              />
+                              {locked && <div className="absolute inset-0 flex items-center justify-center"><span className="text-xs bg-black/60 text-white px-2 py-0.5 rounded-full font-semibold">Pro</span></div>}
+                            </div>
                             <span className="font-semibold text-xs sm:text-sm md:text-base">{theme.label}</span>
                           </Label>
                         </div>
-                      ))}
+                        );
+                      })}
                     </RadioGroup>
                   </div>
 

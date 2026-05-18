@@ -174,6 +174,11 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
   };
 
   const toggleRole = async (userId: string, currentRole: string) => {
+    const isBusinessPlan = creatorPlan === "business" || creatorPlan === "brand_workspace" || creatorPlan === "enterprise";
+    if (!isBusinessPlan) {
+      toast.error("Business feature", { description: "Upgrade to Business to assign admin roles." });
+      return;
+    }
     setPromotingId(userId);
     const newRole = currentRole === "admin" ? "member" : "admin";
     const { error } = await supabase
@@ -373,8 +378,8 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
                           onClick={() => toggleRole(m.user_id, m.role)}
                           disabled={promotingId === m.user_id}
                           className="text-muted-foreground hover:text-bronze transition-colors"
-                          aria-label={m.role === "admin" ? "Demote to member" : "Promote to admin"}
-                          title={m.role === "admin" ? "Demote to member" : "Promote to admin"}
+                          aria-label={m.role === "admin" ? "Demote to member" : "Promote to admin (Business+)"}
+                          title={m.role === "admin" ? "Demote to member" : "Promote to admin (Business plan required)"}
                         >
                           {promotingId === m.user_id
                             ? <Loader2 className="w-3.5 h-3.5 animate-spin" />

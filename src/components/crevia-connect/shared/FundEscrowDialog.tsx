@@ -23,6 +23,7 @@ import {
   Loader2
 } from "lucide-react";
 import { toast } from "sonner";
+import { useSubscription } from "@/hooks/use-subscription";
 
 interface FundEscrowDialogProps {
   open: boolean;
@@ -32,13 +33,16 @@ interface FundEscrowDialogProps {
   onSuccess: () => void;
 }
 
-const FundEscrowDialog = ({ 
-  open, 
-  onOpenChange, 
-  application, 
+const FundEscrowDialog = ({
+  open,
+  onOpenChange,
+  application,
   campaign,
-  onSuccess 
+  onSuccess
 }: FundEscrowDialogProps) => {
+  const { isPro, isBusiness, isBrandWorkspace } = useSubscription();
+  const isProUser = isPro || isBusiness || isBrandWorkspace;
+
   const [step, setStep] = useState<"review" | "payment" | "processing" | "success">("review");
   const [paymentMethod, setPaymentMethod] = useState<"mpesa" | "card">("mpesa");
   const [mpesaPhone, setMpesaPhone] = useState("");
@@ -145,7 +149,30 @@ const FundEscrowDialog = ({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg">
-        {step === "review" && (
+        {!isProUser ? (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-bronze" />
+                Escrow Payments
+              </DialogTitle>
+              <DialogDescription>This feature is available on Pro and Business plans.</DialogDescription>
+            </DialogHeader>
+            <div className="py-6 text-center space-y-3">
+              <div className="w-14 h-14 rounded-full bg-bronze/10 flex items-center justify-center mx-auto">
+                <Shield className="w-7 h-7 text-bronze" />
+              </div>
+              <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                Escrow payments protect both parties. Upgrade to Pro or Business to unlock this feature.
+              </p>
+              <a href="/pricing" className="inline-block mt-2 bg-bronze hover:bg-bronze/90 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors">
+                Upgrade to Pro
+              </a>
+            </div>
+          </>
+        ) : (
+          <>
+          {step === "review" && (
           <>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -347,6 +374,8 @@ const FundEscrowDialog = ({
               They've been notified to begin work.
             </p>
           </div>
+        )}
+          </>
         )}
       </DialogContent>
     </Dialog>

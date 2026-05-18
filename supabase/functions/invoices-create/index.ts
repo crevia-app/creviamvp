@@ -105,9 +105,9 @@ serve(async (req) => {
         .eq('user_id', userId)
         .gte('created_at', startOfMonth.toISOString());
 
-      if ((count ?? 0) >= 2) {
+      if ((count ?? 0) >= 3) {
         return new Response(JSON.stringify({
-          error: 'Free plan limit reached. Upgrade to Pro for unlimited invoices.',
+          error: 'Free plan limit reached (3/month). Upgrade to Pro for unlimited invoices.',
           code: 'PLAN_LIMIT_REACHED',
         }), {
           status: 403,

@@ -99,9 +99,9 @@ serve(async (req) => {
         .eq('user_id', userId)
         .gte('created_at', startOfMonth.toISOString());
 
-      if ((count ?? 0) >= 2) {
+      if ((count ?? 0) >= 5) {
         return new Response(JSON.stringify({
-          error: 'Free plan limit reached. Upgrade to Pro for unlimited Canvas.',
+          error: 'Free plan limit reached (5/month). Upgrade to Pro or Business for unlimited Canvas.',
           code: 'PLAN_LIMIT_REACHED',
         }), {
           status: 403,
