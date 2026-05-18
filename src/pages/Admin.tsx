@@ -704,7 +704,7 @@ const BillingSection = () => {
   const [profiles, setProfiles]       = useState<any[]>([]);
   const [tab, setTab]                 = useState<"transactions" | "refunds" | "analytics" | "plans">("transactions");
   const [loading, setLoading]         = useState(true);
-  const [planPrices, setPlanPrices]   = useState({ pro: "1500", enterprise: "5000" });
+  const [planPrices, setPlanPrices]   = useState({ pro: "14.99", enterprise: "0" });
   const [planSaving, setPlanSaving]   = useState(false);
 
   useEffect(() => { load(); }, []);
@@ -1104,7 +1104,7 @@ const BillingSection = () => {
                   <p className="text-xs text-white/30 mt-0.5">Monthly · billed per user</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-white/25">KES</span>
+                  <span className="text-xs text-white/25">USD $</span>
                   <Input
                     type="number"
                     min="0"
