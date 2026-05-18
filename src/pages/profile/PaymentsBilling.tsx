@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { CreditCard, ArrowRight, Check, Sparkles, Receipt, Calendar } from "lucide-react";
+import { CreditCard, ArrowRight, Check, Sparkles, Receipt, Calendar, Smartphone, Building2, Hash } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const isProPlan = (plan: string) =>
@@ -15,11 +16,43 @@ const planLabel = (plan: string) => {
   return "Free";
 };
 
+const PAYMENT_METHODS = [
+  {
+    id: "card",
+    label: "Credit / Debit Card",
+    description: "Visa, Mastercard, Verve",
+    icon: CreditCard,
+    channels: ["card"],
+  },
+  {
+    id: "mobile_money",
+    label: "Mobile Money",
+    description: "M-Pesa, Airtel Money, MTN",
+    icon: Smartphone,
+    channels: ["mobile_money"],
+  },
+  {
+    id: "bank_transfer",
+    label: "Bank Transfer",
+    description: "Direct from your bank account",
+    icon: Building2,
+    channels: ["bank_transfer"],
+  },
+  {
+    id: "ussd",
+    label: "USSD",
+    description: "Pay via shortcode on any phone",
+    icon: Hash,
+    channels: ["ussd"],
+  },
+];
+
 const PaymentsBilling = () => {
   const { t } = useLanguage();
   const [userId, setUserId] = useState<string | null>(null);
   const [subscription, setSubscription] = useState<string>("free");
   const [isPaystackLoading, setIsPaystackLoading] = useState(false);
+  const [showMethodDialog, setShowMethodDialog] = useState(false);
 
   useEffect(() => { checkAuth(); }, []);
 
@@ -52,12 +85,41 @@ const PaymentsBilling = () => {
     setSubscription(profile?.subscription_plan || "free");
   };
 
+  const openPaystack = async (channels?: string[]) => {
+    setShowMethodDialog(false);
+    setIsPaystackLoading(true);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const email = user?.email;
+    if (!email) { setIsPaystackLoading(false); return; }
+
+    const w = window as unknown as {
+      PaystackPop: { setup: (opts: Record<string, unknown>) => { openIframe: () => void } }
+    };
+    const opts: Record<string, unknown> = {
+      key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+      email,
+      amount: 1499,
+      currency: "USD",
+      metadata: { plan: "pro" },
+      callback: () => { setIsPaystackLoading(false); },
+      onClose: () => { setIsPaystackLoading(false); },
+    };
+    if (channels) opts.channels = channels;
+    const handler = w.PaystackPop.setup(opts);
+    handler.openIframe();
+  };
+
+  const handleUpgrade = () => openPaystack();
+
+  const isPro = isProPlan(subscription);
+
   const starterFeatures = [
     "10 Kira AI actions per day",
     "Crevia Link — basic templates",
     "Unlimited bio links",
-    "5 invoices per month",
-    "5 contracts per month",
+    "2 invoices per month",
+    "2 contracts per month",
     "Standard chat interface",
   ];
 
@@ -72,30 +134,6 @@ const PaymentsBilling = () => {
     "Client Portal access",
     "Priority support",
   ];
-
-  const handleUpgrade = async () => {
-    setIsPaystackLoading(true);
-
-    const { data: { user } } = await supabase.auth.getUser();
-    const email = user?.email;
-    if (!email) { setIsPaystackLoading(false); return; }
-
-    const w = window as unknown as {
-      PaystackPop: { setup: (opts: Record<string, unknown>) => { openIframe: () => void } }
-    };
-    const handler = w.PaystackPop.setup({
-      key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-      email,
-      amount: 1949 * 100,
-      currency: "KES",
-      metadata: { plan: "pro" },
-      callback: () => { setIsPaystackLoading(false); },
-      onClose: () => { setIsPaystackLoading(false); },
-    });
-    handler.openIframe();
-  };
-
-  const isPro = isProPlan(subscription);
 
   return (
     <div className="min-h-screen bg-background">
@@ -122,7 +160,7 @@ const PaymentsBilling = () => {
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {isPro ? "KES 1,949 / month" : "Free — no billing required"}
+                  {isPro ? "$14.99 / month" : "Free — no billing required"}
                 </p>
               </div>
             </div>
@@ -147,7 +185,9 @@ const PaymentsBilling = () => {
               <p className="font-medium">No payment method on file</p>
               <p className="text-sm text-muted-foreground">Add a card or mobile money to subscribe to Pro</p>
             </div>
-            <Button variant="outline" size="sm">Add Method</Button>
+            <Button variant="outline" size="sm" onClick={() => setShowMethodDialog(true)}>
+              Add Method
+            </Button>
           </div>
         </Card>
 
@@ -158,7 +198,7 @@ const PaymentsBilling = () => {
           <Card className="p-6 border-border/40">
             <h3 className="font-vollkorn text-xl font-bold mb-1">Free</h3>
             <div className="flex items-baseline gap-1 mb-5">
-              <span className="text-3xl font-bold">KES 0</span>
+              <span className="text-3xl font-bold">$0</span>
               <span className="text-muted-foreground text-sm">/month</span>
             </div>
             <ul className="space-y-3 mb-6">
@@ -180,11 +220,10 @@ const PaymentsBilling = () => {
               <Badge className="bg-bronze text-white border-0">Recommended</Badge>
             </div>
             <h3 className="font-vollkorn text-xl font-bold mb-1">Pro</h3>
-            <div className="flex items-baseline gap-1 mb-1">
-              <span className="text-3xl font-bold">KES 1,949</span>
+            <div className="flex items-baseline gap-1 mb-5">
+              <span className="text-3xl font-bold">$14.99</span>
               <span className="text-muted-foreground text-sm">/month</span>
             </div>
-            <p className="text-xs text-muted-foreground mb-4">~$14.99 USD</p>
             <ul className="space-y-3 mb-6">
               {proFeatures.map((f) => (
                 <li key={f} className="flex items-start gap-2">
@@ -216,6 +255,37 @@ const PaymentsBilling = () => {
           </div>
         </Card>
       </div>
+
+      {/* Payment Method Dialog */}
+      <Dialog open={showMethodDialog} onOpenChange={setShowMethodDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-vollkorn text-xl">Choose Payment Method</DialogTitle>
+            <p className="text-sm text-muted-foreground">Select how you'd like to pay for your Pro subscription</p>
+          </DialogHeader>
+          <div className="grid gap-3 mt-2">
+            {PAYMENT_METHODS.map((method) => {
+              const Icon = method.icon;
+              return (
+                <button
+                  key={method.id}
+                  onClick={() => openPaystack(method.channels)}
+                  className="flex items-center gap-4 p-4 rounded-xl border border-border hover:border-bronze/50 hover:bg-bronze/5 transition-all text-left group"
+                >
+                  <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center group-hover:bg-bronze/10 transition-colors shrink-0">
+                    <Icon className="w-5 h-5 text-muted-foreground group-hover:text-bronze transition-colors" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{method.label}</p>
+                    <p className="text-xs text-muted-foreground">{method.description}</p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-bronze ml-auto transition-colors" />
+                </button>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
