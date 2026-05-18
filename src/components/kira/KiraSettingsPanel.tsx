@@ -86,7 +86,10 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
   }, [open, userId]);
 
   const persistMemory = useCallback(async (updated: KiraMemory) => {
-    await supabase.from("profiles").update({ kira_memory: updated }).eq("id", userId);
+    // Merge with existing value so KiraMemoryPanel fields (rates, clients, etc.) are not wiped
+    const { data: current } = await supabase.from("profiles").select("kira_memory").eq("id", userId).single();
+    const merged = { ...(current?.kira_memory as object || {}), ...updated };
+    await supabase.from("profiles").update({ kira_memory: merged }).eq("id", userId);
   }, [userId]);
 
   const handleToggle = async (

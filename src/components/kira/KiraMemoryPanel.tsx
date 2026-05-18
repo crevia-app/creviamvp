@@ -71,9 +71,13 @@ export function KiraMemoryPanel({ open, onOpenChange, userId }: KiraMemoryPanelP
       notes: notes.trim() || undefined,
     };
 
+    // Merge with existing value so KiraSettingsPanel fields (nickname, occupation, etc.) are not wiped
+    const { data: current } = await supabase.from("profiles").select("kira_memory").eq("id", userId).single();
+    const merged = { ...(current?.kira_memory as object || {}), ...kiraMemory };
+
     const { error } = await supabase
       .from("profiles")
-      .update({ kira_memory: kiraMemory })
+      .update({ kira_memory: merged })
       .eq("id", userId);
 
     if (error) {
