@@ -36,8 +36,9 @@ type Section = "overview" | "users" | "billing" | "documents" | "customization" 
 
 const planChip = (plan: string | null) => cn(
   "text-[10px] font-semibold px-2 py-0.5 rounded-full",
-  plan === "pro"          ? "bg-emerald-500/20 text-emerald-400"
-  : plan === "enterprise" ? "bg-violet-500/20  text-violet-400"
+  plan === "pro" || plan === "creative_pro" ? "bg-emerald-500/20 text-emerald-400"
+  : plan === "enterprise"                  ? "bg-violet-500/20  text-violet-400"
+  : plan === "business" || plan === "brand_workspace" ? "bg-amber-500/20 text-amber-400"
   : "bg-white/[0.07] text-white/30"
 );
 
@@ -120,7 +121,7 @@ const StatCard = ({
 // ─── Overview ─────────────────────────────────────────────────────────────────
 const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) => {
   const [data, setData] = useState<{
-    total: number; free: number; pro: number; enterprise: number;
+    total: number; free: number; pro: number; business: number; enterprise: number;
     invoices: number; contracts: number;
     mrr: number; arr: number;
     userTrend: number | null; mrrTrend: number | null;
@@ -142,10 +143,11 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
     ]);
 
     const p = profiles ?? [];
-    const pro = p.filter(u => u.subscription_plan === "pro").length;
+    const pro = p.filter(u => u.subscription_plan === "pro" || u.subscription_plan === "creative_pro").length;
+    const bus = p.filter(u => u.subscription_plan === "business" || u.subscription_plan === "brand_workspace").length;
     const ent = p.filter(u => u.subscription_plan === "enterprise").length;
-    const free = p.length - pro - ent;
-    const mrr = pro * 1500 + ent * 5000;
+    const free = p.length - pro - bus - ent;
+    const mrr = pro * 1499 + bus * 7900 + ent * 5000;
     const arr = mrr * 12;
 
     // Trends — compare vs last month
@@ -168,9 +170,10 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
       u.created_at <= periodEnd &&
       (!u.subscription_expires_at || u.subscription_expires_at >= periodStart);
 
-    const prevPro = p.filter(u => wasActiveInPeriod(u, "pro",        lastMonthStart, lastMonthEnd)).length;
+    const prevPro = p.filter(u => wasActiveInPeriod(u, "pro", lastMonthStart, lastMonthEnd) || wasActiveInPeriod(u, "creative_pro", lastMonthStart, lastMonthEnd)).length;
+    const prevBus = p.filter(u => wasActiveInPeriod(u, "business", lastMonthStart, lastMonthEnd) || wasActiveInPeriod(u, "brand_workspace", lastMonthStart, lastMonthEnd)).length;
     const prevEnt = p.filter(u => wasActiveInPeriod(u, "enterprise", lastMonthStart, lastMonthEnd)).length;
-    const prevMrr = prevPro * 1500 + prevEnt * 5000;
+    const prevMrr = prevPro * 1499 + prevBus * 7900 + prevEnt * 5000;
     const mrrTrend = prevMrr > 0 ? Math.round(((mrr - prevMrr) / prevMrr) * 100) : null;
 
     // MRR chart — active paid users per month (accounts for churn via subscription_expires_at)
@@ -178,9 +181,10 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
       const d     = subMonths(now, 5 - i);
       const start = startOfMonth(d).toISOString();
       const end   = endOfMonth(d).toISOString();
-      const mPro  = p.filter(u => wasActiveInPeriod(u, "pro",        start, end)).length;
+      const mPro  = p.filter(u => wasActiveInPeriod(u, "pro", start, end) || wasActiveInPeriod(u, "creative_pro", start, end)).length;
+      const mBus  = p.filter(u => wasActiveInPeriod(u, "business", start, end) || wasActiveInPeriod(u, "brand_workspace", start, end)).length;
       const mEnt  = p.filter(u => wasActiveInPeriod(u, "enterprise", start, end)).length;
-      return { month: format(d, "MMM"), mrr: mPro * 1500 + mEnt * 5000 };
+      return { month: format(d, "MMM"), mrr: mPro * 1499 + mBus * 7900 + mEnt * 5000 };
     });
 
     // User growth chart — new signups per month
@@ -195,15 +199,16 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
     const planChart = [
       { plan: "Free",       count: free, pct: p.length ? Math.round((free / p.length) * 100) : 0 },
       { plan: "Pro",        count: pro,  pct: p.length ? Math.round((pro  / p.length) * 100) : 0 },
+      { plan: "Business",   count: bus,  pct: p.length ? Math.round((bus  / p.length) * 100) : 0 },
       { plan: "Enterprise", count: ent,  pct: p.length ? Math.round((ent  / p.length) * 100) : 0 },
     ];
 
-    setData({ total: p.length, free, pro, enterprise: ent, invoices: inv ?? 0, contracts: con ?? 0, mrr, arr, userTrend, mrrTrend, mrrChart, userChart, planChart, recent: p.slice(0, 6) });
+    setData({ total: p.length, free, pro, business: bus, enterprise: ent, invoices: inv ?? 0, contracts: con ?? 0, mrr, arr, userTrend, mrrTrend, mrrChart, userChart, planChart, recent: p.slice(0, 6) });
   };
 
   if (!data) return <Spin />;
 
-  const { total, pro, enterprise, free, invoices, contracts, mrr, arr, userTrend, mrrTrend, mrrChart, userChart, planChart, recent } = data;
+  const { total, pro, business, enterprise, free, invoices, contracts, mrr, arr, userTrend, mrrTrend, mrrChart, userChart, planChart, recent } = data;
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
@@ -211,7 +216,7 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
       {/* ── Top Stat Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <StatCard
-          label="Total Users" value={fmt(total)} sub={`${free} free · ${pro} pro · ${enterprise} ent`}
+          label="Total Users" value={fmt(total)} sub={`${free} free · ${pro} pro · ${business} biz · ${enterprise} ent`}
           trend={userTrend} icon={Users} accent="bg-blue-500" onClick={() => onNavigate("users")}
         />
         <StatCard
@@ -298,9 +303,10 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
           <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-5">Plan Breakdown</p>
           <div className="space-y-4">
             {[
-              { label: "Free",       count: free,       pct: total ? Math.round((free / total) * 100) : 0,       color: "bg-white/20", text: "text-white/50" },
-              { label: "Pro",        count: pro,        pct: total ? Math.round((pro  / total) * 100) : 0,       color: "bg-emerald-500", text: "text-emerald-400" },
-              { label: "Enterprise", count: enterprise, pct: total ? Math.round((enterprise / total) * 100) : 0, color: "bg-violet-500",  text: "text-violet-400" },
+              { label: "Free",       count: free,       pct: total ? Math.round((free     / total) * 100) : 0, color: "bg-white/20",    text: "text-white/50" },
+              { label: "Pro",        count: pro,        pct: total ? Math.round((pro      / total) * 100) : 0, color: "bg-emerald-500", text: "text-emerald-400" },
+              { label: "Business",   count: business,   pct: total ? Math.round((business / total) * 100) : 0, color: "bg-amber-500",   text: "text-amber-400" },
+              { label: "Enterprise", count: enterprise, pct: total ? Math.round((enterprise / total) * 100) : 0, color: "bg-violet-500", text: "text-violet-400" },
             ].map(row => (
               <div key={row.label}>
                 <div className="flex items-center justify-between mb-2">
@@ -327,7 +333,8 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
           <div className="mt-6 pt-5 border-t border-white/5 space-y-2">
             <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-3">MRR by Plan</p>
             {[
-              { label: "Pro",        value: pro * 1500,        color: "text-emerald-400" },
+              { label: "Pro",        value: pro * 1499,        color: "text-emerald-400" },
+              { label: "Business",   value: business * 7900,   color: "text-amber-400" },
               { label: "Enterprise", value: enterprise * 5000, color: "text-violet-400" },
             ].map(r => (
               <div key={r.label} className="flex items-center justify-between">
@@ -704,7 +711,7 @@ const BillingSection = () => {
   const [profiles, setProfiles]       = useState<any[]>([]);
   const [tab, setTab]                 = useState<"transactions" | "refunds" | "analytics" | "plans">("transactions");
   const [loading, setLoading]         = useState(true);
-  const [planPrices, setPlanPrices]   = useState({ pro: "14.99", enterprise: "0" });
+  const [planPrices, setPlanPrices]   = useState({ pro: "14.99", business: "79", enterprise: "0" });
   const [planSaving, setPlanSaving]   = useState(false);
 
   useEffect(() => { load(); }, []);
@@ -728,14 +735,15 @@ const BillingSection = () => {
       supabase
         .from("app_settings" as any)
         .select("key, value")
-        .in("key", ["plan_price_pro", "plan_price_enterprise"]),
+        .in("key", ["plan_price_pro", "plan_price_business", "plan_price_enterprise"]),
     ]);
     setTxns(txnData ?? []);
     setProfiles(profData ?? []);
     if (settingsData) {
-      const prices = { pro: "1500", enterprise: "5000" };
+      const prices = { pro: "14.99", business: "79", enterprise: "0" };
       (settingsData as any[]).forEach(s => {
-        if (s.key === "plan_price_pro") prices.pro = s.value;
+        if (s.key === "plan_price_pro")        prices.pro        = s.value;
+        if (s.key === "plan_price_business")   prices.business   = s.value;
         if (s.key === "plan_price_enterprise") prices.enterprise = s.value;
       });
       setPlanPrices(prices);
@@ -747,6 +755,7 @@ const BillingSection = () => {
     setPlanSaving(true);
     const rows = [
       { key: "plan_price_pro",        value: planPrices.pro },
+      { key: "plan_price_business",   value: planPrices.business },
       { key: "plan_price_enterprise", value: planPrices.enterprise },
     ];
     const { error } = await (supabase.from("app_settings" as any) as any).upsert(rows, { onConflict: "key" });
@@ -776,7 +785,7 @@ const BillingSection = () => {
   const successTxns      = txns.filter(t => t.status === "completed" || t.status === "success");
   const successRevenue   = successTxns.reduce((s, t) => s + (t.amount ?? 0), 0);
   const totalUsers       = profiles.length;
-  const paidUsers        = profiles.filter(p => p.subscription_plan === "pro" || p.subscription_plan === "enterprise").length;
+  const paidUsers        = profiles.filter(p => ["pro", "creative_pro", "business", "brand_workspace", "enterprise"].includes(p.subscription_plan)).length;
   const conversionRate   = totalUsers > 0 ? ((paidUsers / totalUsers) * 100).toFixed(1) : "0";
   const arpu             = totalUsers > 0 ? Math.round(successRevenue / totalUsers) : 0;
   const avgTxn           = completed > 0  ? Math.round(successRevenue / completed)  : 0;
@@ -788,7 +797,7 @@ const BillingSection = () => {
   // At risk: still paid but expiry within 7 days
   const sevenDaysOut = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
   const atRisk = profiles.filter(p =>
-    (p.subscription_plan === "pro" || p.subscription_plan === "enterprise") &&
+    ["pro", "creative_pro", "business", "brand_workspace", "enterprise"].includes(p.subscription_plan) &&
     p.subscription_expires_at && p.subscription_expires_at <= sevenDaysOut
   ).length;
   // Revenue by month (last 6)
@@ -1001,9 +1010,10 @@ const BillingSection = () => {
               <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-5">User Plan Distribution</p>
               <div className="space-y-3">
                 {[
-                  { label: "Free",       count: totalUsers - paidUsers,                                                             color: "bg-white/20",    text: "text-white/50" },
-                  { label: "Pro",        count: profiles.filter(p => p.subscription_plan === "pro").length,        color: "bg-emerald-500", text: "text-emerald-400" },
-                  { label: "Enterprise", count: profiles.filter(p => p.subscription_plan === "enterprise").length, color: "bg-violet-500",  text: "text-violet-400" },
+                  { label: "Free",       count: totalUsers - paidUsers,                                                                                                                     color: "bg-white/20",    text: "text-white/50" },
+                  { label: "Pro",        count: profiles.filter(p => p.subscription_plan === "pro" || p.subscription_plan === "creative_pro").length,                       color: "bg-emerald-500", text: "text-emerald-400" },
+                  { label: "Business",   count: profiles.filter(p => p.subscription_plan === "business" || p.subscription_plan === "brand_workspace").length,               color: "bg-amber-500",   text: "text-amber-400" },
+                  { label: "Enterprise", count: profiles.filter(p => p.subscription_plan === "enterprise").length,                                                          color: "bg-violet-500",  text: "text-violet-400" },
                 ].map(row => (
                   <div key={row.label}>
                     <div className="flex items-center justify-between mb-1.5">
@@ -1052,8 +1062,8 @@ const BillingSection = () => {
       )}
 
       {tab === "plans" && (
-        <div className="space-y-5 max-w-2xl">
-          <p className="text-xs text-white/30">Set monthly subscription prices. Values are stored in KES and shown to users on the pricing page.</p>
+        <div className="space-y-5 max-w-3xl">
+          <p className="text-xs text-white/30">Set monthly subscription prices (USD). Values are stored and shown to users on the pricing page.</p>
 
           {/* Free plan — always free, no price input */}
           <div className="border border-white/[0.08] rounded-2xl p-5 space-y-4 bg-white/[0.02]">
@@ -1088,13 +1098,22 @@ const BillingSection = () => {
               features: ["Unlimited invoices & Canvas", "CreviaLink profile", "CreviaStudio access", "E2E encrypted messaging", "Escrow payments"],
             },
             {
+              key: "business" as const,
+              label: "Business",
+              color: "text-amber-400",
+              border: "border-amber-500/20",
+              bg: "bg-amber-500/5",
+              accent: "bg-amber-500/10",
+              features: ["Everything in Pro", "3 seats included", "RBAC permissions", "Clause library", "200 Kira msgs/day"],
+            },
+            {
               key: "enterprise" as const,
               label: "Enterprise",
               color: "text-violet-400",
               border: "border-violet-500/20",
               bg: "bg-violet-500/5",
               accent: "bg-violet-500/10",
-              features: ["Everything in Pro", "Multi-seat workspace", "Priority support", "Custom branding", "Advanced analytics"],
+              features: ["Everything in Business", "Unlimited seats", "Priority support", "Custom branding", "Advanced analytics"],
             },
           ]).map(plan => (
             <div key={plan.key} className={cn("border rounded-2xl p-5 space-y-4", plan.border, plan.bg)}>
@@ -1120,7 +1139,7 @@ const BillingSection = () => {
                 <ul className="space-y-1.5">
                   {plan.features.map(f => (
                     <li key={f} className="flex items-center gap-2 text-xs text-white/50">
-                      <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", plan.key === "pro" ? "bg-emerald-500" : "bg-violet-500")} />
+                      <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", plan.key === "pro" ? "bg-emerald-500" : plan.key === "business" ? "bg-amber-500" : "bg-violet-500")} />
                       {f}
                     </li>
                   ))}
