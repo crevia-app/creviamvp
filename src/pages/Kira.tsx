@@ -120,7 +120,7 @@ function DesktopChatItem({
           className="flex-1 bg-transparent text-sm outline-none border-b border-bronze/50 focus:border-bronze text-foreground min-w-0"
         />
       ) : (
-        <span className="flex-1 text-sm truncate">{chat.title}</span>
+        <span className="flex-1 min-w-0 text-sm truncate">{chat.title}</span>
       )}
 
       <DropdownMenu>
@@ -209,7 +209,7 @@ function MobileChatItem({
           className="flex-1 bg-transparent text-sm outline-none border-b border-bronze/50 focus:border-bronze text-foreground min-w-0"
         />
       ) : (
-        <span className="flex-1 text-sm truncate">{chat.title}</span>
+        <span className="flex-1 min-w-0 text-sm truncate">{chat.title}</span>
       )}
 
       <button
@@ -1006,8 +1006,8 @@ const Kira = () => {
               </p>
             </div>
 
-            <ScrollArea className="flex-1 px-2">
-              <div className="space-y-1 pb-3">
+            <ScrollArea className="flex-1">
+              <div className="space-y-1 pb-3 px-2">
                 {isLoadingHistory ? (
                   <div className="py-8 text-center">
                     <Loader2 className="w-5 h-5 mx-auto text-muted-foreground animate-spin mb-2" />
@@ -1165,8 +1165,8 @@ const Kira = () => {
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent Chats</p>
             </div>
 
-            <ScrollArea className="flex-1 px-2">
-              <div className="space-y-1 pb-3">
+            <ScrollArea className="flex-1">
+              <div className="space-y-1 pb-3 px-2">
                 {/* Pinned mobile */}
                 {filteredChats.filter(c => c.pinned).length > 0 && (
                   <p className="text-xs font-medium text-muted-foreground px-2 py-1.5 flex items-center gap-1.5">
