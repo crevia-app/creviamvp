@@ -32,7 +32,7 @@ const fmt = (n: number) =>
   : n >= 1_000   ? `${(n / 1_000).toFixed(1)}K`
   : String(n);
 
-type Section = "overview" | "users" | "billing" | "documents" | "customization" | "support" | "settings";
+type Section = "overview" | "users" | "billing" | "documents" | "customization" | "support" | "settings" | "security";
 
 const planChip = (plan: string | null) => cn(
   "text-[10px] font-semibold px-2 py-0.5 rounded-full",
@@ -2261,6 +2261,133 @@ const SettingsSection = () => {
   );
 };
 
+// ─── Security Section ─────────────────────────────────────────────────────────
+const SecuritySection = () => {
+  const [data, setData]       = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const { data: res } = await supabase.rpc("admin_security_overview" as any);
+      setData(res);
+      setLoading(false);
+    })();
+  }, []);
+
+  if (loading) return <Spin />;
+
+  const events: any[] = data?.recent_auth_events || [];
+  const admins: any[] = data?.admin_users || [];
+
+  const failed   = events.filter(e => e.action?.includes("failed") || e.action?.includes("invalid"));
+  const signups  = events.filter(e => e.action === "user_signedup");
+  const logins   = events.filter(e => e.action === "login");
+
+  return (
+    <div className="p-4 md:p-6 space-y-6 max-w-4xl">
+      <div>
+        <h2 className="font-poppins font-semibold text-white text-lg">Security Overview</h2>
+        <p className="text-xs text-white/30 mt-0.5">Last 7 days · Live from auth logs</p>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: "Total Users",      value: data?.total_users ?? 0,       color: "text-white" },
+          { label: "New Signups (7d)", value: data?.recent_signups_7d ?? 0, color: "text-emerald-400" },
+          { label: "Logins (7d)",      value: logins.length,                color: "text-blue-400" },
+          { label: "Failed Attempts",  value: failed.length,                color: failed.length > 0 ? "text-red-400" : "text-white/30" },
+        ].map(({ label, value, color }) => (
+          <div key={label} className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4">
+            <p className="text-[11px] text-white/30 font-medium mb-1">{label}</p>
+            <p className={cn("text-2xl font-bold tabular-nums", color)}>{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Admin users */}
+      <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-white/[0.05]">
+          <p className="text-xs font-semibold text-white/50 uppercase tracking-wider">Admin Accounts ({admins.length})</p>
+        </div>
+        {admins.length === 0 ? (
+          <p className="px-4 py-4 text-sm text-white/30">No admin accounts found.</p>
+        ) : (
+          <div className="divide-y divide-white/[0.04]">
+            {admins.map((a: any) => (
+              <div key={a.id} className="flex items-center gap-3 px-4 py-3">
+                <div className="w-7 h-7 rounded-full bg-bronze/20 flex items-center justify-center text-[11px] font-bold text-bronze flex-shrink-0">
+                  {(a.display_name?.[0] || "?").toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white font-medium truncate">{a.display_name || "—"}</p>
+                  <p className="text-[11px] text-white/30 truncate">{a.email || a.id}</p>
+                </div>
+                <span className="text-[10px] bg-bronze/10 text-bronze px-2 py-0.5 rounded-full font-semibold flex-shrink-0">Admin</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Recent auth events */}
+      <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-white/[0.05]">
+          <p className="text-xs font-semibold text-white/50 uppercase tracking-wider">Recent Auth Events (7d)</p>
+        </div>
+        {events.length === 0 ? (
+          <p className="px-4 py-4 text-sm text-white/30">No auth events in the last 7 days.</p>
+        ) : (
+          <div className="divide-y divide-white/[0.04] max-h-80 overflow-y-auto">
+            {events.slice(0, 30).map((e: any) => {
+              const isFail = e.action?.includes("failed") || e.action?.includes("invalid");
+              return (
+                <div key={e.id} className="flex items-center gap-3 px-4 py-2.5">
+                  <div className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", isFail ? "bg-red-400" : "bg-emerald-400")} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] text-white/70 font-medium">{e.action || "unknown"}</p>
+                    <p className="text-[11px] text-white/25 truncate">{e.email || "anonymous"} · {e.ip_address || "—"}</p>
+                  </div>
+                  <p className="text-[10px] text-white/20 flex-shrink-0">
+                    {e.created_at ? new Date(e.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Checklist */}
+      <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-white/[0.05]">
+          <p className="text-xs font-semibold text-white/50 uppercase tracking-wider">Security Checklist</p>
+        </div>
+        <div className="divide-y divide-white/[0.04]">
+          {[
+            { label: "RLS enabled on all tables",              done: true  },
+            { label: "Privilege escalation blocked (profiles)", done: true  },
+            { label: "Kira memory RPC secured",                done: true  },
+            { label: "Prompt injection sanitization",          done: true  },
+            { label: "Storage bucket ownership enforced",      done: true  },
+            { label: "Secret leak CI check",                   done: true  },
+            { label: "Email verification enforced",            done: true  },
+            { label: "2FA available (enforce in Dashboard)",   done: false },
+            { label: "Password strength policy (Dashboard)",   done: false },
+          ].map(({ label, done }) => (
+            <div key={label} className="flex items-center gap-3 px-4 py-3">
+              {done
+                ? <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                : <XCircle    className="w-4 h-4 text-amber-400 flex-shrink-0" />}
+              <p className={cn("text-sm", done ? "text-white/70" : "text-amber-300")}>{label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Root ─────────────────────────────────────────────────────────────────────
 const NAV: { id: Section; label: string; icon: React.ElementType }[] = [
   { id: "overview",       label: "Overview",     icon: LayoutDashboard },
@@ -2270,6 +2397,7 @@ const NAV: { id: Section; label: string; icon: React.ElementType }[] = [
   { id: "customization",  label: "Templates",    icon: Palette },
   { id: "support",        label: "Support",      icon: MessageSquare },
   { id: "settings",       label: "Settings",     icon: Settings },
+  { id: "security",       label: "Security",     icon: Shield },
 ];
 
 const Admin = () => {
@@ -2456,6 +2584,7 @@ const Admin = () => {
           {section === "customization"  && <TemplatesSection />}
           {section === "support"        && <SupportSection onTicketClosed={() => setOpenTicketsCount(c => Math.max(0, c - 1))} onVerificationResolved={() => setPendingCount(c => Math.max(0, c - 1))} />}
           {section === "settings"       && <SettingsSection />}
+          {section === "security"       && <SecuritySection />}
         </main>
       </div>
     </div>
