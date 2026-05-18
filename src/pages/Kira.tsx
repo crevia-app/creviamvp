@@ -320,6 +320,7 @@ type ViewMode = "chat" | "projects";
 const Kira = () => {
   const { toast } = useToast();
   const { kiraActionsToday, kiraActionsLimit } = useSubscription();
+  const isAtKiraLimit = kiraActionsToday >= kiraActionsLimit;
   const [userType, setUserType] = useState<'creator' | 'brand' | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -652,6 +653,14 @@ const Kira = () => {
       toast({
         title: "Please sign in",
         description: "You need to be logged in to chat with Kira",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (isAtKiraLimit) {
+      toast({
+        title: "Daily limit reached",
+        description: `You've used all ${kiraActionsLimit} Kira messages for today. Upgrade for more.`,
         variant: "destructive",
       });
       return;
@@ -1475,10 +1484,10 @@ const Kira = () => {
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && !isLoading && handleSend()}
-                  placeholder={activeProject ? `Ask Kira about ${activeProject.name}...` : "How can I help you today?"}
+                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && !isLoading && !isAtKiraLimit && handleSend()}
+                  placeholder={isAtKiraLimit ? `Daily limit reached (${kiraActionsLimit}/${kiraActionsLimit}) · Upgrade to continue` : activeProject ? `Ask Kira about ${activeProject.name}...` : "How can I help you today?"}
                   className="border-0 bg-transparent h-12 text-base focus-visible:ring-0 px-1 placeholder:text-muted-foreground/70"
-                  disabled={isLoading}
+                  disabled={isLoading || isAtKiraLimit}
                 />
                 
                 <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
@@ -1513,14 +1522,21 @@ const Kira = () => {
                     </DropdownMenu>
                   </div>
                   
-                  <Button 
-                    onClick={() => handleSend()}
-                    disabled={isLoading || (!input.trim() && !selectedFile)}
-                    size="icon"
-                    className="h-9 w-9 rounded-lg bg-bronze hover:bg-bronze-dark text-background"
-                  >
-                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {kiraActionsLimit < 1000 && (
+                      <span className={`text-[10px] font-semibold tabular-nums ${isAtKiraLimit ? "text-destructive" : "text-muted-foreground/50"}`}>
+                        {kiraActionsToday}/{kiraActionsLimit}
+                      </span>
+                    )}
+                    <Button
+                      onClick={() => handleSend()}
+                      disabled={isLoading || isAtKiraLimit || (!input.trim() && !selectedFile)}
+                      size="icon"
+                      className="h-9 w-9 rounded-lg bg-bronze hover:bg-bronze-dark text-background"
+                    >
+                      {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    </Button>
+                  </div>
                 </div>
               </div>
 
