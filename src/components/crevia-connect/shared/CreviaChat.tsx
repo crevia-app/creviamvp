@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
@@ -189,6 +190,7 @@ const avatarStyle = (seed: string): React.CSSProperties => {
 };
 
 const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {}) => {
+  const navigate = useNavigate();
   const [currentUserId, setCurrentUserId] = useState("");
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
@@ -1963,12 +1965,15 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                             <p className="text-[10px] text-muted-foreground/60 text-center">Waiting for response…</p>
                                           )}
                                           {status === "accepted" && (
-                                            <div className="flex items-center gap-1.5">
-                                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                            <button
+                                              onClick={() => inv.workspace_id && navigate(`/crevia-studio?tab=chat&roomId=${inv.workspace_id}`)}
+                                              className="flex items-center gap-1.5 w-full hover:opacity-75 active:opacity-50 transition-opacity"
+                                            >
+                                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
                                               <span className="text-[11px] text-emerald-600 font-semibold truncate">
                                                 Accepted — {inv.workspace_name}
                                               </span>
-                                            </div>
+                                            </button>
                                           )}
                                           {status === "declined" && (
                                             <div className="flex items-center gap-1.5">
