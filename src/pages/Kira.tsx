@@ -925,7 +925,7 @@ const Kira = () => {
   // };
 
   return (
-    <div className="h-[calc(100vh-64px-64px)] md:h-[calc(100vh-64px)] flex bg-background">
+    <div className="h-[calc(100dvh-64px-64px)] md:h-[calc(100dvh-64px)] flex bg-background">
       {/* Desktop Sidebar */}
       <div 
         className={`hidden md:flex flex-col bg-card/50 border-r border-border/50 transition-all duration-300 ${
@@ -1320,6 +1320,7 @@ const Kira = () => {
                           transition={{ duration: 0.4, delay: idx === messages.length - 1 ? 0.05 : 0, ease: [0.25, 0.46, 0.45, 0.94] }}
                           onMouseEnter={() => setHoveredIdx(idx)}
                           onMouseLeave={() => setHoveredIdx(null)}
+                          className="group"
                         >
                           <div className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                             {msg.role === 'user' && (
@@ -1388,50 +1389,38 @@ const Kira = () => {
 
                                  
 
-                                  {/* ── HOVER ACTION BUTTONS ── */}
-                                  <AnimatePresence>
-                                    {hoveredIdx === idx && (
-                                      <motion.div
-                                        initial={{ opacity: 0, y: 4 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: 4 }}
-                                        transition={{ duration: 0.15 }}
-                                        className={`flex items-center gap-1 mt-1 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                                      >
-                                        {/* Copy */}
-                                        <button
-                                          onClick={() => handleCopy(msg.content, idx)}
-                                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-all border border-transparent hover:border-border/50"
-                                        >
-                                          {copiedIdx === idx ? (
-                                            <><Check className="w-3 h-3 text-green-500" /><span className="text-green-500">Copied</span></>
-                                          ) : (
-                                            <><Copy className="w-3 h-3" /><span>Copy</span></>
-                                          )}
-                                        </button>
+                                  {/* ── ACTION BUTTONS: always visible on mobile, hover-reveal on desktop ── */}
+                                  <div className={`flex items-center gap-1 mt-1 transition-opacity duration-150 opacity-60 md:opacity-0 md:group-hover:opacity-100 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <button
+                                      onClick={() => handleCopy(msg.content, idx)}
+                                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted transition-all border border-transparent hover:border-border/50"
+                                    >
+                                      {copiedIdx === idx ? (
+                                        <><Check className="w-3 h-3 text-green-500" /><span className="hidden sm:inline text-green-500">Copied</span></>
+                                      ) : (
+                                        <><Copy className="w-3 h-3" /><span className="hidden sm:inline">Copy</span></>
+                                      )}
+                                    </button>
 
-                                        {/* Edit + Retry — user messages only */}
-                                        {msg.role === 'user' && (
-                                          <>
-                                            <button
-                                              onClick={() => { setEditingMessageIdx(idx); setEditingContent(msg.content); }}
-                                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-all border border-transparent hover:border-border/50"
-                                            >
-                                              <Pencil className="w-3 h-3" />
-                                              <span>Edit</span>
-                                            </button>
-                                            <button
-                                              onClick={() => handleRetry(msg.content, idx)}
-                                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-all border border-transparent hover:border-border/50"
-                                            >
-                                              <RotateCcw className="w-3 h-3" />
-                                              <span>Retry</span>
-                                            </button>
-                                          </>
-                                        )}
-                                      </motion.div>
+                                    {msg.role === 'user' && (
+                                      <>
+                                        <button
+                                          onClick={() => { setEditingMessageIdx(idx); setEditingContent(msg.content); }}
+                                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted transition-all border border-transparent hover:border-border/50"
+                                        >
+                                          <Pencil className="w-3 h-3" />
+                                          <span className="hidden sm:inline">Edit</span>
+                                        </button>
+                                        <button
+                                          onClick={() => handleRetry(msg.content, idx)}
+                                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted transition-all border border-transparent hover:border-border/50"
+                                        >
+                                          <RotateCcw className="w-3 h-3" />
+                                          <span className="hidden sm:inline">Retry</span>
+                                        </button>
+                                      </>
                                     )}
-                                  </AnimatePresence>
+                                  </div>
                                 </>
                               )}
                             </div>

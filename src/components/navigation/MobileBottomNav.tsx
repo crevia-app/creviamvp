@@ -92,7 +92,7 @@ const MobileBottomNav = () => {
               <span className="font-poppins text-xs font-medium">{t("common.more")}</span>
             </button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="bg-black border-white/10 h-[85vh] max-h-[85vh] flex flex-col p-0">
+          <SheetContent side="bottom" className="bg-black border-white/10 h-[85dvh] max-h-[85dvh] flex flex-col p-0">
             <SheetHeader className="px-4 pt-4 pb-2 flex-shrink-0">
               <SheetTitle className="text-white font-vollkorn text-lg">{t("nav.moreOptions")}</SheetTitle>
             </SheetHeader>
