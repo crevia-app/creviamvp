@@ -33,7 +33,7 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
   const isSubPage = SUB_PAGE_PREFIXES.some((p) => location.pathname.startsWith(p));
   const [sheetOpen, setSheetOpen] = useState(false);
   const { notifications, unreadCount, loading, markRead, markAllRead, clearAll } =
-    useNotifications(profile?.id ?? "");
+    useNotifications(profile?.id);
 
   const { setTheme } = useTheme();
   const [themeOpen, setThemeOpen] = useState(false);

@@ -24,7 +24,7 @@ function applyFilter(data: AppNotification[], userId: string): AppNotification[]
   return data.filter((n) => n.created_at > clearedAt);
 }
 
-export function useNotifications(userId: string) {
+export function useNotifications(userId: string | undefined) {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(false);
 

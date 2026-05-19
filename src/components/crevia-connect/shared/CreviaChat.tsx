@@ -356,49 +356,49 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     selectRoom(room);
   }, [externalRoomId, rooms, loadingRooms]);
 
-  // Subscribe to new messages
+  // Subscribe to new/updated messages — scoped to the active room only.
+  // Depends on selectedRoom?.id (string) not the full object so the channel
+  // is only rebuilt when the room actually changes, not on every render.
   useEffect(() => {
-    if (!currentUserId) return;
+    if (!currentUserId || !selectedRoom?.id) return;
+
+    const roomId = selectedRoom.id;
 
     const channel = supabase
-      .channel(`chat-realtime:${currentUserId}:${selectedRoom?.id ?? "global"}`)
+      .channel(`chat-realtime:${currentUserId}:${roomId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "chat_messages" },
+        { event: "INSERT", schema: "public", table: "chat_messages", filter: `room_id=eq.${roomId}` },
         (payload) => {
           const newMsg = payload.new as ChatMessage;
-          if (selectedRoom && newMsg.room_id === selectedRoom.id) {
-            (async () => {
-              const msgWithProfile = await loadSenderProfile(newMsg);
-              // Load reply context if present
-              if (msgWithProfile.reply_to_id) {
-                msgWithProfile.replyTo = await loadReplyContext(msgWithProfile.reply_to_id);
+          (async () => {
+            const msgWithProfile = await loadSenderProfile(newMsg);
+            if (msgWithProfile.reply_to_id) {
+              msgWithProfile.replyTo = await loadReplyContext(msgWithProfile.reply_to_id);
+            }
+            if (msgWithProfile.is_encrypted && msgWithProfile.content) {
+              try {
+                msgWithProfile.content = await decrypt(msgWithProfile.content, roomId);
+              } catch {
+                // keep original content if decryption fails
               }
-              if (msgWithProfile.is_encrypted && msgWithProfile.content) {
-                try {
-                  msgWithProfile.content = await decrypt(msgWithProfile.content, msgWithProfile.room_id);
-                } catch {
-                  // keep original content if decryption fails
-                }
+            }
+            setMessages((prev) => [...prev, msgWithProfile]);
+            if (newMsg.sender_id !== currentUserId) {
+              if (typingTimeoutsRef.current[newMsg.sender_id]) {
+                clearTimeout(typingTimeoutsRef.current[newMsg.sender_id]);
+                delete typingTimeoutsRef.current[newMsg.sender_id];
               }
-              setMessages((prev) => [...prev, msgWithProfile]);
-              // Clear typing indicator for this sender immediately when message lands
-              if (newMsg.sender_id !== currentUserId) {
-                if (typingTimeoutsRef.current[newMsg.sender_id]) {
-                  clearTimeout(typingTimeoutsRef.current[newMsg.sender_id]);
-                  delete typingTimeoutsRef.current[newMsg.sender_id];
-                }
-                setTypingUsers((prev) => prev.filter((id) => id !== newMsg.sender_id));
-              }
-            })();
-            updateReadReceipt(newMsg.room_id);
-          }
+              setTypingUsers((prev) => prev.filter((id) => id !== newMsg.sender_id));
+            }
+          })();
+          updateReadReceipt(roomId);
           fetchRooms();
         }
       )
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "chat_messages" },
+        { event: "UPDATE", schema: "public", table: "chat_messages", filter: `room_id=eq.${roomId}` },
         (payload) => {
           const updated = payload.new as any;
           setMessages((prev) =>
@@ -415,7 +415,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUserId, selectedRoom]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [currentUserId, selectedRoom?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync profile picture / display name changes for all visible users in real time
   useEffect(() => {
