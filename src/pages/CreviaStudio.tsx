@@ -50,13 +50,13 @@ const CreviaStudio = () => {
     <div className={cn(
       "bg-background",
       isChatTab
-        ? "h-[calc(100vh-128px)] md:h-[calc(100vh-64px)] flex flex-col overflow-hidden"
-        : "min-h-screen overflow-x-hidden"
+        ? "h-[calc(100dvh-128px)] md:h-[calc(100dvh-64px)] flex flex-col overflow-hidden"
+        : "min-h-dvh overflow-x-hidden"
     )}>
       {/* Studio Header */}
       <div className={cn(
         "border-b border-border bg-background z-30 flex-shrink-0",
-        !isChatTab && "md:sticky md:top-0"
+        !isChatTab && "sticky top-0"
       )}>
         <div className="mx-auto w-full max-w-7xl px-4 py-3 md:px-6 md:py-4">
           <div className="flex items-center gap-3 mb-3 md:mb-4">
