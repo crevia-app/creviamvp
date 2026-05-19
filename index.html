@@ -19,11 +19,23 @@
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/crevia-logo.png" />
     
-    <!-- Google Fonts -->
+    <!-- Google Fonts — non-blocking -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Vollkorn:wght@400;600;700;800&family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=Great+Vibes&family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <!-- Core UI fonts load immediately -->
+    <link rel="preload" as="style" onload="this.rel='stylesheet'"
+      href="https://fonts.googleapis.com/css2?family=Vollkorn:wght@400;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap">
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vollkorn:wght@400;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap">
+    </noscript>
+    <!-- Signature fonts only needed in invoice/canvas — deferred -->
+    <link rel="preload" as="style" onload="this.rel='stylesheet'"
+      href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Great+Vibes&family=Caveat:wght@400;500;600;700&display=swap">
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Great+Vibes&family=Caveat:wght@400;500;600;700&display=swap">
+    </noscript>
+    <!-- Paystack deferred — does not block page render -->
+    <script src="https://js.paystack.co/v1/inline.js" defer></script>
   </head>
 
   <body>

@@ -66,7 +66,15 @@ const MaintenancePage = () => (
   </div>
 );
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 2,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // AppContent lives inside BrowserRouter so routing hooks are available.
 // useInitializeE2EE is called HERE — at the very top of this component,
