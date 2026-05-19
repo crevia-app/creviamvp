@@ -47,17 +47,9 @@ const CreviaStudio = () => {
   const isChatTab = activeTab === "chat";
 
   return (
-    <div className={cn(
-      "bg-background",
-      isChatTab
-        ? "h-[calc(100dvh-128px)] md:h-[calc(100dvh-64px)] flex flex-col overflow-hidden"
-        : "min-h-dvh overflow-x-hidden"
-    )}>
-      {/* Studio Header */}
-      <div className={cn(
-        "border-b border-border bg-background z-30 flex-shrink-0",
-        !isChatTab && "sticky top-0"
-      )}>
+    <div className="h-full flex flex-col bg-background">
+      {/* Studio Header — flex-shrink-0 keeps it pinned while content below scrolls */}
+      <div className="border-b border-border bg-background z-30 flex-shrink-0">
         <div className="mx-auto w-full max-w-7xl px-4 py-3 md:px-6 md:py-4">
           <div className="flex items-center gap-3 mb-3 md:mb-4">
             <div className="p-1.5 md:p-2 rounded-xl bg-bronze/10">
@@ -150,7 +142,7 @@ const CreviaStudio = () => {
           <StudioWorkspacesHub initialRoomId={activeRoomId} />
         </div>
       ) : (
-        <div className="flex-1 min-w-0 overflow-x-hidden">
+        <div className="flex-1 overflow-y-auto min-w-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
