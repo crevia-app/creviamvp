@@ -1,7 +1,5 @@
--- Fix: function bodies still reference old column names after contracts → canvases rename.
--- The column renames had already been applied; only the function bodies need updating.
-
--- Recreate enforce_contract_limit with correct column names (trigger still references this function)
+-- Fix enforce_contract_limit and can_create_canvas function bodies
+-- to use canvases_used_this_month / canvases_usage_month after the rename.
 
 CREATE OR REPLACE FUNCTION public.enforce_contract_limit()
 RETURNS TRIGGER
@@ -45,7 +43,6 @@ BEGIN
 END;
 $$;
 
--- Recreate can_create_canvas with correct column names
 CREATE OR REPLACE FUNCTION public.can_create_canvas()
 RETURNS JSON
 LANGUAGE plpgsql
