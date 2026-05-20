@@ -13,6 +13,7 @@ import { RecoveryPasswordModal } from "@/components/auth/RecoveryPasswordModal";
 import { SetRecoveryPasswordDialog } from "@/components/auth/SetRecoveryPasswordDialog";
 import ScrollToTop from "./components/ScrollToTop";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { UpdateBanner } from "./components/UpdateBanner";
 import { CookieConsent } from "./components/CookieConsent";
 import AppLayout from "./components/navigation/AppLayout";
 import PublicPageWrapper from "./components/PublicPageWrapper";
@@ -204,6 +205,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <AppContent />
+              <UpdateBanner />
             </BrowserRouter>
           </TooltipProvider>
         </LanguageProvider>

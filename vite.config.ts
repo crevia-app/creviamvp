@@ -37,22 +37,36 @@ export default defineConfig({
         ]
       },
       workbox: {
-        skipWaiting: true,
+        // New SW waits until the user taps "Update" in the UpdateBanner.
+        // This prevents chunk-URL mismatches: the old SW keeps serving the current
+        // session's chunks; the new SW only takes over on a clean page reload.
+        skipWaiting: false,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
         runtimeCaching: [
+          // Always fetch the HTML shell from the network so users immediately
+          // get the latest index.html (with correct chunk hashes) on every
+          // navigation, falling back to cache only when offline.
+          {
+            urlPattern: ({ request }: { request: Request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst' as const,
+            options: {
+              cacheName: 'navigation-cache',
+              networkTimeoutSeconds: 5,
+            },
+          },
           {
             urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-            handler: 'NetworkFirst',
+            handler: 'NetworkFirst' as const,
             options: {
               cacheName: 'supabase-cache',
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24
-              }
-            }
-          }
-        ]
+                maxAgeSeconds: 60 * 60 * 24,
+              },
+            },
+          },
+        ],
       }
     })
   ],
