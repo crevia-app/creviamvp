@@ -121,7 +121,7 @@ function DesktopChatItem({
           }}
           onBlur={onRenameSubmit}
           onClick={(e) => e.stopPropagation()}
-          className="flex-1 bg-transparent text-sm outline-none border-b border-bronze/50 focus:border-bronze text-foreground min-w-0"
+          className="flex-1 bg-transparent text-base md:text-sm outline-none border-b border-bronze/50 focus:border-bronze text-foreground min-w-0"
         />
       ) : (
         <span className="flex-1 min-w-0 text-sm truncate">{chat.title}</span>
@@ -206,7 +206,7 @@ function MobileChatItem({
       onTouchEnd={onLongPressEnd}
       onTouchMove={onLongPressEnd}
       onContextMenu={(e) => { e.preventDefault(); onLongPress(); }}
-      className={`flex items-center gap-2 p-2.5 rounded-lg cursor-pointer transition-all select-none ${
+      className={`flex items-center gap-2 py-3 px-2.5 min-h-[44px] rounded-lg cursor-pointer transition-all select-none ${
         isActive ? 'bg-bronze/10' : 'hover:bg-muted/50'
       }`}
     >
@@ -223,7 +223,7 @@ function MobileChatItem({
           }}
           onBlur={onRenameSubmit}
           onClick={(e) => e.stopPropagation()}
-          className="flex-1 bg-transparent text-sm outline-none border-b border-bronze/50 focus:border-bronze text-foreground min-w-0"
+          className="flex-1 bg-transparent text-base outline-none border-b border-bronze/50 focus:border-bronze text-foreground min-w-0"
         />
       ) : (
         <span className="flex-1 min-w-0 text-sm truncate">{chat.title}</span>
@@ -231,7 +231,7 @@ function MobileChatItem({
 
       <button
         onClick={(e) => { e.stopPropagation(); onLongPress(); }}
-        className="p-1 rounded flex-shrink-0 text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/80 transition-all"
+        className="flex items-center justify-center rounded-lg flex-shrink-0 text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/80 transition-all min-w-[44px] min-h-[44px]"
       >
         <MoreVertical className="w-3.5 h-3.5" />
       </button>
@@ -1115,7 +1115,7 @@ const Kira = () => {
           
           <div className="flex flex-col h-[calc(100%-56px)]">
             <div className="p-3">
-              <Button onClick={() => { handleNewChat(null); setMobileSidebarOpen(false); }} className="w-full justify-start gap-2 bg-bronze hover:bg-bronze/90 text-background" size="sm">
+              <Button onClick={() => { handleNewChat(null); setMobileSidebarOpen(false); }} className="w-full justify-start gap-2 bg-bronze hover:bg-bronze/90 text-background h-11 text-base">
                 <Plus className="w-4 h-4" />
                 New Chat
               </Button>
@@ -1124,16 +1124,16 @@ const Kira = () => {
             <div className="px-3 pb-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder="Search chats..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-9 text-sm" />
+                <Input placeholder="Search chats..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-11 text-base" />
               </div>
             </div>
 
             <div className="px-3 space-y-1 mb-2">
-              <button onClick={() => setViewMode("chat")} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${viewMode === "chat" ? "bg-bronze/10 text-foreground" : "text-muted-foreground hover:bg-muted/50"}`}>
+              <button onClick={() => setViewMode("chat")} className={`w-full flex items-center gap-2 px-3 py-3 min-h-[44px] rounded-lg text-sm transition-colors ${viewMode === "chat" ? "bg-bronze/10 text-foreground" : "text-muted-foreground hover:bg-muted/50"}`}>
                 <MessageSquare className="w-4 h-4" />
                 Chats
               </button>
-              <button onClick={() => { setViewMode("projects"); setMobileSidebarOpen(false); }} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${viewMode === "projects" ? "bg-bronze/10 text-foreground" : "text-muted-foreground hover:bg-muted/50"}`}>
+              <button onClick={() => { setViewMode("projects"); setMobileSidebarOpen(false); }} className={`w-full flex items-center gap-2 px-3 py-3 min-h-[44px] rounded-lg text-sm transition-colors ${viewMode === "projects" ? "bg-bronze/10 text-foreground" : "text-muted-foreground hover:bg-muted/50"}`}>
                 <FolderOpen className="w-4 h-4" />
                 Projects
                 <span className="ml-auto text-xs bg-muted px-1.5 py-0.5 rounded">{projects.length}</span>
@@ -1205,7 +1205,7 @@ const Kira = () => {
         <div className="flex-1 flex flex-col min-w-0">
           {/* Mobile Header */}
           <div className="md:hidden h-12 flex items-center gap-3 px-4 border-b border-border/50">
-            <Button variant="ghost" size="icon" onClick={() => setMobileSidebarOpen(true)} className="h-8 w-8">
+            <Button variant="ghost" size="icon" onClick={() => setMobileSidebarOpen(true)} className="h-11 w-11">
               <PanelLeft className="h-4 w-4" />
             </Button>
             <div className="flex items-center gap-2 flex-1">
@@ -1214,7 +1214,7 @@ const Kira = () => {
               </div>
               <span className="font-poppins font-semibold text-sm">Kira</span>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => setMemoryPanelOpen(true)} title="Kira settings" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="icon" onClick={() => setMemoryPanelOpen(true)} title="Kira settings" className="h-11 w-11 text-muted-foreground hover:text-foreground">
               <Settings className="h-4 w-4" />
             </Button>
           </div>
@@ -1223,7 +1223,7 @@ const Kira = () => {
           {activeProject && (
             <button
               onClick={() => { setSelectedProject(activeProject); setProjectDetailOpen(true); }}
-              className="flex items-center gap-2 px-4 py-2 bg-bronze/5 border-b border-bronze/20 hover:bg-bronze/10 transition-colors"
+              className="flex items-center gap-2 px-4 py-3 min-h-[44px] bg-bronze/5 border-b border-bronze/20 hover:bg-bronze/10 transition-colors"
             >
               <FolderOpen className="w-4 h-4 text-bronze" />
               <span className="text-sm font-medium">{activeProject.name}</span>
@@ -1297,7 +1297,7 @@ const Kira = () => {
                                   <textarea
                                     value={editingContent}
                                     onChange={(e) => setEditingContent(e.target.value)}
-                                    className="w-full rounded-2xl px-4 py-3 text-sm bg-muted border border-bronze/50 focus:outline-none focus:ring-1 focus:ring-bronze resize-none"
+                                    className="w-full rounded-2xl px-4 py-3 text-base bg-muted border border-bronze/50 focus:outline-none focus:ring-1 focus:ring-bronze resize-none"
                                     rows={3}
                                     autoFocus
                                     onKeyDown={(e) => {
@@ -1353,7 +1353,7 @@ const Kira = () => {
                                   <div className={`flex items-center gap-1 mt-1 transition-opacity duration-150 opacity-60 md:opacity-0 md:group-hover:opacity-100 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <button
                                       onClick={() => handleCopy(msg.content, idx)}
-                                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted transition-all border border-transparent hover:border-border/50"
+                                      className="flex items-center gap-1.5 px-2.5 py-2 min-h-[44px] rounded-lg text-xs text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted transition-all border border-transparent hover:border-border/50"
                                     >
                                       {copiedIdx === idx ? (
                                         <><Check className="w-3 h-3 text-green-500" /><span className="hidden sm:inline text-green-500">Copied</span></>
@@ -1366,14 +1366,14 @@ const Kira = () => {
                                       <>
                                         <button
                                           onClick={() => { setEditingMessageIdx(idx); setEditingContent(msg.content); }}
-                                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted transition-all border border-transparent hover:border-border/50"
+                                          className="flex items-center gap-1.5 px-2.5 py-2 min-h-[44px] rounded-lg text-xs text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted transition-all border border-transparent hover:border-border/50"
                                         >
                                           <Pencil className="w-3 h-3" />
                                           <span className="hidden sm:inline">Edit</span>
                                         </button>
                                         <button
                                           onClick={() => handleRetry(msg.content, idx)}
-                                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted transition-all border border-transparent hover:border-border/50"
+                                          className="flex items-center gap-1.5 px-2.5 py-2 min-h-[44px] rounded-lg text-xs text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted transition-all border border-transparent hover:border-border/50"
                                         >
                                           <RotateCcw className="w-3 h-3" />
                                           <span className="hidden sm:inline">Retry</span>
@@ -1430,14 +1430,14 @@ const Kira = () => {
           </div>
 
           {/* Input Area */}
-          <div className="p-4 md:p-6 bg-background">
+          <div className="flex-shrink-0 p-4 md:p-6 bg-background">
             <div className="max-w-2xl mx-auto">
               {/* File attachment preview */}
               {selectedFile && (
                 <div className="mb-2 flex items-center gap-2 px-4 py-2 bg-muted rounded-2xl text-sm border border-border/50">
                   <Paperclip className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   <span className="flex-1 truncate text-foreground/80">{selectedFile.name}</span>
-                  <Button variant="ghost" size="sm" onClick={() => setSelectedFile(null)} className="h-6 w-6 p-0 hover:bg-destructive/10 rounded-full">
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedFile(null)} className="h-9 w-9 p-0 hover:bg-destructive/10 rounded-full flex-shrink-0">
                     <X className="w-3 h-3" />
                   </Button>
                 </div>
@@ -1450,7 +1450,7 @@ const Kira = () => {
                 {/* Plus / attachment menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-background/80 flex-shrink-0">
+                    <Button variant="ghost" size="icon" className="h-11 w-11 rounded-full hover:bg-background/80 flex-shrink-0">
                       <Plus className="w-5 h-5 text-muted-foreground" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -1493,7 +1493,7 @@ const Kira = () => {
                   onClick={() => handleSend()}
                   disabled={isLoading || isAtKiraLimit || (!input.trim() && !selectedFile)}
                   size="icon"
-                  className="h-9 w-9 rounded-full bg-bronze hover:bg-bronze/90 text-background flex-shrink-0 disabled:opacity-30 transition-opacity"
+                  className="h-11 w-11 rounded-full bg-bronze hover:bg-bronze/90 text-background flex-shrink-0 disabled:opacity-30 transition-opacity"
                 >
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </Button>
