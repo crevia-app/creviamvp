@@ -96,7 +96,7 @@ const Home = () => {
 
         {/* PWA install banner — first-time visitors only */}
         {canInstall && !installDismissed && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 animate-fade-in">
+          <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 animate-fade-in">
             <div className="flex items-center gap-3 bg-background/90 backdrop-blur-md border border-bronze/30 rounded-2xl px-4 py-3 shadow-xl">
               <div className="w-9 h-9 rounded-xl bg-bronze/10 flex items-center justify-center flex-shrink-0">
                 <Monitor className="w-5 h-5 text-bronze" />
