@@ -409,3 +409,28 @@ All colors MUST be HSL.
     display: none;
   }
 }
+
+@media print {
+  @page { margin: 0.4in; size: A4 portrait; }
+
+  /* Hide everything, then reveal only the invoice document */
+  body * { visibility: hidden !important; }
+
+  .invoice-print-area,
+  .invoice-print-area * {
+    visibility: visible !important;
+  }
+
+  .invoice-print-area {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  /* Force desktop table layout (hide mobile card list) */
+  .invoice-print-area .invoice-mobile-items { display: none !important; }
+  .invoice-print-area .invoice-desktop-items { display: block !important; }
+}

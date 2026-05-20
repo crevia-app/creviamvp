@@ -248,7 +248,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
         {/* ── Invoice Document ── */}
         <div className="overflow-y-auto max-h-[calc(95dvh-52px)] sm:max-h-[calc(90vh-52px)]">
           <div className="p-3 sm:p-6">
-            <div ref={docRef} className="bg-white text-black rounded-xl shadow-lg overflow-hidden print:shadow-none">
+            <div ref={docRef} className="invoice-print-area bg-white text-black rounded-xl shadow-lg overflow-hidden print:shadow-none">
 
               {/* Accent bar */}
               <div className="h-1.5" style={{ background: accentColor }} />
@@ -317,8 +317,8 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
                 {/* ── Items ── */}
                 {/* Mobile: card list. Desktop: table */}
                 <div className="mb-6">
-                  {/* Mobile card list */}
-                  <div className="sm:hidden">
+                  {/* Mobile card list — hidden during print */}
+                  <div className="sm:hidden invoice-mobile-items">
                     <div className="flex justify-between pb-2 mb-2" style={{ borderBottom: `2px solid ${accentColor}` }}>
                       <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: accentColor }}>Description</span>
                       <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: accentColor }}>Amount</span>
@@ -340,8 +340,8 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
                     ))}
                   </div>
 
-                  {/* Desktop table */}
-                  <div className="hidden sm:block overflow-x-auto">
+                  {/* Desktop table — always shown during print */}
+                  <div className="hidden sm:block overflow-x-auto invoice-desktop-items">
                     <table className="w-full">
                       <thead>
                         <tr style={{ borderBottom: `2px solid ${accentColor}` }}>
