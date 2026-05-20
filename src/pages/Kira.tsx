@@ -1472,77 +1472,78 @@ const Kira = () => {
           {/* Input Area */}
           <div className="p-4 md:p-6 bg-background">
             <div className="max-w-2xl mx-auto">
+              {/* File attachment preview */}
               {selectedFile && (
-                <div className="mb-3 flex items-center gap-2 p-3 bg-muted rounded-xl text-sm border border-border/50">
+                <div className="mb-2 flex items-center gap-2 px-4 py-2 bg-muted rounded-2xl text-sm border border-border/50">
                   <Paperclip className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  <span className="flex-1 truncate">{selectedFile.name}</span>
-                  <Button variant="ghost" size="sm" onClick={() => setSelectedFile(null)} className="h-6 w-6 p-0 hover:bg-destructive/10">
+                  <span className="flex-1 truncate text-foreground/80">{selectedFile.name}</span>
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedFile(null)} className="h-6 w-6 p-0 hover:bg-destructive/10 rounded-full">
                     <X className="w-3 h-3" />
                   </Button>
                 </div>
               )}
-              
-              <div className="bg-card rounded-2xl border border-border/50 p-3 shadow-lg">
+
+              {/* Single-row pill input — Gemini/Claude style */}
+              <div className="flex items-center gap-1 bg-muted/40 rounded-full border border-border/60 px-2 py-1.5 shadow-sm transition-all duration-200 focus-within:border-bronze/50 focus-within:bg-card focus-within:shadow-md">
+                <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/*,.pdf,.doc,.docx,.txt" />
+
+                {/* Plus / attachment menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-background/80 flex-shrink-0">
+                      <Plus className="w-5 h-5 text-muted-foreground" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56">
+                    <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="gap-3 cursor-pointer">
+                      <Image className="w-4 h-4 text-muted-foreground" />
+                      <div className="flex flex-col"><span className="font-medium">Add images</span><span className="text-xs text-muted-foreground">Upload photos or screenshots</span></div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="gap-3 cursor-pointer">
+                      <FileUp className="w-4 h-4 text-muted-foreground" />
+                      <div className="flex flex-col"><span className="font-medium">Add files</span><span className="text-xs text-muted-foreground">PDF, DOC, TXT files</span></div>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setVoiceChatOpen(true)} className="gap-3 cursor-pointer">
+                      <Mic className="w-4 h-4 text-muted-foreground" />
+                      <div className="flex flex-col"><span className="font-medium">Voice chat</span><span className="text-xs text-muted-foreground">Talk with Kira</span></div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setViewMode("projects")} className="gap-3 cursor-pointer">
+                      <FolderOpen className="w-4 h-4 text-muted-foreground" />
+                      <div className="flex flex-col"><span className="font-medium">Use project</span><span className="text-xs text-muted-foreground">Add project context</span></div>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Text input */}
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && !isLoading && !isAtKiraLimit && handleSend()}
-                  placeholder={isAtKiraLimit ? `Daily limit reached (${kiraActionsLimit}/${kiraActionsLimit}) · Upgrade to continue` : activeProject ? `Ask Kira about ${activeProject.name}...` : "How can I help you today?"}
-                  className="border-0 bg-transparent h-12 text-base focus-visible:ring-0 px-1 placeholder:text-muted-foreground/70"
+                  placeholder={isAtKiraLimit ? `Daily limit reached · Upgrade to continue` : activeProject ? `Ask Kira about ${activeProject.name}...` : "Ask Kira anything..."}
+                  className="border-0 bg-transparent h-9 text-base focus-visible:ring-0 px-2 flex-1 min-w-0 placeholder:text-muted-foreground/60"
                   disabled={isLoading || isAtKiraLimit}
                 />
-                
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
-                  <div className="flex items-center gap-1">
-                    <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/*,.pdf,.doc,.docx,.txt" />
-                    
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-muted">
-                          <Plus className="w-5 h-5 text-muted-foreground" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="w-56">
-                        <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="gap-3 cursor-pointer">
-                          <Image className="w-4 h-4 text-muted-foreground" />
-                          <div className="flex flex-col"><span className="font-medium">Add images</span><span className="text-xs text-muted-foreground">Upload photos or screenshots</span></div>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="gap-3 cursor-pointer">
-                          <FileUp className="w-4 h-4 text-muted-foreground" />
-                          <div className="flex flex-col"><span className="font-medium">Add files</span><span className="text-xs text-muted-foreground">PDF, DOC, TXT files</span></div>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => setVoiceChatOpen(true)} className="gap-3 cursor-pointer">
-                          <Mic className="w-4 h-4 text-muted-foreground" />
-                          <div className="flex flex-col"><span className="font-medium">Voice chat</span><span className="text-xs text-muted-foreground">Talk with Kira</span></div>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setViewMode("projects")} className="gap-3 cursor-pointer">
-                          <FolderOpen className="w-4 h-4 text-muted-foreground" />
-                          <div className="flex flex-col"><span className="font-medium">Use project</span><span className="text-xs text-muted-foreground">Add project context</span></div>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    {kiraActionsLimit < 1000 && (
-                      <span className={`text-[10px] font-semibold tabular-nums ${isAtKiraLimit ? "text-destructive" : "text-muted-foreground/50"}`}>
-                        {kiraActionsToday}/{kiraActionsLimit}
-                      </span>
-                    )}
-                    <Button
-                      onClick={() => handleSend()}
-                      disabled={isLoading || isAtKiraLimit || (!input.trim() && !selectedFile)}
-                      size="icon"
-                      className="h-9 w-9 rounded-lg bg-bronze hover:bg-bronze-dark text-background"
-                    >
-                      {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                </div>
+
+                {/* Usage counter */}
+                {kiraActionsLimit < 1000 && (
+                  <span className={`text-[10px] font-semibold tabular-nums flex-shrink-0 pr-1 ${isAtKiraLimit ? "text-destructive" : "text-muted-foreground/40"}`}>
+                    {kiraActionsToday}/{kiraActionsLimit}
+                  </span>
+                )}
+
+                {/* Send button — always visible; disabled when nothing to send */}
+                <Button
+                  onClick={() => handleSend()}
+                  disabled={isLoading || isAtKiraLimit || (!input.trim() && !selectedFile)}
+                  size="icon"
+                  className="h-9 w-9 rounded-full bg-bronze hover:bg-bronze/90 text-background flex-shrink-0 disabled:opacity-30 transition-opacity"
+                >
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                </Button>
               </div>
 
-              <p className="text-xs text-muted-foreground text-center mt-4">
+              <p className="text-xs text-muted-foreground text-center mt-3">
                 Kira may occasionally make mistakes. Please verify important information.
               </p>
             </div>
