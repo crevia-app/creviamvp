@@ -1655,14 +1655,16 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
               <div className="p-3 md:p-4 border-b bg-background/95 backdrop-blur flex-shrink-0">
                 <div className="flex min-w-0 items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onBack ? onBack() : setSelectedRoom(null)}
-                      className="md:hidden -ml-2 h-8 w-8 p-0"
-                    >
-                      <ArrowLeft className="h-5 w-5" />
-                    </Button>
+                    {!hideRoomList && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onBack ? onBack() : setSelectedRoom(null)}
+                        className="md:hidden -ml-2 h-8 w-8 p-0"
+                      >
+                        <ArrowLeft className="h-5 w-5" />
+                      </Button>
+                    )}
                     <button
                       onClick={() => setShowRoomInfo(true)}
                       className="flex items-center gap-3 min-w-0 hover:opacity-75 transition-opacity"
@@ -2243,8 +2245,8 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                 </div>
               </ScrollArea>
 
-              {/* Input Area */}
-              <div className="p-3 md:p-4 border-t bg-background/95 backdrop-blur flex-shrink-0">
+              {/* Input Area — extra bottom padding on mobile clears the fixed MobileBottomNav (64px) when embedded */}
+              <div className={`border-t bg-background/95 backdrop-blur flex-shrink-0 ${hideRoomList ? "px-3 pt-3 pb-[calc(0.75rem+4rem)] md:p-4" : "p-3 md:p-4"}`}>
                 <div className="max-w-3xl mx-auto">
                   {/* Reply preview */}
                   {replyingTo && (

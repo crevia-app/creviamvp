@@ -232,15 +232,15 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-md max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-4 pt-4 pb-3 border-b flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Users className="w-4 h-4 text-bronze" />
             Workspace Members
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
           {/* Invite link — creator only */}
           {isCreator && (
             <button
@@ -351,7 +351,7 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
             ) : (
               <div className="space-y-1">
                 {members.map((m) => (
-                  <div key={m.user_id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/30 transition-colors">
+                  <div key={m.user_id} className="flex items-center gap-2 px-2 py-2 rounded-xl hover:bg-muted/30 transition-colors">
                     <Avatar className="h-8 w-8 flex-shrink-0">
                       <AvatarImage src={m.profile.avatar_url || undefined} />
                       <AvatarFallback className="text-xs bg-bronze/20 text-bronze">
@@ -359,27 +359,24 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1">
                         <p className="text-sm font-medium truncate">{getName(m.profile)}</p>
                         {m.user_id === createdBy && (
                           <Crown className="w-3 h-3 text-bronze flex-shrink-0" />
                         )}
                       </div>
-                      {m.profile.display_name && (
-                        <p className="text-xs text-muted-foreground truncate">{m.profile.email}</p>
-                      )}
+                      <p className="text-[10px] text-muted-foreground truncate max-w-[120px] sm:max-w-none">
+                        {m.user_id === createdBy ? "owner" : m.role}
+                        {m.profile.display_name ? ` · ${m.profile.email}` : ""}
+                      </p>
                     </div>
-                    <Badge variant="outline" className="text-[10px] capitalize flex-shrink-0">
-                      {m.user_id === createdBy ? "owner" : m.role}
-                    </Badge>
                     {isCreator && m.user_id !== createdBy && (
-                      <div className="flex items-center gap-1 flex-shrink-0">
+                      <div className="flex items-center gap-0.5 flex-shrink-0">
                         <button
                           onClick={() => toggleRole(m.user_id, m.role)}
                           disabled={promotingId === m.user_id}
-                          className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-bronze hover:bg-bronze/10 transition-colors"
-                          aria-label={m.role === "admin" ? "Demote to member" : "Promote to admin (Business+)"}
-                          title={m.role === "admin" ? "Demote to member" : "Promote to admin (Business plan required)"}
+                          className="p-2 h-9 w-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-bronze hover:bg-bronze/10 transition-colors"
+                          aria-label={m.role === "admin" ? "Demote to member" : "Promote to admin"}
                         >
                           {promotingId === m.user_id
                             ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -390,7 +387,7 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
                         <button
                           onClick={() => removeMember(m.user_id)}
                           disabled={removingId === m.user_id}
-                          className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          className="p-2 h-9 w-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                           aria-label="Remove member"
                         >
                           {removingId === m.user_id

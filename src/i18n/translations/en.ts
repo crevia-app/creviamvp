@@ -263,6 +263,14 @@ const en = {
   "toast.languageChanged": "Language changed",
   "toast.languageChangedDesc": "Interface language has been updated",
 
+  // Studio tabs
+  "studio.title": "Crevia Studio",
+  "studio.subtitle": "Your creative business toolkit",
+  "studio.tab.link": "Crevia Link",
+  "studio.tab.workspace": "Workspace",
+  "studio.tab.invoice": "Invoice",
+  "studio.tab.canvas": "Canvas",
+
   // Sidebar
   "sidebar.studio": "Crevia Studio",
   "sidebar.connect": "Crevia Connect",

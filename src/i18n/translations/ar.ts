@@ -102,6 +102,13 @@ const ar = {
   "toast.languageChanged": "تم تغيير اللغة",
   "toast.languageChangedDesc": "تم تحديث لغة الواجهة",
 
+  "studio.title": "Crevia Studio",
+  "studio.subtitle": "مجموعة أدوات أعمالك الإبداعية",
+  "studio.tab.link": "Crevia Link",
+  "studio.tab.workspace": "مساحة العمل",
+  "studio.tab.invoice": "فاتورة",
+  "studio.tab.canvas": "Canvas",
+
   "sidebar.studio": "Crevia Studio",
   "sidebar.connect": "Crevia Connect",
   "sidebar.kira": "Kira AI",

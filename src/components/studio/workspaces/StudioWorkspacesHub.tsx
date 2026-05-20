@@ -193,14 +193,14 @@ const StudioWorkspacesHub = ({ initialRoomId }: { initialRoomId?: string } = {})
         )}
       >
         {/* Mobile back button */}
-        <div className="md:hidden flex-shrink-0 px-3 py-2 border-b border-gray-100 dark:border-border/50 bg-background/80 backdrop-blur-sm">
+        <div className="md:hidden flex-shrink-0 h-10 flex items-center gap-2 px-2 border-b border-gray-100 dark:border-border/50 bg-background/80 backdrop-blur-sm">
           <button
             onClick={() => setShowMobileChat(false)}
-            className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors flex-shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
-            All messages
           </button>
+          <span className="text-xs font-medium text-muted-foreground truncate">All messages</span>
         </div>
 
         {/* Workspace / DM action bar */}
@@ -212,7 +212,7 @@ const StudioWorkspacesHub = ({ initialRoomId }: { initialRoomId?: string } = {})
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.16 }}
-              className="flex-shrink-0 border-b border-gray-100 dark:border-border/50 px-4 py-2.5 flex items-center justify-between gap-2 overflow-hidden bg-card/50 backdrop-blur-sm"
+              className="flex-shrink-0 border-b border-gray-100 dark:border-border/50 px-3 py-1.5 flex items-center justify-between gap-2 overflow-hidden bg-card/50 backdrop-blur-sm"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-7 h-7 rounded-lg bg-bronze/15 flex items-center justify-center flex-shrink-0">
@@ -246,7 +246,7 @@ const StudioWorkspacesHub = ({ initialRoomId }: { initialRoomId?: string } = {})
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.16 }}
-              className="flex-shrink-0 border-b border-gray-100 dark:border-border/50 px-4 py-2.5 flex items-center gap-2.5 overflow-hidden"
+              className="flex-shrink-0 border-b border-gray-100 dark:border-border/50 px-3 py-1.5 flex items-center gap-2 overflow-hidden"
             >
               <Button
                 size="sm"

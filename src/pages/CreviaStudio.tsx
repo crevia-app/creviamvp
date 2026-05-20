@@ -2,6 +2,7 @@ import { useSearchParams } from "react-router-dom";
 import { Link2, MessageSquare, Sparkles, Receipt, FileSignature } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/i18n/LanguageContext";
 // Tab content
 import CreviaLink from "./CreviaLink";
 import SmartInvoicesTab from "@/components/studio/SmartInvoicesTab";
@@ -10,6 +11,7 @@ import StudioWorkspacesHub from "@/components/studio/workspaces/StudioWorkspaces
 
 const CreviaStudio = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { t } = useLanguage();
 
   const activeTab = searchParams.get("tab") || "link";
   const activeLinkSection = searchParams.get("section") || "profile";
@@ -18,10 +20,10 @@ const CreviaStudio = () => {
 
   // Strict order: Link → Workspace → Invoice → Canvas
   const studioTabs = [
-    { id: "link",      label: "Crevia Link", mobileLabel: "Link",      icon: Link2 },
-    { id: "chat",      label: "Workspace",   mobileLabel: "Workspace", icon: MessageSquare },
-    { id: "invoices",  label: "Invoice",     mobileLabel: "Invoice",   icon: Receipt },
-    { id: "contracts", label: "Canvas",      mobileLabel: "Canvas",    icon: FileSignature },
+    { id: "link",      labelKey: "studio.tab.link",      icon: Link2 },
+    { id: "chat",      labelKey: "studio.tab.workspace", icon: MessageSquare },
+    { id: "invoices",  labelKey: "studio.tab.invoice",   icon: Receipt },
+    { id: "contracts", labelKey: "studio.tab.canvas",    icon: FileSignature },
   ];
 
   const linkSections = [
@@ -53,10 +55,10 @@ const CreviaStudio = () => {
             </div>
             <div>
               <h1 className="font-vollkorn text-xl md:text-2xl font-semibold text-foreground">
-                Crevia Studio
+                {t("studio.title")}
               </h1>
               <p className="text-sm md:text-base text-muted-foreground">
-                Your creative business toolkit
+                {t("studio.subtitle")}
               </p>
             </div>
           </div>
@@ -66,12 +68,12 @@ const CreviaStudio = () => {
             {studioTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
+              const label = t(tab.labelKey);
               return (
                 <button
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
                   className={cn(
-                    // shared
                     "flex-1 flex flex-col sm:flex-row items-center justify-center",
                     "gap-2 sm:gap-1.5 px-1 sm:px-3 py-3.5 sm:py-2.5",
                     "rounded-xl sm:rounded-t-lg sm:rounded-b-none font-poppins",
@@ -82,9 +84,8 @@ const CreviaStudio = () => {
                   )}
                 >
                   <Icon className="h-[22px] w-[22px] sm:h-4 sm:w-4 flex-shrink-0" />
-                  {/* Desktop label */}
                   <span className="hidden sm:inline text-sm font-medium whitespace-nowrap">
-                    {tab.label}
+                    {label}
                   </span>
                 </button>
               );

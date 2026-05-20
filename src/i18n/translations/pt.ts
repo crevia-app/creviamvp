@@ -102,6 +102,13 @@ const pt = {
   "toast.languageChanged": "Idioma alterado",
   "toast.languageChangedDesc": "O idioma da interface foi atualizado",
 
+  "studio.title": "Crevia Studio",
+  "studio.subtitle": "Seu kit de ferramentas de negócios criativos",
+  "studio.tab.link": "Crevia Link",
+  "studio.tab.workspace": "Espaço de trabalho",
+  "studio.tab.invoice": "Fatura",
+  "studio.tab.canvas": "Canvas",
+
   "sidebar.studio": "Crevia Studio",
   "sidebar.connect": "Crevia Connect",
   "sidebar.kira": "Kira AI",
