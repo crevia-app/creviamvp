@@ -39,7 +39,6 @@ import {
   Image,
   FileUp,
   X,
-  Mic,
   FileSignature,
   Receipt,
   Copy,
@@ -61,7 +60,6 @@ import {
 import { CreateProjectDialog } from "@/components/kira/CreateProjectDialog";
 import { ProjectDetailSheet } from "@/components/kira/ProjectDetailSheet";
 import { ProjectsView } from "@/components/kira/ProjectsView";
-import { VoiceChatDialog } from "@/components/kira/VoiceChatDialog";
 import CreateContractDialog from "@/components/studio/CreateContractDialog";
 import CreateInvoiceDialog from "@/components/studio/CreateInvoiceDialog";
 import { ApproveActionDialog } from "@/components/kira/ApproveActionDialog";
@@ -399,7 +397,6 @@ const Kira = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [projectDetailOpen, setProjectDetailOpen] = useState(false);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
-  const [voiceChatOpen, setVoiceChatOpen] = useState(false);
   const [contractDialogOpen, setContractDialogOpen] = useState(false);
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
@@ -1504,10 +1501,6 @@ const Kira = () => {
                       <div className="flex flex-col"><span className="font-medium">Add files</span><span className="text-xs text-muted-foreground">PDF, DOC, TXT files</span></div>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => setVoiceChatOpen(true)} className="gap-3 cursor-pointer">
-                      <Mic className="w-4 h-4 text-muted-foreground" />
-                      <div className="flex flex-col"><span className="font-medium">Voice chat</span><span className="text-xs text-muted-foreground">Talk with Kira</span></div>
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setViewMode("projects")} className="gap-3 cursor-pointer">
                       <FolderOpen className="w-4 h-4 text-muted-foreground" />
                       <div className="flex flex-col"><span className="font-medium">Use project</span><span className="text-xs text-muted-foreground">Add project context</span></div>
@@ -1569,17 +1562,6 @@ const Kira = () => {
         onProjectDeleted={handleProjectDeleted}
         onConversationSelect={handleConversationSelect}
         onNewChat={(projectId) => handleNewChat(projectId)}
-      />
-
-      <VoiceChatDialog
-        open={voiceChatOpen}
-        onOpenChange={setVoiceChatOpen}
-        userType={userType}
-        projectContext={getActiveProject() ? {
-          name: getActiveProject()!.name,
-          description: getActiveProject()!.description,
-          customInstructions: getActiveProject()!.custom_instructions
-        } : null}
       />
 
       <CreateContractDialog
