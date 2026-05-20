@@ -470,8 +470,8 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
                   </div>
                 )}
 
-              </div>{/* / p-4 sm:p-8 page 1 */}
-              </div>{/* / page1Ref */}
+              </div>
+              </div>
 
               {/* ── Page break indicator (screen only — ignored by download) ── */}
               {hasPage2 && (
@@ -579,10 +579,10 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
                   </div>
                 )}
 
-                </div>{/* / p-4 sm:p-8 page 2 */}
-                </div>{/* / page2Ref */}
-              )}{/* / hasPage2 */}
-            </div>{/* / docRef */}
+                </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
