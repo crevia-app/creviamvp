@@ -422,6 +422,68 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
                   </div>
                 )}
 
+                {/* ── Payment Details ── */}
+                {invoice.payment_details?.method && (() => {
+                  const pd = invoice.payment_details as {
+                    method?: string; accountName?: string; bankName?: string;
+                    accountNumber?: string; branchCode?: string; reference?: string;
+                    instructions?: string;
+                  };
+
+                  const fieldLabels: Record<string, string> = {
+                    "Bank Transfer":  JSON.stringify({ accountName: "Account Name", bankName: "Bank Name", accountNumber: "Account Number", branchCode: "Branch / SWIFT", reference: "Reference" }),
+                    "M-Pesa":         JSON.stringify({ accountName: "Business Name", accountNumber: "Till / Paybill / Phone", reference: "Reference" }),
+                    "PayPal":         JSON.stringify({ accountName: "PayPal Name", accountNumber: "PayPal Email / Phone", reference: "Reference" }),
+                    "Stripe":         JSON.stringify({ accountName: "Account Name", accountNumber: "Payment Link / Email", reference: "Reference" }),
+                    "Cryptocurrency": JSON.stringify({ bankName: "Network", accountNumber: "Wallet Address", branchCode: "Memo / Tag" }),
+                    "Cash":           "{}",
+                    "Other":          JSON.stringify({ accountName: "Account Name", bankName: "Platform", accountNumber: "Account / ID", reference: "Reference" }),
+                  };
+
+                  const labels: Record<string, string> = JSON.parse(fieldLabels[pd.method ?? ""] || "{}");
+
+                  const rows: { label: string; value: string }[] = (
+                    Object.keys(labels) as Array<keyof typeof pd>
+                  )
+                    .filter(k => pd[k])
+                    .map(k => ({ label: labels[k as string], value: pd[k] as string }));
+
+                  return (
+                    <div className="mt-6 rounded-xl overflow-hidden" style={{ border: `1px solid ${hexToRgba(accentColor, 0.25)}` }}>
+                      {/* Header bar */}
+                      <div className="px-4 py-2.5 flex items-center gap-2" style={{ background: hexToRgba(accentColor, 0.08), borderBottom: `1px solid ${hexToRgba(accentColor, 0.2)}` }}>
+                        <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: accentColor }}>
+                          <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>
+                        </svg>
+                        <p className="text-[10px] uppercase tracking-widest font-bold" style={{ color: accentColor }}>
+                          Payment Details
+                        </p>
+                        <span className="text-[10px] text-gray-500 ml-auto font-medium">Pay via {pd.method}</span>
+                      </div>
+
+                      {/* Fields grid */}
+                      <div className="px-4 py-3">
+                        {rows.length > 0 && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 mb-2">
+                            {rows.map(({ label, value }) => (
+                              <div key={label}>
+                                <p className="text-[9px] uppercase tracking-wider text-gray-400 font-semibold mb-0.5">{label}</p>
+                                <p className="text-gray-900 text-xs font-semibold break-all">{value}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {pd.instructions && (
+                          <div className="mt-2 pt-2" style={{ borderTop: `1px solid ${hexToRgba(accentColor, 0.15)}` }}>
+                            <p className="text-[9px] uppercase tracking-wider text-gray-400 font-semibold mb-0.5">Instructions</p>
+                            <p className="text-gray-600 text-xs whitespace-pre-line">{pd.instructions}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* ── Footer ── */}
                 <div className="mt-8 pt-3 text-center" style={{ borderTop: `1px solid ${hexToRgba(accentColor, 0.2)}` }}>
                   <p className="text-xs font-medium" style={{ color: accentColor }}>Thank you for your business!</p>

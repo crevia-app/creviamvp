@@ -24,7 +24,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Plus, Trash2, Receipt, Users, ChevronDown, BookUser } from "lucide-react";
+import { Plus, Trash2, Receipt, Users, ChevronDown, ChevronUp, BookUser, CreditCard, X as XIcon } from "lucide-react";
 import { toast } from "sonner";
 import ClientAddressBook, { type SavedClient } from "@/components/studio/ClientAddressBook";
 
@@ -44,6 +44,59 @@ interface CreateInvoiceDialogProps {
   onCreated?: (id: string) => void;
   kiraContext?: Record<string, unknown> | null;
 }
+
+interface PaymentDetails {
+  method: string;
+  accountName: string;
+  bankName: string;
+  accountNumber: string;
+  branchCode: string;
+  reference: string;
+  instructions: string;
+}
+
+const defaultPaymentDetails: PaymentDetails = {
+  method: "", accountName: "", bankName: "",
+  accountNumber: "", branchCode: "", reference: "", instructions: "",
+};
+
+// Field labels per payment method — only keys present are rendered
+const PAYMENT_METHOD_FIELDS: Record<string, Partial<Record<keyof PaymentDetails, string>>> = {
+  "Bank Transfer": {
+    accountName:   "Account Holder Name",
+    bankName:      "Bank Name",
+    accountNumber: "Account Number",
+    branchCode:    "Branch / SWIFT / Sort Code",
+    reference:     "Payment Reference",
+  },
+  "M-Pesa": {
+    accountName:   "Business / Person Name",
+    accountNumber: "Till No. · Paybill · Phone",
+    reference:     "Account No. / Reference",
+  },
+  "PayPal": {
+    accountName:   "PayPal Name",
+    accountNumber: "PayPal Email or Phone",
+    reference:     "Reference (optional)",
+  },
+  "Stripe": {
+    accountName:   "Account Name",
+    accountNumber: "Payment Link or Email",
+    reference:     "Reference (optional)",
+  },
+  "Cryptocurrency": {
+    bankName:      "Network (e.g. Bitcoin, Ethereum)",
+    accountNumber: "Wallet Address",
+    branchCode:    "Memo / Tag (if required)",
+  },
+  "Cash": {},
+  "Other": {
+    accountName:   "Account Name",
+    bankName:      "Platform / Institution",
+    accountNumber: "Account / ID",
+    reference:     "Reference",
+  },
+};
 
 const currencies = [
   { code: "KES", name: "Kenyan Shilling" },
@@ -81,6 +134,10 @@ const CreateInvoiceDialog = ({
   const [items, setItems] = useState<InvoiceItem[]>([
     { description: "", quantity: "", unit_price: "", total: 0 },
   ]);
+  // Payment details
+  const [paymentDetails, setPaymentDetails] = useState<PaymentDetails>(defaultPaymentDetails);
+  const [showPaymentDetails, setShowPaymentDetails] = useState(false);
+
   // Address book state
   const [savedClients, setSavedClients] = useState<SavedClient[]>([]);
   const [autofillOpen, setAutofillOpen] = useState(false);
@@ -103,6 +160,13 @@ const CreateInvoiceDialog = ({
       setDiscountAmount(editingInvoice.discount_amount ? String(editingInvoice.discount_amount) : "");
       setNotes(editingInvoice.notes || "");
       setTerms(editingInvoice.terms || "");
+      if (editingInvoice.payment_details) {
+        setPaymentDetails({ ...defaultPaymentDetails, ...editingInvoice.payment_details });
+        setShowPaymentDetails(true);
+      } else {
+        setPaymentDetails(defaultPaymentDetails);
+        setShowPaymentDetails(false);
+      }
       fetchItems(editingInvoice.id);
     } else {
       // Immediate sync reset with defaults (settings will override below)
@@ -114,6 +178,8 @@ const CreateInvoiceDialog = ({
       setTaxRate("");
       setTerms("Payment is due within 30 days of invoice date.");
       setItems([{ description: "", quantity: "", unit_price: "", total: 0 }]);
+      setPaymentDetails(defaultPaymentDetails);
+      setShowPaymentDetails(false);
 
       // Kira context
       if (kiraContext) {
@@ -282,6 +348,8 @@ const CreateInvoiceDialog = ({
             total,
             notes: notes || null,
             terms: terms || null,
+            payment_details: (showPaymentDetails && paymentDetails.method)
+              ? paymentDetails as any : null,
           })
           .eq("id", editingInvoice.id);
 
@@ -324,6 +392,8 @@ const CreateInvoiceDialog = ({
             total,
             notes: notes || null,
             terms: terms || null,
+            payment_details: (showPaymentDetails && paymentDetails.method)
+              ? paymentDetails as any : null,
           })
           .select()
           .single();
@@ -731,6 +801,102 @@ const CreateInvoiceDialog = ({
                 rows={3}
               />
             </div>
+          </div>
+
+          {/* Payment Details */}
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => setShowPaymentDetails((v) => !v)}
+              className="w-full flex items-center justify-between gap-2 p-3.5 rounded-xl border border-dashed border-border hover:border-bronze/50 hover:bg-bronze/5 transition-all duration-200 group"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-bronze/10 flex items-center justify-center flex-shrink-0 group-hover:bg-bronze/20 transition-colors">
+                  <CreditCard className="h-4 w-4 text-bronze" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-foreground leading-tight">Payment Details</p>
+                  <p className="text-[11px] text-muted-foreground leading-tight">
+                    {showPaymentDetails ? "Shown on invoice" : "Add bank / M-Pesa / PayPal info to your invoice"}
+                  </p>
+                </div>
+              </div>
+              {showPaymentDetails
+                ? <ChevronUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                : <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
+            </button>
+
+            {showPaymentDetails && (
+              <div className="p-4 bg-muted/30 rounded-xl border border-border/50 space-y-4">
+                {/* Method */}
+                <div>
+                  <Label>Payment Method <span className="text-destructive">*</span></Label>
+                  <Select
+                    value={paymentDetails.method}
+                    onValueChange={(v) => setPaymentDetails((p) => ({ ...defaultPaymentDetails, method: v }))}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select how you'd like to be paid" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(PAYMENT_METHOD_FIELDS).map((m) => (
+                        <SelectItem key={m} value={m}>{m}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Dynamic fields */}
+                {paymentDetails.method && (() => {
+                  const fields = PAYMENT_METHOD_FIELDS[paymentDetails.method] || {};
+                  const fieldKeys = (Object.keys(fields) as Array<keyof PaymentDetails>).filter(k => k !== "instructions");
+                  return (
+                    <>
+                      {fieldKeys.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {fieldKeys.map((key) => (
+                            <div key={key} className={key === "accountNumber" || key === "reference" ? "sm:col-span-1" : ""}>
+                              <Label className="text-xs">{fields[key]}</Label>
+                              <Input
+                                value={paymentDetails[key] as string}
+                                onChange={(e) => setPaymentDetails((p) => ({ ...p, [key]: e.target.value }))}
+                                placeholder={fields[key]}
+                                className="mt-1"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div>
+                        <Label className="text-xs">Additional Instructions <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                        <Textarea
+                          value={paymentDetails.instructions}
+                          onChange={(e) => setPaymentDetails((p) => ({ ...p, instructions: e.target.value }))}
+                          placeholder="e.g. Please include the invoice number as reference when transferring"
+                          className="mt-1 resize-none"
+                          rows={2}
+                        />
+                      </div>
+                    </>
+                  );
+                })()}
+
+                {!paymentDetails.method && (
+                  <p className="text-xs text-muted-foreground text-center py-2">
+                    Select a payment method above to add details.
+                  </p>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => { setShowPaymentDetails(false); setPaymentDetails(defaultPaymentDetails); }}
+                  className="text-[11px] text-muted-foreground hover:text-destructive transition-colors flex items-center gap-1"
+                >
+                  <XIcon className="h-3 w-3" /> Remove payment details
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Actions */}
