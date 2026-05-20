@@ -85,6 +85,7 @@ const WorkspaceInboxList = ({
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [mobileTab, setMobileTab] = useState<"workspaces" | "dms">("workspaces");
 
   // Workspace CRUD state
   const [renameDialog, setRenameDialog] = useState<Room | null>(null);
@@ -404,8 +405,8 @@ const WorkspaceInboxList = ({
 
   return (
     <>
-      <div className="flex flex-col w-[268px] xl:w-[295px] flex-shrink-0 border-r border-gray-100 dark:border-border/60 bg-background overflow-hidden">
-        {/* Header — search only, no "New" button */}
+      <div className="flex flex-col w-full h-full bg-background overflow-hidden">
+        {/* Header */}
         <div className="px-3 pt-3 pb-2.5 border-b border-gray-100 dark:border-border/50 flex-shrink-0 space-y-2.5">
           <h3 className="font-semibold text-sm tracking-tight">Messages</h3>
           <div className="relative">
@@ -419,10 +420,37 @@ const WorkspaceInboxList = ({
           </div>
         </div>
 
+        {/* Mobile tab bar — WhatsApp style */}
+        <div className="md:hidden flex-shrink-0 flex bg-background border-b border-gray-100 dark:border-border/50">
+          {([
+            { id: "workspaces" as const, label: "Workspaces", icon: Sparkles },
+            { id: "dms" as const, label: "Messages", icon: MessageSquare },
+          ] as const).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setMobileTab(tab.id)}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-all relative",
+                mobileTab === tab.id ? "text-bronze" : "text-muted-foreground/50"
+              )}
+            >
+              <tab.icon className="w-3.5 h-3.5" />
+              {tab.label}
+              {mobileTab === tab.id && (
+                <motion.div
+                  layoutId="mobile-tab-underline"
+                  className="absolute bottom-0 left-6 right-6 h-0.5 bg-bronze rounded-full"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
+            </button>
+          ))}
+        </div>
+
         <ScrollArea className="flex-1">
           <div className="p-2 space-y-4">
             {/* Active Workspaces */}
-            <div>
+            <div className={cn(mobileTab !== "workspaces" && "hidden md:block")}>
               <div className="flex items-center justify-between px-2 py-1.5">
                 <p className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">
                   Active Workspaces
@@ -546,7 +574,7 @@ const WorkspaceInboxList = ({
             </div>
 
             {/* Direct Messages */}
-            <div>
+            <div className={cn(mobileTab !== "dms" && "hidden md:block")}>
               <div className="flex items-center justify-between px-2 py-1.5">
                 <p className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">
                   Direct Messages

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -31,19 +31,67 @@ interface SelectedRoom {
   memberCount?: number;
 }
 
+const MIN_SIDEBAR = 260;
+const MAX_SIDEBAR = 520;
+const DEFAULT_SIDEBAR = 320;
+
 const StudioWorkspacesHub = ({ initialRoomId }: { initialRoomId?: string } = {}) => {
   const [userId, setUserId] = useState("");
   const [selectedRoom, setSelectedRoom] = useState<SelectedRoom | null>(null);
   const [showMobileChat, setShowMobileChat] = useState(false);
   const [memberCount, setMemberCount] = useState(1);
+  const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Members dialog (Add People)
+  // Members dialog
   const [membersDialogOpen, setMembersDialogOpen] = useState(false);
 
-  // Propose workspace dialog (DM → workspace invite)
+  // Propose workspace dialog
   const [proposeDialogOpen, setProposeDialogOpen] = useState(false);
   const [proposeName, setProposeName] = useState("");
   const [proposeSending, setProposeSending] = useState(false);
+
+  // Resize state
+  const isResizing = useRef(false);
+  const startX = useRef(0);
+  const startWidth = useRef(0);
+
+  // Mobile detection
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  // Global resize drag listeners
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!isResizing.current) return;
+      const delta = e.clientX - startX.current;
+      setSidebarWidth(Math.min(Math.max(startWidth.current + delta, MIN_SIDEBAR), MAX_SIDEBAR));
+    };
+    const onUp = () => {
+      if (!isResizing.current) return;
+      isResizing.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, []);
+
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    isResizing.current = true;
+    startX.current = e.clientX;
+    startWidth.current = sidebarWidth;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  }, [sidebarWidth]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -51,7 +99,6 @@ const StudioWorkspacesHub = ({ initialRoomId }: { initialRoomId?: string } = {})
     });
   }, []);
 
-  // Auto-select when navigated from notification / external link
   useEffect(() => {
     if (!initialRoomId || !userId) return;
     supabase
@@ -77,8 +124,6 @@ const StudioWorkspacesHub = ({ initialRoomId }: { initialRoomId?: string } = {})
     setSelectedRoom({ ...room, type });
     setShowMobileChat(true);
     setMembersDialogOpen(false);
-
-    // Fetch member count for the workspace header
     if (type === "workspace") {
       const { count } = await supabase
         .from("chat_room_members")
@@ -113,12 +158,14 @@ const StudioWorkspacesHub = ({ initialRoomId }: { initialRoomId?: string } = {})
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-background">
-      {/* ── PANE 1: Inbox ── */}
+
+      {/* ── PANE 1: Inbox sidebar ── */}
       <div
         className={cn(
-          "flex-shrink-0 border-r border-gray-100 dark:border-border/60",
-          showMobileChat ? "hidden md:flex" : "flex w-full md:w-auto"
+          "flex-shrink-0 overflow-hidden flex flex-col",
+          showMobileChat ? "hidden md:flex" : "flex w-full"
         )}
+        style={!isMobile ? { width: sidebarWidth } : undefined}
       >
         {userId && (
           <WorkspaceInboxList
@@ -129,6 +176,15 @@ const StudioWorkspacesHub = ({ initialRoomId }: { initialRoomId?: string } = {})
         )}
       </div>
 
+      {/* ── Resize handle — desktop only ── */}
+      <div
+        onMouseDown={handleResizeStart}
+        className="hidden md:flex items-center justify-center w-2 cursor-col-resize flex-shrink-0 relative group border-r border-gray-100 dark:border-border/60 hover:border-bronze/30 transition-colors duration-200 select-none"
+        title="Drag to resize"
+      >
+        <div className="w-0.5 h-10 bg-border/30 rounded-full group-hover:bg-bronze/50 group-active:bg-bronze transition-colors duration-150" />
+      </div>
+
       {/* ── PANE 2: Chat / empty state ── */}
       <div
         className={cn(
@@ -136,18 +192,18 @@ const StudioWorkspacesHub = ({ initialRoomId }: { initialRoomId?: string } = {})
           showMobileChat ? "flex" : "hidden md:flex"
         )}
       >
-        {/* Mobile back */}
-        <div className="md:hidden flex-shrink-0 px-3 py-2 border-b border-gray-100 dark:border-border/50">
+        {/* Mobile back button */}
+        <div className="md:hidden flex-shrink-0 px-3 py-2 border-b border-gray-100 dark:border-border/50 bg-background/80 backdrop-blur-sm">
           <button
             onClick={() => setShowMobileChat(false)}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             All messages
           </button>
         </div>
 
-        {/* Workspace action bar — shows above chat for workspaces */}
+        {/* Workspace / DM action bar */}
         <AnimatePresence>
           {isWorkspace && selectedRoom && (
             <motion.div
@@ -156,22 +212,22 @@ const StudioWorkspacesHub = ({ initialRoomId }: { initialRoomId?: string } = {})
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.16 }}
-              className="flex-shrink-0 border-b border-gray-100 dark:border-border/50 px-4 py-2 flex items-center justify-between gap-2 overflow-hidden bg-card/40"
+              className="flex-shrink-0 border-b border-gray-100 dark:border-border/50 px-4 py-2.5 flex items-center justify-between gap-2 overflow-hidden bg-card/50 backdrop-blur-sm"
             >
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="w-6 h-6 rounded-lg bg-bronze/10 flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="w-3 h-3 text-bronze" />
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-bronze/15 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-3.5 h-3.5 text-bronze" />
                 </div>
-                <span className="text-xs font-semibold truncate text-foreground/80">
-                  {selectedRoom.name ?? "Workspace"}
-                </span>
-                <span className="text-[10px] text-muted-foreground/50 flex-shrink-0 flex items-center gap-1">
-                  <Users className="w-2.5 h-2.5" />
-                  {memberCount}
-                </span>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold truncate text-foreground/90 leading-tight">
+                    {selectedRoom.name ?? "Workspace"}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/50 flex items-center gap-1 leading-tight">
+                    <Users className="w-2.5 h-2.5" />
+                    {memberCount} member{memberCount !== 1 ? "s" : ""}
+                  </p>
+                </div>
               </div>
-
-              {/* Add People — prominent, always visible */}
               <Button
                 size="sm"
                 onClick={() => setMembersDialogOpen(true)}
@@ -183,7 +239,6 @@ const StudioWorkspacesHub = ({ initialRoomId }: { initialRoomId?: string } = {})
             </motion.div>
           )}
 
-          {/* DM toolbar — Propose Workspace */}
           {isDm && (
             <motion.div
               key="dm-bar"
@@ -191,7 +246,7 @@ const StudioWorkspacesHub = ({ initialRoomId }: { initialRoomId?: string } = {})
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.16 }}
-              className="flex-shrink-0 border-b border-gray-100 dark:border-border/50 px-4 py-2 flex items-center gap-2 overflow-hidden"
+              className="flex-shrink-0 border-b border-gray-100 dark:border-border/50 px-4 py-2.5 flex items-center gap-2.5 overflow-hidden"
             >
               <Button
                 size="sm"
@@ -230,8 +285,9 @@ const StudioWorkspacesHub = ({ initialRoomId }: { initialRoomId?: string } = {})
             ) : (
               <motion.div
                 key="empty"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
                 className="h-full flex flex-col items-center justify-center text-center p-8"
               >
                 <div className="w-16 h-16 rounded-2xl bg-bronze/8 dark:bg-bronze/10 flex items-center justify-center mb-4">
