@@ -97,7 +97,7 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
                   className="h-11 w-11 text-white/70 hover:text-white hover:bg-white/10"
                   aria-label="Toggle theme"
                 >
-                  <Monitor className="h-5 w-5" />
+                  {(() => { const Icon = themeOptions.find(o => o.value === selected)?.icon ?? Monitor; return <Icon className="h-5 w-5" />; })()}
                 </Button>
 
                 <AnimatePresence>
