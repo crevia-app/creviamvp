@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import html2canvas from "html2canvas";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -57,14 +58,31 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
 
   const { isPro, isBrandWorkspace, isBusiness } = useSubscription();
 
-  const handlePrint = () => {
-    document.body.setAttribute("data-printing", "invoice");
-    const cleanup = () => {
-      document.body.removeAttribute("data-printing");
-      window.removeEventListener("afterprint", cleanup);
-    };
-    window.addEventListener("afterprint", cleanup);
-    window.print();
+  const handlePrint = async () => {
+    if (!docRef.current) return;
+    try {
+      const canvas = await html2canvas(docRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+      const imgData = canvas.toDataURL("image/png");
+      const pw = window.open("", "_blank");
+      if (!pw) { toast.error("Allow pop-ups to print the invoice"); return; }
+      pw.document.write(
+        `<!DOCTYPE html><html><head><title>Invoice ${invoice?.invoice_number ?? ""}</title>` +
+        `<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#fff}` +
+        `img{width:100%;height:auto;display:block}` +
+        `@media print{@page{margin:0;size:auto}}</style></head>` +
+        `<body><img src="${imgData}">` +
+        `<script>window.onload=function(){window.print();window.onafterprint=function(){window.close()}}<\/script>` +
+        `</body></html>`
+      );
+      pw.document.close();
+    } catch {
+      toast.error("Could not prepare print preview");
+    }
   };
   const isProUser = isPro || isBrandWorkspace || isBusiness;
 
