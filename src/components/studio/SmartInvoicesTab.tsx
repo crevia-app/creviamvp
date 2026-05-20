@@ -433,12 +433,12 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
             placeholder="Search invoices or clients..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-10"
+            className="pl-10 h-11 text-base"
           />
         </div>
         <div className="flex gap-2">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="flex-1 h-10">
+            <SelectTrigger className="flex-1 h-11">
               <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground flex-shrink-0" />
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -451,7 +451,7 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
             </SelectContent>
           </Select>
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
-            <SelectTrigger className="flex-1 h-10">
+            <SelectTrigger className="flex-1 h-11">
               <ArrowUpDown className="h-3.5 w-3.5 mr-1.5 text-muted-foreground flex-shrink-0" />
               <SelectValue />
             </SelectTrigger>
@@ -548,7 +548,7 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+                        <Button variant="ghost" size="icon" className="h-11 w-11 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>

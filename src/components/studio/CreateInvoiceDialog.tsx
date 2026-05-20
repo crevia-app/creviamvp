@@ -475,7 +475,7 @@ const CreateInvoiceDialog = ({
               <Input
                 value={invoiceNumber}
                 onChange={(e) => setInvoiceNumber(e.target.value)}
-                className="mt-1"
+                className="mt-1 h-11 text-base"
               />
             </div>
             <div>
@@ -484,7 +484,7 @@ const CreateInvoiceDialog = ({
                 type="date"
                 value={issueDate}
                 onChange={(e) => setIssueDate(e.target.value)}
-                className="mt-1"
+                className="mt-1 h-11 text-base"
               />
             </div>
             <div>
@@ -493,7 +493,7 @@ const CreateInvoiceDialog = ({
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="mt-1"
+                className="mt-1 h-11 text-base"
               />
             </div>
           </div>
@@ -506,7 +506,7 @@ const CreateInvoiceDialog = ({
                 {/* Autofill combobox */}
                 <Popover open={autofillOpen} onOpenChange={setAutofillOpen}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs border-bronze/30 text-bronze hover:bg-bronze/5">
+                    <Button variant="outline" size="sm" className="h-9 gap-1.5 text-xs border-bronze/30 text-bronze hover:bg-bronze/5">
                       <Users className="h-3.5 w-3.5" />
                       Autofill
                       <ChevronDown className="h-3 w-3" />
@@ -517,7 +517,7 @@ const CreateInvoiceDialog = ({
                       placeholder="Search saved clients..."
                       value={clientSearch}
                       onChange={e => setClientSearch(e.target.value)}
-                      className="mb-2 h-8 text-sm"
+                      className="mb-2 h-11 text-base"
                       autoFocus
                     />
                     <div className="max-h-48 overflow-y-auto space-y-0.5">
@@ -531,7 +531,7 @@ const CreateInvoiceDialog = ({
                             key={client.id}
                             type="button"
                             onClick={() => applyClient(client)}
-                            className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted/60 transition-colors"
+                            className="w-full text-left px-3 py-3 min-h-[44px] rounded-lg hover:bg-muted/60 transition-colors"
                           >
                             <p className="text-sm font-medium text-foreground leading-tight">{client.client_name}</p>
                             {client.client_email && (
@@ -548,7 +548,7 @@ const CreateInvoiceDialog = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                  className="h-9 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
                   onClick={() => setAddressBookOpen(true)}
                 >
                   <BookUser className="h-3.5 w-3.5" />
@@ -564,7 +564,7 @@ const CreateInvoiceDialog = ({
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
                   placeholder="Company or individual name"
-                  className="mt-1"
+                  className="mt-1 h-11 text-base"
                 />
               </div>
               <div>
@@ -574,7 +574,7 @@ const CreateInvoiceDialog = ({
                   value={clientEmail}
                   onChange={(e) => setClientEmail(e.target.value)}
                   placeholder="client@example.com"
-                  className="mt-1"
+                  className="mt-1 h-11 text-base"
                 />
               </div>
             </div>
@@ -584,7 +584,7 @@ const CreateInvoiceDialog = ({
                 value={clientAddress}
                 onChange={(e) => setClientAddress(e.target.value)}
                 placeholder="Full address"
-                className="mt-1"
+                className="mt-1 h-11 text-base"
                 rows={2}
               />
             </div>
@@ -609,7 +609,7 @@ const CreateInvoiceDialog = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-foreground">Line Items</h3>
-              <Button variant="outline" size="sm" onClick={addItem} className="gap-1">
+              <Button variant="outline" onClick={addItem} className="h-11 gap-1">
                 <Plus className="h-4 w-4" />
                 Add Item
               </Button>
@@ -642,6 +642,7 @@ const CreateInvoiceDialog = ({
                       placeholder="Service or product name"
                       value={item.description}
                       onChange={(e) => updateItemTotal(index, "description", e.target.value)}
+                      className="h-11 text-base"
                     />
                   </div>
                   {/* Qty / Price / Total in a row on mobile */}
@@ -654,6 +655,7 @@ const CreateInvoiceDialog = ({
                         value={item.quantity}
                         onChange={(e) => updateItemTotal(index, "quantity", e.target.value)}
                         min={1}
+                        className="h-11 text-base"
                       />
                     </div>
                     <div className="sm:col-span-2">
@@ -664,6 +666,7 @@ const CreateInvoiceDialog = ({
                         value={item.unit_price}
                         onChange={(e) => updateItemTotal(index, "unit_price", e.target.value)}
                         min={0}
+                        className="h-11 text-base"
                       />
                     </div>
                     <div className="sm:col-span-2">
@@ -671,7 +674,7 @@ const CreateInvoiceDialog = ({
                       <Input
                         value={formatCurrency(item.total)}
                         disabled
-                        className="bg-muted"
+                        className="bg-muted h-11 text-base"
                       />
                     </div>
                   </div>
@@ -681,7 +684,7 @@ const CreateInvoiceDialog = ({
                       size="icon"
                       onClick={() => removeItem(index)}
                       disabled={items.length === 1}
-                      className="text-destructive hover:text-destructive"
+                      className="h-11 w-11 text-destructive hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -696,7 +699,7 @@ const CreateInvoiceDialog = ({
             <div>
               <Label>Currency</Label>
               <Select value={currency} onValueChange={setCurrency}>
-                <SelectTrigger className="mt-1">
+                <SelectTrigger className="mt-1 h-11 text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -715,7 +718,7 @@ const CreateInvoiceDialog = ({
                 value={taxRate}
                 onChange={(e) => setTaxRate(e.target.value)}
                 placeholder="0"
-                className="mt-1"
+                className="mt-1 h-11 text-base"
                 min={0}
                 max={100}
               />
@@ -727,7 +730,7 @@ const CreateInvoiceDialog = ({
                 value={discountAmount}
                 onChange={(e) => setDiscountAmount(e.target.value)}
                 placeholder="0"
-                className="mt-1"
+                className="mt-1 h-11 text-base"
                 min={0}
               />
             </div>
@@ -765,7 +768,7 @@ const CreateInvoiceDialog = ({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Additional notes for the client"
-                className="mt-1"
+                className="mt-1 text-base"
                 rows={3}
               />
             </div>
@@ -775,7 +778,7 @@ const CreateInvoiceDialog = ({
                 value={terms}
                 onChange={(e) => setTerms(e.target.value)}
                 placeholder="Payment terms and conditions"
-                className="mt-1"
+                className="mt-1 text-base"
                 rows={3}
               />
             </div>
@@ -813,7 +816,7 @@ const CreateInvoiceDialog = ({
                     value={paymentDetails.method}
                     onValueChange={(v) => setPaymentDetails((p) => ({ ...defaultPaymentDetails, method: v }))}
                   >
-                    <SelectTrigger className="mt-1">
+                    <SelectTrigger className="mt-1 h-11 text-base">
                       <SelectValue placeholder="Select how you'd like to be paid" />
                     </SelectTrigger>
                     <SelectContent>
@@ -839,7 +842,7 @@ const CreateInvoiceDialog = ({
                                 value={paymentDetails[key] as string}
                                 onChange={(e) => setPaymentDetails((p) => ({ ...p, [key]: e.target.value }))}
                                 placeholder={fields[key]}
-                                className="mt-1"
+                                className="mt-1 h-11 text-base"
                               />
                             </div>
                           ))}
@@ -852,7 +855,7 @@ const CreateInvoiceDialog = ({
                           value={paymentDetails.instructions}
                           onChange={(e) => setPaymentDetails((p) => ({ ...p, instructions: e.target.value }))}
                           placeholder="e.g. Please include the invoice number as reference when transferring"
-                          className="mt-1 resize-none"
+                          className="mt-1 text-base resize-none"
                           rows={2}
                         />
                       </div>
