@@ -112,7 +112,7 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
 };
 
 const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
-  const [canvases, setContracts] = useState<Canvas[]>([]);
+  const [canvases, setCanvases] = useState<Canvas[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -135,7 +135,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null);
   const [renameFolderValue, setRenameFolderValue] = useState("");
 
-  const fetchContracts = async (folderId: string | null = null) => {
+  const fetchCanvases = async (folderId: string | null = null) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
@@ -224,7 +224,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     if (error) { toast.error("Failed to delete folder"); return; }
     toast.success("Folder deleted — canvases moved to root");
     fetchFolders();
-    fetchContracts(null);
+    fetchCanvases(null);
   };
 
   const renameFolder = async (folder: Folder) => {
@@ -244,18 +244,18 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   const navigateToFolder = (folder: Folder) => {
     setCurrentFolderId(folder.id);
     setCurrentFolder(folder);
-    fetchContracts(folder.id);
+    fetchCanvases(folder.id);
   };
 
   const navigateToRoot = () => {
     setCurrentFolderId(null);
     setCurrentFolder(null);
-    fetchContracts(null);
+    fetchCanvases(null);
     fetchFolders();
   };
 
   useEffect(() => {
-    fetchContracts(currentFolderId);
+    fetchCanvases(currentFolderId);
     if (!workspaceId) fetchFolders();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId, currentFolderId]);
@@ -266,7 +266,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     const { error } = await supabase.from("canvases").update({ title: trimmed }).eq("id", id);
     if (error) { toast.error("Failed to rename Canvas"); return; }
     setRenamingId(null);
-    fetchContracts(currentFolderId);
+    fetchCanvases(currentFolderId);
     toast.success("Canvas renamed");
   };
 
@@ -277,10 +277,10 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       return;
     }
     toast.success("Canvas deleted");
-    fetchContracts(currentFolderId);
+    fetchCanvases(currentFolderId);
   };
 
-  const handleDuplicate = async (contract: Canvas) => {
+  const handleDuplicate = async (canvas: Canvas) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
@@ -307,7 +307,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       return;
     }
     toast.success("Canvas duplicated");
-    fetchContracts(currentFolderId);
+    fetchCanvases(currentFolderId);
   };
 
   const handleStatusChange = async (id: string, status: string) => {
@@ -321,7 +321,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       return;
     }
     toast.success(`Status updated to ${status}`);
-    fetchContracts(currentFolderId);
+    fetchCanvases(currentFolderId);
   };
 
   const handleFileUpload = async (file: File, canvasType: string, title: string) => {
@@ -355,7 +355,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       user_id: session.user.id,
       title,
       client_name: "To be specified",
-      contract_type: contractType,
+      contract_type: canvasType,
       content,
       status: "draft",
       currency: "KES",
@@ -367,7 +367,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     }
 
     toast.success("Canvas uploaded! You can now edit all details.");
-    fetchContracts(currentFolderId);
+    fetchCanvases(currentFolderId);
     
     // Open the edit dialog immediately so user can fill in details
     if (data) {
@@ -383,7 +383,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     }).format(amount);
   };
 
-  const filteredCanvases = contracts
+  const filteredCanvases = canvases
     .filter((canvas) => {
       const matchesSearch = canvas.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         canvas.client_name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -690,7 +690,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                 >
                   <div
                     className="group relative flex flex-col gap-3 rounded-2xl border border-border/50 bg-card p-4 transition-all duration-300 hover:border-primary/20 hover:shadow-md hover:shadow-primary/5 cursor-pointer md:flex-row md:items-center"
-                    onClick={() => setPreviewCanvas(contract)}
+                    onClick={() => setPreviewCanvas(canvas)}
                   >
                     {/* Type Icon */}
                     <div className={`hidden sm:flex w-12 h-12 rounded-2xl bg-gradient-to-br ${typeInfo.gradient} items-center justify-center text-lg flex-shrink-0 transition-transform group-hover:scale-105`}>
@@ -762,7 +762,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                       {canvas.value && (
                         <div className="text-left md:text-right">
                           <p className="text-sm font-bold text-foreground tabular-nums">
-                            {formatCurrency(Number(contract.value), canvas.currency)}
+                            {formatCurrency(Number(canvas.value), canvas.currency)}
                           </p>
                         </div>
                       )}
@@ -773,11 +773,11 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44 rounded-xl">
-                          <DropdownMenuItem onClick={() => setPreviewCanvas(contract)} className="rounded-lg">
+                          <DropdownMenuItem onClick={() => setPreviewCanvas(canvas)} className="rounded-lg">
                             <Eye className="h-4 w-4 mr-2" />
                             View & Sign
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setEditingCanvas(contract)} className="rounded-lg">
+                          <DropdownMenuItem onClick={() => setEditingCanvas(canvas)} className="rounded-lg">
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
@@ -880,7 +880,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
         }}
         editingCanvas={editingCanvas}
         folderId={currentFolderId}
-        onSuccess={() => fetchContracts(currentFolderId)}
+        onSuccess={() => fetchCanvases(currentFolderId)}
       />
 
       <UploadCanvasDialog

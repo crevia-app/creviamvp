@@ -117,6 +117,19 @@ const StudioWorkspacesHub = ({ initialRoomId }: { initialRoomId?: string } = {})
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialRoomId, userId]);
 
+  // Auto-mark message notifications as read when a room is opened
+  useEffect(() => {
+    if (!selectedRoom || !userId) return;
+    supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("user_id", userId)
+      .eq("type", "message")
+      .eq("read", false)
+      .filter("data->>room_id", "eq", selectedRoom.id)
+      .then(() => {});
+  }, [selectedRoom?.id, userId]);
+
   const handleSelectRoom = async (
     room: { id: string; name: string | null; created_by?: string; memberCount?: number },
     type: "workspace" | "dm"
