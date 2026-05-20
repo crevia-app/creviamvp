@@ -2,8 +2,6 @@ import { useSearchParams } from "react-router-dom";
 import { Link2, MessageSquare, Sparkles, Receipt, FileSignature } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-
 // Tab content
 import CreviaLink from "./CreviaLink";
 import SmartInvoicesTab from "@/components/studio/SmartInvoicesTab";
@@ -18,12 +16,12 @@ const CreviaStudio = () => {
   const activeWorkspace = searchParams.get("workspace") || undefined;
   const activeRoomId = searchParams.get("roomId") || undefined;
 
-  // Strict order: Link → Workspace → Invoice → Contracts → Settings
+  // Strict order: Link → Workspace → Invoice → Canvas
   const studioTabs = [
-    { id: "link",      label: "Crevia Link", icon: Link2 },
-    { id: "chat",      label: "Workspace",   icon: MessageSquare },
-    { id: "invoices",  label: "Invoice",     icon: Receipt },
-    { id: "contracts", label: "Canvas",       icon: FileSignature },
+    { id: "link",      label: "Crevia Link", mobileLabel: "Link",      icon: Link2 },
+    { id: "chat",      label: "Workspace",   mobileLabel: "Workspace", icon: MessageSquare },
+    { id: "invoices",  label: "Invoice",     mobileLabel: "Invoice",   icon: Receipt },
+    { id: "contracts", label: "Canvas",      mobileLabel: "Canvas",    icon: FileSignature },
   ];
 
   const linkSections = [
@@ -63,32 +61,39 @@ const CreviaStudio = () => {
             </div>
           </div>
 
-          {/* Tabs — strict order enforced by studioTabs array */}
-          <ScrollArea className="w-full">
-            <div className="flex items-center gap-1 pb-1 -mb-px">
-              {studioTabs.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => handleTabChange(tab.id)}
-                    title={tab.label}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-2.5 rounded-t-lg font-poppins text-sm font-medium whitespace-nowrap transition-all duration-300 min-w-[44px] justify-center",
-                      isActive
-                        ? "bg-bronze/10 text-bronze border-b-2 border-bronze"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                    )}
-                  >
-                    <Icon className="h-4 w-4 flex-shrink-0" />
-                    <span className="hidden sm:inline">{tab.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <ScrollBar orientation="horizontal" className="h-1.5" />
-          </ScrollArea>
+          {/* Tabs */}
+          <div className="flex items-stretch gap-1 -mb-px">
+            {studioTabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={cn(
+                    // shared
+                    "flex-1 flex flex-col sm:flex-row items-center justify-center",
+                    "gap-2 sm:gap-1.5 px-1 sm:px-3 py-3.5 sm:py-2.5",
+                    "rounded-xl sm:rounded-t-lg sm:rounded-b-none font-poppins",
+                    "transition-all duration-200 active:scale-[0.96] select-none",
+                    isActive
+                      ? "bg-bronze/10 text-bronze sm:border-b-2 sm:border-bronze"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                  )}
+                >
+                  <Icon className="h-[22px] w-[22px] sm:h-4 sm:w-4 flex-shrink-0" />
+                  {/* Mobile label */}
+                  <span className="sm:hidden text-[10px] font-bold leading-none tracking-wide">
+                    {tab.mobileLabel}
+                  </span>
+                  {/* Desktop label */}
+                  <span className="hidden sm:inline text-sm font-medium whitespace-nowrap">
+                    {tab.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
           {/* Link sub-sections (mobile only) — segmented control */}
           {activeTab === "link" && (
