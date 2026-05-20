@@ -465,8 +465,8 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
                   </div>
                 )}
                 {!hasPage2 && !isProUser && (
-                  <div className="mt-4 -mx-8 -mb-8 px-6 py-2.5 bg-amber-50 border-t border-amber-200 text-center">
-                    <p className="text-[11px] text-amber-700 font-medium">Created with <strong>Crevia Free</strong> · Upgrade to Pro to remove this watermark</p>
+                  <div className="mt-4 -mx-8 -mb-8 px-6 py-2 border-t border-gray-100 text-center">
+                    <p className="text-[10px] text-gray-300 font-medium tracking-wide">Powered by Crevia</p>
                   </div>
                 )}
 
@@ -572,10 +572,8 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
 
                 {/* ── Free Watermark ── */}
                 {!isProUser && (
-                  <div className="mt-4 -mx-8 -mb-8 px-6 py-2.5 bg-amber-50 border-t border-amber-200 text-center">
-                    <p className="text-[11px] text-amber-700 font-medium">
-                      Created with <strong>Crevia Free</strong> · Upgrade to Pro to remove this watermark
-                    </p>
+                  <div className="mt-4 -mx-8 -mb-8 px-6 py-2 border-t border-gray-100 text-center">
+                    <p className="text-[10px] text-gray-300 font-medium tracking-wide">Powered by Crevia</p>
                   </div>
                 )}
 

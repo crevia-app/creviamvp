@@ -1,5 +1,5 @@
 import { useSearchParams } from "react-router-dom";
-import { Link2, MessageSquare, Sparkles, Receipt, FileSignature } from "lucide-react";
+import { Link2, MessageSquare, Sparkles, Receipt, FileSignature, User, MousePointerClick, Palette, SlidersHorizontal, BarChart2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -27,11 +27,11 @@ const CreviaStudio = () => {
   ];
 
   const linkSections = [
-    { id: "profile",    label: "Profile" },
-    { id: "buttons",    label: "Buttons" },
-    { id: "appearance", label: "Appearance" },
-    { id: "settings",   label: "Settings" },
-    { id: "analytics",  label: "Analytics" },
+    { id: "profile",    label: "Profile",    icon: User },
+    { id: "buttons",    label: "Buttons",    icon: MousePointerClick },
+    { id: "appearance", label: "Appearance", icon: Palette },
+    { id: "settings",   label: "Settings",   icon: SlidersHorizontal },
+    { id: "analytics",  label: "Analytics",  icon: BarChart2 },
   ];
 
   const handleTabChange = (tabId: string) => {
@@ -92,44 +92,32 @@ const CreviaStudio = () => {
             })}
           </div>
 
-          {/* Link sub-sections (mobile only) — segmented control */}
+          {/* Link sub-sections (mobile only) — scrollable pill nav */}
           {activeTab === "link" && (
-            <div className="md:hidden mt-2 border-t border-border/40 pt-2">
-              {/* Row 1: Profile · Buttons · Appearance */}
-              <div className="flex gap-1 p-1 bg-muted/60 rounded-xl mb-1">
-                {linkSections.slice(0, 3).map((section) => (
-                  <button
-                    key={section.id}
-                    type="button"
-                    onClick={() => handleLinkSectionChange(section.id)}
-                    className={cn(
-                      "flex-1 py-1.5 rounded-lg text-[11px] font-semibold text-center transition-all duration-200 active:scale-95",
-                      activeLinkSection === section.id
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground"
-                    )}
-                  >
-                    {section.label}
-                  </button>
-                ))}
-              </div>
-              {/* Row 2: Settings · Analytics */}
-              <div className="flex gap-1 p-1 bg-muted/60 rounded-xl">
-                {linkSections.slice(3).map((section) => (
-                  <button
-                    key={section.id}
-                    type="button"
-                    onClick={() => handleLinkSectionChange(section.id)}
-                    className={cn(
-                      "flex-1 py-1.5 rounded-lg text-[11px] font-semibold text-center transition-all duration-200 active:scale-95",
-                      activeLinkSection === section.id
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground"
-                    )}
-                  >
-                    {section.label}
-                  </button>
-                ))}
+            <div className="md:hidden mt-2 border-t border-border/40 pt-2.5 -mx-4 px-4">
+              <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                {linkSections.map((section) => {
+                  const Icon = section.icon;
+                  const isActive = activeLinkSection === section.id;
+                  return (
+                    <button
+                      key={section.id}
+                      type="button"
+                      onClick={() => handleLinkSectionChange(section.id)}
+                      className={cn(
+                        "flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-full",
+                        "text-sm font-semibold transition-all duration-200 active:scale-95",
+                        "min-h-[44px] select-none",
+                        isActive
+                          ? "bg-bronze text-white shadow-md shadow-bronze/30"
+                          : "bg-muted/70 text-muted-foreground hover:text-foreground hover:bg-muted"
+                      )}
+                    >
+                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      <span>{section.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
