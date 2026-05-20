@@ -5,6 +5,26 @@ interface State {
   message: string;
 }
 
+const RELOAD_KEY = "crevia_chunk_reload";
+const DEBOUNCE_MS = 30_000; // 30 s — long enough to avoid loops, short enough to recover
+
+async function clearCachesAndReload() {
+  sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+  try {
+    if ("serviceWorker" in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
+    }
+    if ("caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+  } catch {
+    // best-effort
+  }
+  window.location.reload();
+}
+
 export class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
   State
@@ -19,35 +39,29 @@ export class ErrorBoundary extends React.Component<
     console.error("[Crevia] Unhandled error:", error, info.componentStack);
 
     // Stale deployment: browser has old JS chunk URLs that no longer exist on
-    // Vercel after a new deploy. Auto-reload once to pick up the new index.html.
+    // Vercel after a new deploy. Auto-reload once to pick up new index.html.
     const isChunkError =
       error.message.includes("Failed to fetch dynamically imported module") ||
       error.message.includes("Importing a module script failed") ||
-      error.message.includes("Unable to preload CSS");
+      error.message.includes("Unable to preload CSS") ||
+      error.message.includes("Loading chunk") ||
+      error.message.includes("ChunkLoadError");
 
     if (isChunkError) {
-      const reloadKey = "crevia_chunk_reload";
-      const last = sessionStorage.getItem(reloadKey);
+      const last = sessionStorage.getItem(RELOAD_KEY);
       const now = Date.now();
-      if (!last || now - Number(last) > 10_000) {
-        sessionStorage.setItem(reloadKey, String(now));
-        // Unregister stale service workers and wipe all caches before reloading
-        // so the browser fetches fresh assets from the CDN rather than the old SW cache.
-        const cleanup = async () => {
-          if ("serviceWorker" in navigator) {
-            const regs = await navigator.serviceWorker.getRegistrations();
-            await Promise.all(regs.map((r) => r.unregister()));
-          }
-          if ("caches" in window) {
-            const keys = await caches.keys();
-            await Promise.all(keys.map((k) => caches.delete(k)));
-          }
-          window.location.reload();
-        };
-        cleanup().catch(() => window.location.reload());
+      if (!last || now - Number(last) > DEBOUNCE_MS) {
+        clearCachesAndReload();
       }
     }
   }
+
+  handleManualRefresh = () => {
+    // Always do a full cache-clear refresh so the manual button recovers from
+    // stale-chunk situations even when the auto-reload debounce is active.
+    sessionStorage.removeItem(RELOAD_KEY);
+    clearCachesAndReload();
+  };
 
   render() {
     if (this.state.hasError) {
@@ -61,7 +75,7 @@ export class ErrorBoundary extends React.Component<
             An unexpected error occurred. Refreshing the page usually fixes this.
           </p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={this.handleManualRefresh}
             className="bg-[#C9A84C] text-black font-semibold px-5 py-2.5 rounded-xl text-sm hover:opacity-90 transition-opacity"
           >
             Refresh page
