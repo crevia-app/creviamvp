@@ -8,8 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, XCircle, Eye, Wallet, Shield, FileSignature } from "lucide-react";
 import FundEscrowDialog from "./FundEscrowDialog";
-import CreateContractDialog from "@/components/studio/CreateContractDialog";
-import type { ApplicationContext } from "@/components/studio/CreateContractDialog";
+import CreateCanvasDialog from "@/components/studio/CreateCanvasDialog";
+import type { ApplicationContext } from "@/components/studio/CreateCanvasDialog";
 
 interface CampaignApplicationsDialogProps {
   campaign: any;
@@ -339,7 +339,7 @@ const AcceptedApplicationCard = ({ application, campaign, checkEscrowStatus }: {
         </div>
       </Card>
 
-      <CreateContractDialog
+      <CreateCanvasDialog
         open={showCreateCanvas}
         onOpenChange={setShowCreateCanvas}
         applicationContext={appContext}

@@ -1,4 +1,4 @@
-import ContractsTab from "@/components/studio/ContractsTab";
+import ContractsTab from "@/components/studio/CanvasTab";
 
 const CreviaContracts = () => <ContractsTab />;
 

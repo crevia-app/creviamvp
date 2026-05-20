@@ -60,7 +60,7 @@ import {
 import { CreateProjectDialog } from "@/components/kira/CreateProjectDialog";
 import { ProjectDetailSheet } from "@/components/kira/ProjectDetailSheet";
 import { ProjectsView } from "@/components/kira/ProjectsView";
-import CreateContractDialog from "@/components/studio/CreateContractDialog";
+import CreateCanvasDialog from "@/components/studio/CreateCanvasDialog";
 import CreateInvoiceDialog from "@/components/studio/CreateInvoiceDialog";
 import { ApproveActionDialog } from "@/components/kira/ApproveActionDialog";
 import { KiraSettingsPanel } from "@/components/kira/KiraSettingsPanel";
@@ -1527,7 +1527,7 @@ const Kira = () => {
         onNewChat={(projectId) => handleNewChat(projectId)}
       />
 
-      <CreateContractDialog
+      <CreateCanvasDialog
         open={contractDialogOpen}
         onOpenChange={setContractDialogOpen}
         onSuccess={() => setContractDialogOpen(false)}

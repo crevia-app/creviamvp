@@ -20,10 +20,10 @@ export interface ApplicationContext {
   deliverables: string[];
 }
 
-interface CreateContractDialogProps {
+interface CreateCanvasDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editingContract?: any;
+  editingCanvas?: any;
   onSuccess: () => void;
   onCreated?: (id: string) => void;
   kiraContext?: Record<string, unknown> | null;
@@ -97,16 +97,16 @@ Date:      ________________________________
 `;
 };
 
-const CreateContractDialog = ({
+const CreateCanvasDialog = ({
   open,
   onOpenChange,
-  editingContract,
+  editingCanvas,
   onSuccess,
   onCreated,
   kiraContext,
   applicationContext,
   folderId,
-}: CreateContractDialogProps) => {
+}: CreateCanvasDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [content, setContent] = useState("");
@@ -122,7 +122,7 @@ const CreateContractDialog = ({
     } else {
       setContent("");
     }
-  }, [editingContract, kiraContext, applicationContext, open]);
+  }, [editingCanvas, kiraContext, applicationContext, open]);
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -135,9 +135,9 @@ const CreateContractDialog = ({
         : `Canvas – ${new Date().toLocaleDateString()}`;
       const contractData = {
         user_id: session.user.id,
-        title: editingContract?.title?.trim() || autoTitle,
-        client_name: applicationContext?.creatorName || editingContract?.client_name?.trim() || "",
-        client_email: applicationContext?.creatorEmail || editingContract?.client_email?.trim() || null,
+        title: editingCanvas?.title?.trim() || autoTitle,
+        client_name: applicationContext?.creatorName || editingCanvas?.client_name?.trim() || "",
+        client_email: applicationContext?.creatorEmail || editingCanvas?.client_email?.trim() || null,
         value: applicationContext?.proposedPrice || null,
         deliverables: applicationContext?.deliverables?.length ? applicationContext.deliverables : null,
         contract_type: "custom",
@@ -182,7 +182,7 @@ const CreateContractDialog = ({
       <SuccessOverlay
         show={showSuccess}
         title="Canvas Created"
-        subtitle="Your Canvas is ready to sign"
+        subtitle="Your Canvas is ready"
         onComplete={() => { setShowSuccess(false); onSuccess(); }}
       />
 
@@ -231,4 +231,4 @@ const CreateContractDialog = ({
   );
 };
 
-export default CreateContractDialog;
+export default CreateCanvasDialog;

@@ -35,9 +35,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import ContractPreviewDialog from "@/components/studio/ContractPreviewDialog";
+import ContractPreviewDialog from "@/components/studio/CanvasPreviewDialog";
 import InvoicePreviewDialog from "@/components/studio/InvoicePreviewDialog";
-import CreateContractDialog from "@/components/studio/CreateContractDialog";
+import CreateCanvasDialog from "@/components/studio/CreateCanvasDialog";
 import CreateInvoiceDialog from "@/components/studio/CreateInvoiceDialog";
 
 interface Contract {
@@ -476,7 +476,7 @@ const WorkspaceActionVault = ({
       </Dialog>
 
       {/* Create Contract Dialog */}
-      <CreateContractDialog
+      <CreateCanvasDialog
         open={createContractOpen}
         onOpenChange={setCreateContractOpen}
         onSuccess={() => onRefresh?.()}
@@ -496,8 +496,8 @@ const WorkspaceActionVault = ({
         <ContractPreviewDialog
           open={!!contractDialog}
           onOpenChange={(open) => { if (!open) setContractDialog(null); }}
-          contract={contractDialog}
-          onContractUpdate={() => { onRefresh?.(); }}
+          canvas={contractDialog}
+          onCanvasUpdate={() => { onRefresh?.(); }}
         />
       )}
 

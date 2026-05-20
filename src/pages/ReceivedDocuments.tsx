@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Receipt, FileSignature, Clock, CheckCircle2, AlertCircle, Send } from "lucide-react";
 import { format } from "date-fns";
 import InvoicePreviewDialog from "@/components/studio/InvoicePreviewDialog";
-import ContractPreviewDialog from "@/components/studio/ContractPreviewDialog";
+import ContractPreviewDialog from "@/components/studio/CanvasPreviewDialog";
 
 const INVOICE_STATUS: Record<string, { label: string; color: string }> = {
   draft:   { label: "Draft",   color: "bg-gray-100 text-gray-600" },
@@ -201,8 +201,8 @@ const ReceivedDocuments = () => {
         <ContractPreviewDialog
           open={!!selectedContract}
           onOpenChange={(v) => { if (!v) setSelectedContract(null); }}
-          contract={selectedContract}
-          onContractUpdate={() => {}}
+          canvas={selectedContract}
+          onCanvasUpdate={() => {}}
         />
       )}
     </div>

@@ -20,28 +20,31 @@ import { useDownloadPDF } from "@/hooks/use-download-pdf";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface SigPos { x: number; y: number; w: number; h: number }
+// Stored position (percentage-based for new signatures, pixel-based for legacy)
+interface SigPos {
+  x?: number; y?: number; w?: number; h?: number;          // legacy pixels
+  xPct?: number; yPct?: number; wPct?: number; hPct?: number; // new: device-independent %
+}
+
+// Pixel-only type used internally during the drag/placement session
+interface PixelPos { x: number; y: number; w: number; h: number }
 
 const MIN_W   = 80;
 const MIN_H   = 40;
-const INIT_W  = 220;
-const INIT_H  = 88;
+const INIT_W  = 200;
+const INIT_H  = 80;
 
 // ─── Draggable + resizable widget ─────────────────────────────────────────────
-// Must live outside ContractPreviewDialog so React never unmounts it on parent
-// re-renders during an active drag.
-
 interface DraggableSigProps {
-  pos:       SigPos;
+  pos:       PixelPos;
   signature: string;
-  onChange:  (p: SigPos) => void;
+  onChange:  (p: PixelPos) => void;
 }
 
 const DraggableSig = ({ pos, signature, onChange }: DraggableSigProps) => {
   const dragRef   = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
-  const resizeRef = useRef<{ corner: string; sx: number; sy: number; orig: SigPos } | null>(null);
+  const resizeRef = useRef<{ corner: string; sx: number; sy: number; orig: PixelPos } | null>(null);
 
-  // drag body
   const onBodyDown = (e: React.PointerEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -54,7 +57,6 @@ const DraggableSig = ({ pos, signature, onChange }: DraggableSigProps) => {
   };
   const onBodyUp = () => { dragRef.current = null; };
 
-  // resize corners
   const ch = (corner: string) => ({
     onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
       e.preventDefault();
@@ -68,7 +70,7 @@ const DraggableSig = ({ pos, signature, onChange }: DraggableSigProps) => {
       const dy = e.clientY - resizeRef.current.sy;
       const o  = resizeRef.current.orig;
       let { x, y, w, h } = o;
-      if (corner === "se") { w = Math.max(MIN_W, o.w + dx);                                 h = Math.max(MIN_H, o.h + dy); }
+      if (corner === "se") { w = Math.max(MIN_W, o.w + dx);                                  h = Math.max(MIN_H, o.h + dy); }
       if (corner === "sw") { x = o.x + Math.min(dx, o.w - MIN_W); w = Math.max(MIN_W, o.w - dx); h = Math.max(MIN_H, o.h + dy); }
       if (corner === "ne") { w = Math.max(MIN_W, o.w + dx); y = o.y + Math.min(dy, o.h - MIN_H); h = Math.max(MIN_H, o.h - dy); }
       if (corner === "nw") {
@@ -125,28 +127,28 @@ const DraggableSig = ({ pos, signature, onChange }: DraggableSigProps) => {
 
 // ─── Main Dialog ──────────────────────────────────────────────────────────────
 
-interface ContractPreviewDialogProps {
+interface CanvasPreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  contract: any;
-  onContractUpdate?: () => void;
+  canvas: any;
+  onCanvasUpdate?: () => void;
 }
 
-const ContractPreviewDialog = ({
+const CanvasPreviewDialog = ({
   open,
   onOpenChange,
-  contract,
-  onContractUpdate,
-}: ContractPreviewDialogProps) => {
+  canvas,
+  onCanvasUpdate,
+}: CanvasPreviewDialogProps) => {
   const [profile, setProfile]                           = useState<any>(null);
   const [showSignatureDialog, setShowSignatureDialog]   = useState(false);
   const [placementMode, setPlacementMode]               = useState<{
     signature: string;
     signedAt:  string;
-    pos:       SigPos | null;
+    pos:       PixelPos | null;
   } | null>(null);
   const [savingSignature, setSavingSignature]           = useState(false);
-  const [localContract, setLocalContract]               = useState(contract);
+  const [localCanvas, setLocalCanvas]                  = useState(canvas);
   const [isEditingDetails, setIsEditingDetails]         = useState(false);
   const [editableContent, setEditableContent]           = useState("");
   const [savingDetails, setSavingDetails]               = useState(false);
@@ -160,18 +162,18 @@ const ContractPreviewDialog = ({
   const textDivRef = useRef<HTMLDivElement>(null);
 
   const { ref: docRef, download, downloading } = useDownloadPDF(
-    contract ? `Canvas-${contract.title?.replace(/\s+/g, "-")}` : "Canvas"
+    canvas ? `Canvas-${canvas.title?.replace(/\s+/g, "-")}` : "Canvas"
   );
 
   useEffect(() => {
-    if (contract) {
+    if (canvas) {
       fetchProfile();
-      setLocalContract(contract);
-      setEditableContent(contract.content || "");
+      setLocalCanvas(canvas);
+      setEditableContent(canvas.content || "");
       setIsEditingDetails(false);
       setPlacementMode(null);
     }
-  }, [contract]);
+  }, [canvas]);
 
   const fetchProfile = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -258,41 +260,48 @@ const ContractPreviewDialog = ({
     }
   };
 
-  // Confirm → save to DB
+  // Confirm → save to DB using percentage-based position for device independence
   const handleConfirm = async () => {
-    if (!placementMode?.pos || !localContract) return;
+    if (!placementMode?.pos || !localCanvas || !contentAreaRef.current) return;
     setSavingSignature(true);
     const { signature, signedAt, pos } = placementMode;
+    const rect = contentAreaRef.current.getBoundingClientRect();
+    const normalizedPos: SigPos = {
+      xPct: pos.x! / rect.width,
+      yPct: pos.y! / rect.height,
+      wPct: pos.w! / rect.width,
+      hPct: pos.h! / rect.height,
+    };
     const { error } = await supabase
       .from("canvases")
       .update({
         creator_signature:  signature,
         creator_signed_at:  signedAt,
-        signature_position: pos as any,
+        signature_position: normalizedPos as any,
         status:             "signed",
       })
-      .eq("id", localContract.id);
+      .eq("id", localCanvas.id);
     setSavingSignature(false);
     if (error) { toast.error("Failed to save signature"); return; }
-    setLocalContract({ ...localContract, creator_signature: signature, creator_signed_at: signedAt, signature_position: pos, status: "signed" });
+    setLocalCanvas({ ...localCanvas, creator_signature: signature, creator_signed_at: signedAt, signature_position: normalizedPos, status: "signed" });
     setPlacementMode(null);
     toast.success("Signature placed and saved!");
-    onContractUpdate?.();
+    onCanvasUpdate?.();
   };
 
   const handleSaveDetails = async () => {
-    if (!localContract) return;
+    if (!localCanvas) return;
     setSavingDetails(true);
-    const { error } = await supabase.from("canvases").update({ content: editableContent || null }).eq("id", localContract.id);
+    const { error } = await supabase.from("canvases").update({ content: editableContent || null }).eq("id", localCanvas.id);
     setSavingDetails(false);
     if (error) { toast.error("Failed to save changes"); return; }
-    setLocalContract({ ...localContract, content: editableContent || null });
+    setLocalCanvas({ ...localCanvas, content: editableContent || null });
     setIsEditingDetails(false);
-    toast.success("Contract updated");
-    onContractUpdate?.();
+    toast.success("Canvas updated");
+    onCanvasUpdate?.();
   };
 
-  if (!contract || !localContract) return null;
+  if (!canvas || !localCanvas) return null;
 
   const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
     draft:     { label: "Draft",     color: "text-muted-foreground", bg: "bg-muted" },
@@ -303,8 +312,8 @@ const ContractPreviewDialog = ({
     cancelled: { label: "Cancelled", color: "text-destructive",      bg: "bg-destructive/10" },
   };
 
-  const status   = statusConfig[localContract.status] || statusConfig.draft;
-  const savedPos = localContract.signature_position as SigPos | null;
+  const status   = statusConfig[localCanvas.status] || statusConfig.draft;
+  const savedPos = localCanvas.signature_position as SigPos | null;
 
   return (
   <>
@@ -317,7 +326,7 @@ const ContractPreviewDialog = ({
         {/* ── Top Bar ── */}
         <div className="print:hidden sticky top-0 z-10 bg-background border-b border-border/50 px-3 py-2 flex items-center justify-between gap-1.5">
           <div className="flex items-center gap-2 min-w-0">
-            <DialogTitle className="font-vollkorn text-sm sm:text-base truncate">{localContract.title}</DialogTitle>
+            <DialogTitle className="font-vollkorn text-sm sm:text-base truncate">{localCanvas.title}</DialogTitle>
             <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium flex-shrink-0", status.bg, status.color)}>
               {status.label}
             </span>
@@ -325,13 +334,13 @@ const ContractPreviewDialog = ({
           <div className="flex items-center gap-1 flex-shrink-0">
             {!isEditingDetails && !placementMode && (
               <Button variant="ghost" size="sm" title="Edit"
-                onClick={() => { setIsEditingDetails(true); setEditableContent(localContract.content || ""); }}
+                onClick={() => { setIsEditingDetails(true); setEditableContent(localCanvas.content || ""); }}
                 className="h-8 w-8 p-0 rounded-lg"
               >
                 <Edit3 className="h-3.5 w-3.5" />
               </Button>
             )}
-            {!isEditingDetails && !placementMode && !localContract.creator_signature && (
+            {!isEditingDetails && !placementMode && !localCanvas.creator_signature && (
               <Button variant="ghost" size="sm" title="Sign"
                 onClick={() => setShowSignatureDialog(true)}
                 className="h-8 w-8 p-0 rounded-lg text-primary hover:bg-primary/10"
@@ -371,7 +380,7 @@ const ContractPreviewDialog = ({
                     <h2 className="font-vollkorn text-xl font-bold text-foreground">Edit Canvas</h2>
                     <div className="flex gap-1.5">
                       <Button size="sm" variant="ghost"
-                        onClick={() => { setIsEditingDetails(false); setEditableContent(localContract.content || ""); }}
+                        onClick={() => { setIsEditingDetails(false); setEditableContent(localCanvas.content || ""); }}
                         className="gap-1 h-8 text-xs rounded-lg"
                       >
                         <X className="h-3 w-3" /> Cancel
@@ -437,9 +446,9 @@ const ContractPreviewDialog = ({
                     <div className="space-y-4">
                       <div className="flex items-start justify-between gap-4">
                         <h1 className="text-2xl md:text-3xl font-vollkorn font-bold text-foreground tracking-tight">
-                          {localContract.title}
+                          {localCanvas.title}
                         </h1>
-                        {localContract.creator_signature && (
+                        {localCanvas.creator_signature && (
                           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex-shrink-0">
                             <CheckCircle2 className="h-3.5 w-3.5" />
                             <span className="text-xs font-semibold">Signed</span>
@@ -452,9 +461,9 @@ const ContractPreviewDialog = ({
                     {/* Agreement body */}
                     <div>
                       <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-semibold mb-4">Full Agreement</p>
-                      {localContract.content ? (
+                      {localCanvas.content ? (
                         <div ref={textDivRef} className="whitespace-pre-wrap break-all text-sm text-foreground/80 leading-relaxed font-mono p-4 rounded-xl bg-muted/20 border border-border/20 overflow-hidden">
-                          {localContract.content}
+                          {localCanvas.content}
                         </div>
                       ) : (
                         <div className="text-sm text-muted-foreground/40 italic p-8 rounded-xl bg-muted/20 border border-dashed border-border/30 text-center">
@@ -484,23 +493,29 @@ const ContractPreviewDialog = ({
                    * Rendered at the exact saved coordinates so it appears
                    * permanently in the right spot on the document.
                    */}
-                  {!placementMode && savedPos && localContract.creator_signature && (
-                    <div
-                      className="absolute pointer-events-none"
-                      style={{ left: savedPos.x, top: savedPos.y, width: savedPos.w, height: savedPos.h, zIndex: 5 }}
-                    >
-                      {localContract.creator_signature.startsWith("data:image") ? (
-                        <img src={localContract.creator_signature} alt="Signature" className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-screen" draggable={false} />
-                      ) : (
-                        <span
-                          className="font-vollkorn italic text-foreground/85 flex items-center justify-center w-full h-full"
-                          style={{ fontSize: Math.max(14, Math.min(savedPos.h * 0.40, 48)) }}
-                        >
-                          {localContract.creator_signature}
-                        </span>
-                      )}
-                    </div>
-                  )}
+                  {!placementMode && savedPos && localCanvas.creator_signature && (() => {
+                    const isPct = savedPos.xPct !== undefined;
+                    const sigStyle = isPct
+                      ? { left: `${savedPos.xPct! * 100}%`, top: `${savedPos.yPct! * 100}%`, width: `${savedPos.wPct! * 100}%`, height: `${savedPos.hPct! * 100}%`, zIndex: 5 }
+                      : { left: savedPos.x, top: savedPos.y, width: savedPos.w, height: savedPos.h, zIndex: 5 };
+                    const approxH = isPct
+                      ? (savedPos.hPct! * (contentAreaRef.current?.clientHeight ?? 300))
+                      : (savedPos.h ?? 88);
+                    return (
+                      <div className="absolute pointer-events-none" style={sigStyle}>
+                        {localCanvas.creator_signature.startsWith("data:image") ? (
+                          <img src={localCanvas.creator_signature} alt="Signature" className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-screen" draggable={false} />
+                        ) : (
+                          <span
+                            className="font-vollkorn italic text-foreground/85 flex items-center justify-center w-full h-full"
+                            style={{ fontSize: Math.max(14, Math.min(approxH * 0.40, 48)) }}
+                          >
+                            {localCanvas.creator_signature}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             )}
@@ -565,13 +580,13 @@ const ContractPreviewDialog = ({
       open={showSendDialog}
       onOpenChange={setShowSendDialog}
       type="canvas"
-      documentId={localContract.id}
-      defaultEmail={localContract.client_email || ""}
-      documentLabel={localContract.title}
+      documentId={localCanvas.id}
+      defaultEmail={localCanvas.client_email || ""}
+      documentLabel={localCanvas.title}
       onSent={() => onOpenChange(false)}
     />
   </>
   );
 };
 
-export default ContractPreviewDialog;
+export default CanvasPreviewDialog;

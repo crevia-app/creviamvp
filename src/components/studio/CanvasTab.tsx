@@ -54,13 +54,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import CreateContractDialog from "./CreateContractDialog";
+import CreateCanvasDialog from "./CreateCanvasDialog";
 import { useSubscription } from "@/hooks/use-subscription";
 import UpgradePrompt from "@/components/subscription/UpgradePrompt";
-import ContractPreviewDialog from "./ContractPreviewDialog";
-import UploadContractDialog from "./UploadContractDialog";
+import CanvasPreviewDialog from "./CanvasPreviewDialog";
+import UploadCanvasDialog from "./UploadCanvasDialog";
 
-interface Contract {
+interface Canvas {
   id: string;
   title: string;
   client_name: string;
@@ -112,15 +112,15 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
 };
 
 const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
-  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [canvases, setContracts] = useState<Canvas[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "value">("newest");
   const { limits, isFree } = useSubscription();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editingContract, setEditingContract] = useState<Contract | null>(null);
-  const [previewContract, setPreviewContract] = useState<Contract | null>(null);
+  const [editingCanvas, setEditingContract] = useState<Canvas | null>(null);
+  const [previewCanvas, setPreviewContract] = useState<Canvas | null>(null);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -146,10 +146,10 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
         .eq("room_id", workspaceId)
         .not("contract_id", "is", null);
       const ids = [...new Set((msgs || []).map((m: any) => m.contract_id).filter(Boolean))];
-      if (ids.length === 0) { setContracts([]); setLoading(false); return; }
+      if (ids.length === 0) { setCanvases([]); setLoading(false); return; }
       const { data, error } = await supabase.from("canvases").select("*").in("id", ids).order("created_at", { ascending: false });
       if (error) { toast.error("Failed to load Canvas"); return; }
-      setContracts(data || []);
+      setCanvases(data || []);
       setLoading(false);
       return;
     }
@@ -172,7 +172,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       ? all.filter(c => c.folder_id === folderId)
       : all.filter(c => !c.folder_id);
 
-    setContracts(filtered);
+    setCanvases(filtered);
     setLoading(false);
   };
 
@@ -280,25 +280,25 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     fetchContracts(currentFolderId);
   };
 
-  const handleDuplicate = async (contract: Contract) => {
+  const handleDuplicate = async (contract: Canvas) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
     const { error } = await supabase.from("canvases").insert({
       user_id: session.user.id,
-      title: `${contract.title} (Copy)`,
-      client_name: contract.client_name,
-      client_email: contract.client_email,
-      contract_type: contract.contract_type,
-      content: contract.content,
-      deliverables: contract.deliverables,
-      payment_terms: contract.payment_terms,
-      exclusivity: contract.exclusivity,
-      exclusivity_details: contract.exclusivity_details,
-      usage_rights: contract.usage_rights,
-      termination_clause: contract.termination_clause,
-      value: contract.value,
-      currency: contract.currency,
+      title: `${canvas.title} (Copy)`,
+      client_name: canvas.client_name,
+      client_email: canvas.client_email,
+      contract_type: canvas.contract_type,
+      content: canvas.content,
+      deliverables: canvas.deliverables,
+      payment_terms: canvas.payment_terms,
+      exclusivity: canvas.exclusivity,
+      exclusivity_details: canvas.exclusivity_details,
+      usage_rights: canvas.usage_rights,
+      termination_clause: canvas.termination_clause,
+      value: canvas.value,
+      currency: canvas.currency,
       status: "draft",
     });
 
@@ -312,7 +312,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
 
   const handleStatusChange = async (id: string, status: string) => {
     const { error } = await supabase
-      .from("contracts")
+      .from("canvases")
       .update({ status })
       .eq("id", id);
 
@@ -324,7 +324,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     fetchContracts(currentFolderId);
   };
 
-  const handleFileUpload = async (file: File, contractType: string, title: string) => {
+  const handleFileUpload = async (file: File, canvasType: string, title: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
@@ -348,7 +348,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
         return;
       }
 
-      content = `[Original file: ${file.name}]\n[File type: ${file.type || fileExt}]\n[Uploaded: ${new Date().toLocaleString()}]\n\n---\n\nYou can edit this contract content below. The original document has been securely stored.\n\n---\n\n[Add or paste your contract terms here]`;
+      content = `[Original file: ${file.name}]\n[File type: ${file.type || fileExt}]\n[Uploaded: ${new Date().toLocaleString()}]\n\n---\n\nYou can edit this canvas content below. The original document has been securely stored.\n\n---\n\n[Add or paste your canvas terms here]`;
     }
 
     const { data, error } = await supabase.from("canvases").insert({
@@ -362,7 +362,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     }).select().single();
 
     if (error) {
-      toast.error("Failed to create contract record");
+      toast.error("Failed to create canvas record");
       return;
     }
 
@@ -371,7 +371,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     
     // Open the edit dialog immediately so user can fill in details
     if (data) {
-      setEditingContract(data as Contract);
+      setEditingCanvas(data as Contract);
     }
   };
 
@@ -383,11 +383,11 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     }).format(amount);
   };
 
-  const filteredContracts = contracts
-    .filter((contract) => {
-      const matchesSearch = contract.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        contract.client_name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = statusFilter === "all" || contract.status === statusFilter;
+  const filteredCanvases = contracts
+    .filter((canvas) => {
+      const matchesSearch = canvas.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        canvas.client_name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === "all" || canvas.status === statusFilter;
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
@@ -397,10 +397,10 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     });
 
   const stats = {
-    total: contracts.length,
-    active: contracts.filter((c) => c.status === "active" || c.status === "signed").length,
-    pending: contracts.filter((c) => c.status === "sent" || c.status === "draft").length,
-    totalValue: contracts.filter(c => c.status !== "cancelled").reduce((acc, c) => acc + (Number(c.value) || 0), 0),
+    total: canvases.length,
+    active: canvases.filter((c) => c.status === "active" || c.status === "signed").length,
+    pending: canvases.filter((c) => c.status === "sent" || c.status === "draft").length,
+    totalValue: canvases.filter(c => c.status !== "cancelled").reduce((acc, c) => acc + (Number(c.value) || 0), 0),
   };
 
   if (loading) {
@@ -451,7 +451,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
           </div>
           <p className="text-sm text-muted-foreground">
             {currentFolder
-              ? `Inside ${currentFolder.name} · ${contracts.length} canvas${contracts.length !== 1 ? "es" : ""}`
+              ? `Inside ${currentFolder.name} · ${canvases.length} canvas${canvases.length !== 1 ? "es" : ""}`
               : "Professional agreements, e-signatures & document management"}
           </p>
         </div>
@@ -665,7 +665,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       )}
 
       {/* Canvas list label */}
-      {!currentFolderId && (contracts.length > 0 || folders.length > 0) && (
+      {!currentFolderId && (canvases.length > 0 || folders.length > 0) && (
         <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 px-0.5 -mb-4">
           Canvases
         </p>
@@ -673,24 +673,24 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
 
       {/* Contracts List */}
       <AnimatePresence mode="wait">
-        {filteredContracts.length > 0 && (
+        {filteredCanvases.length > 0 && (
           <motion.div key="list" className="space-y-2">
-            {filteredContracts.map((contract, index) => {
-              const typeInfo = contractTypeConfig[contract.contract_type] || contractTypeConfig.custom;
-              const status = statusConfig[contract.status] || statusConfig.draft;
-              const hasSignatures = contract.creator_signature || contract.client_signature;
-              const bothSigned = contract.creator_signature && contract.client_signature;
+            {filteredCanvases.map((canvas, index) => {
+              const typeInfo = contractTypeConfig[canvas.contract_type] || contractTypeConfig.custom;
+              const status = statusConfig[canvas.status] || statusConfig.draft;
+              const hasSignatures = canvas.creator_signature || canvas.client_signature;
+              const bothSigned = canvas.creator_signature && canvas.client_signature;
               
               return (
                 <motion.div
-                  key={contract.id}
+                  key={canvas.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.03 }}
                 >
                   <div
                     className="group relative flex flex-col gap-3 rounded-2xl border border-border/50 bg-card p-4 transition-all duration-300 hover:border-primary/20 hover:shadow-md hover:shadow-primary/5 cursor-pointer md:flex-row md:items-center"
-                    onClick={() => setPreviewContract(contract)}
+                    onClick={() => setPreviewCanvas(contract)}
                   >
                     {/* Type Icon */}
                     <div className={`hidden sm:flex w-12 h-12 rounded-2xl bg-gradient-to-br ${typeInfo.gradient} items-center justify-center text-lg flex-shrink-0 transition-transform group-hover:scale-105`}>
@@ -700,9 +700,9 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="mb-0.5 flex flex-wrap items-start gap-2">
-                        {renamingId === contract.id ? (
+                        {renamingId === canvas.id ? (
                           <form
-                            onSubmit={e => { e.preventDefault(); handleRename(contract.id); }}
+                            onSubmit={e => { e.preventDefault(); handleRename(canvas.id); }}
                             className="flex items-center gap-1.5 min-w-0"
                             onClick={e => e.stopPropagation()}
                           >
@@ -722,7 +722,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                           </form>
                         ) : (
                           <h4 className="min-w-0 break-words font-semibold text-foreground text-sm">
-                            {contract.title}
+                            {canvas.title}
                           </h4>
                         )}
                         <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${status.bg} ${status.color}`}>
@@ -739,18 +739,18 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
-                          {contract.client_name}
+                          {canvas.client_name}
                         </span>
                         <span className="hidden sm:inline">•</span>
                         <span className="hidden sm:flex items-center gap-1">
                           {typeInfo.label}
                         </span>
-                        {contract.start_date && (
+                        {canvas.start_date && (
                           <>
                             <span className="hidden md:inline">•</span>
                             <span className="hidden md:flex items-center gap-1">
                               <CalendarDays className="h-3 w-3" />
-                              {format(new Date(contract.start_date), "MMM d, yyyy")}
+                              {format(new Date(canvas.start_date), "MMM d, yyyy")}
                             </span>
                           </>
                         )}
@@ -759,10 +759,10 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
 
                     {/* Value & Actions */}
                     <div className="flex w-full items-center justify-between gap-3 md:w-auto md:justify-end" onClick={(e) => e.stopPropagation()}>
-                      {contract.value && (
+                      {canvas.value && (
                         <div className="text-left md:text-right">
                           <p className="text-sm font-bold text-foreground tabular-nums">
-                            {formatCurrency(Number(contract.value), contract.currency)}
+                            {formatCurrency(Number(contract.value), canvas.currency)}
                           </p>
                         </div>
                       )}
@@ -773,46 +773,46 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44 rounded-xl">
-                          <DropdownMenuItem onClick={() => setPreviewContract(contract)} className="rounded-lg">
+                          <DropdownMenuItem onClick={() => setPreviewCanvas(contract)} className="rounded-lg">
                             <Eye className="h-4 w-4 mr-2" />
                             View & Sign
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setEditingContract(contract)} className="rounded-lg">
+                          <DropdownMenuItem onClick={() => setEditingCanvas(contract)} className="rounded-lg">
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() => { setRenamingId(contract.id); setRenameValue(contract.title); }}
+                            onClick={() => { setRenamingId(canvas.id); setRenameValue(canvas.title); }}
                             className="rounded-lg"
                           >
                             <Pencil className="h-4 w-4 mr-2" />
                             Rename
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDuplicate(contract)} className="rounded-lg">
+                          <DropdownMenuItem onClick={() => handleDuplicate(canvas)} className="rounded-lg">
                             <Copy className="h-4 w-4 mr-2" />
                             Duplicate
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          {contract.status === "draft" && (
-                            <DropdownMenuItem onClick={() => handleStatusChange(contract.id, "sent")} className="rounded-lg">
+                          {canvas.status === "draft" && (
+                            <DropdownMenuItem onClick={() => handleStatusChange(canvas.id, "sent")} className="rounded-lg">
                               <Send className="h-4 w-4 mr-2" />
                               Mark as Sent
                             </DropdownMenuItem>
                           )}
-                          {contract.status === "sent" && (
-                            <DropdownMenuItem onClick={() => handleStatusChange(contract.id, "signed")} className="rounded-lg">
+                          {canvas.status === "sent" && (
+                            <DropdownMenuItem onClick={() => handleStatusChange(canvas.id, "signed")} className="rounded-lg">
                               <FileSignature className="h-4 w-4 mr-2" />
                               Mark as Signed
                             </DropdownMenuItem>
                           )}
-                          {contract.status === "signed" && (
-                            <DropdownMenuItem onClick={() => handleStatusChange(contract.id, "active")} className="rounded-lg">
+                          {canvas.status === "signed" && (
+                            <DropdownMenuItem onClick={() => handleStatusChange(canvas.id, "active")} className="rounded-lg">
                               <CheckCircle2 className="h-4 w-4 mr-2" />
                               Mark Active
                             </DropdownMenuItem>
                           )}
-                          {contract.status === "active" && (
-                            <DropdownMenuItem onClick={() => handleStatusChange(contract.id, "completed")} className="rounded-lg">
+                          {canvas.status === "active" && (
+                            <DropdownMenuItem onClick={() => handleStatusChange(canvas.id, "completed")} className="rounded-lg">
                               <CheckCircle2 className="h-4 w-4 mr-2" />
                               Complete
                             </DropdownMenuItem>
@@ -820,7 +820,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive rounded-lg"
-                            onClick={() => handleDelete(contract.id)}
+                            onClick={() => handleDelete(canvas.id)}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
@@ -872,28 +872,28 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
         </DialogContent>
       </Dialog>
 
-      <CreateContractDialog
+      <CreateCanvasDialog
         open={createDialogOpen || !!editingContract}
         onOpenChange={(open) => {
           setCreateDialogOpen(open);
-          if (!open) setEditingContract(null);
+          if (!open) setEditingCanvas(null);
         }}
-        editingContract={editingContract}
+        editingCanvas={editingCanvas}
         folderId={currentFolderId}
         onSuccess={() => fetchContracts(currentFolderId)}
       />
 
-      <UploadContractDialog
+      <UploadCanvasDialog
         open={uploadDialogOpen}
         onOpenChange={setUploadDialogOpen}
         onUpload={handleFileUpload}
       />
 
-      <ContractPreviewDialog
+      <CanvasPreviewDialog
         open={!!previewContract}
-        onOpenChange={(open) => !open && setPreviewContract(null)}
-        contract={previewContract}
-        onContractUpdate={fetchContracts}
+        onOpenChange={(open) => !open && setPreviewCanvas(null)}
+        canvas={previewCanvas}
+        onCanvasUpdate={fetchCanvases}
       />
     </div>
   );

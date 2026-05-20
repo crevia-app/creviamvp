@@ -6,7 +6,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 // Tab content
 import CreviaLink from "./CreviaLink";
 import SmartInvoicesTab from "@/components/studio/SmartInvoicesTab";
-import ContractsTab from "@/components/studio/ContractsTab";
+import ContractsTab from "@/components/studio/CanvasTab";
 import StudioWorkspacesHub from "@/components/studio/workspaces/StudioWorkspacesHub";
 
 const CreviaStudio = () => {

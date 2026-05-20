@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface UploadContractDialogProps {
+interface UploadCanvasDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpload: (file: File, contractType: string, title: string) => void;
@@ -33,7 +33,7 @@ const contractTypes = [
   { id: "custom", label: "Custom", desc: "Other Canvas type", icon: "✏️" },
 ];
 
-const UploadContractDialog = ({ open, onOpenChange, onUpload }: UploadContractDialogProps) => {
+const UploadCanvasDialog = ({ open, onOpenChange, onUpload }: UploadCanvasDialogProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedType, setSelectedType] = useState("plain");
   const [title, setTitle] = useState("");
@@ -197,4 +197,4 @@ const UploadContractDialog = ({ open, onOpenChange, onUpload }: UploadContractDi
   );
 };
 
-export default UploadContractDialog;
+export default UploadCanvasDialog;
