@@ -1,5 +1,5 @@
 import { useSearchParams } from "react-router-dom";
-import { Link2, MessageSquare, Sparkles, Settings, Receipt, FileSignature } from "lucide-react";
+import { Link2, MessageSquare, Sparkles, Receipt, FileSignature } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -8,7 +8,6 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import CreviaLink from "./CreviaLink";
 import SmartInvoicesTab from "@/components/studio/SmartInvoicesTab";
 import ContractsTab from "@/components/studio/ContractsTab";
-import StudioSettingsTab from "@/components/studio/StudioSettingsTab";
 import StudioWorkspacesHub from "@/components/studio/workspaces/StudioWorkspacesHub";
 
 const CreviaStudio = () => {
@@ -25,7 +24,6 @@ const CreviaStudio = () => {
     { id: "chat",      label: "Workspace",   icon: MessageSquare },
     { id: "invoices",  label: "Invoice",     icon: Receipt },
     { id: "contracts", label: "Canvas",       icon: FileSignature },
-    { id: "settings",  label: "Settings",    icon: Settings },
   ];
 
   const linkSections = [
@@ -154,7 +152,6 @@ const CreviaStudio = () => {
               {activeTab === "link"      && <CreviaLink isEmbedded />}
               {activeTab === "invoices"  && <SmartInvoicesTab workspaceId={activeWorkspace} />}
               {activeTab === "contracts" && <ContractsTab workspaceId={activeWorkspace} />}
-              {activeTab === "settings"  && <StudioSettingsTab />}
             </motion.div>
           </AnimatePresence>
         </div>
