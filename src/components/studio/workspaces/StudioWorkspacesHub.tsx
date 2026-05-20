@@ -162,7 +162,7 @@ const StudioWorkspacesHub = ({ initialRoomId }: { initialRoomId?: string } = {})
       {/* ── PANE 1: Inbox sidebar ── */}
       <div
         className={cn(
-          "flex-shrink-0 overflow-hidden flex flex-col",
+          "flex-shrink-0 overflow-hidden flex flex-col h-full",
           showMobileChat ? "hidden md:flex" : "flex w-full"
         )}
         style={!isMobile ? { width: sidebarWidth } : undefined}
