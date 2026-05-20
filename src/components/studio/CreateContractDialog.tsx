@@ -28,6 +28,7 @@ interface CreateContractDialogProps {
   onCreated?: (id: string) => void;
   kiraContext?: Record<string, unknown> | null;
   applicationContext?: ApplicationContext | null;
+  folderId?: string | null;
 }
 
 const buildTemplate = (ctx: ApplicationContext): string => {
@@ -104,6 +105,7 @@ const CreateContractDialog = ({
   onCreated,
   kiraContext,
   applicationContext,
+  folderId,
 }: CreateContractDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -154,7 +156,7 @@ const CreateContractDialog = ({
       } else {
         const { data: created, error } = await supabase
           .from("canvases")
-          .insert(contractData)
+          .insert({ ...contractData, folder_id: folderId ?? null } as any)
           .select("id")
           .single();
         if (error) throw error;

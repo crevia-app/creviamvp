@@ -27,7 +27,18 @@ import {
   CalendarDays,
   Pencil,
   X,
+  FolderOpen,
+  FolderPlus,
+  ChevronRight,
+  ChevronDown,
+  Loader2,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -74,6 +85,15 @@ interface Contract {
   termination_clause: string | null;
 }
 
+interface Folder {
+  id: string;
+  name: string;
+  user_id: string;
+  workspace_id: string | null;
+  created_at: string;
+  canvasCount?: number;
+}
+
 const contractTypeConfig: Record<string, { label: string; icon: string; gradient: string }> = {
   sponsorship: { label: "Sponsorship", icon: "💎", gradient: "from-violet-500/10 to-purple-500/5" },
   content_creation: { label: "Content", icon: "🎬", gradient: "from-blue-500/10 to-cyan-500/5" },
@@ -107,7 +127,17 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
 
-  const fetchContracts = async () => {
+  // Folder navigation state
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
+  const [createFolderOpen, setCreateFolderOpen] = useState(false);
+  const [folderName, setFolderName] = useState("");
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null);
+  const [renameFolderValue, setRenameFolderValue] = useState("");
+
+  const fetchContracts = async (folderId: string | null = null) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
@@ -126,24 +156,107 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       return;
     }
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("canvases")
       .select("*")
       .eq("user_id", session.user.id)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      toast.error("Failed to load Canvas");
-      return;
+    // Scope to current folder or root
+    if (folderId) {
+      query = query.eq("folder_id", folderId) as any;
+    } else {
+      query = query.is("folder_id", null) as any;
     }
 
+    const { data, error } = await query;
+    if (error) { toast.error("Failed to load Canvas"); return; }
     setContracts(data || []);
     setLoading(false);
   };
 
+  const fetchFolders = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    const { data } = await (supabase as any)
+      .from("canvas_folders")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .order("name");
+    if (!data) { setFolders([]); return; }
+    // Attach canvas counts
+    const withCounts = await Promise.all(
+      (data as Folder[]).map(async (folder) => {
+        const { count } = await supabase
+          .from("canvases")
+          .select("*", { count: "exact", head: true })
+          .eq("folder_id", folder.id) as any;
+        return { ...folder, canvasCount: count ?? 0 };
+      })
+    );
+    setFolders(withCounts);
+  };
+
+  const createFolder = async () => {
+    const name = folderName.trim();
+    if (!name) return;
+    setCreatingFolder(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { setCreatingFolder(false); return; }
+    const { error } = await (supabase as any)
+      .from("canvas_folders")
+      .insert({ name, user_id: session.user.id });
+    setCreatingFolder(false);
+    if (error) { toast.error("Failed to create folder"); return; }
+    toast.success("Folder created");
+    setCreateFolderOpen(false);
+    setFolderName("");
+    fetchFolders();
+  };
+
+  const deleteFolder = async (folder: Folder) => {
+    const { error } = await (supabase as any)
+      .from("canvas_folders")
+      .delete()
+      .eq("id", folder.id);
+    if (error) { toast.error("Failed to delete folder"); return; }
+    toast.success("Folder deleted — canvases moved to root");
+    fetchFolders();
+    fetchContracts(null);
+  };
+
+  const renameFolder = async (folder: Folder) => {
+    const name = renameFolderValue.trim();
+    if (!name) return;
+    const { error } = await (supabase as any)
+      .from("canvas_folders")
+      .update({ name })
+      .eq("id", folder.id);
+    if (error) { toast.error("Failed to rename folder"); return; }
+    toast.success("Folder renamed");
+    setRenamingFolderId(null);
+    fetchFolders();
+    if (currentFolder?.id === folder.id) setCurrentFolder({ ...currentFolder, name });
+  };
+
+  const navigateToFolder = (folder: Folder) => {
+    setCurrentFolderId(folder.id);
+    setCurrentFolder(folder);
+    fetchContracts(folder.id);
+  };
+
+  const navigateToRoot = () => {
+    setCurrentFolderId(null);
+    setCurrentFolder(null);
+    fetchContracts(null);
+    fetchFolders();
+  };
+
   useEffect(() => {
-    fetchContracts();
-  }, [workspaceId]);
+    fetchContracts(currentFolderId);
+    if (!workspaceId) fetchFolders();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspaceId, currentFolderId]);
 
   const handleRename = async (id: string) => {
     const trimmed = renameValue.trim();
@@ -151,7 +264,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     const { error } = await supabase.from("canvases").update({ title: trimmed }).eq("id", id);
     if (error) { toast.error("Failed to rename Canvas"); return; }
     setRenamingId(null);
-    fetchContracts();
+    fetchContracts(currentFolderId);
     toast.success("Canvas renamed");
   };
 
@@ -162,7 +275,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       return;
     }
     toast.success("Canvas deleted");
-    fetchContracts();
+    fetchContracts(currentFolderId);
   };
 
   const handleDuplicate = async (contract: Contract) => {
@@ -192,7 +305,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       return;
     }
     toast.success("Canvas duplicated");
-    fetchContracts();
+    fetchContracts(currentFolderId);
   };
 
   const handleStatusChange = async (id: string, status: string) => {
@@ -206,7 +319,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       return;
     }
     toast.success(`Status updated to ${status}`);
-    fetchContracts();
+    fetchContracts(currentFolderId);
   };
 
   const handleFileUpload = async (file: File, contractType: string, title: string) => {
@@ -252,7 +365,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     }
 
     toast.success("Canvas uploaded! You can now edit all details.");
-    fetchContracts();
+    fetchContracts(currentFolderId);
     
     // Open the edit dialog immediately so user can fill in details
     if (data) {
@@ -310,20 +423,37 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   return (
     <div className="mx-auto w-full max-w-6xl min-w-0 space-y-6 p-4 md:p-8 xl:max-w-7xl">
 
-      {/* Header — Clean & Minimal */}
-      <motion.div 
+      {/* Header */}
+      <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col md:flex-row md:items-end justify-between gap-4"
       >
         <div>
-          <h2 className="font-vollkorn text-2xl md:text-4xl font-bold text-foreground tracking-tight">
-            Canvas
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Professional agreements, e-signatures & document management
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <button
+              onClick={navigateToRoot}
+              className="font-vollkorn text-2xl md:text-4xl font-bold tracking-tight text-foreground hover:text-bronze transition-colors"
+            >
+              Canvas
+            </button>
+            {currentFolder && (
+              <>
+                <ChevronRight className="h-5 w-5 md:h-6 md:w-6 text-muted-foreground/50 flex-shrink-0" />
+                <span className="font-vollkorn text-2xl md:text-4xl font-bold tracking-tight text-foreground truncate max-w-[200px] md:max-w-xs">
+                  {currentFolder.name}
+                </span>
+              </>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {currentFolder
+              ? `Inside ${currentFolder.name} · ${contracts.length} canvas${contracts.length !== 1 ? "es" : ""}`
+              : "Professional agreements, e-signatures & document management"}
           </p>
         </div>
+
         <div className="flex items-center gap-2 w-full md:w-auto">
           <Button
             variant="outline"
@@ -333,25 +463,46 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
             <Upload className="h-4 w-4" />
             <span>Upload</span>
           </Button>
-          <Button
-            // onClick={() => setCreateDialogOpen(true)}
-            onClick={async () => {
-              if (isFree) {
-                const { count } = await supabase
-                  .from("canvases")
-                  .select("*", { count: "exact", head: true });
-                if ((count || 0) >= limits.canvasesPerMonth) {
-                  toast.error("You've reached your free plan limit of 2 Canvas. Upgrade to Pro for unlimited Canvas.");
-                return;
-              }
-            }
-            setCreateDialogOpen(true);
-          }}
-            className="gap-2 h-10 rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30 flex-1 md:flex-none"
-          >
-            <Plus className="h-4 w-4" />
-            New Canvas
-          </Button>
+
+          {/* Universal "New" dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="gap-2 h-10 rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all flex-1 md:flex-none">
+                <Plus className="h-4 w-4" />
+                New
+                <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 rounded-xl">
+              {!currentFolderId && (
+                <DropdownMenuItem
+                  onClick={() => { setFolderName(""); setCreateFolderOpen(true); }}
+                  className="rounded-lg gap-2"
+                >
+                  <FolderPlus className="h-4 w-4 text-bronze" />
+                  New Folder
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem
+                onClick={async () => {
+                  if (isFree) {
+                    const { count } = await supabase
+                      .from("canvases")
+                      .select("*", { count: "exact", head: true });
+                    if ((count || 0) >= limits.canvasesPerMonth) {
+                      toast.error("Free plan limit: 2 Canvas. Upgrade to Pro for unlimited.");
+                      return;
+                    }
+                  }
+                  setCreateDialogOpen(true);
+                }}
+                className="rounded-lg gap-2"
+              >
+                <FileSignature className="h-4 w-4 text-primary" />
+                New Canvas
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </motion.div>
 
@@ -429,6 +580,94 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
           </Select>
         </div>
       </motion.div>
+
+      {/* Folders Grid — shown at root only */}
+      {!currentFolderId && folders.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+          className="space-y-2"
+        >
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 px-0.5">
+            Folders
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {folders.map((folder, idx) => (
+              <motion.div
+                key={folder.id}
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 0.04 }}
+                className="group relative"
+              >
+                <button
+                  onClick={() => navigateToFolder(folder)}
+                  className="w-full flex flex-col items-start gap-2.5 p-4 rounded-2xl border border-border/50 bg-card hover:border-bronze/40 hover:bg-bronze/5 hover:shadow-md hover:shadow-bronze/5 transition-all duration-200 text-left"
+                >
+                  <FolderOpen className="h-8 w-8 text-bronze/60 group-hover:text-bronze transition-colors" />
+                  {renamingFolderId === folder.id ? (
+                    <form
+                      onSubmit={(e) => { e.preventDefault(); renameFolder(folder); }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-full"
+                    >
+                      <input
+                        autoFocus
+                        value={renameFolderValue}
+                        onChange={(e) => setRenameFolderValue(e.target.value)}
+                        onKeyDown={(e) => e.key === "Escape" && setRenamingFolderId(null)}
+                        className="w-full h-6 text-xs rounded-md border border-primary/40 bg-background px-2 focus:outline-none focus:ring-1 focus:ring-primary/40"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </form>
+                  ) : (
+                    <div className="w-full min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate leading-tight">{folder.name}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {folder.canvasCount ?? 0} canvas{(folder.canvasCount ?? 0) !== 1 ? "es" : ""}
+                      </p>
+                    </div>
+                  )}
+                </button>
+
+                {/* Folder context menu */}
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                        <MoreHorizontal className="h-3.5 w-3.5" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-36 rounded-xl">
+                      <DropdownMenuItem
+                        onClick={() => { setRenamingFolderId(folder.id); setRenameFolderValue(folder.name); }}
+                        className="rounded-lg gap-2 text-xs"
+                      >
+                        <Pencil className="h-3.5 w-3.5" /> Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => deleteFolder(folder)}
+                        className="rounded-lg gap-2 text-xs text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Canvas list label */}
+      {!currentFolderId && (contracts.length > 0 || folders.length > 0) && (
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 px-0.5 -mb-4">
+          Canvases
+        </p>
+      )}
 
       {/* Contracts List */}
       <AnimatePresence mode="wait">
@@ -648,6 +887,43 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
         )}
       </AnimatePresence>
 
+      {/* Create Folder dialog */}
+      <Dialog open={createFolderOpen} onOpenChange={(o) => { if (!o) setCreateFolderOpen(false); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-semibold">
+              <FolderPlus className="h-4 w-4 text-bronze" />
+              New Folder
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground -mt-1">
+            Organise your canvases into folders, just like Google Drive.
+          </p>
+          <input
+            autoFocus
+            value={folderName}
+            onChange={(e) => setFolderName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !creatingFolder && createFolder()}
+            placeholder="e.g. Client Projects, Q3 Campaigns"
+            className="w-full h-10 rounded-xl border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          />
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" size="sm" onClick={() => setCreateFolderOpen(false)} disabled={creatingFolder}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={createFolder}
+              disabled={!folderName.trim() || creatingFolder}
+              className="bg-bronze hover:bg-bronze/90 text-background gap-1.5"
+            >
+              {creatingFolder ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FolderPlus className="h-3.5 w-3.5" />}
+              Create Folder
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <CreateContractDialog
         open={createDialogOpen || !!editingContract}
         onOpenChange={(open) => {
@@ -655,7 +931,8 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
           if (!open) setEditingContract(null);
         }}
         editingContract={editingContract}
-        onSuccess={fetchContracts}
+        folderId={currentFolderId}
+        onSuccess={() => fetchContracts(currentFolderId)}
       />
 
       <UploadContractDialog
