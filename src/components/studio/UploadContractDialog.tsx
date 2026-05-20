@@ -130,7 +130,7 @@ const UploadContractDialog = ({ open, onOpenChange, onUpload }: UploadContractDi
                   {(selectedFile.size / 1024).toFixed(1)} KB
                 </p>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setSelectedFile(null)} className="text-muted-foreground">
+              <Button variant="ghost" onClick={() => setSelectedFile(null)} className="h-11 text-muted-foreground">
                 Change
               </Button>
             </div>
@@ -145,7 +145,7 @@ const UploadContractDialog = ({ open, onOpenChange, onUpload }: UploadContractDi
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Brand X Partnership Agreement"
-                  className="mt-1.5"
+                  className="mt-1.5 h-11 text-base"
                 />
               </div>
 

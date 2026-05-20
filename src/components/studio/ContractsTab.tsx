@@ -551,12 +551,12 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
             placeholder="Search Canvas, clients..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-10 rounded-xl bg-muted/50 border-0 focus:bg-background focus:ring-1 focus:ring-primary/20 transition-all"
+            className="pl-10 h-11 text-base rounded-xl bg-muted/50 border-0 focus:bg-background focus:ring-1 focus:ring-primary/20 transition-all"
           />
         </div>
         <div className="flex gap-2">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="flex-1 h-10 rounded-xl bg-muted/50 border-0">
+            <SelectTrigger className="flex-1 h-11 rounded-xl bg-muted/50 border-0">
               <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground flex-shrink-0" />
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -570,7 +570,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
             </SelectContent>
           </Select>
           <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
-            <SelectTrigger className="flex-1 h-10 rounded-xl bg-muted/50 border-0">
+            <SelectTrigger className="flex-1 h-11 rounded-xl bg-muted/50 border-0">
               <ArrowUpDown className="h-3.5 w-3.5 mr-1.5 text-muted-foreground flex-shrink-0" />
               <SelectValue />
             </SelectTrigger>
@@ -768,7 +768,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                       )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl opacity-100 transition-all xl:opacity-0 xl:group-hover:opacity-100">
+                          <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl opacity-100 transition-all md:opacity-0 md:group-hover:opacity-100">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -854,17 +854,16 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
             onChange={(e) => setFolderName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !creatingFolder && createFolder()}
             placeholder="e.g. Client Projects, Q3 Campaigns"
-            className="w-full h-10 rounded-xl border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="w-full h-11 rounded-xl border border-border bg-background px-3 text-base focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
           <div className="flex gap-2 justify-end">
-            <Button variant="outline" size="sm" onClick={() => setCreateFolderOpen(false)} disabled={creatingFolder}>
+            <Button variant="outline" className="h-11" onClick={() => setCreateFolderOpen(false)} disabled={creatingFolder}>
               Cancel
             </Button>
             <Button
-              size="sm"
+              className="h-11 bg-bronze hover:bg-bronze/90 text-background gap-1.5"
               onClick={createFolder}
               disabled={!folderName.trim() || creatingFolder}
-              className="bg-bronze hover:bg-bronze/90 text-background gap-1.5"
             >
               {creatingFolder ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FolderPlus className="h-3.5 w-3.5" />}
               Create Folder
