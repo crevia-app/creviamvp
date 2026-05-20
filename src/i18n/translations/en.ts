@@ -268,6 +268,19 @@ const en = {
   "sidebar.connect": "Crevia Connect",
   "sidebar.kira": "Kira AI",
   "sidebar.wallet": "Wallet",
+
+  // Danger Zone
+  "settings.dangerZone": "Danger Zone",
+  "settings.dangerZoneDesc": "Permanently delete your account and all associated data. This action cannot be undone.",
+  "settings.deleteAccount": "Delete Account",
+  "settings.deleteAccountConfirmTitle": "Delete your account permanently?",
+  "settings.deleteAccountConfirmDesc": "This will permanently delete your profile, all your Canvases, invoices, Kira conversations, Crevia Link, and workspace data. This action is irreversible.",
+  "settings.deleteAccountConfirmLabel": "Type DELETE to confirm",
+  "settings.deleteAccountConfirmPlaceholder": "DELETE",
+  "settings.deleteAccountConfirm": "Yes, Delete My Account",
+  "settings.deleteAccountSuccess": "Account deleted",
+  "settings.deleteAccountSuccessDesc": "Your account has been permanently deleted.",
+  "settings.deleteAccountError": "Failed to delete account. Please try again.",
 };
 
 export default en;

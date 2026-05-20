@@ -45,12 +45,9 @@ export const countries = [
 ];
 
 export const languages = [
-  { code: "en", name: "English", flag: "🇬🇧" },
-  { code: "sw", name: "Kiswahili (Swahili)", flag: "🇰🇪" },
-  { code: "fr", name: "Français (French)", flag: "🇫🇷" },
-  { code: "ar", name: "العربية (Arabic)", flag: "🇸🇦" },
-  { code: "de", name: "Deutsch (German)", flag: "🇩🇪" },
-  { code: "es", name: "Español (Spanish)", flag: "🇪🇸" },
-  { code: "it", name: "Italiano (Italian)", flag: "🇮🇹" },
-  { code: "pt", name: "Português (Portuguese)", flag: "🇵🇹" },
+  { code: "en", name: "English",            flag: "🇬🇧" },
+  { code: "es", name: "Español",            flag: "🇪🇸" },
+  { code: "fr", name: "Français",           flag: "🇫🇷" },
+  { code: "pt", name: "Português",          flag: "🇵🇹" },
+  { code: "ar", name: "العربية (Arabic)",   flag: "🇸🇦" },
 ];

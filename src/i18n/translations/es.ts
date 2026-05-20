@@ -106,6 +106,18 @@ const es = {
   "sidebar.connect": "Crevia Connect",
   "sidebar.kira": "Kira AI",
   "sidebar.wallet": "Billetera",
+
+  "settings.dangerZone": "Zona de Peligro",
+  "settings.dangerZoneDesc": "Elimina permanentemente tu cuenta y todos los datos asociados. Esta acción no se puede deshacer.",
+  "settings.deleteAccount": "Eliminar Cuenta",
+  "settings.deleteAccountConfirmTitle": "¿Eliminar tu cuenta permanentemente?",
+  "settings.deleteAccountConfirmDesc": "Esto eliminará permanentemente tu perfil, todos tus Canvas, facturas, conversaciones con Kira, Crevia Link y datos de workspace. Esta acción es irreversible.",
+  "settings.deleteAccountConfirmLabel": "Escribe DELETE para confirmar",
+  "settings.deleteAccountConfirmPlaceholder": "DELETE",
+  "settings.deleteAccountConfirm": "Sí, Eliminar Mi Cuenta",
+  "settings.deleteAccountSuccess": "Cuenta eliminada",
+  "settings.deleteAccountSuccessDesc": "Tu cuenta ha sido eliminada permanentemente.",
+  "settings.deleteAccountError": "Error al eliminar la cuenta. Inténtalo de nuevo.",
 };
 
 export default es;

@@ -1,17 +1,14 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import en from "./translations/en";
-import sw from "./translations/sw";
-import fr from "./translations/fr";
-import ar from "./translations/ar";
-import de from "./translations/de";
 import es from "./translations/es";
-import it from "./translations/it";
+import fr from "./translations/fr";
 import pt from "./translations/pt";
+import ar from "./translations/ar";
 
 type TranslationKeys = keyof typeof en;
 type Translations = Record<string, Record<string, string>>;
 
-const translations: Translations = { en, sw, fr, ar, de, es, it, pt };
+const translations: Translations = { en, es, fr, pt, ar };
 
 interface LanguageContextType {
   language: string;

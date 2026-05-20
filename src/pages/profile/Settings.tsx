@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
-import { Settings as SettingsIcon, Camera, Languages, Shield } from "lucide-react";
+import { Settings as SettingsIcon, Camera, Languages, Shield, TriangleAlert, Trash2 } from "lucide-react";
 import SecurityTab from "@/components/settings/SecurityTab";
 import {
   Select,
@@ -16,6 +17,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { languages } from "@/data/countries";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -23,10 +31,14 @@ import { useLanguage } from "@/i18n/LanguageContext";
 const Settings = () => {
   const { toast } = useToast();
   const { language, setLanguage, t } = useLanguage();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<any>(null);
   const [userType, setUserType] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteInput, setDeleteInput] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Editable form fields
@@ -139,6 +151,23 @@ const Settings = () => {
       toast({ title: "Save failed", description: error.message || "Failed to save settings.", variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      const { error } = await supabase.rpc("delete_user");
+      if (error) throw error;
+      await supabase.auth.signOut();
+      toast({ title: t("settings.deleteAccountSuccess"), description: t("settings.deleteAccountSuccessDesc") });
+      navigate("/");
+    } catch (err: any) {
+      toast({ title: t("settings.deleteAccountError"), description: err.message, variant: "destructive" });
+    } finally {
+      setDeleting(false);
+      setDeleteOpen(false);
+      setDeleteInput("");
     }
   };
 
@@ -282,8 +311,72 @@ const Settings = () => {
                   {saving ? "Saving..." : t("common.save")}
                 </Button>
               </div>
+
+              {/* Danger Zone */}
+              <div className="pt-4 border-t border-destructive/20">
+                <div className="flex items-center gap-2 mb-3">
+                  <TriangleAlert className="w-5 h-5 text-destructive" />
+                  <h3 className="text-sm md:text-base font-semibold text-destructive">{t("settings.dangerZone")}</h3>
+                </div>
+                <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{t("settings.deleteAccount")}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 max-w-sm">{t("settings.dangerZoneDesc")}</p>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    onClick={() => setDeleteOpen(true)}
+                    className="flex-shrink-0 gap-2 h-11"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {t("settings.deleteAccount")}
+                  </Button>
+                </div>
+              </div>
             </div>
           </Card>
+
+          {/* Delete Account Dialog */}
+          <Dialog open={deleteOpen} onOpenChange={(v) => { setDeleteOpen(v); if (!v) setDeleteInput(""); }}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-destructive font-vollkorn text-xl">
+                  <TriangleAlert className="h-5 w-5" />
+                  {t("settings.deleteAccountConfirmTitle")}
+                </DialogTitle>
+                <DialogDescription className="text-sm leading-relaxed pt-1">
+                  {t("settings.deleteAccountConfirmDesc")}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div>
+                  <Label className="text-sm font-medium">{t("settings.deleteAccountConfirmLabel")}</Label>
+                  <Input
+                    value={deleteInput}
+                    onChange={(e) => setDeleteInput(e.target.value)}
+                    placeholder={t("settings.deleteAccountConfirmPlaceholder")}
+                    className="mt-1.5 h-11 text-base font-mono border-destructive/40 focus-visible:ring-destructive/30"
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={() => setDeleteOpen(false)} className="flex-1 h-11">
+                    {t("common.cancel")}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    disabled={deleteInput !== "DELETE" || deleting}
+                    onClick={handleDeleteAccount}
+                    className="flex-1 h-11 gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {deleting ? "Deleting…" : t("settings.deleteAccountConfirm")}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
 
