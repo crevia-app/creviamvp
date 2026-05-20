@@ -281,7 +281,7 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
                 value={search}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder="Search by email or name to add..."
-                className="pl-9 pr-4"
+                className="pl-9 pr-4 h-11 text-base"
               />
               {searching && (
                 <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
@@ -310,7 +310,7 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
                     size="sm"
                     onClick={() => addMember(user)}
                     disabled={addingId === user.id}
-                    className="h-7 gap-1.5 bg-bronze hover:bg-bronze/90 text-background flex-shrink-0"
+                    className="h-9 gap-1.5 bg-bronze hover:bg-bronze/90 text-background flex-shrink-0"
                   >
                     {addingId === user.id
                       ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -377,7 +377,7 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
                         <button
                           onClick={() => toggleRole(m.user_id, m.role)}
                           disabled={promotingId === m.user_id}
-                          className="text-muted-foreground hover:text-bronze transition-colors"
+                          className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-bronze hover:bg-bronze/10 transition-colors"
                           aria-label={m.role === "admin" ? "Demote to member" : "Promote to admin (Business+)"}
                           title={m.role === "admin" ? "Demote to member" : "Promote to admin (Business plan required)"}
                         >
@@ -390,7 +390,7 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
                         <button
                           onClick={() => removeMember(m.user_id)}
                           disabled={removingId === m.user_id}
-                          className="text-muted-foreground hover:text-destructive transition-colors"
+                          className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                           aria-label="Remove member"
                         >
                           {removingId === m.user_id

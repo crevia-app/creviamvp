@@ -415,7 +415,7 @@ const WorkspaceInboxList = ({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search..."
-              className="pl-8 h-8 text-xs bg-gray-50 dark:bg-muted/40 border-gray-100 dark:border-border/50 focus-visible:ring-bronze/30"
+              className="pl-8 h-11 text-base bg-gray-50 dark:bg-muted/40 border-gray-100 dark:border-border/50 focus-visible:ring-bronze/30"
             />
           </div>
         </div>
@@ -458,7 +458,7 @@ const WorkspaceInboxList = ({
                 <button
                   onClick={() => { setCreateName(""); setCreateDialogOpen(true); }}
                   title="New workspace"
-                  className="w-5 h-5 flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-bronze hover:bg-bronze/10 transition-all duration-150"
+                  className="w-9 h-9 flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-bronze hover:bg-bronze/10 transition-all duration-150"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
@@ -582,7 +582,7 @@ const WorkspaceInboxList = ({
                 <button
                   onClick={openDmDialog}
                   title="New direct message"
-                  className="w-5 h-5 flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted transition-all duration-150"
+                  className="w-9 h-9 flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted transition-all duration-150"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
@@ -692,16 +692,15 @@ const WorkspaceInboxList = ({
             value={createName}
             onChange={(e) => setCreateName(e.target.value)}
             placeholder="e.g. Nike x Crevia Campaign"
-            className="h-9 text-sm"
+            className="h-11 text-base"
             autoFocus
             onKeyDown={(e) => { if (e.key === "Enter" && !creating) createWorkspace(); }}
           />
           <div className="flex gap-2 justify-end mt-1">
-            <Button variant="outline" size="sm" onClick={() => setCreateDialogOpen(false)} disabled={creating}>
+            <Button variant="outline" className="h-11" onClick={() => setCreateDialogOpen(false)} disabled={creating}>
               Cancel
             </Button>
-            <Button size="sm" onClick={createWorkspace} disabled={!createName.trim() || creating}
-              className="bg-bronze hover:bg-bronze/90 text-background">
+            <Button className="h-11 bg-bronze hover:bg-bronze/90 text-background" onClick={createWorkspace} disabled={!createName.trim() || creating}>
               {creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Create"}
             </Button>
           </div>
@@ -718,16 +717,15 @@ const WorkspaceInboxList = ({
             value={renameValue}
             onChange={(e) => setRenameValue(e.target.value)}
             placeholder="Workspace name"
-            className="h-9 text-sm"
+            className="h-11 text-base"
             autoFocus
             onKeyDown={(e) => { if (e.key === "Enter") handleRename(); }}
           />
           <div className="flex gap-2 justify-end mt-1">
-            <Button variant="outline" size="sm" onClick={() => setRenameDialog(null)} disabled={renaming}>
+            <Button variant="outline" className="h-11" onClick={() => setRenameDialog(null)} disabled={renaming}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleRename} disabled={!renameValue.trim() || renaming}
-              className="bg-bronze hover:bg-bronze/90 text-background">
+            <Button className="h-11 bg-bronze hover:bg-bronze/90 text-background" onClick={handleRename} disabled={!renameValue.trim() || renaming}>
               {renaming ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Save"}
             </Button>
           </div>
@@ -748,9 +746,9 @@ const WorkspaceInboxList = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="text-xs h-8">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="h-11">Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={deleting}
-              className="text-xs h-8 bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+              className="h-11 bg-destructive hover:bg-destructive/90 text-destructive-foreground">
               {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -772,7 +770,7 @@ const WorkspaceInboxList = ({
               value={userSearch}
               onChange={(e) => setUserSearch(e.target.value)}
               placeholder="Search people..."
-              className="pl-8 h-9 text-sm"
+              className="pl-8 h-11 text-base"
               autoFocus
             />
           </div>
