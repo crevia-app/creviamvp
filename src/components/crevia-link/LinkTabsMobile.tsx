@@ -30,7 +30,7 @@ const LinkTabsMobile = ({ userType }: LinkTabsMobileProps) => {
                 key={tab.id}
                 to={`/crevia-link?tab=${tab.id}`}
                 className={cn(
-                  "inline-flex items-center justify-center px-5 py-2.5 rounded-lg whitespace-nowrap font-poppins text-sm font-medium transition-all duration-200",
+                  "inline-flex items-center justify-center px-5 py-3 min-h-[44px] rounded-lg whitespace-nowrap font-poppins text-sm font-medium transition-all duration-200",
                   isActive
                     ? "bg-bronze/10 text-bronze border border-bronze/20"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"

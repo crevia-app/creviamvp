@@ -574,7 +574,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                   type="button"
                   onClick={() => navigate(`/crevia-studio?tab=link&section=${tab.id}`)}
                   className={cn(
-                    "inline-flex items-center justify-center rounded-lg border px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors",
+                    "inline-flex items-center justify-center rounded-lg border px-4 py-3 min-h-[44px] text-sm font-medium whitespace-nowrap transition-colors",
                     embeddedTab === tab.id
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-background text-muted-foreground border-border hover:bg-muted hover:text-foreground"
@@ -613,7 +613,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                       value={linkProfile?.bio || ""}
                       onChange={(e) => setLinkProfile({ ...linkProfile, bio: e.target.value.slice(0, 150) })}
                       placeholder="Tell people about yourself..."
-                      className="min-h-[100px] resize-none"
+                      className="min-h-[100px] resize-none text-base"
                       maxLength={150}
                     />
                     <p className="text-xs text-muted-foreground mt-1">{linkProfile?.bio?.length || 0}/150</p>
@@ -1195,14 +1195,14 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 <LivePreview linkProfile={linkProfile} buttons={buttons} />
                 <div className="mt-4 flex gap-2">
                   <Button
-                    className="flex-1 bg-bronze hover:bg-bronze-dark text-white gap-1.5 text-xs h-9"
+                    className="flex-1 bg-bronze hover:bg-bronze-dark text-white gap-1.5 text-sm h-11"
                     onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/${linkProfile?.username}`); toast({ title: "Link copied!" }); }}
                   >
                     <Copy className="w-3.5 h-3.5" /> Copy Link
                   </Button>
                   <Button
                     variant="outline"
-                    className="flex-1 gap-1.5 text-xs h-9"
+                    className="flex-1 gap-1.5 text-sm h-11"
                     onClick={() => window.open(`${window.location.origin}/${linkProfile?.username}`, "_blank")}
                   >
                     <ExternalLink className="w-3.5 h-3.5" /> View Page
@@ -1625,7 +1625,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
           </div>
 
           {/* Live Preview - Desktop Only (Standalone) */}
-          <div className="hidden lg:block w-[340px] flex-shrink-0 sticky top-0 h-screen py-8 pr-6">
+          <div className="hidden lg:block w-[340px] flex-shrink-0 sticky top-0 h-dvh py-8 pr-6">
             <div className="sticky top-8">
               <p className="text-sm font-medium text-center text-muted-foreground mb-4">Live Preview</p>
               <LivePreview linkProfile={linkProfile} buttons={buttons} />

@@ -28,7 +28,7 @@ export function ButtonItem({ button, onEdit, onDelete, onToggleVisibility, onMov
             size="icon"
             onClick={() => onMoveUp?.(button.id)}
             disabled={isFirst}
-            className="h-7 w-7 p-0 disabled:opacity-20 text-bronze hover:text-bronze hover:bg-bronze/10"
+            className="h-9 w-9 p-0 disabled:opacity-20 text-bronze hover:text-bronze hover:bg-bronze/10"
           >
             <ChevronUp className="w-5 h-5" />
           </Button>
@@ -37,7 +37,7 @@ export function ButtonItem({ button, onEdit, onDelete, onToggleVisibility, onMov
             size="icon"
             onClick={() => onMoveDown?.(button.id)}
             disabled={isLast}
-            className="h-7 w-7 p-0 disabled:opacity-20 text-bronze hover:text-bronze hover:bg-bronze/10"
+            className="h-9 w-9 p-0 disabled:opacity-20 text-bronze hover:text-bronze hover:bg-bronze/10"
           >
             <ChevronDown className="w-5 h-5" />
           </Button>
@@ -71,7 +71,7 @@ export function ButtonItem({ button, onEdit, onDelete, onToggleVisibility, onMov
             variant="ghost"
             size="icon"
             onClick={() => onEdit(button)}
-            className="transition-all duration-300 hover:scale-110 h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10"
+            className="transition-all duration-300 hover:scale-110 h-11 w-11 md:h-10 md:w-10"
           >
             <Pencil className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
           </Button>
@@ -80,7 +80,7 @@ export function ButtonItem({ button, onEdit, onDelete, onToggleVisibility, onMov
             variant="ghost"
             size="icon"
             onClick={() => onDelete(button.id)}
-            className="transition-all duration-300 hover:scale-110 h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10"
+            className="transition-all duration-300 hover:scale-110 h-11 w-11 md:h-10 md:w-10"
           >
             <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-destructive" />
           </Button>

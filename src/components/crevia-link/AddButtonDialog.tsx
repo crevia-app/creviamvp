@@ -60,12 +60,12 @@ export function AddButtonDialog({ open, onOpenChange, onAdd }: AddButtonDialogPr
         <div className="space-y-4 py-4">
           <div>
             <Label htmlFor="title">Button Title</Label>
-            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="My Portfolio" className="mt-2" />
+            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="My Portfolio" className="mt-2 h-11 text-base" />
           </div>
 
           <div>
             <Label htmlFor="url">URL</Label>
-            <Input id="url" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://example.com" className="mt-2" />
+            <Input id="url" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://example.com" className="mt-2 h-11 text-base" />
           </div>
 
           <div>
@@ -76,7 +76,7 @@ export function AddButtonDialog({ open, onOpenChange, onAdd }: AddButtonDialogPr
                 value={iconSearch}
                 onChange={(e) => setIconSearch(e.target.value)}
                 placeholder="Search icons..."
-                className="pl-9"
+                className="pl-9 h-11 text-base"
               />
             </div>
             <ScrollArea className="h-48 mt-2 border rounded-lg p-2">
@@ -99,7 +99,7 @@ export function AddButtonDialog({ open, onOpenChange, onAdd }: AddButtonDialogPr
                             setIcon(opt.value);
                             setIconSearch("");
                           }}
-                          className={`flex flex-col items-center gap-1 p-2 rounded-lg text-xs transition-all ${
+                          className={`flex flex-col items-center gap-1 p-3 min-h-[56px] rounded-lg text-xs transition-all ${
                             icon === opt.value
                               ? "bg-bronze text-white"
                               : "hover:bg-muted text-muted-foreground hover:text-foreground"
