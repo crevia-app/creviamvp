@@ -411,26 +411,31 @@ All colors MUST be HSL.
 }
 
 @media print {
-  @page { margin: 0.4in; size: A4 portrait; }
+  @page { margin: 0.5in; size: A4 portrait; }
 
-  /* Hide everything, then reveal only the invoice document */
-  body * { visibility: hidden !important; }
+  /* When printing an invoice: hide every element on the page… */
+  body[data-printing="invoice"] * {
+    visibility: hidden !important;
+  }
 
-  .invoice-print-area,
-  .invoice-print-area * {
+  /* …then make only the invoice document and its children visible */
+  body[data-printing="invoice"] .invoice-print-area,
+  body[data-printing="invoice"] .invoice-print-area * {
     visibility: visible !important;
   }
 
-  .invoice-print-area {
-    position: fixed !important;
-    inset: 0 !important;
+  /* Lift the invoice to the top of the page; let it paginate naturally */
+  body[data-printing="invoice"] .invoice-print-area {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
     width: 100% !important;
     border-radius: 0 !important;
     box-shadow: none !important;
     overflow: visible !important;
   }
 
-  /* Force desktop table layout (hide mobile card list) */
-  .invoice-print-area .invoice-mobile-items { display: none !important; }
-  .invoice-print-area .invoice-desktop-items { display: block !important; }
+  /* Always use the desktop table layout when printing */
+  body[data-printing="invoice"] .invoice-mobile-items { display: none !important; }
+  body[data-printing="invoice"] .invoice-desktop-items { display: block !important; }
 }

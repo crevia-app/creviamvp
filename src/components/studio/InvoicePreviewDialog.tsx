@@ -56,6 +56,16 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
   const [showPalette, setShowPalette]           = useState(false);
 
   const { isPro, isBrandWorkspace, isBusiness } = useSubscription();
+
+  const handlePrint = () => {
+    document.body.setAttribute("data-printing", "invoice");
+    const cleanup = () => {
+      document.body.removeAttribute("data-printing");
+      window.removeEventListener("afterprint", cleanup);
+    };
+    window.addEventListener("afterprint", cleanup);
+    window.print();
+  };
   const isProUser = isPro || isBrandWorkspace || isBusiness;
 
   const { ref: docRef, download, downloading } = useDownloadPDF(
@@ -233,7 +243,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
             <Button variant="outline" size="sm" onClick={download} disabled={downloading} className="h-8 w-8 p-0" title="Download">
               <Download className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="outline" size="sm" onClick={() => window.print()} className="h-8 w-8 p-0 hidden sm:flex" title="Print">
+            <Button variant="outline" size="sm" onClick={handlePrint} className="h-8 w-8 p-0 hidden sm:flex" title="Print">
               <Printer className="h-3.5 w-3.5" />
             </Button>
             <Button variant="outline" size="sm" onClick={() => setIsFullscreen(!isFullscreen)} className="h-8 w-8 p-0 hidden sm:flex" title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}>
