@@ -82,10 +82,6 @@ const CreviaStudio = () => {
                   )}
                 >
                   <Icon className="h-[22px] w-[22px] sm:h-4 sm:w-4 flex-shrink-0" />
-                  {/* Mobile label */}
-                  <span className="sm:hidden text-[10px] font-bold leading-none tracking-wide">
-                    {tab.mobileLabel}
-                  </span>
                   {/* Desktop label */}
                   <span className="hidden sm:inline text-sm font-medium whitespace-nowrap">
                     {tab.label}
