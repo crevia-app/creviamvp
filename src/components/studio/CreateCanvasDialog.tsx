@@ -113,8 +113,8 @@ const CreateCanvasDialog = ({
 
   useEffect(() => {
     if (!open) return;
-    if (editingContract) {
-      setContent(editingContract.content ?? "");
+    if (editingCanvas) {
+      setContent(editingCanvas.content ?? "");
     } else if (applicationContext) {
       setContent(buildTemplate(applicationContext));
     } else if (kiraContext) {
@@ -144,11 +144,11 @@ const CreateCanvasDialog = ({
         content: content || null,
       };
 
-      if (editingContract) {
+      if (editingCanvas) {
         const { error } = await supabase
           .from("canvases")
           .update(contractData)
-          .eq("id", editingContract.id);
+          .eq("id", editingCanvas.id);
         if (error) throw error;
         onSuccess();
         onOpenChange(false);
@@ -195,7 +195,7 @@ const CreateCanvasDialog = ({
                 <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
                   <FileSignature className="h-4 w-4 text-primary" />
                 </div>
-                {editingContract ? "Edit Canvas" : applicationContext ? `Canvas – ${applicationContext.campaignTitle}` : "New Canvas"}
+                {editingCanvas ? "Edit Canvas" : applicationContext ? `Canvas – ${applicationContext.campaignTitle}` : "New Canvas"}
               </DialogTitle>
             </DialogHeader>
           </div>
@@ -222,7 +222,7 @@ const CreateCanvasDialog = ({
               disabled={loading}
               className="rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
             >
-              {loading ? "Saving…" : editingContract ? "Update Canvas" : "Save Canvas"}
+              {loading ? "Saving…" : editingCanvas ? "Update Canvas" : "Save Canvas"}
             </Button>
           </div>
         </DialogContent>

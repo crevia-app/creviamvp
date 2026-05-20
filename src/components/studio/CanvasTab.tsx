@@ -119,8 +119,8 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "value">("newest");
   const { limits, isFree } = useSubscription();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editingCanvas, setEditingContract] = useState<Canvas | null>(null);
-  const [previewCanvas, setPreviewContract] = useState<Canvas | null>(null);
+  const [editingCanvas, setEditingCanvas] = useState<Canvas | null>(null);
+  const [previewCanvas, setPreviewCanvas] = useState<Canvas | null>(null);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -371,7 +371,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     
     // Open the edit dialog immediately so user can fill in details
     if (data) {
-      setEditingCanvas(data as Contract);
+      setEditingCanvas(data as Canvas);
     }
   };
 
@@ -873,7 +873,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       </Dialog>
 
       <CreateCanvasDialog
-        open={createDialogOpen || !!editingContract}
+        open={createDialogOpen || !!editingCanvas}
         onOpenChange={(open) => {
           setCreateDialogOpen(open);
           if (!open) setEditingCanvas(null);
@@ -890,7 +890,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       />
 
       <CanvasPreviewDialog
-        open={!!previewContract}
+        open={!!previewCanvas}
         onOpenChange={(open) => !open && setPreviewCanvas(null)}
         canvas={previewCanvas}
         onCanvasUpdate={fetchCanvases}
