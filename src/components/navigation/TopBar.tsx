@@ -94,7 +94,7 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
                   variant="ghost"
                   size="icon"
                   onClick={() => setThemeOpen((v) => !v)}
-                  className="h-9 w-9 text-white/70 hover:text-white hover:bg-white/10"
+                  className="h-11 w-11 text-white/70 hover:text-white hover:bg-white/10"
                   aria-label="Toggle theme"
                 >
                   <Monitor className="h-5 w-5" />
@@ -113,7 +113,7 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
                         <button
                           key={value}
                           onClick={() => handleThemeSelect(value)}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
+                          className="w-full flex items-center gap-3 px-4 py-3 min-h-[44px] text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
                         >
                           <Icon className="w-4 h-4 flex-shrink-0" />
                           <span className="flex-1 text-left">{label}</span>
@@ -133,7 +133,7 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
               variant="ghost"
               size="icon"
               onClick={() => setSheetOpen(true)}
-              className="relative h-9 w-9 text-white/70 hover:text-white hover:bg-white/10"
+              className="relative h-11 w-11 text-white/70 hover:text-white hover:bg-white/10"
               aria-label="Notifications"
             >
               <Bell className="h-5 w-5" />
