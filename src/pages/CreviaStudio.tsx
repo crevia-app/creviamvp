@@ -141,7 +141,7 @@ const CreviaStudio = () => {
           <StudioWorkspacesHub initialRoomId={activeRoomId} />
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto min-w-0">
+        <div className="flex-1 overflow-y-auto min-w-0 pb-16 md:pb-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}

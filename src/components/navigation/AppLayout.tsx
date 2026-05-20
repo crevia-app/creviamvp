@@ -68,6 +68,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   };
 
   const isCrevidAI = location.pathname === "/crevia-ai";
+  const isStudio   = location.pathname === "/crevia-studio";
 
   return (
     <div className="min-h-dvh bg-background flex flex-col">
@@ -83,7 +84,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           onProfileClick={() => setProfileDrawerOpen(true)}
         />
 
-        <main className="flex-1 overflow-auto pb-16 md:pb-0 md:ml-[100px]">
+        <main className={`flex-1 md:ml-[100px] ${isStudio ? "overflow-hidden" : "overflow-auto pb-16 md:pb-0"}`}>
           {children}
         </main>
       </div>
