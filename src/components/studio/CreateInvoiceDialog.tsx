@@ -74,28 +74,6 @@ const PAYMENT_METHOD_FIELDS: Record<string, Partial<Record<keyof PaymentDetails,
     accountNumber: "Till No. · Paybill · Phone",
     reference:     "Account No. / Reference",
   },
-  "PayPal": {
-    accountName:   "PayPal Name",
-    accountNumber: "PayPal Email or Phone",
-    reference:     "Reference (optional)",
-  },
-  "Stripe": {
-    accountName:   "Account Name",
-    accountNumber: "Payment Link or Email",
-    reference:     "Reference (optional)",
-  },
-  "Cryptocurrency": {
-    bankName:      "Network (e.g. Bitcoin, Ethereum)",
-    accountNumber: "Wallet Address",
-    branchCode:    "Memo / Tag (if required)",
-  },
-  "Cash": {},
-  "Other": {
-    accountName:   "Account Name",
-    bankName:      "Platform / Institution",
-    accountNumber: "Account / ID",
-    reference:     "Reference",
-  },
 };
 
 const currencies = [

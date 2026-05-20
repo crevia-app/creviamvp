@@ -431,13 +431,8 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
                   };
 
                   const fieldLabels: Record<string, string> = {
-                    "Bank Transfer":  JSON.stringify({ accountName: "Account Name", bankName: "Bank Name", accountNumber: "Account Number", branchCode: "Branch / SWIFT", reference: "Reference" }),
-                    "M-Pesa":         JSON.stringify({ accountName: "Business Name", accountNumber: "Till / Paybill / Phone", reference: "Reference" }),
-                    "PayPal":         JSON.stringify({ accountName: "PayPal Name", accountNumber: "PayPal Email / Phone", reference: "Reference" }),
-                    "Stripe":         JSON.stringify({ accountName: "Account Name", accountNumber: "Payment Link / Email", reference: "Reference" }),
-                    "Cryptocurrency": JSON.stringify({ bankName: "Network", accountNumber: "Wallet Address", branchCode: "Memo / Tag" }),
-                    "Cash":           "{}",
-                    "Other":          JSON.stringify({ accountName: "Account Name", bankName: "Platform", accountNumber: "Account / ID", reference: "Reference" }),
+                    "Bank Transfer": JSON.stringify({ accountName: "Account Name", bankName: "Bank Name", accountNumber: "Account Number", branchCode: "Branch / SWIFT", reference: "Reference" }),
+                    "M-Pesa":        JSON.stringify({ accountName: "Business Name", accountNumber: "Till / Paybill / Phone", reference: "Reference" }),
                   };
 
                   const labels: Record<string, string> = JSON.parse(fieldLabels[pd.method ?? ""] || "{}");
