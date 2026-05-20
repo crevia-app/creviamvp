@@ -71,7 +71,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const isStudio   = location.pathname === "/crevia-studio";
 
   return (
-    <div className="min-h-dvh bg-background flex flex-col">
+    <div className="h-dvh bg-background flex flex-col">
       <TopBar
         profile={profile}
         onProfileClick={() => setProfileDrawerOpen(true)}
@@ -84,7 +84,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           onProfileClick={() => setProfileDrawerOpen(true)}
         />
 
-        <main className={`flex-1 md:ml-[100px] ${isStudio ? "overflow-hidden" : "overflow-auto pb-16 md:pb-0"}`}>
+        <main className={`flex-1 min-h-0 md:ml-[100px] ${isStudio ? "overflow-hidden h-full" : "overflow-auto pb-16 md:pb-0"}`}>
           {children}
         </main>
       </div>
