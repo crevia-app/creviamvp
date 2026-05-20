@@ -179,11 +179,12 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   const fetchFolders = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
-    const { data } = await (supabase as any)
+    const { data, error } = await (supabase as any)
       .from("canvas_folders")
       .select("*")
       .eq("user_id", session.user.id)
       .order("name");
+    if (error) { console.error("fetchFolders:", error); setFolders([]); return; }
     if (!data) { setFolders([]); return; }
     // Attach canvas counts
     const withCounts = await Promise.all(
