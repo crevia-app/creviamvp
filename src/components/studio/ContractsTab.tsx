@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Plus,
@@ -22,7 +21,6 @@ import {
   Filter,
   ArrowUpDown,
   TrendingUp,
-  Sparkles,
   File,
   CalendarDays,
   Pencil,
@@ -674,60 +672,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
 
       {/* Contracts List */}
       <AnimatePresence mode="wait">
-        {filteredContracts.length === 0 ? (
-          <motion.div
-            key="empty"
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <Card className="p-12 md:p-20 text-center border border-dashed border-border/60 bg-muted/20 rounded-3xl">
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-6">
-                <FileSignature className="h-9 w-9 text-primary" />
-              </div>
-              <h3 className="font-vollkorn text-2xl font-bold text-foreground mb-2">
-                {searchQuery || statusFilter !== "all" ? "No Canvas found" : "Create your first Canvas"}
-              </h3>
-              <p className="text-muted-foreground mb-8 max-w-md mx-auto text-sm leading-relaxed">
-                {searchQuery || statusFilter !== "all"
-                  ? "Try adjusting your search or filters"
-                  : "Build professional Canvas with templates, e-signatures, and document management — all in one place."}
-              </p>
-              {!searchQuery && statusFilter === "all" && (
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button
-                    // onClick={() => setCreateDialogOpen(true)}
-                    onClick={async () => {
-                      if (isFree) {
-                         const { count } = await supabase
-                            .from("canvases")
-                            .select("*", { count: "exact", head: true });
-                         if ((count || 0) >= limits.canvasesPerMonth) {
-                           toast.error("You've reached your free plan limit of 2 Canvas. Upgrade to Pro for unlimited Canvas.");
-                           return;
-                         }
-                       }
-                   setCreateDialogOpen(true);
-                  }}
-                 className="gap-2 rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 h-11"
-                    // className="gap-2 rounded-xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 h-11"
-                  >
-                    <Sparkles className="h-4 w-4" />
-                    Create from Template
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setUploadDialogOpen(true)}
-                    className="gap-2 rounded-xl h-11 border-dashed"
-                  >
-                    <Upload className="h-4 w-4" />
-                    Upload Document
-                  </Button>
-                </div>
-              )}
-            </Card>
-          </motion.div>
-        ) : (
+        {filteredContracts.length > 0 && (
           <motion.div key="list" className="space-y-2">
             {filteredContracts.map((contract, index) => {
               const typeInfo = contractTypeConfig[contract.contract_type] || contractTypeConfig.custom;
