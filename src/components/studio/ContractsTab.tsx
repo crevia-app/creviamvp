@@ -156,22 +156,25 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       return;
     }
 
-    let query = supabase
+    const { data, error } = await supabase
       .from("canvases")
       .select("*")
       .eq("user_id", session.user.id)
       .order("created_at", { ascending: false });
 
-    // Scope to current folder or root
-    if (folderId) {
-      query = query.eq("folder_id", folderId) as any;
-    } else {
-      query = query.is("folder_id", null) as any;
+    if (error) {
+      toast.error("Failed to load Canvas");
+      setLoading(false);
+      return;
     }
 
-    const { data, error } = await query;
-    if (error) { toast.error("Failed to load Canvas"); return; }
-    setContracts(data || []);
+    // Filter client-side so the column-not-yet-migrated case still works
+    const all = (data || []) as any[];
+    const filtered = folderId
+      ? all.filter(c => c.folder_id === folderId)
+      : all.filter(c => !c.folder_id);
+
+    setContracts(filtered);
     setLoading(false);
   };
 
