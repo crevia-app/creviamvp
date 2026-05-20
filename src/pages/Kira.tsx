@@ -239,29 +239,7 @@ function MobileChatItem({
   );
 }
 
-const THINKING_STATES = [
-  "Thinking...",
-  "Cooking something up...",
-  "Connecting the dots...",
-  "Reading between the lines...",
-  "Pulling it together...",
-  "Working through this...",
-  "Let me dig in...",
-  "Weighing the details...",
-  "Crafting your response...",
-  "On it...",
-  "Processing the context...",
-  "Laying the groundwork...",
-  "Sharpening my thoughts...",
-  "Almost there...",
-];
-
 function ThinkingIndicator() {
-  const [stateIdx, setStateIdx] = useState(() => Math.floor(Math.random() * THINKING_STATES.length));
-  useEffect(() => {
-    const id = setInterval(() => setStateIdx(i => (i + 1) % THINKING_STATES.length), 2000);
-    return () => clearInterval(id);
-  }, []);
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -282,18 +260,7 @@ function ThinkingIndicator() {
               />
             ))}
           </div>
-          <AnimatePresence mode="wait">
-            <motion.span
-              key={stateIdx}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.2 }}
-              className="text-sm text-muted-foreground"
-            >
-              {THINKING_STATES[stateIdx]}
-            </motion.span>
-          </AnimatePresence>
+          <span className="text-sm text-muted-foreground">Thinking...</span>
         </div>
       </div>
     </motion.div>
@@ -449,11 +416,7 @@ const Kira = () => {
             project_id: c.project_id,
             pinned: c.pinned ?? false,
           })));
-          
-          if (conversations.length > 0) {
-            setActiveChat(conversations[0].id);
-            setActiveProjectId(conversations[0].project_id || null);
-          }
+          // Always land on a fresh new-chat state; user picks from sidebar to resume
         }
 
         const { data: projectsData, error: projectsError } = await supabase
