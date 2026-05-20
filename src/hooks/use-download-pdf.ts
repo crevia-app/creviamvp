@@ -2,7 +2,10 @@ import { useRef, useState } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
-export function useDownloadPDF(filename: string) {
+export function useDownloadPDF(
+  filename: string,
+  options?: { ignoreElements?: (el: Element) => boolean }
+) {
   const ref = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
 
@@ -15,6 +18,7 @@ export function useDownloadPDF(filename: string) {
         useCORS: true,
         backgroundColor: "#ffffff",
         logging: false,
+        ignoreElements: options?.ignoreElements,
       });
 
       const imgData = canvas.toDataURL("image/png");

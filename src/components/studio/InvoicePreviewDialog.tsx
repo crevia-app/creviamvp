@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -57,38 +58,62 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
   const [showPalette, setShowPalette]           = useState(false);
 
   const { isPro, isBrandWorkspace, isBusiness } = useSubscription();
+  const isProUser = isPro || isBrandWorkspace || isBusiness;
+
+  const page1Ref = useRef<HTMLDivElement>(null);
+  const page2Ref = useRef<HTMLDivElement>(null);
+  const hasPage2 = !!(invoice?.notes || invoice?.terms || invoice?.payment_details?.method);
+
+  const { ref: docRef, download, downloading } = useDownloadPDF(
+    invoice ? `Invoice-${invoice.invoice_number}` : "Invoice",
+    { ignoreElements: (el: Element) => el.classList.contains("print-page-break") }
+  );
 
   const handlePrint = async () => {
-    if (!docRef.current) return;
     try {
-      const canvas = await html2canvas(docRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-      });
-      const imgData = canvas.toDataURL("image/png");
-      const pw = window.open("", "_blank");
-      if (!pw) { toast.error("Allow pop-ups to print the invoice"); return; }
-      pw.document.write(
-        `<!DOCTYPE html><html><head><title>Invoice ${invoice?.invoice_number ?? ""}</title>` +
-        `<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#fff}` +
-        `img{width:100%;height:auto;display:block}` +
-        `@media print{@page{margin:0;size:auto}}</style></head>` +
-        `<body><img src="${imgData}">` +
-        `<script>window.onload=function(){window.print();window.onafterprint=function(){window.close()}}<\/script>` +
-        `</body></html>`
-      );
-      pw.document.close();
+      const opts = { scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false } as const;
+      const M = 12; // page margin in mm
+
+      if (hasPage2 && page1Ref.current && page2Ref.current) {
+        const [c1, c2] = await Promise.all([
+          html2canvas(page1Ref.current, opts),
+          html2canvas(page2Ref.current, opts),
+        ]);
+
+        const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+        const PW = pdf.internal.pageSize.getWidth();
+        const CW = PW - M * 2;
+
+        // ── Page 1 ──
+        pdf.addImage(c1.toDataURL("image/png"), "PNG", M, M, CW, (c1.height / c1.width) * CW);
+
+        // ── Page 2 ──
+        pdf.addPage();
+        const [r, g, b] = [
+          parseInt(accentColor.slice(1, 3), 16),
+          parseInt(accentColor.slice(3, 5), 16),
+          parseInt(accentColor.slice(5, 7), 16),
+        ];
+        pdf.setFillColor(r, g, b);
+        pdf.rect(0, 0, PW, 3, "F"); // accent bar
+        pdf.setFontSize(7);
+        pdf.setTextColor(180, 180, 180);
+        pdf.text(`Invoice ${invoice?.invoice_number ?? ""} · continued`, PW - M, 10, { align: "right" });
+        pdf.addImage(c2.toDataURL("image/png"), "PNG", M, 3 + M, CW, (c2.height / c2.width) * CW);
+
+        window.open(pdf.output("bloburl") as string, "_blank");
+      } else if (page1Ref.current) {
+        const c = await html2canvas(page1Ref.current, opts);
+        const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+        const PW = pdf.internal.pageSize.getWidth();
+        const CW = PW - M * 2;
+        pdf.addImage(c.toDataURL("image/png"), "PNG", M, M, CW, (c.height / c.width) * CW);
+        window.open(pdf.output("bloburl") as string, "_blank");
+      }
     } catch {
       toast.error("Could not prepare print preview");
     }
   };
-  const isProUser = isPro || isBrandWorkspace || isBusiness;
-
-  const { ref: docRef, download, downloading } = useDownloadPDF(
-    invoice ? `Invoice-${invoice.invoice_number}` : "Invoice"
-  );
 
   useEffect(() => {
     if (!invoice) return;
@@ -278,9 +303,9 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
           <div className="p-3 sm:p-6">
             <div ref={docRef} className="invoice-print-area bg-white text-black rounded-xl shadow-lg overflow-hidden print:shadow-none">
 
-              {/* Accent bar */}
+              {/* ── PAGE 1 ── */}
+              <div ref={page1Ref} className="bg-white">
               <div className="h-1.5" style={{ background: accentColor }} />
-
               <div className="p-4 sm:p-8">
 
                 {/* ── Header: INVOICE + business info ── */}
@@ -432,6 +457,36 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
                   </div>
                 </div>
 
+                {/* Footer + watermark on page 1 when there is no page 2 */}
+                {!hasPage2 && (
+                  <div className="mt-8 pt-3 text-center" style={{ borderTop: `1px solid ${hexToRgba(accentColor, 0.2)}` }}>
+                    <p className="text-xs font-medium" style={{ color: accentColor }}>Thank you for your business!</p>
+                    <p className="text-gray-300 text-[10px] mt-0.5">Generated with Crevia Studio · {format(new Date(), "yyyy")}</p>
+                  </div>
+                )}
+                {!hasPage2 && !isProUser && (
+                  <div className="mt-4 -mx-8 -mb-8 px-6 py-2.5 bg-amber-50 border-t border-amber-200 text-center">
+                    <p className="text-[11px] text-amber-700 font-medium">Created with <strong>Crevia Free</strong> · Upgrade to Pro to remove this watermark</p>
+                  </div>
+                )}
+
+              </div>{/* / p-4 sm:p-8 page 1 */}
+              </div>{/* / page1Ref */}
+
+              {/* ── Page break indicator (screen only — ignored by download) ── */}
+              {hasPage2 && (
+                <div className="print-page-break flex items-center gap-2 px-6 py-2.5 bg-gray-50 border-y border-gray-100">
+                  <div className="flex-1 h-px bg-gray-200" />
+                  <span className="text-[9px] font-bold text-gray-300 uppercase tracking-[0.18em] select-none px-2">Page 2</span>
+                  <div className="flex-1 h-px bg-gray-200" />
+                </div>
+              )}
+
+              {/* ── PAGE 2 ── */}
+              {hasPage2 && (
+                <div ref={page2Ref} className="bg-white">
+                <div className="p-4 sm:p-8 pt-6 sm:pt-8">
+
                 {/* ── Notes & Terms ── */}
                 {(invoice.notes || invoice.terms) && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4" style={{ borderTop: `1px solid ${hexToRgba(accentColor, 0.2)}` }}>
@@ -524,8 +579,10 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
                   </div>
                 )}
 
-              </div>
-            </div>
+                </div>{/* / p-4 sm:p-8 page 2 */}
+                </div>{/* / page2Ref */}
+              )}{/* / hasPage2 */}
+            </div>{/* / docRef */}
           </div>
         </div>
 
