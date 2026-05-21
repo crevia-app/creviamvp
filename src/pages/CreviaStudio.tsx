@@ -92,7 +92,6 @@ const CreviaStudio = () => {
                   )}>
                     <Icon className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
                   </div>
-                  <span className="text-[10px] font-semibold tracking-wide sm:hidden">{tab.shortLabel}</span>
                   <span className="hidden sm:inline text-sm font-medium whitespace-nowrap">{label}</span>
                 </button>
               );
@@ -128,12 +127,6 @@ const CreviaStudio = () => {
                       )}>
                         <Icon className="h-5 w-5" />
                       </div>
-                      <span className={cn(
-                        "text-[10px] font-semibold tracking-wide transition-colors duration-200",
-                        isActive ? "text-bronze" : "text-muted-foreground"
-                      )}>
-                        {section.label}
-                      </span>
                     </button>
                   );
                 })}
