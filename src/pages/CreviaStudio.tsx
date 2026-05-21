@@ -23,7 +23,7 @@ const CreviaStudio = () => {
     { id: "link",      labelKey: "studio.tab.link",      shortLabel: "Link",      icon: Link2 },
     { id: "chat",      labelKey: "studio.tab.workspace", shortLabel: "Workspace", icon: MessageSquare },
     { id: "invoices",  labelKey: "studio.tab.invoice",   shortLabel: "Invoice",   icon: Receipt },
-    { id: "contracts", labelKey: "studio.tab.canvas",    shortLabel: "Canvas",    icon: FileSignature },
+    { id: "canvas", labelKey: "studio.tab.canvas",    shortLabel: "Canvas",    icon: FileSignature },
   ];
 
   const linkSections = [
@@ -153,7 +153,7 @@ const CreviaStudio = () => {
             >
               {activeTab === "link"      && <CreviaLink isEmbedded />}
               {activeTab === "invoices"  && <SmartInvoicesTab workspaceId={activeWorkspace} />}
-              {activeTab === "contracts" && <ContractsTab workspaceId={activeWorkspace} />}
+              {activeTab === "canvas" && <ContractsTab workspaceId={activeWorkspace} />}
             </motion.div>
           </AnimatePresence>
         </div>
