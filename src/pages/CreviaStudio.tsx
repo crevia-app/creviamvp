@@ -92,10 +92,10 @@ const CreviaStudio = () => {
             })}
           </div>
 
-          {/* Link sub-sections (mobile only) — scrollable pill nav */}
+          {/* Link sub-sections (mobile only) — icon + label tab bar */}
           {activeTab === "link" && (
-            <div className="md:hidden mt-2 border-t border-border/40 pt-2.5 -mx-4 px-4">
-              <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="md:hidden mt-2 border-t border-border/40 -mx-4">
+              <div className="flex w-full">
                 {linkSections.map((section) => {
                   const Icon = section.icon;
                   const isActive = activeLinkSection === section.id;
@@ -105,16 +105,28 @@ const CreviaStudio = () => {
                       type="button"
                       onClick={() => handleLinkSectionChange(section.id)}
                       className={cn(
-                        "flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-full",
-                        "text-sm font-semibold transition-all duration-200 active:scale-95",
-                        "min-h-[44px] select-none",
-                        isActive
-                          ? "bg-bronze text-white shadow-md shadow-bronze/30"
-                          : "bg-muted/70 text-muted-foreground hover:text-foreground hover:bg-muted"
+                        "flex-1 flex flex-col items-center gap-1 py-2.5 select-none",
+                        "transition-all duration-200 active:scale-95 relative"
                       )}
                     >
-                      <Icon className="h-4 w-4 flex-shrink-0" />
-                      <span>{section.label}</span>
+                      {/* Active indicator line */}
+                      {isActive && (
+                        <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-bronze" />
+                      )}
+                      <div className={cn(
+                        "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200",
+                        isActive
+                          ? "bg-bronze/15 text-bronze"
+                          : "text-muted-foreground"
+                      )}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <span className={cn(
+                        "text-[10px] font-semibold tracking-wide transition-colors duration-200",
+                        isActive ? "text-bronze" : "text-muted-foreground"
+                      )}>
+                        {section.label}
+                      </span>
                     </button>
                   );
                 })}
