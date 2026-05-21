@@ -7,20 +7,29 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const [status, setStatus] = useState<"loading" | "auth" | "unauth">("loading");
+  const [status, setStatus] = useState<"loading" | "auth" | "mfa" | "unauth">("loading");
 
   useEffect(() => {
-    // getSession() is the single authoritative initial check.
-    // It handles token refresh internally and returns the true current state.
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setStatus(session ? "auth" : "unauth");
+      if (!session) {
+        setStatus("unauth");
+        return;
+      }
+      // If a fresh login flagged MFA as pending, block until it's completed.
+      if (sessionStorage.getItem("mfa_pending") === "1") {
+        setStatus("mfa");
+        return;
+      }
+      setStatus("auth");
     });
 
-    // onAuthStateChange handles live transitions only.
-    // INITIAL_SESSION is intentionally ignored to avoid racing with getSession().
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        setStatus("auth");
+        if (sessionStorage.getItem("mfa_pending") === "1") {
+          setStatus("mfa");
+        } else {
+          setStatus("auth");
+        }
       } else if (event === "SIGNED_OUT") {
         setStatus("unauth");
       }
@@ -37,9 +46,8 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
 
-  if (status === "unauth") {
-    return <Navigate to="/auth" replace />;
-  }
+  if (status === "unauth") return <Navigate to="/auth" replace />;
+  if (status === "mfa")   return <Navigate to="/mfa-verify" replace />;
 
   return <>{children}</>;
 };

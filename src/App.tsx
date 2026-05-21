@@ -15,6 +15,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { CookieConsent } from "./components/CookieConsent";
+import { BiometricLockScreen } from "./components/auth/BiometricLockScreen";
 import AppLayout from "./components/navigation/AppLayout";
 import PublicPageWrapper from "./components/PublicPageWrapper";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -86,6 +87,10 @@ function AppContent() {
   const [maintenance, setMaintenance] = useState(false);
   const location = useLocation();
 
+  // Biometric app lock
+  const [bioLocked, setBioLocked] = useState(false);
+  const [bioCredentialId, setBioCredentialId] = useState<string | null>(null);
+
   // MUST be called before any early returns.
   // Receives "" until the auth state resolves, then fires the full init flow.
   const {
@@ -136,11 +141,45 @@ function AppContent() {
       });
   }, []);
 
+  // Biometric app lock — arm after session resolves
+  useEffect(() => {
+    if (!userId) return;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      const enabled = !!user?.user_metadata?.biometric_enabled;
+      const credId = user?.user_metadata?.biometric_credential_id as string | undefined;
+      if (!enabled || !credId) return;
+      setBioCredentialId(credId);
+      setBioLocked(true);
+    });
+  }, [userId]);
+
+  // Re-lock after 5 minutes in background
+  useEffect(() => {
+    if (!bioCredentialId) return;
+    let hiddenAt = 0;
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        hiddenAt = Date.now();
+      } else if (hiddenAt && Date.now() - hiddenAt >= 5 * 60 * 1000) {
+        setBioLocked(true);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [bioCredentialId]);
+
   // Admin path always bypasses maintenance so the toggle can be turned off
   if (maintenance && !location.pathname.startsWith("/admin")) return <MaintenancePage />;
 
   return (
     <>
+      {bioLocked && bioCredentialId && (
+        <BiometricLockScreen
+          credentialId={bioCredentialId}
+          onUnlock={() => setBioLocked(false)}
+        />
+      )}
+
       <ScrollToTop />
       <CookieConsent />
 

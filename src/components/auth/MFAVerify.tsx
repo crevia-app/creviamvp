@@ -56,6 +56,7 @@ const MFAVerify = () => {
       });
       if (error) throw error;
 
+      sessionStorage.removeItem("mfa_pending");
       supabase.functions.invoke("login-alert").catch(() => {});
       toast({ title: "Verified!", description: "Welcome back to Crevia." });
       navigate("/kira", { replace: true });

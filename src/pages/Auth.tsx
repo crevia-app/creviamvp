@@ -83,6 +83,7 @@ const Auth = () => {
       if (event === 'SIGNED_IN' && session && !inPasswordResetFlow.current) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.user_metadata?.two_fa_enabled) {
+          sessionStorage.setItem("mfa_pending", "1");
           navigate("/mfa-verify", { replace: true });
         } else {
           supabase.functions.invoke("login-alert").catch(() => {});

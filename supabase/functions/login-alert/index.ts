@@ -87,8 +87,8 @@ serve(async (req) => {
     }
 
     const signInTime = formatDateTime(new Date());
-    const settingsUrl = "https://creviamvp.vercel.app/settings?tab=security";
-    const displayName = user.user_metadata?.full_name || user.email;
+    const settingsUrl = "https://crevia.app/profile/settings?tab=security";
+    const displayName = user.user_metadata?.display_name || user.user_metadata?.full_name || user.email;
 
     const html = `
 <!DOCTYPE html>
@@ -108,7 +108,7 @@ serve(async (req) => {
             <td style="background:#1a1a1a;padding:28px 40px;">
               <table cellpadding="0" cellspacing="0"><tr>
                 <td style="vertical-align:middle;padding-right:10px;">
-                  <img src="https://creviamvp.vercel.app/crevia-logo.png" alt="Crevia" width="40" height="40" style="display:block;border-radius:50%;border:1px solid #333;" />
+                  <img src="https://crevia.app/crevia-logo.png" alt="Crevia" width="40" height="40" style="display:block;border-radius:50%;border:1px solid #333;" />
                 </td>
                 <td style="vertical-align:middle;">
                   <span style="font-size:22px;font-weight:700;color:#c9a96e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">Crevia</span>

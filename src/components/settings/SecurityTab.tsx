@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import MFASetup from "@/components/auth/MFASetup";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { biometricsAvailable, registerBiometric } from "@/hooks/use-biometrics";
 import {
   Shield,
   KeyRound,
@@ -23,6 +24,7 @@ import {
   Lock,
   Mail,
   Loader2,
+  Fingerprint,
 } from "lucide-react";
 import {
   Dialog,
@@ -62,13 +64,22 @@ const SecurityTab = () => {
   const [showSignOutAll, setShowSignOutAll] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
-  // Load 2FA and login alerts status on mount
+  // Biometrics state
+  const [bioAvailable, setBioAvailable] = useState(false);
+  const [bioEnabled, setBioEnabled] = useState(false);
+  const [bioRegistering, setBioRegistering] = useState(false);
+  const [bioDisabling, setBioDisabling] = useState(false);
+
+  // Load 2FA, login alerts and biometrics status on mount
   useEffect(() => {
+    biometricsAvailable().then(setBioAvailable);
+
     supabase.auth.getUser().then(({ data: { user } }) => {
       setTwoFactorEnabled(!!user?.user_metadata?.two_fa_enabled);
       if (user?.email) setTwoFaEmail(user.email);
       const saved = user?.user_metadata?.login_alerts_enabled;
       setLoginAlertsEnabled(saved === undefined ? true : !!saved);
+      setBioEnabled(!!user?.user_metadata?.biometric_enabled);
     });
   }, []);
 
@@ -174,6 +185,46 @@ const SecurityTab = () => {
     } finally {
       setSigningOut(false);
       setShowSignOutAll(false);
+    }
+  };
+
+  const handleEnableBiometrics = async () => {
+    setBioRegistering(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      const displayName = user.user_metadata?.display_name || user.email || user.id;
+      const credentialId = await registerBiometric(user.id, displayName);
+      const { error } = await supabase.auth.updateUser({
+        data: { biometric_enabled: true, biometric_credential_id: credentialId },
+      });
+      if (error) throw error;
+      setBioEnabled(true);
+      toast({ title: "Biometrics enabled", description: "Your device biometric will lock the app when you return." });
+    } catch (err: any) {
+      if (err?.name === "NotAllowedError") {
+        toast({ title: "Cancelled", description: "Biometric registration was cancelled.", variant: "destructive" });
+      } else {
+        toast({ title: "Registration failed", description: err.message || "Could not register biometric.", variant: "destructive" });
+      }
+    } finally {
+      setBioRegistering(false);
+    }
+  };
+
+  const handleDisableBiometrics = async () => {
+    setBioDisabling(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { biometric_enabled: false, biometric_credential_id: null },
+      });
+      if (error) throw error;
+      setBioEnabled(false);
+      toast({ title: "Biometrics disabled", description: "App lock has been turned off." });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setBioDisabling(false);
     }
   };
 
@@ -478,10 +529,62 @@ const SecurityTab = () => {
         )}
       </Card>
 
+      {/* Biometrics & App Lock */}
+      <Card className="p-4 md:p-8">
+        <div className="flex items-center gap-3 mb-1">
+          <Fingerprint className="w-5 h-5 text-bronze" />
+          <h2 className="font-vollkorn text-xl md:text-2xl font-bold">Biometrics & App Lock</h2>
+        </div>
+        <p className="text-sm text-muted-foreground mb-5">
+          Lock the app when you step away. Unlock instantly with your fingerprint, Face ID, or Windows Hello.
+        </p>
 
-
-
-
+        {!bioAvailable ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <AlertTriangle className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+            Biometrics are not available on this device or browser.
+          </div>
+        ) : (
+          <div className="flex items-start md:items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <Label className="text-sm md:text-base">Platform Biometric</Label>
+                {bioEnabled ? (
+                  <Badge variant="outline" className="text-primary border-primary/30 text-[10px]">Active</Badge>
+                ) : (
+                  <Badge variant="outline" className="text-muted-foreground text-[10px]">Not set up</Badge>
+                )}
+              </div>
+              <p className="text-xs md:text-sm text-muted-foreground">
+                {bioEnabled
+                  ? "Crevia will prompt for your biometric when you return after 5 minutes away."
+                  : "Register your fingerprint or face. Crevia will lock itself after 5 minutes in the background."}
+              </p>
+            </div>
+            {bioEnabled ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDisableBiometrics}
+                disabled={bioDisabling}
+                className="flex-shrink-0 text-destructive border-destructive/30 hover:bg-destructive/10"
+              >
+                {bioDisabling ? <Loader2 className="w-4 h-4 animate-spin" /> : "Disable"}
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                onClick={handleEnableBiometrics}
+                disabled={bioRegistering}
+                className="flex-shrink-0 bg-bronze hover:bg-bronze/90 text-background"
+              >
+                {bioRegistering ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Fingerprint className="w-4 h-4 mr-1" />}
+                {bioRegistering ? "Registering…" : "Enable"}
+              </Button>
+            )}
+          </div>
+        )}
+      </Card>
 
       {/* Session Security */}
       <Card className="p-4 md:p-8">
