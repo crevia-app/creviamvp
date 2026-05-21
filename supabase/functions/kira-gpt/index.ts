@@ -262,7 +262,7 @@ serve(async (req) => {
     }
 
     const contentLength = req.headers.get('content-length');
-    if (contentLength && parseInt(contentLength) > 50000) {
+    if (contentLength && parseInt(contentLength) > 1200000) {
       return new Response(JSON.stringify({ error: 'Request too large' }), { status: 413, headers: cors });
     }
 
@@ -273,7 +273,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400, headers: cors });
     }
 
-    const { prompt, history, conversationId } = body;
+    const { prompt, history, conversationId, fileContent, fileType } = body;
 
     if (!prompt || typeof prompt !== 'string') {
       return new Response(JSON.stringify({ error: 'Prompt is required' }), { status: 400, headers: cors });
@@ -281,6 +281,22 @@ serve(async (req) => {
     if (prompt.trim().length < 2) {
       return new Response(JSON.stringify({ error: 'Prompt is too short' }), { status: 400, headers: cors });
     }
+
+    const safeFileType: 'image' | 'text' | null =
+      fileType === 'image' || fileType === 'text' ? fileType : null;
+    let safeFileContent: string | null = null;
+    if (safeFileType === 'image' && typeof fileContent === 'string') {
+      if (!fileContent.startsWith('data:image/')) {
+        return new Response(JSON.stringify({ error: 'Invalid image data' }), { status: 400, headers: cors });
+      }
+      if (fileContent.length > 1000000) {
+        return new Response(JSON.stringify({ error: 'Image too large. Please use a smaller image.' }), { status: 413, headers: cors });
+      }
+      safeFileContent = fileContent;
+    } else if (safeFileType === 'text' && typeof fileContent === 'string') {
+      safeFileContent = fileContent.slice(0, 6000);
+    }
+
     if (isPromptAbuse(prompt)) {
       return new Response(JSON.stringify({
         reply: "I am Kira, built specifically for the creative economy. I cannot help with that, but I am here to help you grow your creative business. What do you need?"
@@ -391,14 +407,27 @@ serve(async (req) => {
       systemPrompt += `\n\n${summaryContext}`;
     }
 
-    // Build OpenAI messages array
-    const openaiMessages: Array<{ role: string; content: string }> = [
+    // Build OpenAI messages array (content can be string or vision array)
+    type ContentPart = { type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } };
+    type OAIMsg = { role: string; content: string | ContentPart[] };
+
+    const userContent: string | ContentPart[] =
+      safeFileType === 'image' && safeFileContent
+        ? [
+            { type: 'text', text: sanitizedPrompt || 'Describe what you see and how it relates to my work.' },
+            { type: 'image_url', image_url: { url: safeFileContent } },
+          ]
+        : safeFileType === 'text' && safeFileContent
+          ? `[Attached file — use as context]\n\n${safeFileContent}\n\n${sanitizedPrompt}`
+          : sanitizedPrompt;
+
+    const openaiMessages: OAIMsg[] = [
       { role: 'system', content: systemPrompt },
       ...(summaryContext && activeHistory.length > 4
         ? activeHistory.slice(-4)
         : activeHistory
       ),
-      { role: 'user', content: sanitizedPrompt },
+      { role: 'user', content: userContent },
     ];
 
     // Stream response via raw OpenAI SSE

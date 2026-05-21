@@ -56,6 +56,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import { CreateProjectDialog } from "@/components/kira/CreateProjectDialog";
 import { ProjectDetailSheet } from "@/components/kira/ProjectDetailSheet";
@@ -356,7 +359,10 @@ const Kira = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const textInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFileContent, setSelectedFileContent] = useState<string | null>(null);
+  const [selectedFileType, setSelectedFileType] = useState<'image' | 'text' | null>(null);
   
   // View modes and dialogs
   const [viewMode, setViewMode] = useState<ViewMode>("chat");
@@ -540,13 +546,24 @@ const Kira = () => {
     };
   }, [isStreaming]);
 
-  const streamKiraResponse = useCallback(async (userMessages: Message[], conversationId: string) => {
+  const streamKiraResponse = useCallback(async (
+    userMessages: Message[],
+    conversationId: string,
+    attachContent?: string | null,
+    attachType?: 'image' | 'text' | null,
+  ) => {
     const lastUserContent = userMessages[userMessages.length - 1].content;
     const history = userMessages.slice(-7, -1).map(m => ({ role: m.role, content: m.content }));
 
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token;
     if (!token) throw new Error("Not authenticated");
+
+    const body: Record<string, unknown> = { prompt: lastUserContent, history, conversationId };
+    if (attachContent && attachType) {
+      body.fileContent = attachContent;
+      body.fileType = attachType;
+    }
 
     const response = await fetch(
       `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kira-gpt`,
@@ -557,7 +574,7 @@ const Kira = () => {
           'Authorization': `Bearer ${token}`,
           'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
-        body: JSON.stringify({ prompt: lastUserContent, history, conversationId }),
+        body: JSON.stringify(body),
       }
     );
 
@@ -679,22 +696,26 @@ const Kira = () => {
     }
 
     const updatedMessages = [...messages, newMessage];
+    const attachContent = selectedFileContent;
+    const attachType = selectedFileType;
     setMessages(updatedMessages);
     if (!overrideInput) setInput("");
     setSelectedFile(null);
+    setSelectedFileContent(null);
+    setSelectedFileType(null);
     setPendingAction(null);
     setKiraContractContext(null);
     setKiraInvoiceContext(null);
     setIsLoading(true);
-    
+
     await saveMessage(conversationId, "user", newMessage.content, newMessage.file);
-    
+
     if (messages.length === 0) {
       await updateConversationTitle(conversationId, newMessage.content);
     }
-    
+
     try {
-      await streamKiraResponse(updatedMessages, conversationId);
+      await streamKiraResponse(updatedMessages, conversationId, attachContent, attachType);
       
       await supabase
         .from('kira_conversations')
@@ -825,8 +846,62 @@ const Kira = () => {
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    const isImage = file.type.startsWith('image/');
+    const isText = file.type === 'text/plain' || file.name.endsWith('.txt');
+
+    if (!isImage && !isText) {
+      toast({ title: "Unsupported file type", description: "Only images and .txt files are supported", variant: "destructive" });
+      return;
+    }
+
+    setSelectedFile(file);
+
+    if (isImage) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new window.Image();
+        img.onload = () => {
+          const MAX = 1024;
+          let { width, height } = img;
+          if (width > MAX || height > MAX) {
+            const ratio = Math.min(MAX / width, MAX / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
+          setSelectedFileContent(canvas.toDataURL('image/jpeg', 0.85));
+          setSelectedFileType('image');
+        };
+        img.src = ev.target!.result as string;
+      };
+      reader.readAsDataURL(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setSelectedFileContent((ev.target!.result as string).slice(0, 6000));
+        setSelectedFileType('text');
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleSelectProject = async (projectId: string | null) => {
+    setActiveProjectId(projectId);
+    if (activeChat) {
+      await supabase
+        .from('kira_conversations')
+        .update({ project_id: projectId })
+        .eq('id', activeChat);
+      setChatHistories(prev => prev.map(c =>
+        c.id === activeChat ? { ...c, project_id: projectId } : c
+      ));
     }
   };
 
@@ -1437,9 +1512,13 @@ const Kira = () => {
               {/* File attachment preview */}
               {selectedFile && (
                 <div className="mb-2 flex items-center gap-2 px-4 py-2 bg-muted rounded-2xl text-sm border border-border/50">
-                  <Paperclip className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  {selectedFileType === 'image' && selectedFileContent ? (
+                    <img src={selectedFileContent} alt="preview" className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                  ) : (
+                    <Paperclip className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  )}
                   <span className="flex-1 truncate text-foreground/80">{selectedFile.name}</span>
-                  <Button variant="ghost" size="sm" onClick={() => setSelectedFile(null)} className="h-9 w-9 p-0 hover:bg-destructive/10 rounded-full flex-shrink-0">
+                  <Button variant="ghost" size="sm" onClick={() => { setSelectedFile(null); setSelectedFileContent(null); setSelectedFileType(null); }} className="h-9 w-9 p-0 hover:bg-destructive/10 rounded-full flex-shrink-0">
                     <X className="w-3 h-3" />
                   </Button>
                 </div>
@@ -1447,7 +1526,8 @@ const Kira = () => {
 
               {/* Single-row pill input — Gemini/Claude style */}
               <div className="flex items-center gap-1 bg-muted/40 rounded-full border border-border/60 px-2 py-1.5 shadow-sm transition-all duration-200 focus-within:border-bronze/50 focus-within:bg-card focus-within:shadow-md">
-                <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" accept="image/*,.pdf,.doc,.docx,.txt" />
+                <input type="file" ref={imageInputRef} onChange={handleFileSelect} className="hidden" accept="image/*" />
+                <input type="file" ref={textInputRef} onChange={handleFileSelect} className="hidden" accept=".txt,text/plain" />
 
                 {/* Plus / attachment menu */}
                 <DropdownMenu>
@@ -1457,19 +1537,58 @@ const Kira = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-56">
-                    <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="gap-3 cursor-pointer">
+                    <DropdownMenuItem onClick={() => imageInputRef.current?.click()} className="gap-3 cursor-pointer">
                       <Image className="w-4 h-4 text-muted-foreground" />
-                      <div className="flex flex-col"><span className="font-medium">Add images</span><span className="text-xs text-muted-foreground">Upload photos or screenshots</span></div>
+                      <div className="flex flex-col"><span className="font-medium">Add images</span><span className="text-xs text-muted-foreground">Photos, screenshots, charts</span></div>
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="gap-3 cursor-pointer">
+                    <DropdownMenuItem onClick={() => textInputRef.current?.click()} className="gap-3 cursor-pointer">
                       <FileUp className="w-4 h-4 text-muted-foreground" />
-                      <div className="flex flex-col"><span className="font-medium">Add files</span><span className="text-xs text-muted-foreground">PDF, DOC, TXT files</span></div>
+                      <div className="flex flex-col"><span className="font-medium">Add files</span><span className="text-xs text-muted-foreground">.txt files only</span></div>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => setViewMode("projects")} className="gap-3 cursor-pointer">
-                      <FolderOpen className="w-4 h-4 text-muted-foreground" />
-                      <div className="flex flex-col"><span className="font-medium">Use project</span><span className="text-xs text-muted-foreground">Add project context</span></div>
-                    </DropdownMenuItem>
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="gap-3 cursor-pointer">
+                        <FolderOpen className="w-4 h-4 text-muted-foreground" />
+                        <div className="flex flex-col text-left">
+                          <span className="font-medium">Use project</span>
+                          <span className="text-xs text-muted-foreground truncate max-w-[130px]">
+                            {activeProject ? activeProject.name : 'Add project context'}
+                          </span>
+                        </div>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="w-52">
+                        {activeProjectId && (
+                          <>
+                            <DropdownMenuItem onClick={() => handleSelectProject(null)} className="gap-2 cursor-pointer text-muted-foreground">
+                              <X className="w-3.5 h-3.5" />
+                              <span className="text-sm">Remove project</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                          </>
+                        )}
+                        {projects.length === 0 ? (
+                          <DropdownMenuItem onClick={() => setCreateProjectOpen(true)} className="gap-2 cursor-pointer">
+                            <Plus className="w-3.5 h-3.5" />
+                            <span className="text-sm">Create first project</span>
+                          </DropdownMenuItem>
+                        ) : (
+                          <>
+                            {projects.map(p => (
+                              <DropdownMenuItem key={p.id} onClick={() => handleSelectProject(p.id)} className="gap-2 cursor-pointer">
+                                <FolderOpen className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                                <span className="text-sm truncate flex-1">{p.name}</span>
+                                {activeProjectId === p.id && <Check className="w-3.5 h-3.5 text-bronze flex-shrink-0" />}
+                              </DropdownMenuItem>
+                            ))}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setCreateProjectOpen(true)} className="gap-2 cursor-pointer text-muted-foreground">
+                              <Plus className="w-3.5 h-3.5" />
+                              <span className="text-sm">New project</span>
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
                   </DropdownMenuContent>
                 </DropdownMenu>
 
