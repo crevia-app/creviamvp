@@ -1090,8 +1090,8 @@ const Kira = () => {
         <div className={`border-t border-border/40 p-3 flex-shrink-0 ${sidebarCollapsed ? 'flex justify-center' : ''}`}>
           <button
             onClick={() => setMemoryPanelOpen(true)}
-            className={`group flex flex-col items-center gap-1 rounded-xl transition-all duration-200 hover:bg-bronze/10 ${
-              sidebarCollapsed ? 'p-2' : 'w-full py-2.5'
+            className={`group flex flex-col items-start gap-1 rounded-xl transition-all duration-200 hover:bg-bronze/10 ${
+              sidebarCollapsed ? 'p-2 items-center' : 'w-full py-2.5 pl-2'
             }`}
           >
             <div className="w-9 h-9 rounded-xl bg-muted/60 group-hover:bg-bronze/15 border border-border/50 group-hover:border-bronze/30 flex items-center justify-center transition-all shadow-sm">
@@ -1193,6 +1193,21 @@ const Kira = () => {
                 ))}
               </div>
             </ScrollArea>
+
+            {/* Settings — pinned to bottom of mobile sidebar */}
+            <div className="border-t border-border/40 p-3 flex-shrink-0">
+              <button
+                onClick={() => { setMemoryPanelOpen(true); setMobileSidebarOpen(false); }}
+                className="group flex flex-col items-start gap-1 rounded-xl transition-all duration-200 hover:bg-bronze/10 w-full py-2.5 pl-2"
+              >
+                <div className="w-9 h-9 rounded-xl bg-muted/60 group-hover:bg-bronze/15 border border-border/50 group-hover:border-bronze/30 flex items-center justify-center transition-all shadow-sm">
+                  <Settings className="w-4 h-4 text-muted-foreground group-hover:text-bronze transition-colors" />
+                </div>
+                <span className="text-[10px] font-semibold text-muted-foreground group-hover:text-bronze transition-colors font-poppins tracking-wide uppercase">
+                  Settings
+                </span>
+              </button>
+            </div>
           </div>
         </SheetContent>
       </Sheet>
@@ -1219,9 +1234,6 @@ const Kira = () => {
               </div>
               <span className="font-poppins font-semibold text-sm">Kira</span>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => setMemoryPanelOpen(true)} title="Kira settings" className="h-11 w-11 text-muted-foreground hover:text-foreground">
-              <Settings className="h-4 w-4" />
-            </Button>
           </div>
 
           {/* Project Context Banner */}
