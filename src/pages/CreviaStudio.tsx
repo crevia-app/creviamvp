@@ -20,10 +20,10 @@ const CreviaStudio = () => {
 
   // Strict order: Link → Workspace → Invoice → Canvas
   const studioTabs = [
-    { id: "link",      labelKey: "studio.tab.link",      icon: Link2 },
-    { id: "chat",      labelKey: "studio.tab.workspace", icon: MessageSquare },
-    { id: "invoices",  labelKey: "studio.tab.invoice",   icon: Receipt },
-    { id: "contracts", labelKey: "studio.tab.canvas",    icon: FileSignature },
+    { id: "link",      labelKey: "studio.tab.link",      shortLabel: "Link",      icon: Link2 },
+    { id: "chat",      labelKey: "studio.tab.workspace", shortLabel: "Workspace", icon: MessageSquare },
+    { id: "invoices",  labelKey: "studio.tab.invoice",   shortLabel: "Invoice",   icon: Receipt },
+    { id: "contracts", labelKey: "studio.tab.canvas",    shortLabel: "Canvas",    icon: FileSignature },
   ];
 
   const linkSections = [
@@ -48,8 +48,8 @@ const CreviaStudio = () => {
     <div className="h-full flex flex-col bg-background">
       {/* Studio Header — flex-shrink-0 keeps it pinned while content below scrolls */}
       <div className="border-b border-border bg-background z-30 flex-shrink-0">
-        <div className="mx-auto w-full max-w-7xl px-4 py-3 md:px-6 md:py-4">
-          <div className="flex items-center gap-3 mb-3 md:mb-4">
+        <div className="mx-auto w-full max-w-7xl px-4 py-1.5 md:px-6 md:py-4">
+          <div className="flex items-center gap-3 mb-1.5 md:mb-4">
             <div className="p-1.5 md:p-2 rounded-xl bg-bronze/10">
               <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-bronze" />
             </div>
@@ -74,19 +74,27 @@ const CreviaStudio = () => {
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
                   className={cn(
-                    "flex-1 flex flex-col sm:flex-row items-center justify-center",
-                    "gap-2 sm:gap-1.5 px-1 sm:px-3 py-3.5 sm:py-2.5",
-                    "rounded-xl sm:rounded-t-lg sm:rounded-b-none font-poppins",
+                    "flex-1 flex flex-col sm:flex-row items-center justify-center relative",
+                    "gap-1 sm:gap-1.5 px-1 sm:px-3 py-2 sm:py-2.5",
+                    "sm:rounded-t-lg sm:rounded-b-none font-poppins",
                     "transition-all duration-200 active:scale-[0.96] select-none",
                     isActive
-                      ? "bg-bronze/10 text-bronze sm:border-b-2 sm:border-bronze"
+                      ? "text-bronze sm:bg-bronze/10 sm:border-b-2 sm:border-bronze"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                   )}
                 >
-                  <Icon className="h-[22px] w-[22px] sm:h-4 sm:w-4 flex-shrink-0" />
-                  <span className="hidden sm:inline text-sm font-medium whitespace-nowrap">
-                    {label}
-                  </span>
+                  {/* Mobile active top indicator */}
+                  {isActive && (
+                    <span className="sm:hidden absolute top-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-bronze" />
+                  )}
+                  <div className={cn(
+                    "w-9 h-9 sm:w-auto sm:h-auto rounded-xl sm:rounded-none flex items-center justify-center transition-all duration-200",
+                    isActive ? "bg-bronze/15 sm:bg-transparent" : "sm:bg-transparent"
+                  )}>
+                    <Icon className="h-5 w-5 sm:h-4 sm:w-4 flex-shrink-0" />
+                  </div>
+                  <span className="text-[10px] font-semibold tracking-wide sm:hidden">{tab.shortLabel}</span>
+                  <span className="hidden sm:inline text-sm font-medium whitespace-nowrap">{label}</span>
                 </button>
               );
             })}
