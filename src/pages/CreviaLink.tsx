@@ -557,7 +557,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     const embeddedTab = new URLSearchParams(location.search).get("section") || "profile";
     
     return (
-      <div className="bg-background overflow-x-hidden">
+      <div className="bg-background">
         {/* Embedded Tab Navigation */}
         <div className="hidden md:block sticky top-0 z-30 border-b border-border/60 bg-background">
           <ScrollArea className="w-full">
