@@ -152,8 +152,11 @@ function AppContent() {
       const credId = user?.user_metadata?.biometric_credential_id as string | undefined;
       if (!enabled || !credId) return;
       setBioCredentialId(credId);
-      // Skip initial lock if the user just completed a fresh login this tab session.
-      if (sessionStorage.getItem("biometric_unlocked") === "1") {
+      // Skip if user just logged in (fresh auth) or already verified biometrics this tab session.
+      if (
+        sessionStorage.getItem("biometric_unlocked") === "1" ||
+        sessionStorage.getItem("biometric_verified") === "1"
+      ) {
         sessionStorage.removeItem("biometric_unlocked");
         return;
       }
@@ -161,20 +164,6 @@ function AppContent() {
     });
   }, [userId]);
 
-  // Re-lock after 5 minutes in background
-  useEffect(() => {
-    if (!bioCredentialId) return;
-    let hiddenAt = 0;
-    const onVisibility = () => {
-      if (document.visibilityState === "hidden") {
-        hiddenAt = Date.now();
-      } else if (hiddenAt && Date.now() - hiddenAt >= 5 * 60 * 1000) {
-        setBioLocked(true);
-      }
-    };
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => document.removeEventListener("visibilitychange", onVisibility);
-  }, [bioCredentialId]);
 
   // Admin path always bypasses maintenance so the toggle can be turned off
   if (maintenance && !location.pathname.startsWith("/admin")) return <MaintenancePage />;
@@ -184,7 +173,10 @@ function AppContent() {
       {bioLocked && bioCredentialId && (
         <BiometricLockScreen
           credentialId={bioCredentialId}
-          onUnlock={() => setBioLocked(false)}
+          onUnlock={() => {
+            sessionStorage.setItem("biometric_verified", "1");
+            setBioLocked(false);
+          }}
         />
       )}
 

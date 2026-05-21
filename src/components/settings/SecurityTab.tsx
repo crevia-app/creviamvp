@@ -557,7 +557,7 @@ const SecurityTab = () => {
               </div>
               <p className="text-xs md:text-sm text-muted-foreground">
                 {bioEnabled
-                  ? "Crevia will prompt for your biometric when you return after 5 minutes away."
+                  ? "Crevia will prompt for your biometric each time you open the app."
                   : "Register your fingerprint or face. Crevia will lock itself after 5 minutes in the background."}
               </p>
             </div>
