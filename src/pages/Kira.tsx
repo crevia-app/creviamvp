@@ -902,17 +902,6 @@ const Kira = () => {
             </div>
           )}
           <div className="flex items-center gap-1">
-            {!sidebarCollapsed && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setMemoryPanelOpen(true)}
-                title="Kira settings"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-            )}
             <Button
               variant="ghost"
               size="icon"
@@ -1087,18 +1076,34 @@ const Kira = () => {
         )}
 
         {sidebarCollapsed && (
-          <div className="flex flex-col items-center gap-2 px-2">
+          <div className="flex flex-col items-center gap-2 px-2 flex-1">
             <Button variant="ghost" size="icon" onClick={() => { setSidebarCollapsed(false); setViewMode("chat"); }} className="w-10 h-10 text-muted-foreground hover:text-foreground">
               <MessageSquare className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="icon" onClick={() => { setSidebarCollapsed(false); setViewMode("projects"); }} className="w-10 h-10 text-muted-foreground hover:text-foreground">
               <FolderOpen className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => setMemoryPanelOpen(true)} title="Kira settings" className="w-10 h-10 text-muted-foreground hover:text-foreground">
-              <Settings className="h-4 w-4" />
-            </Button>
           </div>
         )}
+
+        {/* Settings — pinned to bottom */}
+        <div className={`border-t border-border/40 p-3 flex-shrink-0 ${sidebarCollapsed ? 'flex justify-center' : ''}`}>
+          <button
+            onClick={() => setMemoryPanelOpen(true)}
+            className={`group flex flex-col items-center gap-1 rounded-xl transition-all duration-200 hover:bg-bronze/10 ${
+              sidebarCollapsed ? 'p-2' : 'w-full py-2.5'
+            }`}
+          >
+            <div className="w-9 h-9 rounded-xl bg-muted/60 group-hover:bg-bronze/15 border border-border/50 group-hover:border-bronze/30 flex items-center justify-center transition-all shadow-sm">
+              <Settings className="w-4 h-4 text-muted-foreground group-hover:text-bronze transition-colors" />
+            </div>
+            {!sidebarCollapsed && (
+              <span className="text-[10px] font-semibold text-muted-foreground group-hover:text-bronze transition-colors font-poppins tracking-wide uppercase">
+                Settings
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Sidebar */}
