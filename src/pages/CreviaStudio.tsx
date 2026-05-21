@@ -30,7 +30,6 @@ const CreviaStudio = () => {
     { id: "profile",    label: "Profile",    icon: User },
     { id: "buttons",    label: "Buttons",    icon: MousePointerClick },
     { id: "appearance", label: "Appearance", icon: Palette },
-    { id: "settings",   label: "Settings",   icon: SlidersHorizontal },
     { id: "analytics",  label: "Analytics",  icon: BarChart2 },
   ];
 
