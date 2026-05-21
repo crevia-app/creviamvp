@@ -24,12 +24,12 @@ function applyFilter(data: AppNotification[], userId: string): AppNotification[]
   return data.filter((n) => n.created_at > clearedAt);
 }
 
-export function useNotifications(userId: string | undefined) {
+export function useNotifications(userId: string | undefined, dnd = false) {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(false);
 
   const refresh = useCallback(async () => {
-    if (!userId) return;
+    if (!userId || dnd) return;
     setLoading(true);
     try {
       const { data, error } = await supabase

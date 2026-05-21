@@ -243,6 +243,23 @@ const PublicProfile = () => {
     );
   }
 
+  // Private profile — only the owner can see it
+  const isOwnerViewing = profile?.profiles?.id &&
+    typeof window !== "undefined" &&
+    sessionStorage.getItem("crevia_uid") === profile.profiles.id;
+
+  if (profile?.profiles?.profile_public === false && !isOwnerViewing) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white px-6">
+        <img src="/crevia-logo.png" alt="Crevia" className="w-14 h-14 rounded-full ring-1 ring-white/10 mb-6" />
+        <h1 className="font-vollkorn text-3xl font-bold mb-3">This profile is private</h1>
+        <p className="font-poppins text-white/50 text-sm text-center max-w-xs">
+          The owner has made this profile private. Only they can view it.
+        </p>
+      </div>
+    );
+  }
+
   const layoutClass = profile?.layout === "centered" ? "mx-auto" : 
                      profile?.layout === "left" ? "" : 
                      profile?.layout === "full" ? "w-full px-8" :

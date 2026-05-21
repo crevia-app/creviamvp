@@ -116,7 +116,10 @@ function AppContent() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserId(session?.user?.id ?? "");
+      const uid = session?.user?.id ?? "";
+      setUserId(uid);
+      if (uid) sessionStorage.setItem("crevia_uid", uid);
+      else sessionStorage.removeItem("crevia_uid");
     });
 
     return () => subscription.unsubscribe();

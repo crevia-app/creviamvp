@@ -23,7 +23,7 @@ const themeOptions = [
 const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const { notifications, unreadCount, loading, markRead, markAllRead, clearAll } =
-    useNotifications(profile?.id);
+    useNotifications(profile?.id, !!profile?.do_not_disturb);
 
   const { setTheme } = useTheme();
   const [themeOpen, setThemeOpen] = useState(false);

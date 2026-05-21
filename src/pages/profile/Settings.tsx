@@ -47,6 +47,11 @@ const Settings = () => {
   const [handle, setHandle] = useState("");
   const [bio, setBio] = useState("");
 
+  // Privacy settings
+  const [profilePublic, setProfilePublic] = useState(true);
+  const [doNotDisturb, setDoNotDisturb] = useState(false);
+  const [savingPrivacy, setSavingPrivacy] = useState(false);
+
   useEffect(() => {
     checkAuth();
   }, []);
@@ -67,6 +72,8 @@ const Settings = () => {
     setEmail(profileData?.email || "");
     setHandle(profileData?.handle || "");
     setBio(profileData?.bio || "");
+    setProfilePublic(profileData?.profile_public !== false);
+    setDoNotDisturb(!!profileData?.do_not_disturb);
   };
 
   const handleAvatarClick = () => {
@@ -151,6 +158,32 @@ const Settings = () => {
       toast({ title: "Save failed", description: error.message || "Failed to save settings.", variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handlePrivacyToggle = async (field: "profile_public" | "do_not_disturb", value: boolean) => {
+    if (field === "profile_public") setProfilePublic(value);
+    else setDoNotDisturb(value);
+    setSavingPrivacy(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const { error } = await supabase.from("profiles").update({ [field]: value }).eq("id", session.user.id);
+      if (error) throw error;
+      toast({
+        title: field === "profile_public"
+          ? (value ? "Profile is now public" : "Profile is now private")
+          : (value ? "Do Not Disturb on" : "Do Not Disturb off"),
+        description: field === "profile_public"
+          ? (value ? "Anyone can view your public profile." : "Your profile is hidden from public view.")
+          : (value ? "Notifications are paused." : "You'll receive notifications again."),
+      });
+    } catch (err: any) {
+      toast({ title: "Failed to save", description: err.message, variant: "destructive" });
+      if (field === "profile_public") setProfilePublic(!value);
+      else setDoNotDisturb(!value);
+    } finally {
+      setSavingPrivacy(false);
     }
   };
 
@@ -389,14 +422,24 @@ const Settings = () => {
                   <Label className="text-sm md:text-base">{t("settings.profileVisibility")}</Label>
                   <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{t("settings.profileVisibilityDesc")}</p>
                 </div>
-                <Switch defaultChecked className="flex-shrink-0" />
+                <Switch
+                  checked={profilePublic}
+                  disabled={savingPrivacy}
+                  onCheckedChange={(v) => handlePrivacyToggle("profile_public", v)}
+                  className="flex-shrink-0"
+                />
               </div>
               <div className="flex items-start md:items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <Label className="text-sm md:text-base">{t("settings.doNotDisturb")}</Label>
                   <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{t("settings.doNotDisturbDesc")}</p>
                 </div>
-                <Switch className="flex-shrink-0" />
+                <Switch
+                  checked={doNotDisturb}
+                  disabled={savingPrivacy}
+                  onCheckedChange={(v) => handlePrivacyToggle("do_not_disturb", v)}
+                  className="flex-shrink-0"
+                />
               </div>
             </div>
           </Card>
