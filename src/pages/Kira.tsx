@@ -107,7 +107,7 @@ function DesktopChatItem({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{ position: 'relative' }}
-      className={`flex items-center gap-2 ${indent ? 'py-2.5 pl-7 pr-8' : 'py-3.5 pl-2.5 pr-8'} rounded-lg cursor-pointer transition-all ${
+      className={`flex items-center gap-2 ${indent ? 'py-1.5 pl-7 pr-8' : 'py-2 pl-2.5 pr-8'} rounded-lg cursor-pointer transition-all ${
         isActive ? 'bg-bronze/10 text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
       }`}
     >
@@ -138,8 +138,8 @@ function DesktopChatItem({
               right: '4px',
               top: '50%',
               transform: 'translateY(-50%)',
-              opacity: showMenu ? 1 : 0,
-              pointerEvents: showMenu ? 'auto' : 'none',
+              opacity: showMenu ? 1 : 0.35,
+              pointerEvents: 'auto',
               width: '24px',
               height: '24px',
               display: 'flex',
@@ -209,7 +209,7 @@ function MobileChatItem({
       onTouchEnd={onLongPressEnd}
       onTouchMove={onLongPressEnd}
       onContextMenu={(e) => { e.preventDefault(); onLongPress(); }}
-      className={`flex items-center gap-2 py-3 px-2.5 min-h-[44px] rounded-lg cursor-pointer transition-all select-none ${
+      className={`flex items-center gap-2 py-2 px-2.5 min-h-[44px] rounded-lg cursor-pointer transition-all select-none ${
         isActive ? 'bg-bronze/10' : 'hover:bg-muted/50'
       }`}
     >
