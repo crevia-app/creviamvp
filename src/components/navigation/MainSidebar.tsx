@@ -28,8 +28,8 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
   const { t } = useLanguage();
 
   const navItems = [
-    { id: "kira", label: t("sidebar.kira"), icon: Sparkles, path: "/kira" },
-    { id: "studio", label: t("sidebar.studio"), icon: Briefcase, path: "/crevia-studio" },
+    { id: "kira",   label: t("sidebar.kira"),   icon: Sparkles, path: "/kira",          prefetch: () => import("@/pages/Kira") },
+    { id: "studio", label: t("sidebar.studio"), icon: Briefcase, path: "/crevia-studio", prefetch: () => import("@/pages/CreviaStudio") },
   ];
 
   const isActive = (path: string) => {
@@ -47,6 +47,8 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
             <Link
               key={item.id}
               to={item.path}
+              onMouseEnter={item.prefetch}
+              onTouchStart={item.prefetch}
               className={cn(
                 "flex flex-col items-center justify-center gap-1.5 px-3 py-3 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] group",
                 active

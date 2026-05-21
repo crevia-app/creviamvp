@@ -56,14 +56,23 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+            // Auth & storage endpoints — always fresh (security sensitive)
+            urlPattern: /^https:\/\/.*\.supabase\.co\/(auth|storage)\/.*/i,
             handler: 'NetworkFirst' as const,
             options: {
-              cacheName: 'supabase-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24,
-              },
+              cacheName: 'supabase-auth-cache',
+              networkTimeoutSeconds: 4,
+              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 },
+            },
+          },
+          {
+            // REST read data — serve stale instantly, revalidate in background.
+            // Returning users see their profile/conversations with zero delay.
+            urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/.*/i,
+            handler: 'StaleWhileRevalidate' as const,
+            options: {
+              cacheName: 'supabase-rest-cache',
+              expiration: { maxEntries: 80, maxAgeSeconds: 60 * 60 * 24 },
             },
           },
         ],
@@ -86,7 +95,7 @@ export default defineConfig({
           if (id.includes('@supabase'))                                return 'vendor-supabase';
           if (id.includes('@tanstack'))                                return 'vendor-query';
           if (id.includes('@radix-ui'))                                return 'vendor-ui';
-          if (id.includes('react-dom') || id.includes('react-router')) return 'vendor-react';
+          if (id.includes('react-dom') || id.includes('react-router') || id.includes('/react/')) return 'vendor-react';
         },
       },
     },

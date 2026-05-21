@@ -54,8 +54,8 @@ const MobileBottomNav = () => {
   };
 
   const navItems = [
-    { id: "kira", label: "Kira", icon: Sparkles, path: "/kira" },
-    { id: "studio", label: "Studio", icon: Briefcase, path: "/crevia-studio" },
+    { id: "kira",   label: "Kira",   icon: Sparkles,  path: "/kira",          prefetch: () => import("@/pages/Kira") },
+    { id: "studio", label: "Studio", icon: Briefcase, path: "/crevia-studio", prefetch: () => import("@/pages/CreviaStudio") },
   ];
 
   return (
@@ -69,6 +69,8 @@ const MobileBottomNav = () => {
             <Link
               key={item.id}
               to={item.path}
+              onTouchStart={item.prefetch}
+              onMouseEnter={item.prefetch}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] group",
                 active ? "text-bronze" : "text-white/60"

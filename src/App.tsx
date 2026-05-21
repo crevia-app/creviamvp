@@ -19,14 +19,14 @@ import AppLayout from "./components/navigation/AppLayout";
 import PublicPageWrapper from "./components/PublicPageWrapper";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
-// Eagerly loaded — tiny or always needed immediately
+// Eagerly loaded — the landing page only; everything else deferred
 import Home from "./pages/Home";
-import Auth from "./pages/Auth";
-import AuthCallback from "./pages/AuthCallback";
-import NotFound from "./pages/NotFound";
-import MFAVerify from "./components/auth/MFAVerify";
 
 // Lazy-loaded — split into separate chunks to reduce initial bundle
+const Auth             = lazy(() => import("./pages/Auth"));
+const AuthCallback     = lazy(() => import("./pages/AuthCallback"));
+const NotFound         = lazy(() => import("./pages/NotFound"));
+const MFAVerify        = lazy(() => import("./components/auth/MFAVerify"));
 const ResetPassword    = lazy(() => import("./pages/ResetPassword"));
 const Kira             = lazy(() => import("./pages/Kira"));
 const CreviaLink       = lazy(() => import("./pages/CreviaLink"));
@@ -70,7 +70,8 @@ const MaintenancePage = () => (
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 2,
+      staleTime: 1000 * 60 * 5,   // cache fresh for 5 min — reduces redundant fetches
+      gcTime:    1000 * 60 * 15,  // keep inactive cache alive for 15 min
       retry: 1,
       refetchOnWindowFocus: false,
     },
@@ -115,6 +116,14 @@ function AppContent() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Prefetch the most-visited pages as soon as auth resolves — chunks land in
+  // the SW precache so subsequent navigations are instant (no network waterfall).
+  useEffect(() => {
+    if (!userId) return;
+    import("./pages/Kira");
+    import("./pages/CreviaStudio");
+  }, [userId]);
 
   // Background maintenance check — never blocks render
   useEffect(() => {
