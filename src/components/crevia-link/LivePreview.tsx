@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CheckCircle2 } from "lucide-react";
+import { LINK_THEMES } from "@/lib/linkThemes";
 
 interface LivePreviewProps {
   linkProfile: any;
@@ -8,56 +9,32 @@ interface LivePreviewProps {
 }
 
 const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
-  const theme = linkProfile?.theme || "dark";
+  const themeId = linkProfile?.theme || "elite_obsidian";
   const bgStyle = linkProfile?.background?.style || "solid";
   const customBgUrl = linkProfile?.background?.custom_bg_url;
   const buttonStyle = linkProfile?.background?.button_style || "rounded";
   const buttonSpacing = linkProfile?.background?.button_spacing || 12;
-  const fontFamily = linkProfile?.background?.font_family || "poppins";
+  const fontFamily = linkProfile?.background?.font_family || "plus-jakarta";
   const hoverEffects = linkProfile?.background?.hover_effects !== false;
   const fadeAnimation = linkProfile?.background?.fade_animation !== false;
   const showVerified = linkProfile?.show_verified_badge;
-  const isCustomImage = theme === "custom_image" && customBgUrl;
+  const isCustomImage = themeId === "custom_image" && customBgUrl;
 
-  // Theme background classes
-  const themeMap: Record<string, { bg: string; text: string; lightText: boolean }> = {
-    light: { bg: "bg-white", text: "text-gray-900", lightText: false },
-    dark: { bg: "bg-gradient-to-br from-gray-800 to-gray-900", text: "text-white", lightText: true },
-    bronze: { bg: "bg-gradient-to-br from-[#1a1a1a] to-[#2d2520]", text: "text-white", lightText: true },
-    minimal: { bg: "bg-gray-50", text: "text-gray-800", lightText: false },
-    sunset: { bg: "bg-gradient-to-br from-orange-400 to-pink-600", text: "text-white", lightText: true },
-    ocean: { bg: "bg-gradient-to-br from-blue-500 to-teal-400", text: "text-white", lightText: true },
-    forest: { bg: "bg-gradient-to-br from-green-600 to-emerald-800", text: "text-white", lightText: true },
-    royal: { bg: "bg-gradient-to-br from-purple-600 to-indigo-800", text: "text-white", lightText: true },
-    midnight: { bg: "bg-gradient-to-br from-slate-900 to-blue-950", text: "text-white", lightText: true },
-    rose: { bg: "bg-gradient-to-br from-rose-400 to-pink-300", text: "text-white", lightText: true },
-    noir: { bg: "bg-gradient-to-br from-zinc-900 to-neutral-950", text: "text-white", lightText: true },
-    sapphire: { bg: "bg-gradient-to-br from-blue-700 to-indigo-900", text: "text-white", lightText: true },
-    burgundy: { bg: "bg-gradient-to-br from-rose-900 to-red-950", text: "text-white", lightText: true },
-    emerald: { bg: "bg-gradient-to-br from-emerald-700 to-green-900", text: "text-white", lightText: true },
-    lavender: { bg: "bg-gradient-to-br from-violet-400 to-purple-500", text: "text-white", lightText: true },
-    champagne: { bg: "bg-gradient-to-br from-amber-100 to-yellow-50", text: "text-gray-900", lightText: false },
-    coral: { bg: "bg-gradient-to-br from-orange-400 to-rose-500", text: "text-white", lightText: true },
-    arctic: { bg: "bg-gradient-to-br from-sky-100 to-blue-200", text: "text-slate-800", lightText: false },
-    copper: { bg: "bg-gradient-to-br from-amber-600 to-orange-800", text: "text-white", lightText: true },
-    obsidian: { bg: "bg-gradient-to-br from-gray-950 to-slate-900", text: "text-white", lightText: true },
-    peach: { bg: "bg-gradient-to-br from-orange-100 to-pink-100", text: "text-gray-800", lightText: false },
-    steel: { bg: "bg-gradient-to-br from-slate-400 to-slate-600", text: "text-white", lightText: true },
-    aurora: { bg: "bg-gradient-to-br from-purple-900 via-teal-800 to-green-900", text: "text-white", lightText: true },
-    crimson: { bg: "bg-gradient-to-br from-red-600 to-rose-800", text: "text-white", lightText: true },
-    jade: { bg: "bg-gradient-to-br from-teal-600 to-emerald-700", text: "text-white", lightText: true },
-    sand: { bg: "bg-gradient-to-br from-amber-200 to-stone-300", text: "text-gray-800", lightText: false },
-    custom_image: { bg: "", text: "text-white", lightText: true },
-  };
-
-  const currentTheme = themeMap[theme] || themeMap.dark;
+  // Resolve theme from LINK_THEMES; fall back to obsidian
+  const themeData = LINK_THEMES.find(t => t.value === themeId);
+  const bgValue = themeData?.previewBg || "#050505";
+  const textColor = themeData?.previewText || "#FFFFFF";
+  // Determine if text is light based on luminance heuristic
+  const lightText = !(textColor === "#0A0A0A" || textColor === "#1A1A1A" || textColor === "#2B241E" || textColor === "#000000");
 
   // Font family class
   const fontMap: Record<string, string> = {
+    "plus-jakarta": "font-[Plus_Jakarta_Sans,sans-serif]",
+    playfair: "font-[Playfair_Display,serif]",
+    "dm-serif": "font-[DM_Serif_Display,serif]",
     poppins: "font-poppins",
     vollkorn: "font-vollkorn",
-    inter: "font-[Inter]",
-    playfair: "font-[Playfair_Display]",
+    inter: "font-[Inter,sans-serif]",
   };
   const fontClass = fontMap[fontFamily] || "font-poppins";
 
@@ -75,16 +52,16 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
     const base = `w-full py-2.5 px-4 text-center text-xs font-medium transition-all shadow-sm ${btnRadius}`;
     switch (style) {
       case "outline":
-        return cn(base, currentTheme.lightText 
-          ? "bg-transparent border border-white/40 text-white" 
-          : "bg-transparent border border-gray-400 text-gray-900");
+        return cn(base, lightText
+          ? "bg-transparent border border-white/40 text-white"
+          : "bg-transparent border border-black/30 text-black");
       case "minimal":
-        return cn(base, currentTheme.lightText
+        return cn(base, lightText
           ? "bg-white/10 text-white backdrop-blur-sm"
-          : "bg-gray-100 text-gray-900");
+          : "bg-black/10 text-black");
       case "filled":
       default:
-        return cn(base, "bg-white text-gray-900");
+        return cn(base, lightText ? "bg-white text-gray-900" : "bg-black/80 text-white");
     }
   };
 
@@ -96,25 +73,18 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
       <div className="relative rounded-[3rem] border-[12px] border-gray-800 bg-gray-800 shadow-2xl overflow-hidden">
         {/* Notch */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-gray-800 rounded-b-2xl z-20" />
-        
+
         {/* Screen */}
         <div className="h-[520px] flex flex-col relative">
-          {/* Scrollable content area */}
-          <div 
-            className={cn(
-              "flex-1 overflow-y-auto relative scrollbar-none",
-              !isCustomImage && currentTheme.bg,
-              fontClass
-            )}
-            style={isCustomImage ? { 
-              backgroundImage: `url(${customBgUrl})`, 
-              backgroundSize: 'cover', 
-              backgroundPosition: 'center' 
-            } : {}}
+          <div
+            className={cn("flex-1 overflow-y-auto relative scrollbar-none", fontClass)}
+            style={isCustomImage
+              ? { backgroundImage: `url(${customBgUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+              : { background: bgValue }}
           >
             {/* Custom image overlay */}
             {isCustomImage && <div className="absolute inset-0 bg-black/50 z-0" />}
-            
+
             {/* Pattern overlay */}
             {bgStyle === "pattern" && !isCustomImage && (
               <div className="absolute inset-0 opacity-10 z-0" style={{
@@ -122,16 +92,13 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
                 backgroundSize: '16px 16px'
               }} />
             )}
-            
+
             {/* Blur overlay */}
             {bgStyle === "blur" && !isCustomImage && (
               <div className="absolute inset-0 backdrop-blur-sm bg-white/5 z-0" />
             )}
 
-            <div className={cn(
-              "pt-10 pb-4 px-5 relative z-10",
-              fadeAnimation && "animate-fade-in"
-            )}>
+            <div className={cn("pt-10 pb-4 px-5 relative z-10", fadeAnimation && "animate-fade-in")}>
               {/* Profile Section */}
               <div className="text-center mb-5">
                 {linkProfile?.profile_picture ? (
@@ -142,30 +109,26 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
                     </AvatarFallback>
                   </Avatar>
                 ) : (
-                  <div className={cn(
-                    "w-20 h-20 mx-auto mb-3 rounded-full bg-gradient-to-br from-bronze/30 to-bronze-dark/30 flex items-center justify-center ring-2 ring-white/20",
-                  )}>
-                    <span className={cn("text-2xl font-bold", currentTheme.text)}>
+                  <div className="w-20 h-20 mx-auto mb-3 rounded-full bg-gradient-to-br from-bronze/30 to-bronze-dark/30 flex items-center justify-center ring-2 ring-white/20">
+                    <span className="text-2xl font-bold" style={{ color: textColor }}>
                       {linkProfile?.display_name?.[0]?.toUpperCase() || "U"}
                     </span>
                   </div>
                 )}
-                
+
                 <div className="flex items-center justify-center gap-1 mb-1">
-                  <h2 className={cn("font-semibold text-lg", currentTheme.text)}>
+                  <h2 className="font-semibold text-lg" style={{ color: textColor }}>
                     {linkProfile?.display_name || "Your Name"}
                   </h2>
-                  {showVerified && (
-                    <CheckCircle2 className="w-4 h-4 text-[#CF8150]" />
-                  )}
+                  {showVerified && <CheckCircle2 className="w-4 h-4 text-[#CF8150]" />}
                 </div>
-                
-                <p className={cn("text-xs opacity-70 mb-1.5", currentTheme.text)}>
+
+                <p className="text-xs opacity-70 mb-1.5" style={{ color: textColor }}>
                   @{linkProfile?.username || "username"}
                 </p>
-                
+
                 {linkProfile?.bio && (
-                  <p className={cn("text-[10px] opacity-80 max-w-[200px] mx-auto leading-relaxed", currentTheme.text)}>
+                  <p className="text-[10px] opacity-80 max-w-[200px] mx-auto leading-relaxed" style={{ color: textColor }}>
                     {linkProfile.bio}
                   </p>
                 )}
@@ -200,7 +163,6 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>
