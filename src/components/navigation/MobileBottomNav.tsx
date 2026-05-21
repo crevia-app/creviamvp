@@ -59,7 +59,7 @@ const MobileBottomNav = () => {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-white/10 safe-area-pb">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-t border-border/50 safe-area-pb">
       <div className="grid grid-cols-3 h-16">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -73,7 +73,7 @@ const MobileBottomNav = () => {
               onMouseEnter={item.prefetch}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] group",
-                active ? "text-bronze" : "text-white/60"
+                active ? "text-bronze" : "text-muted-foreground"
               )}
             >
               <Icon className={cn(
@@ -87,19 +87,19 @@ const MobileBottomNav = () => {
 
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
-            <button className="flex flex-col items-center justify-center gap-1 text-white/60">
+            <button className="flex flex-col items-center justify-center gap-1 text-muted-foreground">
               <MoreHorizontal className="h-5 w-5" />
               <span className="font-poppins text-xs font-medium">{t("common.more")}</span>
             </button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="bg-black border-white/10 h-[85dvh] max-h-[85dvh] flex flex-col p-0">
+          <SheetContent side="bottom" className="bg-background border-border h-[85dvh] max-h-[85dvh] flex flex-col p-0">
             <SheetHeader className="px-4 pt-4 pb-2 flex-shrink-0">
-              <SheetTitle className="text-white font-vollkorn text-lg">{t("nav.moreOptions")}</SheetTitle>
+              <SheetTitle className="text-foreground font-vollkorn text-lg">{t("nav.moreOptions")}</SheetTitle>
             </SheetHeader>
-            
+
             <ScrollArea className="flex-1 px-4">
               {profile && (
-                <div className="flex items-center gap-3 p-3 sm:p-4 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 mb-4">
+                <div className="flex items-center gap-3 p-3 sm:p-4 rounded-2xl bg-muted/50 border border-border mb-4">
                   <Avatar className="h-11 w-11 sm:h-12 sm:w-12 ring-2 ring-bronze/30 flex-shrink-0">
                     <AvatarImage src={profile?.avatar_url} />
                     <AvatarFallback className="bg-gradient-to-br from-bronze to-bronze-dark text-white font-semibold text-sm">
@@ -107,14 +107,14 @@ const MobileBottomNav = () => {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="font-poppins text-sm font-semibold text-white truncate">
+                    <p className="font-poppins text-sm font-semibold text-foreground truncate">
                       {profile?.display_name || "User"}
                     </p>
-                    <p className="text-xs text-white/50 truncate">{profile?.email}</p>
+                    <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
                   </div>
                 </div>
               )}
-              
+
               <div className="space-y-4 pb-8">
 
                 {/* Upgrade to Pro — always visible */}
@@ -127,68 +127,68 @@ const MobileBottomNav = () => {
                   <span className="font-poppins text-sm font-semibold">Upgrade to Pro</span>
                 </Link>
 
-                <Separator className="bg-white/10" />
+                <Separator className="bg-border" />
 
                 <div className="space-y-1">
-                  <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider px-2 mb-1">{t("nav.account")}</p>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-11 text-sm font-medium rounded-xl"
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-2 mb-1">{t("nav.account")}</p>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-foreground/90 hover:text-bronze hover:bg-muted/50 h-11 text-sm font-medium rounded-xl"
                     onClick={() => handleNavigation("/profile/settings")}
                   >
                     {t("profile.settings")}
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-11 text-sm font-medium rounded-xl"
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-foreground/90 hover:text-bronze hover:bg-muted/50 h-11 text-sm font-medium rounded-xl"
                     onClick={() => handleNavigation("/profile/payments-billing")}
                   >
                     {t("profile.paymentsBilling")}
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-11 text-sm font-medium rounded-xl"
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-foreground/90 hover:text-bronze hover:bg-muted/50 h-11 text-sm font-medium rounded-xl"
                     onClick={() => handleNavigation("/profile/feedback")}
                   >
                     {t("nav.feedback")}
                   </Button>
                 </div>
 
-                <Separator className="bg-white/10" />
+                <Separator className="bg-border" />
 
                 <div className="space-y-1">
-                  <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider px-2 mb-1">{t("nav.support")}</p>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-11 text-sm font-medium rounded-xl"
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-2 mb-1">{t("nav.support")}</p>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-foreground/90 hover:text-bronze hover:bg-muted/50 h-11 text-sm font-medium rounded-xl"
                     onClick={() => handleNavigation("/profile/help")}
                   >
                     {t("nav.helpSupport")}
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start text-white/90 hover:text-bronze hover:bg-white/5 h-11 text-sm font-medium rounded-xl"
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-foreground/90 hover:text-bronze hover:bg-muted/50 h-11 text-sm font-medium rounded-xl"
                     onClick={() => handleNavigation("/app/about")}
                   >
                     {t("nav.aboutCrevia")}
                   </Button>
                 </div>
 
-                <Separator className="bg-white/10" />
+                <Separator className="bg-border" />
 
                 <div className="space-y-1">
-                  <p className="text-[10px] font-medium text-white/40 uppercase tracking-wider px-2 mb-1">{t("nav.legal")}</p>
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-2 mb-1">{t("nav.legal")}</p>
                   <div className="flex gap-2">
-                    <Button 
-                      variant="ghost" 
-                      className="flex-1 text-white/60 hover:text-bronze hover:bg-white/5 h-11 text-xs font-medium rounded-xl"
+                    <Button
+                      variant="ghost"
+                      className="flex-1 text-muted-foreground hover:text-bronze hover:bg-muted/50 h-11 text-xs font-medium rounded-xl"
                       onClick={() => handleNavigation("/privacy-policy")}
                     >
                       {t("nav.privacy")}
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      className="flex-1 text-white/60 hover:text-bronze hover:bg-white/5 h-11 text-xs font-medium rounded-xl"
+                    <Button
+                      variant="ghost"
+                      className="flex-1 text-muted-foreground hover:text-bronze hover:bg-muted/50 h-11 text-xs font-medium rounded-xl"
                       onClick={() => handleNavigation("/terms-of-service")}
                     >
                       {t("nav.terms")}
@@ -196,7 +196,7 @@ const MobileBottomNav = () => {
                   </div>
                 </div>
 
-                <Separator className="bg-white/10" />
+                <Separator className="bg-border" />
 
                 <Button 
                   variant="ghost" 
