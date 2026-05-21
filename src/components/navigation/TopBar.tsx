@@ -68,21 +68,22 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
   return (
     <header className="sticky top-0 z-40 w-full bg-background/80 backdrop-blur-md border-b border-border/50">
       <div className="flex h-14 items-center justify-between px-4 md:px-6">
-        {/* Left side: back button on sub-pages, logo otherwise */}
-        {isSubPage ? (
-          <BackButton fallback="/kira" className="text-white/70 hover:text-white" />
-        ) : (
+        {/* Left side: always show logo; on sub-pages also show back button */}
+        <div className="flex items-center gap-2">
+          {isSubPage && (
+            <BackButton fallback="/kira" className="text-muted-foreground hover:text-foreground" />
+          )}
           <Link
             to="/dashboard"
             className="flex items-center gap-2 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:opacity-80"
           >
-            <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 md:w-11 md:h-11 rounded-full ring-1 ring-white/10" />
+            <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 md:w-11 md:h-11 rounded-full ring-1 ring-border" />
             <span className="font-vollkorn text-xl md:text-2xl font-bold text-foreground">Crevia</span>
             <span className="text-[8px] font-poppins font-medium text-bronze bg-bronze/10 px-1 py-0.5 rounded-full uppercase tracking-wider">
               beta
             </span>
           </Link>
-        )}
+        </div>
 
         {/* Right side */}
         {!hideRightElements && (
@@ -107,13 +108,13 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 6, scale: 0.95 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 top-11 w-36 rounded-xl bg-[#1a1a1a] border border-white/10 shadow-xl overflow-hidden py-1 z-50"
+                      className="absolute right-0 top-11 w-36 rounded-xl bg-background/95 backdrop-blur-md border border-border/50 shadow-xl overflow-hidden py-1 z-50"
                     >
                       {themeOptions.map(({ value, label, icon: Icon }) => (
                         <button
                           key={value}
                           onClick={() => handleThemeSelect(value)}
-                          className="w-full flex items-center gap-3 px-4 py-3 min-h-[44px] text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
+                          className="w-full flex items-center gap-3 px-4 py-3 min-h-[44px] text-sm text-foreground/80 hover:text-foreground hover:bg-muted/60 transition-colors"
                         >
                           <Icon className="w-4 h-4 flex-shrink-0" />
                           <span className="flex-1 text-left">{label}</span>
