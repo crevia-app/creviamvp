@@ -206,12 +206,12 @@ const StudioWorkspacesHub = ({ initialRoomId }: { initialRoomId?: string } = {})
         )}
       >
         {/* Mobile back button */}
-        <div className="md:hidden flex-shrink-0 h-10 flex items-center gap-2 px-2 border-b border-gray-100 dark:border-border/50 bg-background/80 backdrop-blur-sm">
+        <div className="md:hidden flex-shrink-0 h-7 flex items-center gap-1.5 px-2 border-b border-gray-100 dark:border-border/50 bg-background/80 backdrop-blur-sm">
           <button
             onClick={() => setShowMobileChat(false)}
-            className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors flex-shrink-0"
+            className="flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors flex-shrink-0"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5" />
           </button>
           <span className="text-xs font-medium text-muted-foreground truncate">All messages</span>
         </div>
