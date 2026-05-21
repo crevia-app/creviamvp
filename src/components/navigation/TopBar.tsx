@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Bell, Monitor, Sun, Moon } from "lucide-react";
-import { BackButton } from "@/components/BackButton";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/use-notifications";
 import NotificationSheet from "@/components/notifications/NotificationSheet";
@@ -20,17 +19,8 @@ const themeOptions = [
   { value: "system", label: "System", icon: Monitor },
 ];
 
-const SUB_PAGE_PREFIXES = [
-  "/profile/",
-  "/privacy-policy",
-  "/terms-of-service",
-  "/app/about",
-  "/admin",
-];
 
 const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
-  const location = useLocation();
-  const isSubPage = SUB_PAGE_PREFIXES.some((p) => location.pathname.startsWith(p));
   const [sheetOpen, setSheetOpen] = useState(false);
   const { notifications, unreadCount, loading, markRead, markAllRead, clearAll } =
     useNotifications(profile?.id);
@@ -68,11 +58,8 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
   return (
     <header className="sticky top-0 z-40 w-full bg-background/80 backdrop-blur-md border-b border-border/50">
       <div className="flex h-14 items-center justify-between px-4 md:px-6">
-        {/* Left side: always show logo; on sub-pages also show back button */}
+        {/* Left side */}
         <div className="flex items-center gap-2">
-          {isSubPage && (
-            <BackButton fallback="/kira" className="text-muted-foreground hover:text-foreground" />
-          )}
           <Link
             to="/dashboard"
             className="flex items-center gap-2 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:opacity-80"

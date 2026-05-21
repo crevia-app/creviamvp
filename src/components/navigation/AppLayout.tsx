@@ -6,6 +6,7 @@ import MainSidebar from "./MainSidebar";
 import MobileBottomNav from "./MobileBottomNav";
 import TopBar from "./TopBar";
 import ProfileDrawer from "./ProfileDrawer";
+import { BackButton } from "@/components/BackButton";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -69,6 +70,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
   const isCrevidAI = location.pathname === "/crevia-ai";
   const isStudio   = location.pathname === "/crevia-studio";
+  const isSubPage  = ["/profile/", "/privacy-policy", "/terms-of-service", "/app/about", "/admin"].some(
+    (p) => location.pathname.startsWith(p)
+  );
 
   return (
     <div className="h-dvh bg-background flex flex-col">
@@ -85,6 +89,11 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         />
 
         <main className={`flex-1 min-h-0 md:ml-[100px] ${isStudio ? "overflow-hidden h-full" : "overflow-auto pb-16 md:pb-0"}`}>
+          {isSubPage && (
+            <div className="px-4 md:px-6 pt-3 pb-1">
+              <BackButton fallback="/kira" />
+            </div>
+          )}
           {children}
         </main>
       </div>
