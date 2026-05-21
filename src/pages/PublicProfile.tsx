@@ -106,6 +106,22 @@ const PublicProfile = () => {
       graphite:  { className: "bg-gradient-to-br from-zinc-600 via-zinc-700 to-zinc-900 text-white" },
       blush:     { className: "bg-gradient-to-br from-pink-100 via-rose-100 to-fuchsia-50 text-gray-900" },
       custom_image: { className: "text-white" },
+      // ── 15 Elite Themes ──
+      elite_obsidian:      { className: "bg-[#050505] text-white" },
+      pristine:            { className: "bg-[#FFFFFF] text-[#0A0A0A]" },
+      exec_slate:          { className: "bg-[#1C1E21] text-[#F0F0F0]" },
+      oatmeal:             { className: "bg-[#F5F2EB] text-[#2B241E]" },
+      studio_navy:         { className: "bg-[#050A1F] text-white" },
+      bordeaux_reserve:    { className: "bg-[#2B0F15] text-[#F4E3E6]" },
+      imperial_amethyst:   { className: "bg-[#1A0B2E] text-[#E9DDF7]" },
+      matte_bronze:        { className: "bg-[#0D0B0A] text-[#C58361]" },
+      midnight_emerald:    { className: "bg-[#04120C] text-[#E0F2E9]" },
+      champagne_silk:      { className: "bg-[#E6DCC8] text-[#1A1A1A]" },
+      velvet_onyx:         { className: "bg-[#0B0710] text-[#E6DDF2]" },
+      brushed_titanium:    { className: "bg-gradient-to-br from-[#2a2a2a] via-[#4a4a4a] to-[#2a2a2a] text-white" },
+      tuscan_leather:      { className: "bg-[#2A110A] text-[#FDFBF7]" },
+      abyss_glass:         { className: "bg-[#000000] text-white" },
+      mono_brutalism:      { className: "bg-[#FFFFFF] text-[#000000]" },
     };
     return themeMap[theme] || themeMap.dark;
   };
@@ -144,6 +160,8 @@ const PublicProfile = () => {
       roboto: "font-[Roboto]",
       lora: "font-[Lora]",
       "space-grotesk": "font-[Space_Grotesk]",
+      "plus-jakarta":  "font-[Plus_Jakarta_Sans]",
+      "dm-serif":      "font-[DM_Serif_Display]",
     };
     return fontMap[font] || "font-poppins";
   };

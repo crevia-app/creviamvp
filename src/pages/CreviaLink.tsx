@@ -12,6 +12,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check, Globe, Shield, Bell, BarChart3, TrendingUp, MousePointer, ExternalLink, Camera, AlertCircle, Users, Star, ArrowUp, ArrowDown, ChevronUp, ChevronDown, Image as ImageIcon, User, MousePointerClick, SlidersHorizontal, BarChart2 } from "lucide-react";
+import ThemeSelector from "@/components/crevia-link/ThemeSelector";
+import { PRO_THEME_IDS } from "@/lib/linkThemes";
 import { AddButtonDialog } from "@/components/crevia-link/AddButtonDialog";
 import { EditButtonDialog } from "@/components/crevia-link/EditButtonDialog";
 import { ButtonItem } from "@/components/crevia-link/ButtonItem";
@@ -42,7 +44,7 @@ const validateUsername = (username: string): string | null => {
   return null;
 };
 
-const PREMIUM_THEMES = new Set(["onyx","electric","velvet","terra","glacier","dusk","citrus","ash","graphite","blush"]);
+const PREMIUM_THEMES = PRO_THEME_IDS;
 
 const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const navigate = useNavigate();
@@ -689,78 +691,14 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                   <div className="space-y-6">
                     <div>
                       <Label className="text-sm font-medium mb-4 block">Color Scheme</Label>
-                      <RadioGroup
-                        value={linkProfile?.theme || "dark"}
-                        onValueChange={(value) => {
-                          if (value !== "custom_image") {
-                            setLinkProfile({ ...linkProfile, theme: value, background: { ...linkProfile?.background, style: "solid" } });
-                          }
-                        }}
-                        className="grid grid-cols-2 md:grid-cols-3 gap-3"
-                      >
-                        {[
-                          { value: "light", label: "Light", gradient: "from-gray-50 to-gray-100" },
-                          { value: "dark", label: "Dark", gradient: "from-gray-800 to-gray-900" },
-                          { value: "bronze", label: "Bronze", gradient: "from-bronze to-bronze-dark" },
-                          { value: "minimal", label: "Minimal", gradient: "bg-white border-2 border-gray-200" },
-                          { value: "sunset", label: "Sunset", gradient: "from-orange-400 to-pink-600" },
-                          { value: "ocean", label: "Ocean", gradient: "from-blue-500 to-teal-400" },
-                          { value: "forest", label: "Forest", gradient: "from-green-600 to-emerald-800" },
-                          { value: "royal", label: "Royal", gradient: "from-purple-600 to-indigo-800" },
-                          { value: "midnight", label: "Midnight", gradient: "from-slate-900 to-blue-950" },
-                          { value: "rose", label: "Rosé", gradient: "from-rose-400 to-pink-300" },
-                          { value: "noir", label: "Noir", gradient: "from-zinc-900 to-neutral-950" },
-                          { value: "sapphire", label: "Sapphire", gradient: "from-blue-700 to-indigo-900" },
-                          { value: "burgundy", label: "Burgundy", gradient: "from-rose-900 to-red-950" },
-                          { value: "emerald", label: "Emerald", gradient: "from-emerald-700 to-green-900" },
-                          { value: "lavender", label: "Lavender", gradient: "from-violet-400 to-purple-500" },
-                          { value: "coral", label: "Coral", gradient: "from-orange-400 to-rose-500" },
-                          { value: "arctic", label: "Arctic", gradient: "from-sky-100 to-blue-200" },
-                          { value: "copper", label: "Copper", gradient: "from-amber-600 to-orange-800" },
-                          { value: "obsidian", label: "Obsidian", gradient: "from-gray-950 to-slate-900" },
-                          { value: "peach", label: "Peach", gradient: "from-orange-100 to-pink-100" },
-                          { value: "steel", label: "Steel", gradient: "from-slate-400 to-slate-600" },
-                          { value: "aurora", label: "Aurora", gradient: "from-purple-900 via-teal-800 to-green-900" },
-                          { value: "crimson", label: "Crimson", gradient: "from-red-600 to-rose-800" },
-                          { value: "jade", label: "Jade", gradient: "from-teal-600 to-emerald-700" },
-                          { value: "sand", label: "Sand", gradient: "from-amber-200 to-stone-300" },
-                          { value: "champagne", label: "Champagne", gradient: "from-amber-100 to-yellow-50" },
-                          // ── 10 Premium ──
-                          { value: "onyx", label: "Onyx", gradient: "from-zinc-900 to-black" },
-                          { value: "electric", label: "Electric", gradient: "from-blue-600 via-cyan-500 to-teal-400" },
-                          { value: "velvet", label: "Velvet", gradient: "from-purple-900 via-violet-900 to-fuchsia-950" },
-                          { value: "terra", label: "Terra", gradient: "from-orange-700 via-red-800 to-rose-900" },
-                          { value: "glacier", label: "Glacier", gradient: "from-sky-50 via-blue-100 to-cyan-100" },
-                          { value: "dusk", label: "Dusk", gradient: "from-indigo-900 via-purple-700 to-rose-900" },
-                          { value: "citrus", label: "Citrus", gradient: "from-yellow-400 via-amber-400 to-orange-500" },
-                          { value: "ash", label: "Ash", gradient: "from-stone-600 to-stone-900" },
-                          { value: "graphite", label: "Graphite", gradient: "from-zinc-600 via-zinc-700 to-zinc-900" },
-                          { value: "blush", label: "Blush", gradient: "from-pink-100 via-rose-100 to-fuchsia-50" },
-                        ].map((theme) => {
-                          const isPremium = PREMIUM_THEMES.has(theme.value);
-                          const locked = isPremium && !isProUser;
-                          return (
-                          <div key={theme.value} className="relative">
-                            <RadioGroupItem value={theme.value} id={`embedded-${theme.value}`} className="peer sr-only" disabled={locked} />
-                            <Label
-                              htmlFor={`embedded-${theme.value}`}
-                              onClick={locked ? () => toast({ title: "Pro feature", description: "Upgrade to Pro to unlock premium themes." }) : undefined}
-                               className={cn("flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-card p-4 peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 transition-all", locked ? "cursor-not-allowed opacity-60" : "hover:bg-muted cursor-pointer")}
-                            >
-                              <div className="relative w-full">
-                                <div
-                                  className={cn("w-full h-16 rounded-lg mb-3 shadow-sm",
-                                    theme.gradient && (theme.value === "minimal" ? theme.gradient : `bg-gradient-to-br ${theme.gradient}`)
-                                  )}
-                                />
-                                {locked && <div className="absolute inset-0 flex items-center justify-center"><span className="text-xs bg-black/60 text-white px-2 py-0.5 rounded-full font-semibold">Pro</span></div>}
-                              </div>
-                              <span className="text-sm font-medium">{theme.label}</span>
-                            </Label>
-                          </div>
-                          );
-                        })}
-                      </RadioGroup>
+                      <ThemeSelector
+                        value={linkProfile?.theme || "elite_obsidian"}
+                        onChange={(themeId, fontKey) =>
+                          setLinkProfile({ ...linkProfile, theme: themeId, background: { ...linkProfile?.background, style: "solid", font_family: fontKey } })
+                        }
+                        isProUser={isProUser}
+                        onUpgrade={() => navigate("/profile/payments-billing")}
+                      />
                     </div>
 
                     {/* Custom Background Image */}
@@ -1212,78 +1150,14 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 <div className="space-y-6 md:space-y-10">
                   <div>
                     <Label className="text-sm sm:text-base md:text-lg font-medium mb-3 md:mb-6 block">Color Scheme</Label>
-                    <RadioGroup
-                      value={linkProfile?.theme || "dark"}
-                      onValueChange={(value) => {
-                        if (value !== "custom_image") {
-                          setLinkProfile({ ...linkProfile, theme: value, background: { ...linkProfile?.background, style: "solid" } });
-                        }
-                      }}
-                      className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6"
-                    >
-                      {[
-                        { value: "light", label: "Light", gradient: "from-gray-50 to-gray-100" },
-                        { value: "dark", label: "Dark", gradient: "from-gray-800 to-gray-900" },
-                        { value: "bronze", label: "Bronze", gradient: "from-bronze to-bronze-dark" },
-                        { value: "minimal", label: "Minimal", gradient: "bg-white border-2 border-gray-200" },
-                        { value: "sunset", label: "Sunset", gradient: "from-orange-400 to-pink-600" },
-                        { value: "ocean", label: "Ocean", gradient: "from-blue-500 to-teal-400" },
-                        { value: "forest", label: "Forest", gradient: "from-green-600 to-emerald-800" },
-                        { value: "royal", label: "Royal", gradient: "from-purple-600 to-indigo-800" },
-                        { value: "midnight", label: "Midnight", gradient: "from-slate-900 to-blue-950" },
-                        { value: "rose", label: "Rosé", gradient: "from-rose-400 to-pink-300" },
-                        { value: "noir", label: "Noir", gradient: "from-zinc-900 to-neutral-950" },
-                        { value: "sapphire", label: "Sapphire", gradient: "from-blue-700 to-indigo-900" },
-                        { value: "burgundy", label: "Burgundy", gradient: "from-rose-900 to-red-950" },
-                        { value: "emerald", label: "Emerald", gradient: "from-emerald-700 to-green-900" },
-                        { value: "lavender", label: "Lavender", gradient: "from-violet-400 to-purple-500" },
-                        { value: "coral", label: "Coral", gradient: "from-orange-400 to-rose-500" },
-                        { value: "arctic", label: "Arctic", gradient: "from-sky-100 to-blue-200" },
-                        { value: "copper", label: "Copper", gradient: "from-amber-600 to-orange-800" },
-                        { value: "obsidian", label: "Obsidian", gradient: "from-gray-950 to-slate-900" },
-                        { value: "peach", label: "Peach", gradient: "from-orange-100 to-pink-100" },
-                        { value: "steel", label: "Steel", gradient: "from-slate-400 to-slate-600" },
-                        { value: "aurora", label: "Aurora", gradient: "from-purple-900 via-teal-800 to-green-900" },
-                        { value: "crimson", label: "Crimson", gradient: "from-red-600 to-rose-800" },
-                        { value: "jade", label: "Jade", gradient: "from-teal-600 to-emerald-700" },
-                        { value: "sand", label: "Sand", gradient: "from-amber-200 to-stone-300" },
-                        { value: "champagne", label: "Champagne", gradient: "from-amber-100 to-yellow-50" },
-                        // ── 10 Premium ──
-                        { value: "onyx", label: "Onyx", gradient: "from-zinc-900 to-black" },
-                        { value: "electric", label: "Electric", gradient: "from-blue-600 via-cyan-500 to-teal-400" },
-                        { value: "velvet", label: "Velvet", gradient: "from-purple-900 via-violet-900 to-fuchsia-950" },
-                        { value: "terra", label: "Terra", gradient: "from-orange-700 via-red-800 to-rose-900" },
-                        { value: "glacier", label: "Glacier", gradient: "from-sky-50 via-blue-100 to-cyan-100" },
-                        { value: "dusk", label: "Dusk", gradient: "from-indigo-900 via-purple-700 to-rose-900" },
-                        { value: "citrus", label: "Citrus", gradient: "from-yellow-400 via-amber-400 to-orange-500" },
-                        { value: "ash", label: "Ash", gradient: "from-stone-600 to-stone-900" },
-                        { value: "graphite", label: "Graphite", gradient: "from-zinc-600 via-zinc-700 to-zinc-900" },
-                        { value: "blush", label: "Blush", gradient: "from-pink-100 via-rose-100 to-fuchsia-50" },
-                      ].map((theme) => {
-                        const isPremium = PREMIUM_THEMES.has(theme.value);
-                        const locked = isPremium && !isProUser;
-                        return (
-                        <div key={theme.value} className="relative">
-                          <RadioGroupItem value={theme.value} id={theme.value} className="peer sr-only" disabled={locked} />
-                          <Label
-                            htmlFor={theme.value}
-                            onClick={locked ? () => toast({ title: "Pro feature", description: "Upgrade to Pro to unlock premium themes." }) : undefined}
-                            className={cn("flex flex-col items-center justify-between rounded-lg md:rounded-xl border-2 border-muted bg-card p-3 sm:p-4 md:p-6 peer-data-[state=checked]:border-bronze peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-bronze/20 transition-all", locked ? "cursor-not-allowed opacity-60" : "hover:bg-muted hover:text-foreground cursor-pointer")}
-                          >
-                            <div className="relative w-full">
-                              <div
-                                className={cn("w-full h-16 sm:h-20 md:h-28 rounded-md md:rounded-lg mb-2 sm:mb-3 md:mb-4 shadow-sm",
-                                  theme.gradient && (theme.value === "minimal" ? theme.gradient : `bg-gradient-to-br ${theme.gradient}`)
-                                )}
-                              />
-                              {locked && <div className="absolute inset-0 flex items-center justify-center"><span className="text-xs bg-black/60 text-white px-2 py-0.5 rounded-full font-semibold">Pro</span></div>}
-                            </div>
-                            <span className="font-semibold text-xs sm:text-sm md:text-base">{theme.label}</span>
-                          </Label>
-                        </div>
-                        );
-                      })}
-                    </RadioGroup>
+                    <ThemeSelector
+                      value={linkProfile?.theme || "elite_obsidian"}
+                      onChange={(themeId, fontKey) =>
+                        setLinkProfile({ ...linkProfile, theme: themeId, background: { ...linkProfile?.background, style: "solid", font_family: fontKey } })
+                      }
+                      isProUser={isProUser}
+                      onUpgrade={() => navigate("/profile/payments-billing")}
+                    />
                   </div>
 
                   {/* Custom Background Image */}
