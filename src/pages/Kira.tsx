@@ -1254,21 +1254,6 @@ const Kira = () => {
                             : "I can help with content ideas, brand pitches, and growth strategies"
                         }
                       </p>
-                      <div className="grid grid-cols-2 gap-3 w-full max-w-lg">
-                        {quickActions.map((action, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => handleQuickAction(action.prompt)}
-                            className="group flex items-center gap-3 p-4 rounded-xl bg-card border border-border/50 hover:border-bronze/50 hover:bg-muted/50 transition-all text-left"
-                          >
-                            <div className="p-2 rounded-lg bg-bronze/10 text-bronze group-hover:bg-bronze group-hover:text-background transition-all">
-                              <action.icon className="w-4 h-4" />
-                            </div>
-                            <span className="text-sm font-medium leading-snug">{action.label}</span>
-                            <ArrowRight className="w-4 h-4 ml-auto text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </button>
-                        ))}
-                      </div>
                     </div>
                   ) : (
                     <div className="space-y-6 py-4">
