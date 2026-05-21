@@ -66,8 +66,8 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-black border-b border-white/10">
-      <div className="flex h-16 items-center justify-between px-4 md:px-6">
+    <header className="sticky top-0 z-40 w-full bg-background/80 backdrop-blur-md border-b border-border/50">
+      <div className="flex h-14 items-center justify-between px-4 md:px-6">
         {/* Left side: back button on sub-pages, logo otherwise */}
         {isSubPage ? (
           <BackButton fallback="/kira" className="text-white/70 hover:text-white" />
@@ -77,7 +77,7 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
             className="flex items-center gap-2 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:opacity-80"
           >
             <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 md:w-11 md:h-11 rounded-full ring-1 ring-white/10" />
-            <span className="font-vollkorn text-xl md:text-2xl font-bold text-white">Crevia</span>
+            <span className="font-vollkorn text-xl md:text-2xl font-bold text-foreground">Crevia</span>
             <span className="text-[8px] font-poppins font-medium text-bronze bg-bronze/10 px-1 py-0.5 rounded-full uppercase tracking-wider">
               beta
             </span>
@@ -94,7 +94,7 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
                   variant="ghost"
                   size="icon"
                   onClick={() => setThemeOpen((v) => !v)}
-                  className="h-11 w-11 text-white/70 hover:text-white hover:bg-white/10"
+                  className="h-11 w-11 text-muted-foreground hover:text-foreground hover:bg-muted/60"
                   aria-label="Toggle theme"
                 >
                   {(() => { const Icon = themeOptions.find(o => o.value === selected)?.icon ?? Monitor; return <Icon className="h-5 w-5" />; })()}
@@ -133,7 +133,7 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
               variant="ghost"
               size="icon"
               onClick={() => setSheetOpen(true)}
-              className="relative h-11 w-11 text-white/70 hover:text-white hover:bg-white/10"
+              className="relative h-11 w-11 text-muted-foreground hover:text-foreground hover:bg-muted/60"
               aria-label="Notifications"
             >
               <Bell className="h-5 w-5" />
