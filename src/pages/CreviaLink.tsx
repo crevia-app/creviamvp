@@ -561,7 +561,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
         {/* Embedded Tab Navigation */}
         <div className="hidden md:block border-b border-border/60 bg-background">
           <ScrollArea className="w-full">
-            <div className="flex items-center gap-4 px-6 md:px-8 py-2">
+            <div className="flex items-center justify-around px-6 md:px-10 py-2 w-full">
               {[
                 { id: "profile",    label: "Profile",    icon: User },
                 { id: "buttons",    label: "Buttons",    icon: MousePointerClick },
