@@ -21,6 +21,8 @@ import { Separator } from "@/components/ui/separator";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useSubscription } from "@/hooks/use-subscription";
 import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
+import { usePWAInstall } from "@/hooks/use-pwa-install";
+import { Download } from "lucide-react";
 
 interface ProfileDrawerProps {
   isOpen: boolean;
@@ -32,6 +34,7 @@ const ProfileDrawer = ({ isOpen, onClose, profile }: ProfileDrawerProps) => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const subscription = useSubscription();
+  const { canInstall, install } = usePWAInstall();
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -96,6 +99,19 @@ const ProfileDrawer = ({ isOpen, onClose, profile }: ProfileDrawerProps) => {
             <Sparkles className="h-5 w-5" />
             <span className="font-poppins text-sm font-semibold">Manage Subscription</span>
           </Link>
+        )}
+
+        {canInstall && (
+          <button
+            onClick={() => { install(); onClose(); }}
+            className="flex items-center gap-3 px-4 py-3 mb-2 rounded-lg bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 transition-all w-full"
+          >
+            <Download className="h-5 w-5 text-bronze flex-shrink-0" />
+            <div className="text-left">
+              <p className="font-poppins text-sm font-semibold">Install Crevia App</p>
+              <p className="text-[11px] text-white/50">Add to home screen</p>
+            </div>
+          </button>
         )}
 
         <Separator className="bg-white/10 mb-4" />

@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Sparkles, MoreHorizontal, Briefcase, Crown, Download } from "lucide-react";
+import { Home, Sparkles, MoreHorizontal, Briefcase, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -15,7 +15,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { usePWAInstall } from "@/hooks/use-pwa-install";
 
 const MobileBottomNav = () => {
   const location = useLocation();
@@ -23,7 +22,6 @@ const MobileBottomNav = () => {
   const { t } = useLanguage();
   const [profile, setProfile] = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const { canInstall, install } = usePWAInstall();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -126,20 +124,6 @@ const MobileBottomNav = () => {
                   <Crown className="h-5 w-5 flex-shrink-0" />
                   <span className="font-poppins text-sm font-semibold">Upgrade to Pro</span>
                 </Link>
-
-                {/* Install app — only shown when browser supports it and app isn't installed */}
-                {canInstall && (
-                  <button
-                    onClick={() => { install(); setSheetOpen(false); }}
-                    className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all w-full"
-                  >
-                    <Download className="h-5 w-5 flex-shrink-0 text-bronze" />
-                    <div className="text-left">
-                      <p className="font-poppins text-sm font-semibold">Install Crevia App</p>
-                      <p className="text-[11px] text-white/50">Add to home screen</p>
-                    </div>
-                  </button>
-                )}
 
                 <Separator className="bg-white/10" />
 
