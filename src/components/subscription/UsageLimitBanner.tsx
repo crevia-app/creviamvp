@@ -38,7 +38,7 @@ const UsageLimitBanner = ({ current, limit, feature }: UsageLimitBannerProps) =>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-foreground leading-tight">Daily limit reached</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {current}/{limit} Kira actions used · Resets tomorrow or upgrade for unlimited
+                  {current}/{limit} Kira actions used · Upgrade for unlimited
                 </p>
               </div>
               <button
