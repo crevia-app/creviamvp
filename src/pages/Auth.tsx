@@ -86,6 +86,7 @@ const Auth = () => {
           sessionStorage.setItem("mfa_pending", "1");
           navigate("/mfa-verify", { replace: true });
         } else {
+          sessionStorage.setItem("biometric_unlocked", "1");
           supabase.functions.invoke("login-alert").catch(() => {});
           navigate(redirectTo, { replace: true });
         }

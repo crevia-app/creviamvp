@@ -149,6 +149,11 @@ function AppContent() {
       const credId = user?.user_metadata?.biometric_credential_id as string | undefined;
       if (!enabled || !credId) return;
       setBioCredentialId(credId);
+      // Skip initial lock if the user just completed a fresh login this tab session.
+      if (sessionStorage.getItem("biometric_unlocked") === "1") {
+        sessionStorage.removeItem("biometric_unlocked");
+        return;
+      }
       setBioLocked(true);
     });
   }, [userId]);

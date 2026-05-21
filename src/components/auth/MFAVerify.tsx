@@ -57,6 +57,7 @@ const MFAVerify = () => {
       if (error) throw error;
 
       sessionStorage.removeItem("mfa_pending");
+      sessionStorage.setItem("biometric_unlocked", "1");
       supabase.functions.invoke("login-alert").catch(() => {});
       toast({ title: "Verified!", description: "Welcome back to Crevia." });
       navigate("/kira", { replace: true });
