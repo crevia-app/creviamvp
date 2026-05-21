@@ -27,36 +27,36 @@ const UsageLimitBanner = ({ current, limit, feature }: UsageLimitBannerProps) =>
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}
           transition={{ duration: 0.2 }}
-          className="flex-shrink-0 mx-3 mt-3 mb-1"
+          className="flex-shrink-0 mx-2 mt-2 mb-0.5 sm:mx-3 sm:mt-3 sm:mb-1"
         >
-          <div className="relative rounded-2xl overflow-hidden border border-bronze/25 bg-gradient-to-r from-bronze/10 via-background to-amber-500/5 shadow-sm">
+          <div className="relative rounded-xl sm:rounded-2xl overflow-hidden border border-bronze/25 bg-gradient-to-r from-bronze/10 via-background to-amber-500/5 shadow-sm">
             <div className="absolute inset-0 bg-gradient-to-br from-bronze/5 to-transparent pointer-events-none" />
-            <div className="relative flex items-center gap-3 px-4 py-3">
-              <div className="w-8 h-8 rounded-xl bg-bronze/15 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-4 h-4 text-bronze" />
+            <div className="relative flex items-center gap-2 px-3 py-2 sm:gap-3 sm:px-4 sm:py-3">
+              <div className="w-7 h-7 rounded-lg bg-bronze/15 flex items-center justify-center flex-shrink-0 sm:w-8 sm:h-8 sm:rounded-xl">
+                <Sparkles className="w-3.5 h-3.5 text-bronze sm:w-4 sm:h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground leading-tight">Daily limit reached</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-xs font-semibold text-foreground leading-tight sm:text-sm">Daily limit reached</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5 sm:text-xs">
                   {current}/{limit} Kira actions used · Upgrade for unlimited
                 </p>
               </div>
               <button
                 onClick={() => navigate("/profile/payments-billing")}
-                className="flex-shrink-0 flex items-center gap-1.5 h-8 px-3.5 rounded-xl bg-bronze hover:bg-bronze/90 text-background text-xs font-semibold transition-all shadow-md shadow-bronze/20 hover:shadow-bronze/30"
+                className="flex-shrink-0 flex items-center gap-1 h-7 px-3 rounded-lg bg-bronze hover:bg-bronze/90 text-background text-[11px] font-semibold transition-all shadow-md shadow-bronze/20 hover:shadow-bronze/30 sm:gap-1.5 sm:h-8 sm:px-3.5 sm:rounded-xl sm:text-xs"
               >
                 <Zap className="w-3 h-3" />
                 Upgrade
               </button>
               <button
                 onClick={() => setDismissed(true)}
-                className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors sm:w-6 sm:h-6 sm:rounded-lg"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               </button>
             </div>
             {/* Usage bar */}
-            <div className="h-0.5 bg-muted/40 mx-4 mb-3 rounded-full overflow-hidden">
+            <div className="h-0.5 bg-muted/40 mx-3 mb-2 rounded-full overflow-hidden sm:mx-4 sm:mb-3">
               <div className="h-full bg-bronze rounded-full" style={{ width: "100%" }} />
             </div>
           </div>
