@@ -48,7 +48,7 @@ const CreviaStudio = () => {
       {/* Studio Header — flex-shrink-0 keeps it pinned while content below scrolls */}
       <div className="border-b border-border bg-background z-30 flex-shrink-0">
         <div className="mx-auto w-full max-w-7xl px-4 py-1.5 md:px-6 md:py-4">
-          <div className="mb-1.5 md:mb-4">
+          <div className="hidden md:block md:mb-4">
             <h1 className="font-vollkorn text-xl md:text-2xl font-semibold text-foreground">
               {t("studio.title")}
             </h1>

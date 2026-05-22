@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
-import { Bell, Monitor, Sun, Moon } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { Bell, Monitor, Sun, Moon, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/use-notifications";
 import NotificationSheet from "@/components/notifications/NotificationSheet";
@@ -21,6 +21,9 @@ const themeOptions = [
 
 
 const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
+  const location = useLocation();
+  const isKira   = location.pathname === "/kira";
+  const isStudio = location.pathname.startsWith("/crevia-studio");
   const [sheetOpen, setSheetOpen] = useState(false);
   const { notifications, unreadCount, loading, markRead, markAllRead, clearAll } =
     useNotifications(profile?.id, !!profile?.do_not_disturb);
@@ -60,11 +63,56 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
       <div className="flex h-14 items-center justify-between px-4 md:px-6">
         {/* Left side */}
         <div className="flex items-center gap-2">
+
+          {/* ── Mobile: route-aware brand slot ── */}
+          <AnimatePresence mode="wait" initial={false}>
+            {isKira ? (
+              <motion.div
+                key="kira"
+                className="flex md:hidden items-center gap-2.5"
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -6 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+              >
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-bronze to-bronze-dark flex items-center justify-center shadow-md shadow-bronze/30 flex-shrink-0">
+                  <Sparkles className="h-[18px] w-[18px] text-white" strokeWidth={2} />
+                </div>
+                <span className="font-vollkorn text-xl font-bold text-foreground tracking-tight">Kira</span>
+              </motion.div>
+            ) : isStudio ? (
+              <motion.div
+                key="studio"
+                className="flex md:hidden items-center"
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -6 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+              >
+                <span className="font-vollkorn text-xl font-semibold text-foreground tracking-tight">Crevia Studio</span>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="logo"
+                className="flex md:hidden"
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -6 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+              >
+                <Link to="/dashboard" className="flex items-center hover:opacity-80 transition-opacity">
+                  <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-full ring-1 ring-border" />
+                </Link>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Desktop: always Crevia logo ── */}
           <Link
             to="/dashboard"
-            className="flex items-center gap-2 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:opacity-80"
+            className="hidden md:flex items-center gap-2 transition-opacity hover:opacity-80"
           >
-            <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 md:w-11 md:h-11 rounded-full ring-1 ring-border" />
+            <img src="/crevia-logo.png" alt="Crevia" className="w-11 h-11 rounded-full ring-1 ring-border" />
           </Link>
         </div>
 
