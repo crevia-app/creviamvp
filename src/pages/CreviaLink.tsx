@@ -927,7 +927,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
               <div className="flex flex-col gap-4">
                 <Button
                   size="lg"
-                  onClick={() => navigate(`/${linkProfile?.username}`)}
+                  onClick={() => setShowPreviewModal(true)}
                   className="w-full bg-bronze hover:bg-bronze-dark font-poppins font-semibold h-14 md:h-16 text-base md:text-lg"
                 >
                   <Eye className="w-5 h-5 mr-2" />
@@ -1424,50 +1424,57 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
         button={editingButton}
       />
 
-      {/* Unsaved live preview modal — mobile only */}
+      {/* Live preview modal — full-screen on mobile, centered dialog on desktop */}
       {showPreviewModal && (
-        <div className="fixed inset-0 z-[400] flex flex-col bg-background/95 backdrop-blur-md xl:hidden">
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 h-14 border-b border-border/50 flex-shrink-0">
-            <p className="font-poppins text-sm font-semibold text-foreground">Preview</p>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
-                Unsaved changes
-              </span>
+        <div
+          className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowPreviewModal(false); }}
+        >
+          <div className="w-full sm:w-auto bg-background flex flex-col rounded-t-2xl sm:rounded-2xl border border-border shadow-2xl overflow-hidden max-h-[95dvh] sm:max-h-[90vh]">
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 h-14 border-b border-border/50 flex-shrink-0">
+              <div className="flex items-center gap-2.5">
+                <p className="font-poppins text-sm font-semibold text-foreground">Preview</p>
+                <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                  Unsaved
+                </span>
+              </div>
               <button
                 onClick={() => setShowPreviewModal(false)}
                 className="h-9 w-9 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
                 aria-label="Close preview"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
               </button>
             </div>
-          </div>
 
-          {/* Preview content */}
-          <div className="flex-1 overflow-y-auto flex flex-col items-center justify-start pt-8 pb-10 px-4">
-            <LivePreview linkProfile={linkProfile} buttons={buttons} />
-            <p className="text-xs text-muted-foreground text-center mt-5 max-w-[240px] leading-relaxed">
-              This is a preview of your unsaved changes. Save to make them live.
-            </p>
-            <div className="flex gap-3 mt-5 w-full max-w-[280px]">
-              <Button
-                variant="outline"
-                className="flex-1 h-10 text-sm"
-                onClick={() => setShowPreviewModal(false)}
-              >
-                Keep Editing
-              </Button>
-              <Button
-                className="flex-1 h-10 text-sm bg-bronze hover:bg-bronze/90 text-white"
-                onClick={() => { handleSave(); setShowPreviewModal(false); }}
-                disabled={saving}
-              >
-                {saving ? "Saving..." : "Save"}
-              </Button>
+            {/* Preview content */}
+            <div className="overflow-y-auto flex flex-col items-center pt-7 pb-8 px-6 gap-5">
+              <LivePreview linkProfile={linkProfile} buttons={buttons} />
+              <p className="text-[11px] text-muted-foreground text-center max-w-[240px] leading-relaxed">
+                Preview of your current changes. Save to make them live.
+              </p>
+              <div className="flex gap-3 w-full max-w-[280px]">
+                <Button
+                  variant="outline"
+                  className="flex-1 h-10 text-sm"
+                  onClick={() => setShowPreviewModal(false)}
+                >
+                  Keep Editing
+                </Button>
+                <Button
+                  className="flex-1 h-10 text-sm bg-bronze hover:bg-bronze/90 text-white"
+                  onClick={() => { handleSave(); setShowPreviewModal(false); }}
+                  disabled={saving}
+                >
+                  {saving ? "Saving..." : "Save"}
+                </Button>
+              </div>
             </div>
+
           </div>
         </div>
       )}
