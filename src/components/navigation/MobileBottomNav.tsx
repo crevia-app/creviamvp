@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Sparkles, MoreHorizontal, Briefcase, Crown } from "lucide-react";
+import { Home, Sparkles, MoreHorizontal, Briefcase, Crown, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -15,6 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { usePWAInstall } from "@/hooks/use-pwa-install";
 
 const MobileBottomNav = () => {
   const location = useLocation();
@@ -22,6 +23,7 @@ const MobileBottomNav = () => {
   const { t } = useLanguage();
   const [profile, setProfile] = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const { canInstall, install } = usePWAInstall();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -59,8 +61,8 @@ const MobileBottomNav = () => {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-t border-border/50 safe-area-pb">
-      <div className="grid grid-cols-3 h-16">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/85 backdrop-blur-2xl border-t border-white/[0.06] safe-area-pb">
+      <div className="grid grid-cols-3 h-[60px]">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
@@ -71,25 +73,43 @@ const MobileBottomNav = () => {
               to={item.path}
               onTouchStart={item.prefetch}
               onMouseEnter={item.prefetch}
-              className={cn(
-                "flex flex-col items-center justify-center gap-1 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] group",
-                active ? "text-bronze" : "text-muted-foreground"
-              )}
+              className="flex items-center justify-center"
             >
-              <Icon className={cn(
-                "h-5 w-5 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-110", 
-                active && "drop-shadow-[0_0_8px_rgba(207,129,80,0.5)]"
-              )} />
-              <span className="font-poppins text-xs font-medium">{item.label}</span>
+              <div className={cn(
+                "flex items-center justify-center w-14 h-9 rounded-2xl transition-all duration-300 ease-out",
+                active ? "bg-bronze/15 scale-100" : "bg-transparent scale-95 hover:scale-100"
+              )}>
+                <Icon
+                  strokeWidth={active ? 2.2 : 1.7}
+                  className={cn(
+                    "h-[22px] w-[22px] transition-all duration-300 ease-out",
+                    active
+                      ? "text-bronze drop-shadow-[0_0_10px_rgba(207,129,80,0.45)]"
+                      : "text-foreground/40"
+                  )}
+                />
+              </div>
             </Link>
           );
         })}
 
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
-            <button className="flex flex-col items-center justify-center gap-1 text-muted-foreground">
-              <MoreHorizontal className="h-5 w-5" />
-              <span className="font-poppins text-xs font-medium">{t("common.more")}</span>
+            <button className="flex items-center justify-center">
+              <div className={cn(
+                "flex items-center justify-center w-14 h-9 rounded-2xl transition-all duration-300 ease-out",
+                sheetOpen ? "bg-bronze/15 scale-100" : "bg-transparent scale-95 hover:scale-100"
+              )}>
+                <MoreHorizontal
+                  strokeWidth={sheetOpen ? 2.2 : 1.7}
+                  className={cn(
+                    "h-[22px] w-[22px] transition-all duration-300 ease-out",
+                    sheetOpen
+                      ? "text-bronze drop-shadow-[0_0_10px_rgba(207,129,80,0.45)]"
+                      : "text-foreground/40"
+                  )}
+                />
+              </div>
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="bg-background border-border h-[85dvh] max-h-[85dvh] flex flex-col p-0">
@@ -126,6 +146,19 @@ const MobileBottomNav = () => {
                   <Crown className="h-5 w-5 flex-shrink-0" />
                   <span className="font-poppins text-sm font-semibold">Upgrade to Pro</span>
                 </Link>
+
+                {canInstall && (
+                  <button
+                    onClick={() => { install(); setSheetOpen(false); }}
+                    className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-muted/50 border border-border text-foreground/80 hover:bg-muted transition-all w-full"
+                  >
+                    <Download className="h-5 w-5 text-bronze flex-shrink-0" />
+                    <div className="text-left">
+                      <p className="font-poppins text-sm font-semibold">Install Crevia App</p>
+                      <p className="text-[11px] text-muted-foreground">Add to home screen</p>
+                    </div>
+                  </button>
+                )}
 
                 <Separator className="bg-border" />
 
