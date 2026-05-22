@@ -938,6 +938,17 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     <div className="flex flex-col bg-background">
       <LinkTabsMobile userType={profile?.user_type || "creator"} />
 
+      {/* Mobile-only preview shortcut — xl+ has the sidebar preview */}
+      <div className="xl:hidden flex items-center justify-end px-5 sm:px-6 py-2 border-b border-border/30 bg-background flex-shrink-0">
+        <button
+          onClick={() => setShowPreviewModal(true)}
+          className="flex items-center gap-1.5 text-sm font-poppins font-medium text-bronze hover:text-bronze/80 active:opacity-70 transition-colors py-1 min-h-[36px]"
+        >
+          <Eye className="w-4 h-4" />
+          Preview
+        </button>
+      </div>
+
       <div className="flex w-full">
         <LinkSidebarDesktop userType={profile?.user_type || "creator"} />
 

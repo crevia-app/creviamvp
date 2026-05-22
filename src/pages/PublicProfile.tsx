@@ -278,10 +278,11 @@ const PublicProfile = () => {
   const bgExtras = getBackgroundExtras();
   
   return (
-    <div 
-      className={`min-h-screen ${themeStyles.className} ${getFontFamily()} ${getFontSize()} py-12 px-6 relative`}
-      style={{ 
+    <div
+      className={`min-h-screen ${themeStyles.className} ${getFontFamily()} ${getFontSize()} pt-12 px-6 relative`}
+      style={{
         scrollBehavior: smoothScroll ? 'smooth' : 'auto',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 3rem)',
         ...(isCustomImage ? { backgroundImage: `url(${customBgUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' } : {})
       }}
     >
