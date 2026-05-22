@@ -62,6 +62,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const [editingButton, setEditingButton] = useState<any>(null);
   const [copied, setCopied] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [uploadingPicture, setUploadingPicture] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -837,9 +838,9 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                   <Button onClick={handleSave} disabled={saving} className="flex-1 bg-bronze hover:bg-bronze-dark h-12">
                     {saving ? "Saving..." : "Save Appearance"}
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => window.open(`/${linkProfile?.username}`, "_blank")}
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowPreviewModal(true)}
                     className="h-12 lg:hidden"
                   >
                     <Eye className="w-4 h-4 mr-2" />
@@ -1078,9 +1079,9 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 <Button onClick={handleSave} disabled={saving} className="flex-1 bg-bronze hover:bg-bronze-dark h-14 md:h-16 text-base md:text-lg font-poppins font-semibold">
                   {saving ? "Saving..." : "Save Appearance"}
                 </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => window.open(`/${linkProfile?.username}`, "_blank")}
+                <Button
+                  variant="outline"
+                  onClick={() => setShowPreviewModal(true)}
                   className="h-14 md:h-16"
                 >
                   <Eye className="w-5 h-5 mr-2" />
@@ -1422,6 +1423,54 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
         onSave={handleSaveEditButton}
         button={editingButton}
       />
+
+      {/* Unsaved live preview modal — mobile only */}
+      {showPreviewModal && (
+        <div className="fixed inset-0 z-[400] flex flex-col bg-background/95 backdrop-blur-md xl:hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 h-14 border-b border-border/50 flex-shrink-0">
+            <p className="font-poppins text-sm font-semibold text-foreground">Preview</p>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
+                Unsaved changes
+              </span>
+              <button
+                onClick={() => setShowPreviewModal(false)}
+                className="h-9 w-9 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                aria-label="Close preview"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Preview content */}
+          <div className="flex-1 overflow-y-auto flex flex-col items-center justify-start pt-8 pb-10 px-4">
+            <LivePreview linkProfile={linkProfile} buttons={buttons} />
+            <p className="text-xs text-muted-foreground text-center mt-5 max-w-[240px] leading-relaxed">
+              This is a preview of your unsaved changes. Save to make them live.
+            </p>
+            <div className="flex gap-3 mt-5 w-full max-w-[280px]">
+              <Button
+                variant="outline"
+                className="flex-1 h-10 text-sm"
+                onClick={() => setShowPreviewModal(false)}
+              >
+                Keep Editing
+              </Button>
+              <Button
+                className="flex-1 h-10 text-sm bg-bronze hover:bg-bronze/90 text-white"
+                onClick={() => { handleSave(); setShowPreviewModal(false); }}
+                disabled={saving}
+              >
+                {saving ? "Saving..." : "Save"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
