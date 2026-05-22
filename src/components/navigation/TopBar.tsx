@@ -64,17 +64,10 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
         {/* Left side */}
         <div className="flex items-center gap-2">
 
-          {/* ── Mobile: route-aware brand slot ── */}
-          <AnimatePresence mode="wait" initial={false}>
+          {/* ── Mobile: route-aware brand slot — instant swap, no animation delay ── */}
+          <div className="flex md:hidden items-center gap-1">
             {isKira ? (
-              <motion.div
-                key="kira"
-                className="flex md:hidden items-center gap-1"
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -6 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-              >
+              <>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -85,33 +78,15 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
                   <PanelLeft className="h-[18px] w-[18px]" />
                 </Button>
                 <span className="font-vollkorn text-xl font-bold text-foreground tracking-tight">Kira</span>
-              </motion.div>
+              </>
             ) : isStudio ? (
-              <motion.div
-                key="studio"
-                className="flex md:hidden items-center"
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -6 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-              >
-                <span className="font-vollkorn text-xl font-semibold text-foreground tracking-tight">Crevia Studio</span>
-              </motion.div>
+              <span className="font-vollkorn text-xl font-semibold text-foreground tracking-tight">Crevia Studio</span>
             ) : (
-              <motion.div
-                key="logo"
-                className="flex md:hidden"
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -6 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-              >
-                <Link to="/dashboard" className="flex items-center hover:opacity-80 transition-opacity">
-                  <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-full ring-1 ring-border" />
-                </Link>
-              </motion.div>
+              <Link to="/dashboard" className="flex items-center hover:opacity-80 transition-opacity">
+                <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-full ring-1 ring-border" />
+              </Link>
             )}
-          </AnimatePresence>
+          </div>
 
           {/* ── Desktop: always Crevia logo ── */}
           <Link
