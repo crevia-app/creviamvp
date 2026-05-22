@@ -508,44 +508,14 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
         </div>
       </motion.div>
 
-      {/* Stats */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
-        className="grid grid-cols-2 gap-3 xl:grid-cols-4"
-      >
-        {[
-          { label: "Total", value: stats.total, isCurrency: false, icon: <File className="h-4 w-4" />, iconBg: "bg-primary/10 text-primary" },
-          { label: "Active", value: stats.active, isCurrency: false, icon: <CheckCircle2 className="h-4 w-4" />, iconBg: "bg-emerald-500/10 text-emerald-500" },
-          { label: "Pending", value: stats.pending, isCurrency: false, icon: <Clock className="h-4 w-4" />, iconBg: "bg-amber-500/10 text-amber-500" },
-          { label: "Value", value: stats.totalValue, isCurrency: true, icon: <TrendingUp className="h-4 w-4" />, iconBg: "bg-blue-500/10 text-blue-500" },
-        ].map((stat) => (
-          <div
-            key={stat.label}
-            className="flex items-center gap-2.5 p-4 rounded-2xl border border-border/50 bg-card overflow-hidden"
-          >
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${stat.iconBg}`}>
-              {stat.icon}
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl font-bold text-foreground leading-none md:text-2xl truncate">
-                {stat.isCurrency ? formatCurrency(Number(stat.value), "KES") : stat.value}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
-            </div>
-          </div>
-        ))}
-      </motion.div>
-
-      {/* Search & Filters — Unified Bar */}
+      {/* Search & Sort */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="flex flex-col gap-2"
+        className="flex gap-2"
       >
-        <div className="relative">
+        <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search Canvas, clients..."
@@ -554,33 +524,17 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
             className="pl-10 h-11 text-base rounded-xl bg-muted/50 border-0 focus:bg-background focus:ring-1 focus:ring-primary/20 transition-all"
           />
         </div>
-        <div className="flex gap-2">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="flex-1 h-11 rounded-xl bg-muted/50 border-0">
-              <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground flex-shrink-0" />
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="sent">Sent</SelectItem>
-              <SelectItem value="signed">Signed</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
-            <SelectTrigger className="flex-1 h-11 rounded-xl bg-muted/50 border-0">
-              <ArrowUpDown className="h-3.5 w-3.5 mr-1.5 text-muted-foreground flex-shrink-0" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Newest</SelectItem>
-              <SelectItem value="oldest">Oldest</SelectItem>
-              <SelectItem value="value">Highest Value</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+          <SelectTrigger className="w-44 h-11 rounded-xl bg-muted/50 border-0">
+            <ArrowUpDown className="h-3.5 w-3.5 mr-1.5 text-muted-foreground flex-shrink-0" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest</SelectItem>
+            <SelectItem value="oldest">Oldest</SelectItem>
+            <SelectItem value="value">Highest Value</SelectItem>
+          </SelectContent>
+        </Select>
       </motion.div>
 
       {/* Folders Grid — shown at root only */}

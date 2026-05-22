@@ -465,38 +465,7 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       </div>
 
       {/* Invoices List */}
-      {filteredInvoices.length === 0 ? (
-        <Card className="p-12 md:p-16 text-center border-dashed border-2">
-          <div className="w-20 h-20 rounded-3xl bg-bronze/10 flex items-center justify-center mx-auto mb-5">
-            <Receipt className="h-10 w-10 text-bronze" />
-          </div>
-          <h3 className="font-vollkorn text-xl md:text-2xl font-bold text-foreground mb-2">
-            {searchQuery || statusFilter !== "all" ? "No invoices found" : "Create your first invoice"}
-          </h3>
-          <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-            {searchQuery || statusFilter !== "all"
-              ? "Try adjusting your search or filters"
-              : "Professional invoices with auto-calculations, multiple currencies, and more"}
-          </p>
-          {!searchQuery && statusFilter === "all" && (
-            <Button
-              onClick={() => {
-                if (invoiceLimitReached) {
-                  toast.error("Monthly limit reached", {
-                    description: `Free plan allows ${limits.invoicesPerMonth} invoices per month. Upgrade to Pro or Business for unlimited.`,
-                  });
-                  return;
-                }
-                setCreateDialogOpen(true);
-              }}
-              className="gap-2 bg-bronze hover:bg-bronze/90"
-            >
-              <Sparkles className="h-4 w-4" />
-              Create Invoice
-            </Button>
-          )}
-        </Card>
-      ) : (
+      {filteredInvoices.length > 0 && (
         <div className="space-y-3">
           {filteredInvoices.map((invoice) => {
             const isOverdue = invoice.status === "overdue";
