@@ -5,3 +5,4 @@
 ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS profile_public BOOLEAN DEFAULT true,
   ADD COLUMN IF NOT EXISTS do_not_disturb BOOLEAN DEFAULT false;
+

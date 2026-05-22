@@ -119,6 +119,60 @@ serve(async (req) => {
             kira_actions_limit: kiraLimit,
           })
           .eq('id', profile.id);
+
+        // ── Admin upgrade notification ────────────────────────────────
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('display_name')
+          .eq('id', profile.id)
+          .single();
+
+        const userName   = (prof as any)?.display_name || userEmail;
+        const planLabel  = subscriptionPlan.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+        const amountKES  = (event.data?.amount ?? 0) / 100;
+
+        // In-app notification (realtime → Admin badge)
+        await supabase.from('admin_notifications').insert({
+          type:       'upgrade',
+          user_id:    profile.id,
+          user_email: userEmail,
+          user_name:  userName,
+          plan:       subscriptionPlan,
+          amount:     amountKES,
+          currency:   event.data?.currency ?? 'KES',
+        });
+
+        // Email notification to admin
+        const resendKey = Deno.env.get('RESEND_API_KEY');
+        if (resendKey) {
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${resendKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              from:    'Crevia <notifications@crevia.app>',
+              to:      ['anthonypeterodhiambo@gmail.com'],
+              subject: `🎉 New ${planLabel} upgrade — ${userName}`,
+              html: `
+                <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#fff;border-radius:12px;border:1px solid #e5e7eb">
+                  <img src="https://crevia.app/crevia-logo.png" alt="Crevia" style="width:48px;height:48px;border-radius:50%;margin-bottom:20px"/>
+                  <h2 style="margin:0 0 8px;font-size:20px;color:#111">New plan upgrade</h2>
+                  <p style="margin:0 0 20px;color:#555;font-size:15px">A user just upgraded to <strong>${planLabel}</strong>.</p>
+                  <table style="width:100%;border-collapse:collapse;font-size:14px;color:#333">
+                    <tr><td style="padding:8px 0;color:#888;width:40%">User</td><td style="padding:8px 0">${userName}</td></tr>
+                    <tr><td style="padding:8px 0;color:#888">Email</td><td style="padding:8px 0">${userEmail}</td></tr>
+                    <tr><td style="padding:8px 0;color:#888">Plan</td><td style="padding:8px 0"><strong>${planLabel}</strong></td></tr>
+                    <tr><td style="padding:8px 0;color:#888">Amount</td><td style="padding:8px 0">KES ${amountKES.toLocaleString()}</td></tr>
+                    <tr><td style="padding:8px 0;color:#888">Date</td><td style="padding:8px 0">${new Date().toLocaleString('en-KE', { timeZone: 'Africa/Nairobi' })}</td></tr>
+                  </table>
+                  <a href="https://crevia.app/admin" style="display:inline-block;margin-top:24px;padding:10px 20px;background:#b45309;color:#fff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600">Open Admin Portal</a>
+                </div>
+              `,
+            }),
+          }).catch(() => { /* non-fatal */ });
+        }
       }
     }
 

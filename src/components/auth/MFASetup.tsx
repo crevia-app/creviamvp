@@ -91,7 +91,7 @@ const MFASetup = ({ onComplete, onSkip }: MFASetupProps) => {
           </div>
           <h3 className="font-vollkorn text-xl font-bold mb-2">Enable Two-Factor Authentication</h3>
           <p className="text-muted-foreground text-sm mb-6">
-            Every time you sign in, we'll send a 6-digit code to your email. No authenticator app needed.
+            Two-factor authentication means that after your password, you'll confirm it's really you with a one-time code sent to your email. This keeps your account protected even if your password is ever compromised.
           </p>
           <div className="flex flex-col gap-3">
             <Button

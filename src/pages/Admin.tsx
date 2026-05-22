@@ -2442,6 +2442,7 @@ const Admin = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingCount, setPendingCount]         = useState(0);
   const [openTicketsCount, setOpenTicketsCount] = useState(0);
+  const [upgradeCount, setUpgradeCount]         = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -2453,12 +2454,14 @@ const Admin = () => {
 
       if (!(prof as any)?.is_admin) { navigate("/"); return; }
 
-      const [{ count: vCount }, { count: tCount }] = await Promise.all([
+      const [{ count: vCount }, { count: tCount }, { count: uCount }] = await Promise.all([
         supabase.from("verification_requests" as any).select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("support_tickets" as any).select("id", { count: "exact", head: true }).eq("status", "open"),
+        supabase.from("admin_notifications" as any).select("id", { count: "exact", head: true }).eq("read", false).eq("type", "upgrade"),
       ]);
       setPendingCount(vCount ?? 0);
       setOpenTicketsCount(tCount ?? 0);
+      setUpgradeCount(uCount ?? 0);
 
       setAuthed(true);
       setBooting(false);
@@ -2492,6 +2495,17 @@ const Admin = () => {
           description: (payload.new as any)?.subject || "A user needs help",
           action: { label: "View", onClick: () => setSection("support") },
           duration: 8000,
+        });
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "admin_notifications" }, (payload) => {
+        const n = payload.new as any;
+        if (n?.type !== "upgrade") return;
+        setUpgradeCount(c => c + 1);
+        const planLabel = (n.plan ?? "").replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+        toast(`💳 New ${planLabel} upgrade`, {
+          description: n.user_name || n.user_email || "A user just upgraded",
+          action: { label: "View", onClick: () => setSection("billing") },
+          duration: 10000,
         });
       })
       .subscribe();
@@ -2535,7 +2549,18 @@ const Admin = () => {
           {NAV.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
-              onClick={() => { setSection(id); setSidebarOpen(false); }}
+              onClick={() => {
+                setSection(id);
+                setSidebarOpen(false);
+                if (id === "billing" && upgradeCount > 0) {
+                  setUpgradeCount(0);
+                  supabase.from("admin_notifications" as any)
+                    .update({ read: true })
+                    .eq("type", "upgrade")
+                    .eq("read", false)
+                    .then(() => {});
+                }
+              }}
               className={cn(
                 "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left",
                 section === id
@@ -2550,6 +2575,11 @@ const Admin = () => {
               {id === "support" && (pendingCount + openTicketsCount) > 0 && (
                 <span className="bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center leading-none">
                   {(pendingCount + openTicketsCount) > 9 ? "9+" : (pendingCount + openTicketsCount)}
+                </span>
+              )}
+              {id === "billing" && upgradeCount > 0 && (
+                <span className="bg-bronze text-white text-[9px] font-bold min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center leading-none">
+                  {upgradeCount > 9 ? "9+" : upgradeCount}
                 </span>
               )}
             </button>

@@ -403,7 +403,7 @@ const SecurityTab = () => {
           <h2 className="font-vollkorn text-xl md:text-2xl font-bold">Two-Factor Authentication</h2>
         </div>
         <p className="text-sm text-muted-foreground mb-5">
-          Add an extra layer of protection. Every sign-in will require a code sent to your email.
+          2FA adds a second step after your password. Even if someone steals your password, they still can't get into your account without a code from your email.
         </p>
 
         {twoFaView === "idle" && (
@@ -419,8 +419,8 @@ const SecurityTab = () => {
               </div>
               <p className="text-xs md:text-sm text-muted-foreground">
                 {twoFactorEnabled
-                  ? "A 6-digit code is sent to your email each time you sign in."
-                  : "We'll send a 6-digit code to your email each time you sign in. No app required."}
+                  ? "On every sign-in, a one-time code is sent to your email before access is granted."
+                  : "After your password, you'll confirm your identity with a one-time code sent to your email. No app needed."}
               </p>
             </div>
             {twoFactorEnabled ? (
