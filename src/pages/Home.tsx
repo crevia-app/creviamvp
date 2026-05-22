@@ -9,13 +9,6 @@ import HeroPattern from "@/components/HeroPattern";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import TestimonialMarquee from "@/components/TestimonialMarquee";
 import { supabase } from "@/integrations/supabase/client";
-import gallery1 from "@/assets/about-gallery-1.jpg";
-import gallery2 from "@/assets/about-gallery-2.jpg";
-import gallery3 from "@/assets/about-gallery-3.jpg";
-import gallery4 from "@/assets/about-gallery-4.jpg";
-import connectHero from "@/assets/crevia-connect-hero.jpg";
-
-const galleryImages = [gallery1, gallery2, gallery3, gallery4, connectHero];
 
 const OPS_CARDS = [
   { icon: Link2,         label: "Crevia Link",         path: "/crevia-studio" },
