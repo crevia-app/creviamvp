@@ -10,6 +10,7 @@ import { LanguageProvider } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useInitializeE2EE } from "@/hooks/use-initialize-e2ee";
 import { RecoveryPasswordModal } from "@/components/auth/RecoveryPasswordModal";
+import { CompleteProfileModal } from "@/components/auth/CompleteProfileModal";
 import { SetRecoveryPasswordDialog } from "@/components/auth/SetRecoveryPasswordDialog";
 import ScrollToTop from "./components/ScrollToTop";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -102,6 +103,7 @@ function AppContent() {
   } = useInitializeE2EE(userId);
 
   const [migrationDialogOpen, setMigrationDialogOpen] = useState(false);
+  const [showCompleteProfile, setShowCompleteProfile] = useState(false);
 
   // Open the migration dialog as soon as the flag is raised, but only once per session.
   useEffect(() => {
@@ -131,6 +133,19 @@ function AppContent() {
     if (!userId) return;
     import("./pages/Kira");
     import("./pages/CreviaStudio");
+  }, [userId]);
+
+  // Show "complete profile" prompt for new users who have no display_name yet.
+  useEffect(() => {
+    if (!userId) return;
+    supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", userId)
+      .single()
+      .then(({ data }) => {
+        if (!data?.display_name) setShowCompleteProfile(true);
+      });
   }, [userId]);
 
   // Background maintenance check — never blocks render
@@ -177,6 +192,13 @@ function AppContent() {
             sessionStorage.setItem("biometric_verified", "1");
             setBioLocked(false);
           }}
+        />
+      )}
+
+      {showCompleteProfile && !bioLocked && (
+        <CompleteProfileModal
+          userId={userId}
+          onComplete={() => setShowCompleteProfile(false)}
         />
       )}
 
