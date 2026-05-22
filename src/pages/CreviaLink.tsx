@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -888,20 +889,60 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
           onSave={handleSaveEditButton}
           button={editingButton}
         />
+
+        {/* Preview modal for embedded view — portal to document.body */}
+        {showPreviewModal && createPortal(
+          <div
+            className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center bg-black/70"
+            style={{ WebkitTransform: "translateZ(0)" }}
+            onClick={(e) => { if (e.target === e.currentTarget) setShowPreviewModal(false); }}
+          >
+            <div className="w-full sm:w-[420px] bg-background flex flex-col rounded-t-2xl sm:rounded-2xl border border-border shadow-2xl overflow-hidden max-h-[95dvh] sm:max-h-[90vh]">
+              <div className="flex items-center justify-between px-4 h-14 border-b border-border/50 flex-shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <p className="font-poppins text-sm font-semibold text-foreground">Preview</p>
+                  <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Unsaved changes</span>
+                </div>
+                <button
+                  onClick={() => setShowPreviewModal(false)}
+                  className="h-9 w-9 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                  aria-label="Close preview"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="overflow-y-auto flex flex-col items-center pt-7 pb-8 px-6 gap-5" style={{ WebkitOverflowScrolling: "touch" }}>
+                <LivePreview linkProfile={linkProfile} buttons={buttons} />
+                <p className="text-[11px] text-muted-foreground text-center max-w-[240px] leading-relaxed">
+                  Preview of your current changes. Save to make them live.
+                </p>
+                <div className="flex gap-3 w-full max-w-[280px]">
+                  <Button variant="outline" className="flex-1 h-11 text-sm" onClick={() => setShowPreviewModal(false)}>Keep Editing</Button>
+                  <Button className="flex-1 h-11 text-sm bg-bronze hover:bg-bronze/90 text-white" onClick={() => { handleSave(); setShowPreviewModal(false); }} disabled={saving}>
+                    {saving ? "Saving..." : "Save"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
       </div>
     );
   }
 
   // Standalone view with sidebar
   return (
-    <div className="h-full flex flex-col bg-background">
+    <div className="flex flex-col bg-background">
       <LinkTabsMobile userType={profile?.user_type || "creator"} />
-      
-      <div className="flex flex-1 w-full overflow-hidden">
+
+      <div className="flex w-full">
         <LinkSidebarDesktop userType={profile?.user_type || "creator"} />
-        
+
         {/* Main Content Area */}
-        <main className="flex-1 overflow-auto bg-background md:ml-[100px] flex">
+        <main className="flex-1 bg-background md:ml-[100px] flex">
           {/* Content container */}
           <div className="flex-1 max-w-3xl px-5 sm:px-6 md:px-8 pt-2 pb-10 md:pt-10 md:pb-14">
             <div className="w-full space-y-8 md:space-y-10">
@@ -1424,20 +1465,21 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
         button={editingButton}
       />
 
-      {/* Live preview modal — full-screen on mobile, centered dialog on desktop */}
-      {showPreviewModal && (
+      {/* Live preview modal — rendered via portal to escape overflow/flex context on iOS */}
+      {showPreviewModal && createPortal(
         <div
-          className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center bg-black/70"
+          style={{ WebkitTransform: "translateZ(0)" }}
           onClick={(e) => { if (e.target === e.currentTarget) setShowPreviewModal(false); }}
         >
-          <div className="w-full sm:w-auto bg-background flex flex-col rounded-t-2xl sm:rounded-2xl border border-border shadow-2xl overflow-hidden max-h-[95dvh] sm:max-h-[90vh]">
+          <div className="w-full sm:w-[420px] bg-background flex flex-col rounded-t-2xl sm:rounded-2xl border border-border shadow-2xl overflow-hidden max-h-[95dvh] sm:max-h-[90vh]">
 
             {/* Header */}
             <div className="flex items-center justify-between px-4 h-14 border-b border-border/50 flex-shrink-0">
               <div className="flex items-center gap-2.5">
                 <p className="font-poppins text-sm font-semibold text-foreground">Preview</p>
                 <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                  Unsaved
+                  Unsaved changes
                 </span>
               </div>
               <button
@@ -1452,7 +1494,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
             </div>
 
             {/* Preview content */}
-            <div className="overflow-y-auto flex flex-col items-center pt-7 pb-8 px-6 gap-5">
+            <div className="overflow-y-auto flex flex-col items-center pt-7 pb-8 px-6 gap-5" style={{ WebkitOverflowScrolling: "touch" }}>
               <LivePreview linkProfile={linkProfile} buttons={buttons} />
               <p className="text-[11px] text-muted-foreground text-center max-w-[240px] leading-relaxed">
                 Preview of your current changes. Save to make them live.
@@ -1460,13 +1502,13 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
               <div className="flex gap-3 w-full max-w-[280px]">
                 <Button
                   variant="outline"
-                  className="flex-1 h-10 text-sm"
+                  className="flex-1 h-11 text-sm"
                   onClick={() => setShowPreviewModal(false)}
                 >
                   Keep Editing
                 </Button>
                 <Button
-                  className="flex-1 h-10 text-sm bg-bronze hover:bg-bronze/90 text-white"
+                  className="flex-1 h-11 text-sm bg-bronze hover:bg-bronze/90 text-white"
                   onClick={() => { handleSave(); setShowPreviewModal(false); }}
                   disabled={saving}
                 >
@@ -1476,7 +1518,8 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

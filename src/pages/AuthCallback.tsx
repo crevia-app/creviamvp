@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckCircle2, Loader2, XCircle } from "lucide-react";
+import { Loader2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type Status = "verifying" | "success" | "error";
@@ -34,7 +34,7 @@ const AuthCallback = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setStatus("success");
-        setTimeout(() => navigate("/kira", { replace: true }), 1200);
+        navigate("/kira", { replace: true });
       }
     });
 
@@ -110,20 +110,10 @@ const AuthCallback = () => {
           </div>
         )}
 
-        {/* Success state */}
+        {/* Success state — brief spinner while navigation fires */}
         {status === "success" && (
-          <div className="space-y-5">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-7 h-7 text-emerald-400" />
-            </div>
-            <div>
-              <h1 className="font-vollkorn text-2xl font-bold text-white mb-2">
-                You're verified!
-              </h1>
-              <p className="text-sm text-white/50 font-poppins">
-                Taking you to Crevia…
-              </p>
-            </div>
+          <div className="flex items-center justify-center">
+            <Loader2 className="w-8 h-8 text-bronze animate-spin" />
           </div>
         )}
 

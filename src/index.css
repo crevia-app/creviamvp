@@ -7,6 +7,11 @@
   html {
     font-size: 14px;
   }
+
+  /* Prevent iOS Safari from zooming in on focused inputs (requires font-size >= 16px) */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
 }
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
@@ -111,6 +116,10 @@ All colors MUST be HSL.
     -moz-osx-font-smoothing: grayscale;
     line-height: 1.65;
     letter-spacing: -0.01em;
+    /* Prevent iOS overscroll bounce revealing background color */
+    overscroll-behavior: none;
+    /* Remove iOS tap flash on all tappable elements */
+    -webkit-tap-highlight-color: transparent;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -118,6 +127,11 @@ All colors MUST be HSL.
     font-weight: 700;
     letter-spacing: -0.025em; /* Tight editorial tracking — Apple/Stripe style */
     line-height: 1.15;
+  }
+
+  /* Remove 300ms tap delay on iOS — feel instantly responsive */
+  button, a, [role="button"], input, select, textarea, label {
+    touch-action: manipulation;
   }
 
   /* Apple-style button press — subtle scale down on active */
@@ -414,6 +428,14 @@ All colors MUST be HSL.
   }
   .scrollbar-none::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Momentum / inertia scrolling on iOS for all scroll containers */
+  .overflow-auto,
+  .overflow-y-auto,
+  .overflow-x-auto,
+  [data-radix-scroll-area-viewport] {
+    -webkit-overflow-scrolling: touch;
   }
 }
 

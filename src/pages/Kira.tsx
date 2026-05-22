@@ -980,19 +980,19 @@ const Kira = () => {
           sidebarCollapsed ? 'w-16' : 'w-72'
         }`}
       >
-        <div className="h-14 flex items-center px-3 border-b border-border/50">
-          {!sidebarCollapsed && (
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-bronze to-bronze-dark flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-background" />
-              </div>
-              <span className="font-poppins font-semibold text-sm">Kira AI</span>
-            </div>
-          )}
+        {/* Toggle button — above New Chat */}
+        <div className={`flex pt-3 pb-1 px-3 ${sidebarCollapsed ? 'justify-center' : 'justify-start'}`}>
+          <button
+            onClick={() => setSidebarCollapsed(prev => !prev)}
+            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? <PanelLeft className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
+          </button>
         </div>
 
-        <div className="p-3">
-          <Button 
+        <div className="px-3 pb-3">
+          <Button
             onClick={() => handleNewChat(null)}
             className={`w-full gap-2 bg-bronze hover:bg-bronze/90 text-background font-poppins ${
               sidebarCollapsed ? 'px-0 justify-center' : 'justify-start'
