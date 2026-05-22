@@ -131,6 +131,17 @@ serve(async (req) => {
         const planLabel  = subscriptionPlan.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
         const amountKES  = (event.data?.amount ?? 0) / 100;
 
+        // Record in billing history
+        await supabase.from('subscription_payments').insert({
+          user_id:   profile.id,
+          email:     userEmail,
+          plan:      subscriptionPlan,
+          amount:    amountKES,
+          currency:  event.data?.currency ?? 'KES',
+          reference: event.data?.reference ?? null,
+          status:    'success',
+        });
+
         // In-app notification (realtime → Admin badge)
         await supabase.from('admin_notifications').insert({
           type:       'upgrade',
@@ -176,9 +187,9 @@ serve(async (req) => {
       }
     }
 
-    // ✅ Recurring renewal — extend expiry by one month and keep active
+    // ✅ Recurring renewal — extend expiry, store subscription_code for cancellation
     if (event.event === 'subscription.create') {
-      const { customer } = event.data;
+      const { customer, subscription_code, email_token } = event.data;
       const expiresAt = new Date();
       expiresAt.setMonth(expiresAt.getMonth() + 1);
       await supabase
@@ -186,6 +197,8 @@ serve(async (req) => {
         .update({
           subscription_status: 'active',
           subscription_expires_at: expiresAt.toISOString(),
+          subscription_code:        subscription_code ?? null,
+          subscription_email_token: email_token ?? null,
         })
         .eq('email', customer.email);
     }

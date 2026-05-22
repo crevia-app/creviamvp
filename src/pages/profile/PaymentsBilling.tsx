@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 import {
   CreditCard, ArrowRight, Check, Sparkles,
-  Receipt, Calendar, Smartphone, Users,
+  Receipt, Calendar, Smartphone, Users, AlertTriangle,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { toast } from "sonner";
 
 const planLabel = (plan: string) => {
   if (plan === "business" || plan === "brand_workspace") return "Business";
@@ -62,11 +64,17 @@ const buildMethods = (planKey: "pro" | "business") => {
 
 const PaymentsBilling = () => {
   const { t } = useLanguage();
-  const [userId, setUserId]           = useState<string | null>(null);
-  const [subscription, setSubscription] = useState<string>("free");
-  const [loading, setLoading]         = useState(false);
-  const [showDialog, setShowDialog]   = useState(false);
-  const [targetPlan, setTargetPlan]   = useState<"pro" | "business">("pro");
+  const [userId, setUserId]               = useState<string | null>(null);
+  const [subscription, setSubscription]   = useState<string>("free");
+  const [subStatus, setSubStatus]         = useState<string>("free");
+  const [subExpiry, setSubExpiry]         = useState<string | null>(null);
+  const [loading, setLoading]             = useState(false);
+  const [showDialog, setShowDialog]       = useState(false);
+  const [targetPlan, setTargetPlan]       = useState<"pro" | "business">("pro");
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelling, setCancelling]       = useState(false);
+  const [billingHistory, setBillingHistory] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
 
   useEffect(() => { checkAuth(); }, []);
 
@@ -80,8 +88,10 @@ const PaymentsBilling = () => {
         table: "profiles",
         filter: `id=eq.${userId}`,
       }, (payload) => {
-        const updated = payload.new as { subscription_plan?: string };
+        const updated = payload.new as { subscription_plan?: string; subscription_status?: string; subscription_expires_at?: string };
         setSubscription(updated.subscription_plan || "free");
+        setSubStatus(updated.subscription_status || "free");
+        setSubExpiry(updated.subscription_expires_at || null);
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -93,10 +103,40 @@ const PaymentsBilling = () => {
     setUserId(session.user.id);
     const { data: profile } = await supabase
       .from("profiles")
-      .select("subscription_plan")
+      .select("subscription_plan, subscription_status, subscription_expires_at")
       .eq("id", session.user.id)
       .single();
     setSubscription(profile?.subscription_plan || "free");
+    setSubStatus(profile?.subscription_status || "free");
+    setSubExpiry(profile?.subscription_expires_at || null);
+
+    // Load billing history
+    const { data: payments } = await supabase
+      .from("subscription_payments" as any)
+      .select("id, plan, amount, currency, reference, status, created_at")
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: false });
+    setBillingHistory(payments || []);
+    setHistoryLoading(false);
+  };
+
+  const handleCancel = async () => {
+    setCancelling(true);
+    try {
+      const { error } = await supabase.functions.invoke("cancel-subscription");
+      if (error) throw error;
+      setSubStatus("cancelled");
+      setShowCancelDialog(false);
+      toast.success("Subscription cancelled", {
+        description: subExpiry
+          ? `Your access continues until ${format(new Date(subExpiry), "dd MMM yyyy")}.`
+          : "Your plan will revert to free at the end of the billing period.",
+      });
+    } catch (err: any) {
+      toast.error("Could not cancel", { description: err.message });
+    } finally {
+      setCancelling(false);
+    }
   };
 
   const openUpgrade = (plan: "pro" | "business") => {
@@ -182,24 +222,46 @@ const PaymentsBilling = () => {
                 {isBusiness ? <Users className="h-6 w-6 text-bronze" /> : <Sparkles className="h-6 w-6 text-bronze" />}
               </div>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="font-vollkorn text-xl font-bold">
                     {planLabel(subscription)} {isFree ? "Plan" : ""}
                   </h2>
-                  <Badge variant="outline" className="text-bronze border-bronze/40">
-                    {isFree ? "Free" : "Active"}
+                  <Badge variant="outline" className={subStatus === "cancelled" ? "text-muted-foreground border-border" : "text-bronze border-bronze/40"}>
+                    {isFree ? "Free" : subStatus === "cancelled" ? "Cancelled" : "Active"}
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">{planPrice(subscription)}</p>
+                {subStatus === "cancelled" && subExpiry && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                    Access continues until {format(new Date(subExpiry), "dd MMM yyyy")}
+                  </p>
+                )}
+                {subStatus === "active" && subExpiry && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Renews {format(new Date(subExpiry), "dd MMM yyyy")}
+                  </p>
+                )}
               </div>
             </div>
-            {isFree && (
-              <Link to="/pricing">
-                <Button className="bg-bronze hover:bg-bronze/90 text-white">
-                  Upgrade <ArrowRight className="w-4 h-4 ml-1" />
+            <div className="flex items-center gap-2">
+              {isFree && (
+                <Link to="/pricing">
+                  <Button className="bg-bronze hover:bg-bronze/90 text-white">
+                    Upgrade <ArrowRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </Link>
+              )}
+              {!isFree && subStatus === "active" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                  onClick={() => setShowCancelDialog(true)}
+                >
+                  Cancel Plan
                 </Button>
-              </Link>
-            )}
+              )}
+            </div>
           </div>
         </Card>
 
@@ -310,15 +372,99 @@ const PaymentsBilling = () => {
             <Receipt className="w-5 h-5 text-bronze" />
             <h2 className="font-vollkorn text-xl font-bold">Billing History</h2>
           </div>
-          <div className="text-center py-10">
-            <Calendar className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="text-muted-foreground text-sm">No billing history yet</p>
-            <p className="text-muted-foreground/60 text-xs mt-1">
-              Invoices will appear here once you subscribe
-            </p>
-          </div>
+          {historyLoading ? (
+            <div className="flex justify-center py-10">
+              <div className="w-5 h-5 rounded-full border-2 border-bronze border-t-transparent animate-spin" />
+            </div>
+          ) : billingHistory.length === 0 ? (
+            <div className="text-center py-10">
+              <Calendar className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+              <p className="text-muted-foreground text-sm">No billing history yet</p>
+              <p className="text-muted-foreground/60 text-xs mt-1">
+                Payments will appear here once you subscribe
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {billingHistory.map((tx: any) => (
+                <div key={tx.id} className="flex items-center justify-between py-3.5 gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-lg bg-bronze/10 flex items-center justify-center shrink-0">
+                      <Receipt className="w-4 h-4 text-bronze" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium capitalize">
+                        {(tx.plan || "subscription").replace(/_/g, " ")}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(tx.created_at), "dd MMM yyyy")}
+                        {tx.reference && (
+                          <span className="ml-2 font-mono text-[10px] text-muted-foreground/60">#{tx.reference.slice(-8)}</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-semibold">
+                      {tx.currency} {Number(tx.amount).toLocaleString()}
+                    </p>
+                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                      tx.status === "success"
+                        ? "bg-emerald-500/10 text-emerald-600"
+                        : "bg-red-500/10 text-red-500"
+                    }`}>
+                      {tx.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
       </div>
+
+      {/* Cancel Subscription Dialog */}
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-destructive" />
+              </div>
+              <DialogTitle className="font-vollkorn text-xl">Cancel subscription?</DialogTitle>
+            </div>
+          </DialogHeader>
+          <div className="space-y-3 mt-1">
+            <p className="text-sm text-muted-foreground">
+              You'll keep full access to your{" "}
+              <span className="font-semibold text-foreground">{planLabel(subscription)}</span> plan until{" "}
+              {subExpiry ? (
+                <span className="font-semibold text-foreground">{format(new Date(subExpiry), "dd MMM yyyy")}</span>
+              ) : "the end of your billing period"}.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              After that your account moves to the free plan. You won't be charged again.
+            </p>
+          </div>
+          <div className="flex gap-2 mt-4">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setShowCancelDialog(false)}
+              disabled={cancelling}
+            >
+              Keep Plan
+            </Button>
+            <Button
+              className="flex-1 bg-destructive hover:bg-destructive/90 text-white"
+              onClick={handleCancel}
+              disabled={cancelling}
+            >
+              {cancelling ? "Cancelling..." : "Yes, Cancel"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Payment Method Dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
