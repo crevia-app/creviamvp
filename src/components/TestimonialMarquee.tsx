@@ -11,30 +11,6 @@ const TESTIMONIALS = [
   },
   {
     quote:
-      "We replaced three tools with Crevia. The entire onboarding-to-payment cycle for our creator campaigns is now one clean flow. Our ops team hasn't looked back.",
-    name: "Tariq Mwangi",
-    role: "Head of Partnerships, Hype Agency",
-    initials: "TM",
-    gradient: "from-blue-500 to-cyan-600",
-  },
-  {
-    quote:
-      "The e-signature Canvas flow is insane. Brands used to ghost me on NDAs for weeks. Now they sign in the thread, same day. Signed PDF before the call ends.",
-    name: "Zinhle Dlamini",
-    role: "Brand Photographer · Cape Town",
-    initials: "ZD",
-    gradient: "from-emerald-500 to-teal-600",
-  },
-  {
-    quote:
-      "Crevia's market intelligence on African creator rates finally gave us a real benchmark. We stopped underpaying talent — and partnership retention improved immediately.",
-    name: "Kofi Acheampong",
-    role: "Marketing Director, Bloom Beverages",
-    initials: "KA",
-    gradient: "from-amber-500 to-orange-600",
-  },
-  {
-    quote:
       "I sent my first Crevia invoice, got paid in 48 hours, and felt like a proper CEO. I'm 22 running a visual studio. That's not small — it changed my entire mindset.",
     name: "Leila Hassan",
     role: "Visual Artist · Nairobi",

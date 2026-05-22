@@ -123,33 +123,6 @@ const Home = () => {
         )}
       </section>
 
-      {/* ═══════════════ PHOTO GALLERY MARQUEE ═══════════════ */}
-      <section className="relative w-full py-6 overflow-hidden">
-        <div
-          className="absolute inset-y-0 left-0 w-24 md:w-36 z-10 pointer-events-none"
-          style={{ background: "linear-gradient(to right, hsl(var(--background)) 0%, transparent 100%)" }}
-        />
-        <div
-          className="absolute inset-y-0 right-0 w-24 md:w-36 z-10 pointer-events-none"
-          style={{ background: "linear-gradient(to left, hsl(var(--background)) 0%, transparent 100%)" }}
-        />
-        <div className="flex animate-scroll-left" style={{ width: "max-content", gap: "16px" }}>
-          {[...galleryImages, ...galleryImages, ...galleryImages].map((src, i) => (
-            <div
-              key={i}
-              className="relative flex-shrink-0 w-52 h-36 md:w-72 md:h-48 rounded-xl overflow-hidden border border-border/40"
-            >
-              <img
-                src={src}
-                alt=""
-                className="w-full h-full object-cover"
-                loading="lazy"
-                draggable={false}
-              />
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* ═══════════════ THE PROBLEM ═══════════════ */}
       <section className="py-20 md:py-28 px-4 md:px-6">
@@ -281,22 +254,9 @@ const Home = () => {
                   The operating system for the creative economy.
                 </h3>
                 <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
-                  The creative economy is worth trillions — yet the infrastructure supporting
-                  it has barely evolved. Creatives still chase invoices over WhatsApp. Canvas
-                  get lost in email threads. Payments stall in trust gaps. Crevia changes that.
-                </p>
-                <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
-                  We built a single, structured workspace where creative professionals run
-                  their business with the same rigour as any high-growth company — professional
-                  invoicing, legally binding Canvas, secure escrow payments, a public link
-                  profile that speaks for them, and end-to-end encrypted client collaboration.
-                  Everything connected. Nothing scattered.
-                </p>
-                <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
-                  Whether you're a solo creator turning a craft into a career, or a company
-                  coordinating campaigns across dozens of talents, Crevia gives you the tools,
-                  the clarity, and the credibility to operate at your best — from first brief
-                  to final payment.
+                  Creatives still chase invoices over WhatsApp and lose Canvas in email threads.
+                  Crevia fixes that — one workspace for invoicing, legally binding Canvas,
+                  secure payments, and client collaboration. Everything connected, nothing scattered.
                 </p>
               </div>
             </div>
