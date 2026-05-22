@@ -637,7 +637,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                     <Button onClick={handleSave} disabled={saving} className="bg-bronze hover:bg-bronze-dark">
                       {saving ? "Saving..." : "Save Changes"}
                     </Button>
-                    <Button variant="outline" onClick={() => window.open(`/${linkProfile?.username}`, "_blank")}>
+                    <Button variant="outline" onClick={() => setShowPreviewModal(true)}>
                       <Eye className="w-4 h-4 mr-2" />
                       Preview
                     </Button>
@@ -868,7 +868,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 <Button
                   variant="outline"
                   className="flex-1 gap-1.5 text-xs h-9"
-                  onClick={() => window.open(`${window.location.origin}/${linkProfile?.username}`, "_blank")}
+                  onClick={() => navigate(`/${linkProfile?.username}`)}
                 >
                   <ExternalLink className="w-3.5 h-3.5" /> View Page
                 </Button>
@@ -927,7 +927,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
               <div className="flex flex-col gap-4">
                 <Button
                   size="lg"
-                  onClick={() => window.open(`/${linkProfile?.username}`, "_blank")}
+                  onClick={() => navigate(`/${linkProfile?.username}`)}
                   className="w-full bg-bronze hover:bg-bronze-dark font-poppins font-semibold h-14 md:h-16 text-base md:text-lg"
                 >
                   <Eye className="w-5 h-5 mr-2" />
@@ -1103,7 +1103,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                   <Button
                     variant="outline"
                     className="flex-1 gap-1.5 text-sm h-11"
-                    onClick={() => window.open(`${window.location.origin}/${linkProfile?.username}`, "_blank")}
+                    onClick={() => navigate(`/${linkProfile?.username}`)}
                   >
                     <ExternalLink className="w-3.5 h-3.5" /> View Page
                   </Button>
@@ -1402,7 +1402,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 <Button
                   variant="outline"
                   className="flex-1 gap-1.5 text-xs h-9"
-                  onClick={() => window.open(`${window.location.origin}/${linkProfile?.username}`, "_blank")}
+                  onClick={() => navigate(`/${linkProfile?.username}`)}
                 >
                   <ExternalLink className="w-3.5 h-3.5" /> View Page
                 </Button>

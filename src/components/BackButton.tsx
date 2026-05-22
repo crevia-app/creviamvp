@@ -7,11 +7,14 @@ interface BackButtonProps {
   label?: string;
 }
 
-export function BackButton({ fallback = "/", className = "", label = "Back" }: BackButtonProps) {
+export function BackButton({ fallback = "/crevia-link", className = "", label = "Back" }: BackButtonProps) {
   const navigate = useNavigate();
 
   const handleBack = () => {
-    if (window.history.length > 1) {
+    // React Router v6 stores the history index in window.history.state.
+    // idx > 0 means there is at least one entry to go back to within the SPA.
+    const idx = (window.history.state as any)?.idx ?? 0;
+    if (idx > 0) {
       navigate(-1);
     } else {
       navigate(fallback, { replace: true });
