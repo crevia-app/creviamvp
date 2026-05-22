@@ -190,9 +190,9 @@ function AppContent() {
         onSubmit={provideRecoveryPassword}
       />
 
-      {/* Dismissible: nudges v1 users and new users to set a recovery password */}
+      {/* Recovery password nudge — disabled (dialog hidden) */}
       <SetRecoveryPasswordDialog
-        open={migrationDialogOpen}
+        open={false}
         userId={userId}
         onOpenChange={setMigrationDialogOpen}
         onComplete={clearMigrationFlag}
