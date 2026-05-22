@@ -198,6 +198,15 @@ async function extractAndStoreMemories(
 
   for (const fact of facts) {
     const vector = await embedText(fact);
+
+    // Skip insert if a nearly-identical memory already exists (deduplication)
+    const { data: existing } = await supabase.rpc('match_kira_memories', {
+      query_embedding: vector,
+      match_count: 1,
+      filter: { user_id: userId },
+    });
+    if ((existing as Array<{ similarity: number }>)?.[0]?.similarity > 0.92) continue;
+
     await supabase.from('kira_memories').insert({
       user_id: userId,
       content: fact,
@@ -273,7 +282,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Invalid JSON body' }), { status: 400, headers: cors });
     }
 
-    const { prompt, history, conversationId, fileContent, fileType } = body;
+    const { prompt, history, conversationId, fileContent, fileType, projectContext } = body;
 
     if (!prompt || typeof prompt !== 'string') {
       return new Response(JSON.stringify({ error: 'Prompt is required' }), { status: 400, headers: cors });
@@ -385,21 +394,27 @@ serve(async (req) => {
         contextLines.push(`- Company: ${brandProfile.company_description}`);
       }
       if (memory.more_about_you && !hasInjectionPattern(String(memory.more_about_you))) contextLines.push(`- About: ${memory.more_about_you}`);
-      if (memory.standard_rate) {
-        const rate = `${memory.standard_rate}${memory.currency ? ` (${memory.currency})` : ''}`;
-        contextLines.push(`- Standard rate: ${rate}`);
-      }
-      if (Array.isArray(memory.clients) && (memory.clients as string[]).length > 0) {
-        contextLines.push(`- Regular clients: ${(memory.clients as string[]).slice(0, 5).join(', ')}`);
-      }
-      if (memory.payment_terms) contextLines.push(`- Payment terms: ${memory.payment_terms}`);
-      if (memory.notes) contextLines.push(`- Notes: ${String(memory.notes).slice(0, 150)}`);
 
       systemPrompt += `\n\nUSER CONTEXT (personalise every response — do not repeat verbatim):\n${contextLines.join('\n')}`;
 
       if (memoryContext) systemPrompt += `\n\n${memoryContext}`;
       if (memory.custom_instructions && !hasInjectionPattern(String(memory.custom_instructions))) {
         systemPrompt += `\n\nUSER INSTRUCTIONS (follow in all responses):\n${memory.custom_instructions}`;
+      }
+    }
+
+    // Inject active project context (sent from the client when a project is selected)
+    if (projectContext && typeof projectContext === 'object') {
+      const pc = projectContext as Record<string, unknown>;
+      if (pc.name && !hasInjectionPattern(String(pc.name))) {
+        const projectLines: string[] = [`- Project: ${String(pc.name).slice(0, 100)}`];
+        if (pc.description && !hasInjectionPattern(String(pc.description))) {
+          projectLines.push(`- Description: ${String(pc.description).slice(0, 300)}`);
+        }
+        if (pc.custom_instructions && !hasInjectionPattern(String(pc.custom_instructions))) {
+          projectLines.push(`- Project instructions: ${String(pc.custom_instructions).slice(0, 400)}`);
+        }
+        systemPrompt += `\n\nACTIVE PROJECT:\n${projectLines.join('\n')}`;
       }
     }
 

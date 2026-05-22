@@ -298,6 +298,13 @@ interface Project {
 
 type ViewMode = "chat" | "projects";
 
+function detectKiraIntent(text: string): string | null {
+  const t = text.toLowerCase();
+  if (/\b(canvas|contract|agreement)\b/.test(t) && /\b(create|draft|open|let'?s|ready|shall i|want me|here'?s|go ahead|click)\b/.test(t)) return 'open_contract';
+  if (/\binvoice\b/.test(t) && /\b(create|draft|send|open|let'?s|ready|shall i|want me|here'?s|go ahead|click)\b/.test(t)) return 'open_invoice';
+  return null;
+}
+
 const Kira = () => {
   const { toast } = useToast();
   const { kiraActionsToday, kiraActionsLimit } = useSubscription();
@@ -564,6 +571,7 @@ const Kira = () => {
     conversationId: string,
     attachContent?: string | null,
     attachType?: 'image' | 'text' | null,
+    projectCtx?: { name: string; description: string | null; custom_instructions: string | null } | null,
   ) => {
     const lastUserContent = userMessages[userMessages.length - 1].content;
     const history = userMessages.slice(-7, -1).map(m => ({ role: m.role, content: m.content }));
@@ -576,6 +584,9 @@ const Kira = () => {
     if (attachContent && attachType) {
       body.fileContent = attachContent;
       body.fileType = attachType;
+    }
+    if (projectCtx) {
+      body.projectContext = projectCtx;
     }
 
     const response = await fetch(
@@ -728,8 +739,18 @@ const Kira = () => {
     }
 
     try {
-      await streamKiraResponse(updatedMessages, conversationId, attachContent, attachType);
-      
+      const activeProject = projects.find(p => p.id === activeProjectId);
+      const projectCtx = activeProject
+        ? { name: activeProject.name, description: activeProject.description, custom_instructions: activeProject.custom_instructions }
+        : null;
+
+      const responseContent = await streamKiraResponse(updatedMessages, conversationId, attachContent, attachType, projectCtx);
+
+      if (responseContent) {
+        const intent = detectKiraIntent(responseContent);
+        if (intent) setPendingAction(intent);
+      }
+
       await supabase
         .from('kira_conversations')
         .update({ updated_at: new Date().toISOString() })
