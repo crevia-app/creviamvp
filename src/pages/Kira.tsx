@@ -1312,15 +1312,40 @@ const Kira = () => {
       </Sheet>
 
       {/* Main Content Area */}
-      {viewMode === "projects" ? (
-        <ProjectsView
-          projects={projects}
-          isLoading={isLoadingProjects}
-          onCreateProject={() => setCreateProjectOpen(true)}
-          onSelectProject={(project) => { setSelectedProject(project); setProjectDetailOpen(true); }}
-          onDeleteProject={handleProjectDeleted}
-        />
-      ) : (
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile-only top bar */}
+        <div className="md:hidden flex items-center gap-2 px-2 border-b border-border/50 bg-card/50 flex-shrink-0 h-12">
+          <button
+            onClick={() => setMobileSidebarOpen(true)}
+            className="flex items-center justify-center w-11 h-11 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted transition-colors flex-shrink-0"
+            aria-label="Open sidebar"
+          >
+            <PanelLeft className="w-5 h-5" />
+          </button>
+          <div className="flex-1 flex items-center justify-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-bronze to-bronze-dark flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-3 h-3 text-background" />
+            </div>
+            <span className="font-poppins font-semibold text-sm">Kira AI</span>
+          </div>
+          <button
+            onClick={() => handleNewChat(null)}
+            className="flex items-center justify-center w-11 h-11 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted transition-colors flex-shrink-0"
+            aria-label="New chat"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+        </div>
+
+        {viewMode === "projects" ? (
+          <ProjectsView
+            projects={projects}
+            isLoading={isLoadingProjects}
+            onCreateProject={() => setCreateProjectOpen(true)}
+            onSelectProject={(project) => { setSelectedProject(project); setProjectDetailOpen(true); }}
+            onDeleteProject={handleProjectDeleted}
+          />
+        ) : (
         <div className="flex-1 flex flex-col min-w-0">
           {/* Project Context Banner */}
           {activeProject && (
@@ -1637,7 +1662,8 @@ const Kira = () => {
             </div>
           </div>
         </div>
-      )}
+        )}
+      </div>
 
       {/* Dialogs */}
       {userId && (
