@@ -1,3 +1,4 @@
+import React from "react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CheckCircle2 } from "lucide-react";
@@ -22,8 +23,9 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
 
   // Resolve theme from LINK_THEMES; fall back to obsidian
   const themeData = LINK_THEMES.find(t => t.value === themeId);
-  const bgValue = themeData?.previewBg || "#050505";
-  const textColor = themeData?.previewText || "#FFFFFF";
+  const bgValue    = themeData?.previewBg   || "#080808";
+  const textColor  = themeData?.previewText || "#FFFFFF";
+  const accentColor = themeData?.accentColor || textColor;
   // Determine if text is light based on luminance heuristic
   const lightText = !(textColor === "#0A0A0A" || textColor === "#1A1A1A" || textColor === "#2B241E" || textColor === "#000000");
 
@@ -47,23 +49,20 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
   };
   const btnRadius = btnRadiusMap[buttonStyle] || "rounded-full";
 
-  // Button variant styles
-  const getButtonClasses = (style?: string) => {
-    const base = `w-full py-2.5 px-4 text-center text-xs font-medium transition-all shadow-sm ${btnRadius}`;
+  // Button variant styles — use accentColor for filled buttons
+  const getButtonStyle = (style?: string): React.CSSProperties => {
     switch (style) {
       case "outline":
-        return cn(base, lightText
-          ? "bg-transparent border border-white/40 text-white"
-          : "bg-transparent border border-black/30 text-black");
+        return { border: `1.5px solid ${accentColor}`, color: accentColor, background: "transparent" };
       case "minimal":
-        return cn(base, lightText
-          ? "bg-white/10 text-white backdrop-blur-sm"
-          : "bg-black/10 text-black");
+        return { background: `${accentColor}18`, color: accentColor };
       case "filled":
       default:
-        return cn(base, lightText ? "bg-white text-gray-900" : "bg-black/80 text-white");
+        return { background: accentColor, color: lightText ? "#0A0A0A" : "#FFFFFF" };
     }
   };
+  const getButtonClasses = (style?: string) =>
+    `w-full py-2.5 px-4 text-center text-xs font-medium transition-all shadow-sm ${btnRadius}`;
 
   const visibleButtons = buttons.filter(b => b.visible !== false);
 
@@ -145,7 +144,10 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
                         hoverEffects && "hover:scale-[1.02] hover:shadow-md",
                         fadeAnimation && "animate-fade-in"
                       )}
-                      style={fadeAnimation ? { animationDelay: `${index * 80}ms` } : {}}
+                      style={{
+                        ...getButtonStyle(button.style),
+                        ...(fadeAnimation ? { animationDelay: `${index * 80}ms` } : {}),
+                      }}
                     >
                       <div className="font-medium truncate">{button.title}</div>
                       {button.subtitle && (
@@ -155,9 +157,9 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
                   ))
                 ) : (
                   <>
-                    <div className={getButtonClasses("filled")}>My Portfolio</div>
-                    <div className={getButtonClasses("filled")}>Book Me</div>
-                    <div className={getButtonClasses("filled")}>Latest Work</div>
+                    <div className={getButtonClasses("filled")} style={getButtonStyle("filled")}>My Portfolio</div>
+                    <div className={getButtonClasses("filled")} style={getButtonStyle("filled")}>Book Me</div>
+                    <div className={getButtonClasses("filled")} style={getButtonStyle("filled")}>Latest Work</div>
                   </>
                 )}
               </div>
