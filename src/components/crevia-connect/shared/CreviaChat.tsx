@@ -822,20 +822,17 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     setShowMessageSearch(false);
     setMessageSearch("");
 
-    if (currentUserId && room.members && room.members.length > 0) {
-      const memberIds = room.members.map(m => m.user_id);
-      const roomKey = await getRoomKey(room.id);
-
-      if (roomKey) {
-        // We have the key — silently redistribute to any member who is missing
-        // their wrapped copy. The upsert is idempotent, so this is always safe.
-        redistributeRoomKey(room.id, memberIds);
+    // Fetch messages and check encryption key in parallel — decryptMessages
+    // uses its own key access, so it doesn't need to wait for getRoomKey.
+    const keyCheckPromise = (async () => {
+      if (currentUserId && room.members && room.members.length > 0) {
+        const memberIds = room.members.map(m => m.user_id);
+        const roomKey = await getRoomKey(room.id);
+        if (roomKey) redistributeRoomKey(room.id, memberIds);
       }
-      // If we don't have the key, we can't redistribute — the other participant
-      // will push their copy to us the next time they open this room.
-    }
+    })();
 
-    await fetchMessages(room.id);
+    await Promise.all([fetchMessages(room.id), keyCheckPromise]);
   };
 
   const retryDecryption = async (roomId: string, members: RoomMember[]) => {
@@ -1572,10 +1569,10 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                   return (
                     <button
                       key={room.id}
-                      className={`w-full text-left p-3 rounded-xl cursor-pointer transition-all ${
+                      className={`w-full text-left p-3 rounded-xl cursor-pointer transition-colors ${
                         selectedRoom?.id === room.id
                           ? "bg-bronze/10 border border-bronze/20"
-                          : "hover:bg-muted/50"
+                          : "hover:bg-muted/50 active:bg-muted/50"
                       }`}
                       onClick={() => selectRoom(room)}
                     >
