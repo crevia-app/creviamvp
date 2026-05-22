@@ -68,6 +68,7 @@ import { format, isToday, isYesterday } from "date-fns";
 import ChatMediaPanel from "./ChatMediaPanel";
 import { useE2EEncryption } from "@/hooks/use-e2e-encryption";
 import { iconOptions } from "@/components/crevia-link/iconOptions";
+import { useIOSKeyboardFit } from "@/hooks/use-keyboard-fit";
 
 interface ChatRoom {
   id: string;
@@ -241,6 +242,8 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const typingTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const presenceChannelRef = useRef<any>(null);
   const selectedExternalRef = useRef<string>("");
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  useIOSKeyboardFit(chatContainerRef);
 
   const { initEncryption, setupRoomEncryption, redistributeRoomKey, encrypt, decrypt, decryptMessages, getRoomKey, getPublicKey } =
     useE2EEncryption(currentUserId);
@@ -1471,7 +1474,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     type?.startsWith("image/") || false;
 
   return (
-    <div className={hideRoomList ? "flex h-full w-full flex-col overflow-hidden bg-background" : "mx-auto flex h-[calc(100vh-264px)] w-full min-w-0 max-w-7xl flex-col overflow-hidden bg-background md:h-[calc(100vh-180px)]"}>
+    <div ref={chatContainerRef} className={hideRoomList ? "flex h-full w-full flex-col overflow-hidden bg-background" : "mx-auto flex h-[calc(100dvh-264px)] w-full min-w-0 max-w-7xl flex-col overflow-hidden bg-background md:h-[calc(100dvh-180px)]"}>
       {/* Header — hidden when embedded in the hub (hideRoomList=true) */}
       {!hideRoomList && (
         <div className="flex items-center justify-between p-3 md:p-4 border-b bg-background flex-shrink-0">

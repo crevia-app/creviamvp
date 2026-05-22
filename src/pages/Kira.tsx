@@ -68,6 +68,7 @@ import CreateInvoiceDialog from "@/components/studio/CreateInvoiceDialog";
 import { ApproveActionDialog } from "@/components/kira/ApproveActionDialog";
 import { KiraSettingsPanel } from "@/components/kira/KiraSettingsPanel";
 import { motion, AnimatePresence } from "framer-motion";
+import { useIOSKeyboardFit } from "@/hooks/use-keyboard-fit";
 
 
 interface ChatHistory {
@@ -393,6 +394,8 @@ const Kira = () => {
   const streamBufferRef = useRef('');
   const animFrameRef = useRef<number | null>(null);
   const networkDoneRef = useRef(false);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  useIOSKeyboardFit(chatContainerRef);
 
   // ── NEW: message interaction state ──
   const [editingMessageIdx, setEditingMessageIdx] = useState<number | null>(null);
@@ -994,7 +997,7 @@ const Kira = () => {
   // };
 
   return (
-    <div className="h-[calc(100dvh-64px-64px)] md:h-[calc(100dvh-64px)] flex bg-background">
+    <div ref={chatContainerRef} className="h-[calc(100dvh-64px-64px)] md:h-[calc(100dvh-64px)] flex bg-background">
       {/* Desktop Sidebar */}
       <div 
         className={`hidden md:flex flex-col bg-card/50 border-r border-border/50 transition-all duration-300 ${
