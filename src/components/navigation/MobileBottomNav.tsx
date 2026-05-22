@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePWAInstall } from "@/hooks/use-pwa-install";
+import { IOSInstallGuide } from "@/components/pwa/IOSInstallGuide";
 
 const MobileBottomNav = () => {
   const location = useLocation();
@@ -23,7 +24,7 @@ const MobileBottomNav = () => {
   const { t } = useLanguage();
   const [profile, setProfile] = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const { canInstall, install } = usePWAInstall();
+  const { canInstall, install, showIOSGuide, setShowIOSGuide } = usePWAInstall();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -243,6 +244,8 @@ const MobileBottomNav = () => {
           </SheetContent>
         </Sheet>
       </div>
+
+      <IOSInstallGuide open={showIOSGuide} onClose={() => setShowIOSGuide(false)} />
     </nav>
   );
 };

@@ -23,6 +23,7 @@ import { useSubscription } from "@/hooks/use-subscription";
 import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 import { usePWAInstall } from "@/hooks/use-pwa-install";
 import { Download } from "lucide-react";
+import { IOSInstallGuide } from "@/components/pwa/IOSInstallGuide";
 
 interface ProfileDrawerProps {
   isOpen: boolean;
@@ -34,7 +35,7 @@ const ProfileDrawer = ({ isOpen, onClose, profile }: ProfileDrawerProps) => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const subscription = useSubscription();
-  const { canInstall, install } = usePWAInstall();
+  const { canInstall, install, showIOSGuide, setShowIOSGuide } = usePWAInstall();
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -144,6 +145,8 @@ const ProfileDrawer = ({ isOpen, onClose, profile }: ProfileDrawerProps) => {
           <span className="font-poppins text-sm font-medium">{t("profile.logout")}</span>
         </Button>
       </SheetContent>
+
+      <IOSInstallGuide open={showIOSGuide} onClose={() => setShowIOSGuide(false)} />
     </Sheet>
   );
 };

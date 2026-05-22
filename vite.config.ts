@@ -21,19 +21,14 @@ export default defineConfig({
         theme_color: '#CD9C5C',
         background_color: '#000000',
         display: 'standalone',
+        start_url: '/',
+        scope: '/',
+        orientation: 'portrait',
         icons: [
-          {
-            src: '/crevia-logo.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'any maskable'
-          },
-          {
-            src: '/crevia-logo.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
-          }
+          { src: '/crevia-logo.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/crevia-logo.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+          { src: '/crevia-logo.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/crevia-logo.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ]
       },
       workbox: {

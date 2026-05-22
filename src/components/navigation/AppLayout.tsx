@@ -88,7 +88,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           onProfileClick={() => setProfileDrawerOpen(true)}
         />
 
-        <main className={`flex-1 min-h-0 md:ml-[100px] ${isStudio ? "overflow-hidden h-full" : "overflow-auto pb-16 md:pb-0"}`}>
+        <main className={`flex-1 min-h-0 md:ml-[100px] ${isStudio ? "overflow-hidden h-full" : "overflow-auto pb-[calc(60px+env(safe-area-inset-bottom,0px))] md:pb-0"}`}>
           {isSubPage && (
             <div className="px-4 md:px-6 pt-3 pb-1">
               <BackButton fallback="/kira" />
