@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Bell, Monitor, Sun, Moon, PanelLeft } from "lucide-react";
+import { Bell, Monitor, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/use-notifications";
 import NotificationSheet from "@/components/notifications/NotificationSheet";
@@ -18,6 +18,14 @@ const themeOptions = [
   { value: "dark",   label: "Dark",   icon: Moon },
   { value: "system", label: "System", icon: Monitor },
 ];
+
+const KiraMenuIcon = () => (
+  <div className="flex flex-col gap-[5px]">
+    <span className="block h-[1.5px] w-[18px] rounded-full bg-current" />
+    <span className="block h-[1.5px] w-[12px] rounded-full bg-current" />
+    <span className="block h-[1.5px] w-[18px] rounded-full bg-current" />
+  </div>
+);
 
 
 const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
@@ -63,38 +71,36 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
       <div className="flex h-14 items-center justify-between px-4 md:px-6">
         {/* Left side */}
         <div className="flex items-center gap-2">
+          {isKira ? (
+            /* Kira: hamburger + wordmark — shown on all screen sizes */
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent("kira:toggle-sidebar"))}
+                aria-label="Toggle Kira sidebar"
+                className="group flex h-9 w-9 items-center justify-center rounded-xl text-foreground/60 transition-all duration-200 hover:bg-muted/70 hover:text-foreground active:scale-95"
+              >
+                <KiraMenuIcon />
+              </button>
+              <span className="font-vollkorn text-xl font-bold text-foreground tracking-tight">Kira</span>
+            </div>
+          ) : isStudio ? (
+            /* Studio name — mobile only, desktop has the sidebar */
+            <span className="flex md:hidden font-vollkorn text-xl font-semibold text-foreground tracking-tight">Crevia Studio</span>
+          ) : null}
 
-          {/* ── Mobile: route-aware brand slot — instant swap, no animation delay ── */}
-          <div className="flex md:hidden items-center gap-1">
-            {isKira ? (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 text-muted-foreground hover:text-foreground"
-                  onClick={() => window.dispatchEvent(new CustomEvent("kira:open-sidebar"))}
-                  aria-label="Open Kira sidebar"
-                >
-                  <PanelLeft className="h-[18px] w-[18px]" />
-                </Button>
-                <span className="font-vollkorn text-xl font-bold text-foreground tracking-tight">Kira</span>
-              </>
-            ) : isStudio ? (
-              <span className="font-vollkorn text-xl font-semibold text-foreground tracking-tight">Crevia Studio</span>
-            ) : (
-              <Link to="/dashboard" className="flex items-center hover:opacity-80 transition-opacity">
-                <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-full ring-1 ring-border" />
-              </Link>
-            )}
-          </div>
-
-          {/* ── Desktop: always Crevia logo ── */}
-          <Link
-            to="/dashboard"
-            className="hidden md:flex items-center gap-2 transition-opacity hover:opacity-80"
-          >
-            <img src="/crevia-logo.png" alt="Crevia" className="w-11 h-11 rounded-full ring-1 ring-border" />
-          </Link>
+          {/* Crevia logo — desktop always (except Kira), mobile when not on Kira or Studio */}
+          {!isKira && (
+            <Link
+              to="/dashboard"
+              className={`flex items-center hover:opacity-80 transition-opacity ${isStudio ? "hidden md:flex" : "flex"}`}
+            >
+              <img
+                src="/crevia-logo.png"
+                alt="Crevia"
+                className="w-9 h-9 md:w-11 md:h-11 rounded-full ring-1 ring-border"
+              />
+            </Link>
+          )}
         </div>
 
         {/* Right side */}

@@ -474,11 +474,17 @@ const Kira = () => {
     }
   }, [userType]);
 
-  // TopBar PanelLeft button fires this to open the mobile sidebar
+  // TopBar hamburger fires this — opens mobile sheet or toggles desktop collapse
   useEffect(() => {
-    const handler = () => setMobileSidebarOpen(true);
-    window.addEventListener("kira:open-sidebar", handler);
-    return () => window.removeEventListener("kira:open-sidebar", handler);
+    const handler = () => {
+      if (window.innerWidth < 768) {
+        setMobileSidebarOpen(true);
+      } else {
+        setSidebarCollapsed(prev => !prev);
+      }
+    };
+    window.addEventListener("kira:toggle-sidebar", handler);
+    return () => window.removeEventListener("kira:toggle-sidebar", handler);
   }, []);
 
   useEffect(() => {
@@ -974,7 +980,7 @@ const Kira = () => {
           sidebarCollapsed ? 'w-16' : 'w-72'
         }`}
       >
-        <div className="h-14 flex items-center justify-between px-3 border-b border-border/50">
+        <div className="h-14 flex items-center px-3 border-b border-border/50">
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-bronze to-bronze-dark flex items-center justify-center">
@@ -983,16 +989,6 @@ const Kira = () => {
               <span className="font-poppins font-semibold text-sm">Kira AI</span>
             </div>
           )}
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-            >
-              {sidebarCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-            </Button>
-          </div>
         </div>
 
         <div className="p-3">
