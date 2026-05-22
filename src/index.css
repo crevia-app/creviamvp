@@ -421,6 +421,11 @@ All colors MUST be HSL.
   .safe-area-pb {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+
+  /* Safe area for top bar on notched/dynamic-island iOS devices */
+  .safe-area-pt {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
   
   .scrollbar-none {
     -ms-overflow-style: none;
