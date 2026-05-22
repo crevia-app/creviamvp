@@ -474,6 +474,13 @@ const Kira = () => {
     }
   }, [userType]);
 
+  // TopBar PanelLeft button fires this to open the mobile sidebar
+  useEffect(() => {
+    const handler = () => setMobileSidebarOpen(true);
+    window.addEventListener("kira:open-sidebar", handler);
+    return () => window.removeEventListener("kira:open-sidebar", handler);
+  }, []);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -1298,19 +1305,6 @@ const Kira = () => {
         />
       ) : (
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Mobile Header */}
-          <div className="md:hidden h-12 flex items-center gap-3 px-4 border-b border-border/50">
-            <Button variant="ghost" size="icon" onClick={() => setMobileSidebarOpen(true)} className="h-11 w-11">
-              <PanelLeft className="h-4 w-4" />
-            </Button>
-            <div className="flex items-center gap-2 flex-1">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-bronze to-bronze-dark flex items-center justify-center">
-                <Sparkles className="w-3 h-3 text-background" />
-              </div>
-              <span className="font-poppins font-semibold text-sm">Kira</span>
-            </div>
-          </div>
-
           {/* Project Context Banner */}
           {activeProject && (
             <button

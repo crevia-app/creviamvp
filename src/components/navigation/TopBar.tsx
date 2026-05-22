@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Bell, Monitor, Sun, Moon, Sparkles } from "lucide-react";
+import { Bell, Monitor, Sun, Moon, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/use-notifications";
 import NotificationSheet from "@/components/notifications/NotificationSheet";
@@ -69,15 +69,21 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
             {isKira ? (
               <motion.div
                 key="kira"
-                className="flex md:hidden items-center gap-2.5"
+                className="flex md:hidden items-center gap-1"
                 initial={{ opacity: 0, x: -6 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -6 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
               >
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-bronze to-bronze-dark flex items-center justify-center shadow-md shadow-bronze/30 flex-shrink-0">
-                  <Sparkles className="h-[18px] w-[18px] text-white" strokeWidth={2} />
-                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                  onClick={() => window.dispatchEvent(new CustomEvent("kira:open-sidebar"))}
+                  aria-label="Open Kira sidebar"
+                >
+                  <PanelLeft className="h-[18px] w-[18px]" />
+                </Button>
                 <span className="font-vollkorn text-xl font-bold text-foreground tracking-tight">Kira</span>
               </motion.div>
             ) : isStudio ? (
