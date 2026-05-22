@@ -48,18 +48,10 @@ const CreviaStudio = () => {
       {/* Studio Header — flex-shrink-0 keeps it pinned while content below scrolls */}
       <div className="border-b border-border bg-background z-30 flex-shrink-0">
         <div className="mx-auto w-full max-w-7xl px-4 py-1.5 md:px-6 md:py-4">
-          <div className="flex items-center gap-3 mb-1.5 md:mb-4">
-            <div className="p-1.5 md:p-2 rounded-xl bg-bronze/10">
-              <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-bronze" />
-            </div>
-            <div>
-              <h1 className="font-vollkorn text-xl md:text-2xl font-semibold text-foreground">
-                {t("studio.title")}
-              </h1>
-              <p className="text-sm md:text-base text-muted-foreground">
-                {t("studio.subtitle")}
-              </p>
-            </div>
+          <div className="mb-1.5 md:mb-4">
+            <h1 className="font-vollkorn text-xl md:text-2xl font-semibold text-foreground">
+              {t("studio.title")}
+            </h1>
           </div>
 
           {/* Tabs */}
