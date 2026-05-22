@@ -1,21 +1,13 @@
-import { useState } from "react";
-import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 
-interface Testimonial {
-  quote: string;
-  name: string;
-  role: string;
-  initials: string;
-}
-
-const TESTIMONIALS: Testimonial[] = [
+const TESTIMONIALS = [
   {
     quote:
       "Kira gave me the vocabulary to walk into brand deals and actually justify my rates. First campaign after using it — $4,500, no apology for the number.",
     name: "Amara Osei",
     role: "Content Creator · Lagos",
     initials: "AO",
+    gradient: "from-violet-500 to-purple-600",
   },
   {
     quote:
@@ -23,6 +15,7 @@ const TESTIMONIALS: Testimonial[] = [
     name: "Tariq Mwangi",
     role: "Head of Partnerships, Hype Agency",
     initials: "TM",
+    gradient: "from-blue-500 to-cyan-600",
   },
   {
     quote:
@@ -30,6 +23,7 @@ const TESTIMONIALS: Testimonial[] = [
     name: "Zinhle Dlamini",
     role: "Brand Photographer · Cape Town",
     initials: "ZD",
+    gradient: "from-emerald-500 to-teal-600",
   },
   {
     quote:
@@ -37,6 +31,7 @@ const TESTIMONIALS: Testimonial[] = [
     name: "Kofi Acheampong",
     role: "Marketing Director, Bloom Beverages",
     initials: "KA",
+    gradient: "from-amber-500 to-orange-600",
   },
   {
     quote:
@@ -44,24 +39,17 @@ const TESTIMONIALS: Testimonial[] = [
     name: "Leila Hassan",
     role: "Visual Artist · Nairobi",
     initials: "LH",
+    gradient: "from-rose-500 to-pink-600",
   },
 ];
 
 const TestimonialMarquee = () => {
-  const [active, setActive] = useState(0);
-  const count = TESTIMONIALS.length;
-
-  const prev = () => setActive((i) => (i - 1 + count) % count);
-  const next = () => setActive((i) => (i + 1) % count);
-
-  const t = TESTIMONIALS[active];
-
   return (
-    <section className="py-20 md:py-28 px-4 md:px-6">
-      <div className="container mx-auto max-w-4xl">
+    <section className="py-20 md:py-28 px-4 md:px-6 bg-muted/20">
+      <div className="container mx-auto max-w-5xl">
 
         {/* Header */}
-        <ScrollReveal className="text-center mb-12 md:mb-16">
+        <ScrollReveal className="text-center mb-14 md:mb-20">
           <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase mb-4">
             Real Voices
           </p>
@@ -71,94 +59,44 @@ const TestimonialMarquee = () => {
           </h2>
         </ScrollReveal>
 
-        {/* Card — overflow-hidden clips off-screen cards; translateX slides between them */}
-        <div className="overflow-hidden rounded-2xl">
-          <div
-            className="flex transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
-            style={{ transform: `translateX(-${active * 100}%)` }}
-          >
-            {TESTIMONIALS.map((item, i) => (
-              <div key={i} className="w-full flex-shrink-0">
-                <div className="bg-card border border-border rounded-2xl p-7 sm:p-10 md:p-14">
-                  {/* Stars */}
-                  <div className="flex gap-1 mb-6 md:mb-8">
-                    {Array.from({ length: 5 }).map((_, j) => (
-                      <Star key={j} className="w-4 h-4 fill-bronze text-bronze" />
-                    ))}
+        {/* 2-column grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+          {TESTIMONIALS.map((item, i) => (
+            <ScrollReveal key={i} variant="fade-up" delay={i * 0.07}>
+              <div className="flex flex-col gap-4 h-full">
+
+                {/* Card */}
+                <div className="flex-1 bg-card border border-border/50 rounded-2xl p-7 md:p-8 shadow-sm">
+                  {/* Opening quote mark */}
+                  <p className="font-vollkorn text-[42px] leading-none text-foreground/70 mb-3 select-none">
+                    &ldquo;
+                  </p>
+                  {/* Quote text */}
+                  <p className="font-poppins text-[15px] md:text-base leading-[1.75] text-foreground/85">
+                    {item.quote}
+                  </p>
+                </div>
+
+                {/* Author — below the card, not inside */}
+                <div className="flex items-center gap-3 px-1">
+                  <div
+                    className={`w-11 h-11 rounded-full flex-shrink-0 flex items-center justify-center bg-gradient-to-br ${item.gradient} text-white text-sm font-semibold font-poppins shadow-sm`}
+                  >
+                    {item.initials}
                   </div>
-
-                  {/* Quote */}
-                  <blockquote className="font-vollkorn text-xl sm:text-2xl md:text-3xl font-medium leading-[1.5] text-foreground mb-8 md:mb-10">
-                    &ldquo;{item.quote}&rdquo;
-                  </blockquote>
-
-                  {/* Author */}
-                  <div className="flex items-center gap-4">
-                    <div
-                      className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center
-                                 bg-gradient-to-br from-bronze to-bronze-dark
-                                 text-white text-sm font-semibold font-poppins"
-                    >
-                      {item.initials}
-                    </div>
-                    <div>
-                      <p className="font-poppins font-semibold text-foreground leading-tight">
-                        {item.name}
-                      </p>
-                      <p className="font-poppins text-sm text-muted-foreground mt-0.5">
-                        {item.role}
-                      </p>
-                    </div>
+                  <div>
+                    <p className="font-poppins font-semibold text-sm text-foreground leading-tight">
+                      {item.name}
+                    </p>
+                    <p className="font-poppins text-xs text-muted-foreground mt-0.5">
+                      {item.role}
+                    </p>
                   </div>
                 </div>
+
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Controls — dots left, arrows right */}
-        <div className="flex items-center justify-between mt-6 md:mt-8">
-          {/* Progress dots */}
-          <div className="flex items-center gap-2">
-            {TESTIMONIALS.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setActive(i)}
-                aria-label={`Go to testimonial ${i + 1}`}
-                className={`h-1.5 rounded-full transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                  i === active
-                    ? "w-8 bg-bronze"
-                    : "w-2 bg-border hover:bg-muted-foreground"
-                }`}
-              />
-            ))}
-          </div>
-
-          {/* Prev / Next */}
-          <div className="flex gap-3">
-            <button
-              onClick={prev}
-              aria-label="Previous testimonial"
-              className="w-11 h-11 rounded-full border border-border bg-background
-                         flex items-center justify-center text-foreground
-                         hover:bg-bronze hover:border-bronze hover:text-white
-                         transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
-                         active:scale-95"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              onClick={next}
-              aria-label="Next testimonial"
-              className="w-11 h-11 rounded-full border border-border bg-background
-                         flex items-center justify-center text-foreground
-                         hover:bg-bronze hover:border-bronze hover:text-white
-                         transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
-                         active:scale-95"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+            </ScrollReveal>
+          ))}
         </div>
 
       </div>
