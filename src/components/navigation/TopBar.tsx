@@ -72,17 +72,8 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
         {/* Left side */}
         <div className="flex items-center gap-2">
           {isKira ? (
-            /* Kira: hamburger + wordmark — shown on all screen sizes */
-            <div className="flex items-center gap-2.5">
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent("kira:toggle-sidebar"))}
-                aria-label="Toggle Kira sidebar"
-                className="group flex h-9 w-9 items-center justify-center rounded-xl text-foreground/60 transition-all duration-200 hover:bg-muted/70 hover:text-foreground active:scale-95"
-              >
-                <KiraMenuIcon />
-              </button>
-              <span className="font-vollkorn text-xl font-bold text-foreground tracking-tight">Kira</span>
-            </div>
+            /* Kira: wordmark only — sidebar toggle lives inside the sidebar */
+            <span className="font-vollkorn text-xl font-bold text-foreground tracking-tight">Kira</span>
           ) : isStudio ? (
             /* Studio name — mobile only, desktop has the sidebar */
             <span className="flex md:hidden font-vollkorn text-xl font-semibold text-foreground tracking-tight">Crevia Studio</span>
