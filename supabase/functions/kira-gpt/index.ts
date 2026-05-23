@@ -100,7 +100,7 @@ async function chatComplete(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: "gpt-5.4-mini",
       messages,
       max_tokens: maxTokens,
       temperature: 0,
@@ -461,7 +461,7 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: "gpt-5.4-mini",
             messages: openaiMessages,
             max_tokens: 1000,
             stream: true,
