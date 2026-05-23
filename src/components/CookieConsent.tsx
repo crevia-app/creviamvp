@@ -31,16 +31,15 @@ export function CookieConsent() {
         <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-bronze to-transparent" />
 
         <div className="px-5 py-4 sm:px-6 sm:py-5 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-          <div className="flex-1 min-w-0 space-y-1">
-            <p className="text-sm font-semibold text-foreground font-poppins">We value your privacy</p>
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <p className="text-sm font-bold text-foreground font-poppins">We value your privacy</p>
             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-              Crevia uses essential cookies to keep you signed in and remember your preferences.
-              We do not use advertising or tracking cookies.{" "}
+              We use cookies to improve your browsing experience, serve personalized content for creators and brands, and analyze how our platform is used. By clicking "Accept All", you consent to our use of cookies.{" "}
               <Link
                 to="/cookie-policy"
                 className="text-bronze hover:underline underline-offset-2 transition-colors font-medium"
               >
-                Cookie Policy
+                Read More
               </Link>
             </p>
           </div>
@@ -50,13 +49,13 @@ export function CookieConsent() {
               onClick={decline}
               className="px-4 py-2 rounded-xl border border-border/60 hover:bg-muted active:scale-95 text-muted-foreground text-sm font-medium font-poppins transition-all duration-150 whitespace-nowrap"
             >
-              Decline
+              Reject Non-Necessary
             </button>
             <button
               onClick={accept}
               className="px-5 py-2 rounded-xl bg-bronze hover:bg-bronze/90 active:scale-95 text-white text-sm font-semibold font-poppins transition-all duration-150 shadow-sm whitespace-nowrap"
             >
-              Accept
+              Accept All
             </button>
           </div>
         </div>
