@@ -24,6 +24,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [isResetting, setIsResetting] = useState(false);
@@ -715,16 +716,26 @@ const Auth = () => {
               <form onSubmit={handleSetNewPassword} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="new-pw">New Password</Label>
-                  <Input
-                    id="new-pw"
-                    type="password"
-                    placeholder="••••••••"
-                    value={resetNewPassword}
-                    onChange={(e) => setResetNewPassword(e.target.value)}
-                    required
-                    className="h-12"
-                    autoFocus
-                  />
+                  <div className="relative">
+                    <Input
+                      id="new-pw"
+                      type={showResetPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={resetNewPassword}
+                      onChange={(e) => setResetNewPassword(e.target.value)}
+                      required
+                      className="h-12 pr-12"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowResetPassword(!showResetPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label={showResetPassword ? "Hide password" : "Show password"}
+                    >
+                      {showResetPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
                 {resetNewPassword.length > 0 && (
                   <div className="space-y-1.5">
