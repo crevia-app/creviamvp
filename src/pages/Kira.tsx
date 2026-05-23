@@ -797,32 +797,11 @@ const Kira = () => {
     await handleSend(content);
   };
 
-  const handleNewChat = async (projectId?: string | null) => {
-    if (!userId) return;
-    
-    const { data: newConvo, error } = await supabase
-      .from('kira_conversations')
-      .insert({ 
-        user_id: userId, 
-        title: 'New conversation',
-        project_id: projectId ?? null
-      })
-      .select()
-      .single();
-    
-    if (!error && newConvo) {
-      const newChat: ChatHistory = {
-        id: newConvo.id,
-        title: 'New conversation',
-        timestamp: new Date(),
-        project_id: projectId ?? null
-      };
-      setChatHistories([newChat, ...chatHistories]);
-      setActiveChat(newChat.id);
-      setActiveProjectId(projectId ?? null);
-      setMessages([]);
-      setViewMode("chat");
-    }
+  const handleNewChat = (projectId?: string | null) => {
+    setActiveChat(null);
+    setActiveProjectId(projectId ?? null);
+    setMessages([]);
+    setViewMode("chat");
   };
 
   const handleDeleteChat = async (chatId: string) => {
@@ -964,7 +943,8 @@ const Kira = () => {
     setViewMode("chat");
   };
 
-  const filteredChats = chatHistories.filter(chat => 
+  const filteredChats = chatHistories.filter(chat =>
+    chat.title !== 'New conversation' &&
     chat.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
