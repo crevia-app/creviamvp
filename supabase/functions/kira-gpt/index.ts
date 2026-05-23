@@ -463,7 +463,7 @@ serve(async (req) => {
           body: JSON.stringify({
             model: "gpt-5.4-mini",
             messages: openaiMessages,
-            max_tokens: 1000,
+            max_completion_tokens: 1000,
             stream: true,
           }),
         });
