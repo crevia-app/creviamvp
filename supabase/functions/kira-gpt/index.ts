@@ -102,7 +102,7 @@ async function chatComplete(
     body: JSON.stringify({
       model: "gpt-5.4-mini",
       messages,
-      max_tokens: maxTokens,
+      max_completion_tokens: maxTokens,
       temperature: 0,
     }),
   });
