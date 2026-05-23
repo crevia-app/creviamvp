@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
+import { signOutWithCleanup } from "@/lib/device-session";
 import { Settings as SettingsIcon, Camera, Languages, Shield, TriangleAlert, Trash2 } from "lucide-react";
 import SecurityTab from "@/components/settings/SecurityTab";
 import {
@@ -192,7 +193,7 @@ const Settings = () => {
     try {
       const { error } = await supabase.rpc("delete_user");
       if (error) throw error;
-      await supabase.auth.signOut();
+      await signOutWithCleanup();
       toast({ title: t("settings.deleteAccountSuccess"), description: t("settings.deleteAccountSuccessDesc") });
       navigate("/");
     } catch (err: any) {

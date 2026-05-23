@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, BadgeCheck } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
+import { getOrCreateDeviceId, getDeviceName } from "@/lib/device-session";
 
 const hasOAuthCallback = () => {
   const params = new URLSearchParams(window.location.search);
@@ -20,6 +20,8 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const redirectTo = searchParams.get("redirect") || "/kira";
+
   const [isSignup, setIsSignup] = useState(searchParams.get("mode") === "signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,11 +31,11 @@ const Auth = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [isResetting, setIsResetting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  // const [isAppleLoading, setIsAppleLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const [emailConfirmPending, setEmailConfirmPending] = useState(false);
+  const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
   const [isResendingConfirm, setIsResendingConfirm] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -42,12 +44,9 @@ const Auth = () => {
   const [resetNewPassword, setResetNewPassword] = useState("");
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
-  // Prevents onAuthStateChange from navigating to /kira while the user is in the password-reset OTP flow.
   const inPasswordResetFlow = useRef(false);
-  // True when we landed here from a Google OAuth redirect — hide the form while Supabase exchanges the code.
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(hasOAuthCallback);
 
-  // Countdown timer for resend cooldown
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const id = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
@@ -70,18 +69,33 @@ const Auth = () => {
   };
 
   useEffect(() => {
-    const redirectTo = searchParams.get("redirect") || "/kira";
-
-    // Check if user is already logged in — existing session means 2FA already done
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate(redirectTo, { replace: true });
-      }
+      if (session) navigate(redirectTo, { replace: true });
     });
 
-    // Listen for auth state changes (fresh logins and OAuth redirects)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session && !inPasswordResetFlow.current) {
+      if (event === "SIGNED_IN" && session && !inPasswordResetFlow.current) {
+        // Enforce device session limits
+        const deviceId = getOrCreateDeviceId();
+        const deviceName = getDeviceName();
+        const { data: sessionResult } = await supabase.rpc("register_device_session", {
+          p_device_id: deviceId,
+          p_device_name: deviceName,
+        });
+
+        if (sessionResult?.status === "limit_exceeded") {
+          await supabase.auth.signOut();
+          const planLabel =
+            sessionResult.plan === "free" ? "Free" :
+            sessionResult.plan === "pro" || sessionResult.plan === "creative_pro" ? "Pro" : "Business";
+          toast({
+            title: "Device limit reached",
+            description: `Your ${planLabel} plan allows ${sessionResult.limit} active device${sessionResult.limit > 1 ? "s" : ""}. Sign out from another device to continue.`,
+            variant: "destructive",
+          });
+          return;
+        }
+
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.user_metadata?.two_fa_enabled) {
           sessionStorage.setItem("mfa_pending", "1");
@@ -91,8 +105,7 @@ const Auth = () => {
           supabase.functions.invoke("login-alert").catch(() => {});
           navigate(redirectTo, { replace: true });
         }
-      } else if (event !== 'INITIAL_SESSION' && isProcessingOAuth) {
-        // Exchange failed — fall back to showing the login form.
+      } else if (event !== "INITIAL_SESSION" && isProcessingOAuth) {
         setIsProcessingOAuth(false);
       }
     });
@@ -126,75 +139,29 @@ const Auth = () => {
       });
       return;
     }
-
     setIsGoogleLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'select_account',
-          },
+          queryParams: { access_type: "offline", prompt: "select_account" },
         },
       });
-
       if (error) {
-        toast({
-          title: "Google sign-in failed",
-          description: error.message,
-          variant: "destructive"
-        });
+        toast({ title: "Google sign-in failed", description: error.message, variant: "destructive" });
         setIsGoogleLoading(false);
       }
     } catch (err) {
       console.error("Google auth error:", err);
-      toast({
-        title: "Connection error",
-        description: "Unable to connect to Google. Please check your internet and try again.",
-        variant: "destructive"
-      });
+      toast({ title: "Connection error", description: "Unable to connect to Google. Please check your internet and try again.", variant: "destructive" });
       setIsGoogleLoading(false);
     }
   };
 
-  // const handleAppleSignIn = async () => {
-  //   setIsAppleLoading(true);
-  //   try {
-  //     const { error } = await supabase.auth.signInWithOAuth({
-  //       provider: 'apple',
-  //       options: {
-  //         redirectTo: `${window.location.origin}/auth`,
-  //         queryParams: {
-  //           prompt: 'login',
-  //         },
-  //       },
-  //     });
-
-  //     if (error) {
-  //       toast({ 
-  //         title: "Apple sign-in failed 😅", 
-  //         description: error.message, 
-  //         variant: "destructive" 
-  //       });
-  //       setIsAppleLoading(false);
-  //     }
-  //   } catch (err) {
-  //     console.error("Apple auth error:", err);
-  //     toast({ 
-  //       title: "Connection hiccup! 📡", 
-  //       description: "Unable to connect to Apple. Please try again.", 
-  //       variant: "destructive" 
-  //     });
-  //     setIsAppleLoading(false);
-  //   }
-  // };
-
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
       if (isSignup) {
         const errors = validatePassword(password);
@@ -208,9 +175,7 @@ const Auth = () => {
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
-            data: {
-              user_type: 'creator',
-            },
+            data: { user_type: "creator" },
           },
         });
 
@@ -219,30 +184,29 @@ const Auth = () => {
           if (msg.includes("already registered") || msg.includes("already exists")) {
             toast({
               title: "Account already exists",
-              description: "An account with this email already exists. Try logging in instead.",
+              description: "An account with this email already exists. Please sign in instead.",
               variant: "destructive",
             });
             setIsSignup(false);
           } else if (msg.includes("rate limit") || msg.includes("email rate")) {
-            toast({
-              title: "Too many attempts",
-              description: "Please wait a few minutes before trying again.",
-              variant: "destructive",
-            });
+            toast({ title: "Too many attempts", description: "Please wait a few minutes before trying again.", variant: "destructive" });
           } else {
-            toast({
-              title: "Sign up failed",
-              description: "Something went wrong on our end. Please try again in a moment.",
-              variant: "destructive",
-            });
+            toast({ title: "Sign up failed", description: "Something went wrong on our end. Please try again in a moment.", variant: "destructive" });
             console.error("Signup error:", error.message);
           }
+        } else if (signUpData.user && (!signUpData.user.identities || signUpData.user.identities.length === 0)) {
+          // Supabase silently returns a fake success for existing emails (enumeration protection)
+          toast({
+            title: "Account already exists",
+            description: "An account with this email already exists. Please sign in instead.",
+            variant: "destructive",
+          });
+          setIsSignup(false);
         } else if (signUpData.session) {
-          // User is immediately signed in (email confirmation disabled)
-          // New accounts won't have 2FA enabled yet, so go straight to the app
-          navigate(redirectTo, { replace: true });
+          // Immediate sign-in (email confirmation disabled) — show premium welcome screen
+          setShowWelcomeScreen(true);
         } else {
-          // Email confirmation required — show dedicated screen
+          // Email confirmation required
           setPendingEmail(email);
           setEmailConfirmPending(true);
         }
@@ -251,7 +215,6 @@ const Auth = () => {
           email: email.trim(),
           password,
         });
-
         if (error) {
           const msg = error.message.toLowerCase();
           if (msg.includes("invalid login") || msg.includes("invalid credentials") || msg.includes("wrong password")) {
@@ -262,17 +225,12 @@ const Auth = () => {
             toast({ title: "Sign in failed", description: error.message, variant: "destructive" });
           }
         } else if (data.user) {
-          toast({ title: "Welcome back!", description: "Good to see you." });
-          // navigation is handled by the onAuthStateChange SIGNED_IN listener above
+          // Navigation handled by onAuthStateChange SIGNED_IN listener
         }
       }
     } catch (err) {
       console.error("Auth error:", err);
-      toast({ 
-        title: "Connection hiccup! 📡", 
-        description: "Unable to connect to the server. Please check your internet and try again.", 
-        variant: "destructive" 
-      });
+      toast({ title: "Connection error", description: "Unable to connect to the server. Please check your internet and try again.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -286,7 +244,6 @@ const Auth = () => {
     inPasswordResetFlow.current = false;
   };
 
-  // Step 1 — send OTP code to email
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsResetting(true);
@@ -302,7 +259,6 @@ const Auth = () => {
     }
   };
 
-  // Step 2 — verify the 6-digit code
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsVerifyingOtp(true);
@@ -321,7 +277,6 @@ const Auth = () => {
     }
   };
 
-  // Step 3 — set a new password
   const handleSetNewPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     const errors = validatePassword(resetNewPassword);
@@ -342,57 +297,100 @@ const Auth = () => {
     }
   };
 
+  // ── Shared background elements ─────────────────────────────────
+  const DarkBg = () => (
+    <>
+      <div
+        className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        style={{ backgroundImage: "radial-gradient(circle, #B07D3A 1px, transparent 1px)", backgroundSize: "32px 32px" }}
+      />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-bronze/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-bronze/5 rounded-full blur-3xl pointer-events-none" />
+    </>
+  );
+
+  // ── OAuth loading ──────────────────────────────────────────────
   if (isProcessingOAuth) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center p-4">
-        <div className="flex flex-col items-center gap-4 text-center">
+      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center p-4 relative overflow-hidden">
+        <DarkBg />
+        <div className="relative z-10 flex flex-col items-center gap-4 text-center">
           <Loader2 className="w-10 h-10 animate-spin text-bronze" />
-          <p className="font-poppins text-muted-foreground">Signing you in…</p>
+          <p className="font-poppins text-white/50 text-sm">Signing you in…</p>
         </div>
       </div>
     );
   }
 
-  if (emailConfirmPending) {
+  // ── Welcome screen (immediate signup — no email confirmation) ──
+  if (showWelcomeScreen) {
     return (
       <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center p-6 relative overflow-hidden">
-        {/* Subtle dot grid */}
-        <div className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: "radial-gradient(circle, #B07D3A 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
-          }}
-        />
-        {/* Bronze glow top */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-bronze/8 rounded-full blur-3xl" />
-
+        <DarkBg />
         <div className="relative z-10 w-full max-w-sm animate-fade-in">
-          {/* Logo */}
           <div className="flex items-center justify-center gap-2.5 mb-10">
             <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-full ring-1 ring-white/10" />
             <span className="font-vollkorn text-2xl font-bold text-white">Crevia</span>
           </div>
 
-          {/* Card */}
-          <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-8 text-center backdrop-blur-sm">
-            {/* Icon */}
-            <div className="w-16 h-16 rounded-2xl bg-bronze/15 border border-bronze/25 flex items-center justify-center mx-auto mb-6">
+          <div
+            className="bg-white/[0.04] border border-white/10 rounded-2xl p-8 text-center backdrop-blur-sm"
+            style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.04), 0 24px 64px rgba(0,0,0,0.4)" }}
+          >
+            <div className="w-20 h-20 rounded-2xl bg-bronze/15 border border-bronze/25 flex items-center justify-center mx-auto mb-6">
+              <BadgeCheck className="w-10 h-10 text-bronze" />
+            </div>
+            <h1 className="font-vollkorn text-2xl font-bold text-white mb-2">Welcome to Crevia!</h1>
+            <p className="text-white/45 text-sm font-poppins mb-8 leading-relaxed">
+              Your account has been created. You're all set to start building.
+            </p>
+            <button
+              onClick={() => navigate(redirectTo, { replace: true })}
+              className="w-full h-12 rounded-xl bg-bronze hover:bg-bronze/90 active:bg-bronze/80 text-white font-poppins font-semibold text-sm shadow-lg shadow-bronze/20 transition-all"
+              style={{ touchAction: "manipulation" }}
+            >
+              Get Started
+            </button>
+          </div>
+
+          <p className="text-center text-white/15 text-xs font-poppins mt-8">
+            © {new Date().getFullYear()} Crevia. All rights reserved.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Email confirmation pending ─────────────────────────────────
+  if (emailConfirmPending) {
+    return (
+      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center p-6 relative overflow-hidden">
+        <DarkBg />
+        <div className="relative z-10 w-full max-w-sm animate-fade-in">
+          <div className="flex items-center justify-center gap-2.5 mb-10">
+            <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-full ring-1 ring-white/10" />
+            <span className="font-vollkorn text-2xl font-bold text-white">Crevia</span>
+          </div>
+
+          <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-8 text-center backdrop-blur-sm"
+            style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.04), 0 24px 64px rgba(0,0,0,0.4)" }}
+          >
+            {/* Account created badge */}
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-bronze/15 border border-bronze/30 mb-5">
+              <BadgeCheck className="w-3.5 h-3.5 text-bronze" />
+              <span className="text-xs font-poppins font-semibold text-bronze tracking-wide">Account Created</span>
+            </div>
+
+            <div className="w-16 h-16 rounded-2xl bg-bronze/15 border border-bronze/25 flex items-center justify-center mx-auto mb-5">
               <svg className="w-7 h-7 text-bronze" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
               </svg>
             </div>
 
-            <h1 className="font-vollkorn text-2xl font-bold text-white mb-2">
-              Check your inbox
-            </h1>
-            <p className="text-white/50 text-sm font-poppins mb-1">
-              We sent a confirmation link to
-            </p>
-            <p className="text-bronze font-semibold font-poppins text-sm mb-6 truncate">
-              {pendingEmail}
-            </p>
+            <h1 className="font-vollkorn text-2xl font-bold text-white mb-2">Check your inbox</h1>
+            <p className="text-white/50 text-sm font-poppins mb-1">We sent a confirmation link to</p>
+            <p className="text-bronze font-semibold font-poppins text-sm mb-6 truncate">{pendingEmail}</p>
 
-            {/* Steps */}
             <div className="space-y-3 mb-8 text-left">
               {[
                 { n: "1", label: "Open the email from Crevia" },
@@ -408,22 +406,19 @@ const Auth = () => {
               ))}
             </div>
 
-            {/* Open Gmail shortcut */}
             <a
               href="https://mail.google.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-bronze hover:bg-bronze-dark transition-colors text-white font-poppins font-semibold text-sm mb-4"
+              className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-bronze hover:bg-bronze/90 transition-colors text-white font-poppins font-semibold text-sm mb-4"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 010 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z"/>
+                <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 010 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L5.455 4.64 12 9.548l6.545-4.91 1.528-1.145C21.69 2.28 24 3.434 24 5.457z" />
               </svg>
               Open Gmail
             </a>
 
-            <p className="text-white/30 text-xs font-poppins mb-4">
-              Didn't get it? Check your spam folder.
-            </p>
+            <p className="text-white/30 text-xs font-poppins mb-4">Didn't get it? Check your spam folder.</p>
 
             <button
               onClick={handleResendConfirmation}
@@ -446,224 +441,207 @@ const Auth = () => {
     );
   }
 
+  // ── Main auth form ─────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center p-4 md:p-6">
-      <Card className="w-full max-w-md p-6 md:p-8 mx-4 animate-fade-in">
-        <div className="text-center mb-6 md:mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 mb-4 md:mb-6 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:opacity-80">
-            <img 
-              src="/crevia-logo.png" 
-              alt="Crevia Logo" 
-              className="w-8 h-8 md:w-10 md:h-10 rounded-full ring-1 ring-border transition-transform duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] hover:scale-105"
-            />
-            <span className="font-vollkorn text-2xl md:text-3xl font-bold">Crevia</span>
-          </Link>
-          <h1 className="font-vollkorn text-2xl md:text-3xl font-bold mb-2 animate-fade-in stagger-1 animate-stagger">
-            {isSignup ? "Create your account" : "Welcome back"}
-          </h1>
-          <p className="text-sm md:text-base text-muted-foreground animate-fade-in stagger-2 animate-stagger">
-            {isSignup ? "Sign up to get started" : "Log in to continue"}
-          </p>
-        </div>
+    <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center p-4 md:p-6 relative overflow-hidden">
+      <DarkBg />
 
+      <div className="relative z-10 w-full max-w-md animate-fade-in">
+        {/* Logo */}
+        <Link to="/" className="flex items-center justify-center gap-2.5 mb-8 hover:opacity-80 transition-opacity">
+          <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-full ring-1 ring-white/10 transition-transform hover:scale-105" />
+          <span className="font-vollkorn text-2xl font-bold text-white">Crevia</span>
+        </Link>
 
-        <div className="justify-center">
-          <Button 
-            variant="outline" 
-            className="w-full h-12"
+        {/* Card */}
+        <div
+          className="bg-white/[0.04] border border-white/10 rounded-2xl p-8 backdrop-blur-sm"
+          style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.04), 0 24px 64px rgba(0,0,0,0.4)" }}
+        >
+          {/* Heading */}
+          <div className="mb-7">
+            <h1 className="font-vollkorn text-2xl md:text-[28px] font-bold text-white mb-1.5 leading-tight">
+              {isSignup ? "Create your account" : "Welcome back"}
+            </h1>
+            <p className="text-sm text-white/40 font-poppins">
+              {isSignup
+                ? "Join thousands of creators and brands on Crevia"
+                : "Sign in to continue to your workspace"}
+            </p>
+          </div>
+
+          {/* Google */}
+          <Button
+            variant="outline"
+            className="w-full h-12 mb-5 bg-white/[0.04] border-white/[0.12] hover:bg-white/[0.08] text-white font-poppins font-medium transition-all rounded-xl"
             onClick={handleGoogleSignIn}
             disabled={isGoogleLoading}
           >
             {isGoogleLoading ? (
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              <Loader2 className="w-5 h-5 mr-2.5 animate-spin" />
             ) : (
-              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              <svg className="w-5 h-5 mr-2.5 flex-shrink-0" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
               </svg>
             )}
-             Google
+            Continue with Google
           </Button>
-          {/* <Button 
-            variant="outline" 
-            className="h-12"
-            onClick={handleAppleSignIn}
-            disabled={isGoogleLoading || isAppleLoading}
-          >
-            {isAppleLoading ? (
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-            ) : (
-              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-              </svg>
-            )}
-            Apple
-          </Button> */}
-        </div>
 
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-card px-2 text-muted-foreground">{isSignup ? "Or sign up with email" : "Or sign in with email"}</span>
-          </div>
-        </div>
-
-        <form onSubmit={handleAuth} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              autoComplete={isSignup ? "email" : "username"}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="h-12"
-            />
+          {/* Divider */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex-1 border-t border-white/[0.08]" />
+            <span className="text-xs text-white/25 font-poppins">
+              {isSignup ? "or sign up with email" : "or sign in with email"}
+            </span>
+            <div className="flex-1 border-t border-white/[0.08]" />
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              {!isSignup && (
+          <form onSubmit={handleAuth} className="space-y-4">
+            {/* Email */}
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-white/45 text-[11px] font-poppins font-semibold uppercase tracking-widest">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                autoComplete={isSignup ? "email" : "username"}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="h-12 bg-white/[0.05] border-white/[0.10] text-white placeholder:text-white/20 focus:border-bronze/50 focus-visible:ring-bronze/20 rounded-xl"
+              />
+            </div>
+
+            {/* Password */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-white/45 text-[11px] font-poppins font-semibold uppercase tracking-widest">
+                  Password
+                </Label>
+                {!isSignup && (
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-xs text-bronze/70 hover:text-bronze transition-colors font-poppins"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  autoComplete={isSignup ? "new-password" : "current-password"}
+                  value={password}
+                  onChange={(e) => handlePasswordChange(e.target.value)}
+                  required
+                  className="h-12 pr-12 bg-white/[0.05] border-white/[0.10] text-white placeholder:text-white/20 focus:border-bronze/50 focus-visible:ring-bronze/20 rounded-xl"
+                />
                 <button
                   type="button"
-                  onClick={() => setShowForgotPassword(true)}
-                  className="text-xs text-bronze hover:text-bronze-dark bronze-underline transition-all duration-300"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/55 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  Forgot password?
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
+              </div>
+            </div>
+
+            {/* Password strength */}
+            {isSignup && password.length > 0 && (
+              <div className="space-y-1.5 rounded-xl bg-white/[0.03] border border-white/[0.07] p-3">
+                {["At least 8 characters", "One uppercase letter", "One lowercase letter", "One number", "One special character"].map((rule) => (
+                  <div key={rule} className="flex items-center gap-2 text-xs">
+                    <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", passwordErrors.includes(rule) ? "bg-white/15" : "bg-emerald-400")} />
+                    <span className={cn("font-poppins transition-colors", passwordErrors.includes(rule) ? "text-white/30" : "text-emerald-400")}>{rule}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Terms */}
+            {isSignup && (
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="terms"
+                  checked={termsAccepted}
+                  onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                  className="mt-0.5 shrink-0 border-white/20 data-[state=checked]:bg-bronze data-[state=checked]:border-bronze"
+                />
+                <label htmlFor="terms" className="text-xs text-white/35 leading-relaxed cursor-pointer select-none font-poppins">
+                  By signing up, you agree to the{" "}
+                  <Link to="/terms-of-service" className="text-bronze/80 hover:text-bronze underline underline-offset-2" onClick={(e) => e.stopPropagation()}>
+                    Terms of Use
+                  </Link>{" "}
+                  and{" "}
+                  <Link to="/privacy-policy" className="text-bronze/80 hover:text-bronze underline underline-offset-2" onClick={(e) => e.stopPropagation()}>
+                    Privacy Policy
+                  </Link>
+                  .
+                </label>
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              disabled={isLoading || (isSignup && !termsAccepted)}
+              className="w-full h-12 bg-bronze hover:bg-bronze/90 active:bg-bronze/80 text-white font-poppins font-semibold rounded-xl shadow-lg shadow-bronze/20 transition-all mt-1"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {isSignup ? "Creating account..." : "Signing in..."}
+                </>
+              ) : (
+                isSignup ? "Create Account" : "Sign In"
               )}
-            </div>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                autoComplete={isSignup ? "new-password" : "current-password"}
-                value={password}
-                onChange={(e) => handlePasswordChange(e.target.value)}
-                required
-                className="h-12 pr-12"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
-              </button>
-            </div>
-          </div>
+            </Button>
+          </form>
 
-          {isSignup && password.length > 0 && (
-            <div className="space-y-1.5">
-              {["At least 8 characters", "One uppercase letter", "One lowercase letter", "One number", "One special character"].map((rule) => (
-                <div key={rule} className="flex items-center gap-2 text-xs">
-                  <div className={cn(
-                    "w-1.5 h-1.5 rounded-full transition-colors",
-                    passwordErrors.includes(rule) ? "bg-destructive" : "bg-primary"
-                  )} />
-                  <span className={cn(
-                    "transition-colors",
-                    passwordErrors.includes(rule) ? "text-muted-foreground" : "text-primary"
-                  )}>{rule}</span>
-                </div>
-              ))}
-            </div>
-          )}
+          <p className="text-center mt-5 text-sm text-white/30 font-poppins">
+            {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
+            <button
+              onClick={() => { setIsSignup((v) => !v); setTermsAccepted(false); setPassword(""); setPasswordErrors([]); }}
+              className="text-bronze font-semibold hover:text-bronze/80 transition-colors"
+            >
+              {isSignup ? "Sign In" : "Sign Up"}
+            </button>
+          </p>
+        </div>
 
-          {isSignup && (
-            <div className="flex items-start gap-3">
-              <Checkbox
-                id="terms"
-                checked={termsAccepted}
-                onCheckedChange={(checked) => setTermsAccepted(checked === true)}
-                className="mt-0.5 shrink-0"
-              />
-              <label
-                htmlFor="terms"
-                className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none"
-              >
-                By signing up, you agree to the{" "}
-                <Link
-                  to="/terms-of-service"
-                  className="text-bronze hover:text-bronze-dark underline underline-offset-2"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  Terms of Use
-                </Link>{" "}
-                and{" "}
-                <Link
-                  to="/privacy-policy"
-                  className="text-bronze hover:text-bronze-dark underline underline-offset-2"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  Privacy Policy
-                </Link>
-                .
-              </label>
-            </div>
-          )}
-
-          <Button
-            type="submit"
-            disabled={isLoading || (isSignup && !termsAccepted)}
-            className="w-full h-12 bg-bronze hover:bg-bronze-dark font-semibold"
-          >
-            {isLoading ? "Please wait..." : (isSignup ? "Create Account" : "Log In")}
-          </Button>
-        </form>
-
-        <p className="text-center mt-6 text-sm text-muted-foreground">
-          {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
-          <button
-            onClick={() => { setIsSignup((v) => !v); setTermsAccepted(false); setPassword(""); setPasswordErrors([]); }}
-            className="text-bronze hover:text-bronze-dark font-semibold bronze-underline"
-          >
-            {isSignup ? "Log In" : "Sign Up"}
-          </button>
+        <p className="text-center text-white/15 text-xs font-poppins mt-6">
+          © {new Date().getFullYear()} Crevia. All rights reserved.
         </p>
-      </Card>
+      </div>
 
-      {/* Forgot Password Dialog — 3-step: email → OTP code → new password */}
+      {/* Forgot Password Dialog — 3-step: email → OTP → new password */}
       <Dialog open={showForgotPassword} onOpenChange={(open) => { setShowForgotPassword(open); if (!open) clearResetState(); }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-[#141414] border-white/10">
 
-          {/* Step 1: enter email */}
           {resetStep === 1 && (
             <>
               <DialogHeader>
-                <DialogTitle className="font-vollkorn text-2xl">Reset your password</DialogTitle>
-                <DialogDescription>Enter your email and we'll send a verification code.</DialogDescription>
+                <DialogTitle className="font-vollkorn text-2xl text-white">Reset your password</DialogTitle>
+                <DialogDescription className="text-white/45">Enter your email and we'll send a verification code.</DialogDescription>
               </DialogHeader>
               <form onSubmit={handleForgotPassword} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="reset-email">Email</Label>
-                  <Input
-                    id="reset-email"
-                    type="email"
-                    placeholder="you@example.com"
-                    autoComplete="email"
-                    value={resetEmail}
-                    onChange={(e) => setResetEmail(e.target.value)}
-                    required
-                    className="h-12"
-                  />
+                <div className="space-y-1.5">
+                  <Label htmlFor="reset-email" className="text-white/45 text-[11px] font-poppins font-semibold uppercase tracking-widest">Email</Label>
+                  <Input id="reset-email" type="email" placeholder="you@example.com" autoComplete="email" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} required
+                    className="h-12 bg-white/[0.05] border-white/10 text-white placeholder:text-white/20 focus:border-bronze/50 rounded-xl" />
                 </div>
                 <DialogFooter className="flex-col sm:flex-row gap-2">
-                  <Button type="button" variant="outline" onClick={() => setShowForgotPassword(false)} className="h-12">Cancel</Button>
-                  <Button type="submit" disabled={isResetting} className="h-12 bg-bronze hover:bg-bronze-dark font-semibold">
+                  <Button type="button" variant="outline" onClick={() => setShowForgotPassword(false)}
+                    className="h-12 bg-white/[0.04] border-white/15 text-white hover:bg-white/[0.08]">Cancel</Button>
+                  <Button type="submit" disabled={isResetting} className="h-12 bg-bronze hover:bg-bronze/90 font-semibold">
                     {isResetting ? "Sending..." : "Send Code"}
                   </Button>
                 </DialogFooter>
@@ -671,34 +649,25 @@ const Auth = () => {
             </>
           )}
 
-          {/* Step 2: enter the 6-digit code */}
           {resetStep === 2 && (
             <>
               <DialogHeader>
-                <DialogTitle className="font-vollkorn text-2xl">Enter the code</DialogTitle>
-                <DialogDescription>
-                  We sent a 6-digit code to <span className="font-semibold text-foreground">{resetEmail}</span>. Enter it below.
+                <DialogTitle className="font-vollkorn text-2xl text-white">Enter the code</DialogTitle>
+                <DialogDescription className="text-white/45">
+                  We sent a 6-digit code to <span className="font-semibold text-white/70">{resetEmail}</span>.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleVerifyOtp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="otp-code">Verification code</Label>
-                  <Input
-                    id="otp-code"
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="123456"
-                    maxLength={6}
-                    value={resetOtpCode}
-                    onChange={(e) => setResetOtpCode(e.target.value.replace(/\D/g, ""))}
-                    required
-                    className="h-12 text-center text-xl tracking-widest font-mono"
-                    autoFocus
-                  />
+                <div className="space-y-1.5">
+                  <Label htmlFor="otp-code" className="text-white/45 text-[11px] font-poppins font-semibold uppercase tracking-widest">Verification code</Label>
+                  <Input id="otp-code" type="text" inputMode="numeric" placeholder="123456" maxLength={6} value={resetOtpCode}
+                    onChange={(e) => setResetOtpCode(e.target.value.replace(/\D/g, ""))} required autoFocus
+                    className="h-12 text-center text-xl tracking-widest font-mono bg-white/[0.05] border-white/10 text-white placeholder:text-white/20 focus:border-bronze/50 rounded-xl" />
                 </div>
                 <DialogFooter className="flex-col sm:flex-row gap-2">
-                  <Button type="button" variant="outline" onClick={() => setResetStep(1)} className="h-12">Back</Button>
-                  <Button type="submit" disabled={isVerifyingOtp || resetOtpCode.length < 6} className="h-12 bg-bronze hover:bg-bronze-dark font-semibold">
+                  <Button type="button" variant="outline" onClick={() => setResetStep(1)}
+                    className="h-12 bg-white/[0.04] border-white/15 text-white hover:bg-white/[0.08]">Back</Button>
+                  <Button type="submit" disabled={isVerifyingOtp || resetOtpCode.length < 6} className="h-12 bg-bronze hover:bg-bronze/90 font-semibold">
                     {isVerifyingOtp ? "Verifying..." : "Verify Code"}
                   </Button>
                 </DialogFooter>
@@ -706,53 +675,41 @@ const Auth = () => {
             </>
           )}
 
-          {/* Step 3: set new password */}
           {resetStep === 3 && (
             <>
               <DialogHeader>
-                <DialogTitle className="font-vollkorn text-2xl">Set new password</DialogTitle>
-                <DialogDescription>Choose a strong password for your account.</DialogDescription>
+                <DialogTitle className="font-vollkorn text-2xl text-white">Set new password</DialogTitle>
+                <DialogDescription className="text-white/45">Choose a strong password for your account.</DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSetNewPassword} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="new-pw">New Password</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="new-pw" className="text-white/45 text-[11px] font-poppins font-semibold uppercase tracking-widest">New Password</Label>
                   <div className="relative">
-                    <Input
-                      id="new-pw"
-                      type={showResetPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={resetNewPassword}
-                      onChange={(e) => setResetNewPassword(e.target.value)}
-                      required
-                      className="h-12 pr-12"
-                      autoFocus
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowResetPassword(!showResetPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      aria-label={showResetPassword ? "Hide password" : "Show password"}
-                    >
+                    <Input id="new-pw" type={showResetPassword ? "text" : "password"} placeholder="••••••••" value={resetNewPassword}
+                      onChange={(e) => setResetNewPassword(e.target.value)} required autoFocus
+                      className="h-12 pr-12 bg-white/[0.05] border-white/10 text-white placeholder:text-white/20 focus:border-bronze/50 rounded-xl" />
+                    <button type="button" onClick={() => setShowResetPassword(!showResetPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/55 transition-colors"
+                      aria-label={showResetPassword ? "Hide password" : "Show password"}>
                       {showResetPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
                 {resetNewPassword.length > 0 && (
-                  <div className="space-y-1.5">
-                    {["At least 8 characters","One uppercase letter","One lowercase letter","One number","One special character"].map((rule) => {
-                      const errors = validatePassword(resetNewPassword);
-                      const passing = !errors.includes(rule);
+                  <div className="space-y-1.5 rounded-xl bg-white/[0.03] border border-white/[0.07] p-3">
+                    {["At least 8 characters", "One uppercase letter", "One lowercase letter", "One number", "One special character"].map((rule) => {
+                      const passing = !validatePassword(resetNewPassword).includes(rule);
                       return (
                         <div key={rule} className="flex items-center gap-2 text-xs">
-                          <div className={`w-1.5 h-1.5 rounded-full ${passing ? "bg-primary" : "bg-destructive"}`} />
-                          <span className={passing ? "text-primary" : "text-muted-foreground"}>{rule}</span>
+                          <div className={`w-1.5 h-1.5 rounded-full ${passing ? "bg-emerald-400" : "bg-white/15"}`} />
+                          <span className={`font-poppins ${passing ? "text-emerald-400" : "text-white/30"}`}>{rule}</span>
                         </div>
                       );
                     })}
                   </div>
                 )}
                 <DialogFooter>
-                  <Button type="submit" disabled={isUpdatingPassword} className="w-full h-12 bg-bronze hover:bg-bronze-dark font-semibold">
+                  <Button type="submit" disabled={isUpdatingPassword} className="w-full h-12 bg-bronze hover:bg-bronze/90 font-semibold">
                     {isUpdatingPassword ? "Saving..." : "Set Password"}
                   </Button>
                 </DialogFooter>

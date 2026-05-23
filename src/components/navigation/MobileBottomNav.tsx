@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
+import { signOutWithCleanup } from "@/lib/device-session";
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
@@ -43,7 +44,7 @@ const MobileBottomNav = () => {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOutWithCleanup();
     navigate("/");
     setSheetOpen(false);
   };
