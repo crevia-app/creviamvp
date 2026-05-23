@@ -1314,6 +1314,7 @@ const Kira = () => {
           <button
             onClick={() => handleNewChat(null)}
             className="flex items-center justify-center w-11 h-11 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted transition-colors flex-shrink-0"
+            style={{ touchAction: 'manipulation' }}
             aria-label="New chat"
           >
             <Plus className="w-5 h-5" />
