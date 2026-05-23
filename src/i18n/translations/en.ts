@@ -62,7 +62,7 @@ const en = {
   "settings.uploading": "Uploading...",
   "settings.maxSize": "Max size: 5MB • JPG, PNG, GIF",
   "settings.profileVisibility": "Profile Visibility",
-  "settings.profileVisibilityDesc": "Make your profile public",
+  "settings.profileVisibilityDesc": "Make your profile private",
   "settings.hideEarnings": "Hide Earnings",
   "settings.hideEarningsDesc": "Keep earnings private",
   "settings.doNotDisturb": "Do Not Disturb",

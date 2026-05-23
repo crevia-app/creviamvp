@@ -40,7 +40,7 @@ const fr = {
   "settings.uploading": "Téléchargement...",
   "settings.maxSize": "Taille max : 5 Mo • JPG, PNG, GIF",
   "settings.profileVisibility": "Visibilité du profil",
-  "settings.profileVisibilityDesc": "Rendre votre profil public",
+  "settings.profileVisibilityDesc": "Rendre votre profil privé",
   "settings.hideEarnings": "Masquer les revenus",
   "settings.hideEarningsDesc": "Garder les revenus privés",
   "settings.doNotDisturb": "Ne pas déranger",
