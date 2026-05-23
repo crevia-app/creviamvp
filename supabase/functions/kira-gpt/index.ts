@@ -469,7 +469,8 @@ serve(async (req) => {
         });
 
         if (!openaiRes.ok || !openaiRes.body) {
-          throw new Error(`OpenAI API error: ${openaiRes.status}`);
+          const errBody = await openaiRes.text();
+          throw new Error(`OpenAI API error: ${openaiRes.status} - ${errBody}`);
         }
 
         const reader = openaiRes.body.getReader();
