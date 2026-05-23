@@ -243,7 +243,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const presenceChannelRef = useRef<any>(null);
   const selectedExternalRef = useRef<string>("");
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  useIOSKeyboardFit(chatContainerRef);
+  useIOSKeyboardFit(chatContainerRef, () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }));
 
   const { initEncryption, setupRoomEncryption, redistributeRoomKey, encrypt, decrypt, decryptMessages, getRoomKey, getPublicKey } =
     useE2EEncryption(currentUserId);
@@ -2246,7 +2246,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
               </ScrollArea>
 
               {/* Input Area — extra bottom padding on mobile clears the fixed MobileBottomNav (64px) when embedded */}
-              <div className={`border-t bg-background/95 backdrop-blur flex-shrink-0 ${hideRoomList ? "px-3 pt-3 pb-[calc(0.75rem+4rem)] md:p-4" : "p-3 md:p-4"}`}>
+              <div className={`border-t bg-background/95 backdrop-blur flex-shrink-0 ${hideRoomList ? "px-3 pt-3 pb-[calc(0.75rem+4rem)] md:p-4" : "pt-3 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:p-4"}`}>
                 <div className="max-w-3xl mx-auto">
                   {/* Reply preview */}
                   {replyingTo && (

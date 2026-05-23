@@ -395,7 +395,7 @@ const Kira = () => {
   const animFrameRef = useRef<number | null>(null);
   const networkDoneRef = useRef(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  useIOSKeyboardFit(chatContainerRef);
+  useIOSKeyboardFit(chatContainerRef, () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }));
 
   // ── NEW: message interaction state ──
   const [editingMessageIdx, setEditingMessageIdx] = useState<number | null>(null);
@@ -997,7 +997,7 @@ const Kira = () => {
   // };
 
   return (
-    <div ref={chatContainerRef} className="h-[calc(100dvh-64px-64px)] md:h-[calc(100dvh-64px)] flex bg-background">
+    <div ref={chatContainerRef} className="h-[calc(100dvh-64px-64px)] md:h-[calc(100dvh-64px)] flex bg-background overscroll-none">
       {/* Desktop Sidebar */}
       <div 
         className={`hidden md:flex flex-col bg-card/50 border-r border-border/50 transition-all duration-300 ${
@@ -1546,7 +1546,7 @@ const Kira = () => {
           </div>
 
           {/* Input Area */}
-          <div className="flex-shrink-0 p-4 md:p-6 bg-background">
+          <div className="flex-shrink-0 pt-3 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:p-6 bg-background">
             <div className="max-w-2xl mx-auto">
               {/* File attachment preview */}
               {selectedFile && (
