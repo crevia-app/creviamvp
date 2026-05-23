@@ -179,24 +179,27 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   const fetchFolders = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
-    const { data, error } = await (supabase as any)
-      .from("canvas_folders")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .order("name");
+    // Fetch folders + all folder-assigned canvases in parallel — eliminates N+1 count queries
+    const [{ data, error }, { data: canvasRows }] = await Promise.all([
+      (supabase as any)
+        .from("canvas_folders")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("name"),
+      supabase
+        .from("canvases")
+        .select("folder_id")
+        .eq("user_id", session.user.id)
+        .not("folder_id", "is", null),
+    ]);
     if (error) { console.error("fetchFolders:", error); setFolders([]); return; }
     if (!data) { setFolders([]); return; }
-    // Attach canvas counts
-    const withCounts = await Promise.all(
-      (data as Folder[]).map(async (folder) => {
-        const { count } = await supabase
-          .from("canvases")
-          .select("*", { count: "exact", head: true })
-          .eq("folder_id", folder.id) as any;
-        return { ...folder, canvasCount: count ?? 0 };
-      })
-    );
-    setFolders(withCounts);
+    // Build count map client-side — O(n) single pass
+    const countMap: Record<string, number> = {};
+    (canvasRows || []).forEach((c: any) => {
+      countMap[c.folder_id] = (countMap[c.folder_id] || 0) + 1;
+    });
+    setFolders((data as Folder[]).map(f => ({ ...f, canvasCount: countMap[f.id] ?? 0 })));
   };
 
   const createFolder = async () => {
@@ -255,8 +258,12 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   };
 
   useEffect(() => {
-    fetchCanvases(currentFolderId);
-    if (!workspaceId) fetchFolders();
+    if (workspaceId) {
+      fetchCanvases(currentFolderId);
+    } else {
+      // Run both in parallel — independent queries, no reason to serialize
+      Promise.all([fetchCanvases(currentFolderId), fetchFolders()]);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId, currentFolderId]);
 

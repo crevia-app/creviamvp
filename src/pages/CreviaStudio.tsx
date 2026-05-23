@@ -135,13 +135,13 @@ const CreviaStudio = () => {
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto min-w-0 pb-16 md:pb-0">
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="sync">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
             >
               {activeTab === "link"      && <CreviaLink isEmbedded />}
               {activeTab === "invoices"  && <SmartInvoicesTab workspaceId={activeWorkspace} />}
