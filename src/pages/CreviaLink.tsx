@@ -890,37 +890,98 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
           button={editingButton}
         />
 
-        {/* Preview modal for embedded view — portal to document.body */}
+        {/* Preview modal — portal to document.body */}
         {showPreviewModal && createPortal(
           <div
-            className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center bg-black/70"
+            className="fixed inset-0 z-[400] flex items-end sm:items-center justify-center"
             style={{ WebkitTransform: "translateZ(0)" }}
-            onClick={(e) => { if (e.target === e.currentTarget) setShowPreviewModal(false); }}
           >
-            <div className="w-full sm:w-[420px] bg-background flex flex-col rounded-t-2xl sm:rounded-2xl border border-border shadow-2xl overflow-hidden max-h-[95dvh] sm:max-h-[90vh]">
-              <div className="flex items-center justify-between px-4 h-14 border-b border-border/50 flex-shrink-0">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setShowPreviewModal(false)}
+            />
+
+            {/* Sheet */}
+            <div className="relative w-full sm:w-[440px] bg-background flex flex-col rounded-t-3xl sm:rounded-2xl border border-border/40 overflow-hidden max-h-[95dvh] sm:max-h-[90vh]"
+              style={{ boxShadow: '0 -12px 48px rgba(0,0,0,0.22), 0 0 0 1px rgba(255,255,255,0.04)' }}
+            >
+              {/* Drag handle — mobile only */}
+              <div className="sm:hidden flex justify-center pt-3 pb-0 flex-shrink-0">
+                <div className="w-10 h-[3px] rounded-full bg-border/70" />
+              </div>
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 pt-4 pb-3 flex-shrink-0">
                 <div className="flex items-center gap-2.5">
-                  <p className="font-poppins text-sm font-semibold text-foreground">Preview</p>
-                  <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">Unsaved changes</span>
+                  <div className="w-8 h-8 rounded-xl bg-bronze/10 flex items-center justify-center flex-shrink-0">
+                    <Eye className="w-4 h-4 text-bronze" />
+                  </div>
+                  <div>
+                    <p className="font-poppins text-sm font-semibold text-foreground leading-tight">Your Crevia Link</p>
+                    <p className="text-[10px] text-amber-500 font-medium leading-tight">Unsaved changes</p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setShowPreviewModal(false)}
-                  className="h-9 w-9 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                  style={{ touchAction: 'manipulation' }}
                   aria-label="Close preview"
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M18 6L6 18M6 6l12 12" />
                   </svg>
                 </button>
               </div>
-              <div className="overflow-y-auto flex flex-col items-center pt-7 pb-8 px-6 gap-5" style={{ WebkitOverflowScrolling: "touch" }}>
+
+              {/* Phone mockup — scrollable */}
+              <div className="overflow-y-auto flex flex-col items-center px-6 pt-3 pb-4" style={{ WebkitOverflowScrolling: "touch" }}>
                 <LivePreview linkProfile={linkProfile} buttons={buttons} />
-                <p className="text-[11px] text-muted-foreground text-center max-w-[240px] leading-relaxed">
-                  Preview of your current changes. Save to make them live.
-                </p>
-                <div className="flex gap-3 w-full max-w-[280px]">
-                  <Button variant="outline" className="flex-1 h-11 text-sm" onClick={() => setShowPreviewModal(false)}>Keep Editing</Button>
-                  <Button className="flex-1 h-11 text-sm bg-bronze hover:bg-bronze/90 text-white" onClick={() => { handleSave(); setShowPreviewModal(false); }} disabled={saving}>
+              </div>
+
+              {/* Footer — pinned */}
+              <div
+                className="flex-shrink-0 px-5 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] border-t border-border/40 bg-background space-y-2.5"
+              >
+                {/* URL bar — tap to copy */}
+                <button
+                  onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/${linkProfile?.username}`); toast({ title: "Link copied!", description: `${window.location.origin}/${linkProfile?.username}` }); }}
+                  style={{ touchAction: 'manipulation' }}
+                  className="w-full flex items-center gap-2.5 px-4 h-11 rounded-xl bg-muted/50 border border-border/50 hover:bg-muted/80 active:bg-muted/90 transition-colors group"
+                >
+                  <Link2 className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                  <span className="flex-1 text-left text-xs text-muted-foreground truncate font-mono tracking-tight">
+                    {window.location.origin.replace(/^https?:\/\//, '')}/{linkProfile?.username}
+                  </span>
+                  <Copy className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+                </button>
+
+                {/* View Live Page */}
+                <button
+                  onClick={() => navigate(`/${linkProfile?.username}`)}
+                  style={{ touchAction: 'manipulation' }}
+                  className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border border-border/60 bg-background hover:bg-muted/40 active:bg-muted/60 text-foreground text-sm font-semibold font-poppins transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  View Live Page
+                </button>
+
+                {/* Keep Editing + Save */}
+                <div className="flex gap-2.5">
+                  <Button
+                    variant="ghost"
+                    className="flex-1 h-11 text-sm font-poppins font-medium text-muted-foreground hover:text-foreground rounded-xl"
+                    onClick={() => setShowPreviewModal(false)}
+                    style={{ touchAction: 'manipulation' }}
+                  >
+                    Keep Editing
+                  </Button>
+                  <Button
+                    className="flex-1 h-11 text-sm font-poppins font-semibold bg-bronze hover:bg-bronze/90 active:bg-bronze/80 text-white rounded-xl shadow-sm shadow-bronze/25 transition-all"
+                    onClick={() => { handleSave(); setShowPreviewModal(false); }}
+                    disabled={saving}
+                    style={{ touchAction: 'manipulation' }}
+                  >
                     {saving ? "Saving..." : "Save"}
                   </Button>
                 </div>
