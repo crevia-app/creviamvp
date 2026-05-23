@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Sparkles, MoreHorizontal, Briefcase, Crown, Download } from "lucide-react";
+import { Home, Sparkles, MoreHorizontal, Briefcase, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -15,8 +15,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { usePWAInstall } from "@/hooks/use-pwa-install";
-import { IOSInstallGuide } from "@/components/pwa/IOSInstallGuide";
 
 const MobileBottomNav = () => {
   const location = useLocation();
@@ -24,7 +22,6 @@ const MobileBottomNav = () => {
   const { t } = useLanguage();
   const [profile, setProfile] = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const { canInstall, install, showIOSGuide, setShowIOSGuide } = usePWAInstall();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -148,18 +145,6 @@ const MobileBottomNav = () => {
                   <span className="font-poppins text-sm font-semibold">Upgrade to Pro</span>
                 </Link>
 
-                {canInstall && (
-                  <button
-                    onClick={() => { install(); setSheetOpen(false); }}
-                    className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-muted/50 border border-border text-foreground/80 hover:bg-muted transition-all w-full"
-                  >
-                    <Download className="h-5 w-5 text-bronze flex-shrink-0" />
-                    <div className="text-left">
-                      <p className="font-poppins text-sm font-semibold">Install Crevia App</p>
-                      <p className="text-[11px] text-muted-foreground">Add to home screen</p>
-                    </div>
-                  </button>
-                )}
 
                 <Separator className="bg-border" />
 
@@ -245,7 +230,6 @@ const MobileBottomNav = () => {
         </Sheet>
       </div>
 
-      <IOSInstallGuide open={showIOSGuide} onClose={() => setShowIOSGuide(false)} />
     </nav>
   );
 };

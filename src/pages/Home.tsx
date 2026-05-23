@@ -1,8 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Brain, FileText, Link2, MessageCircle, Receipt, Shield, Monitor, X } from "lucide-react";
-import { usePWAInstall } from "@/hooks/use-pwa-install";
+import { ArrowRight, Brain, FileText, Link2, MessageCircle, Receipt, Shield } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HeroPattern from "@/components/HeroPattern";
@@ -20,8 +19,6 @@ const OPS_CARDS = [
 const Home = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [installDismissed, setInstallDismissed] = useState(false);
-  const { canInstall, install } = usePWAInstall();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setIsLoggedIn(!!session));
@@ -87,33 +84,6 @@ const Home = () => {
           </div>
         </div>
 
-        {/* PWA install banner — first-time visitors only */}
-        {canInstall && !installDismissed && (
-          <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-20 animate-fade-in">
-            <div className="flex items-center gap-2.5 bg-background/90 backdrop-blur-md border border-bronze/30 rounded-xl px-3 py-2 shadow-lg">
-              <div className="w-7 h-7 rounded-lg bg-bronze/10 flex items-center justify-center flex-shrink-0">
-                <Monitor className="w-3.5 h-3.5 text-bronze" />
-              </div>
-              <div className="leading-tight">
-                <p className="text-[11px] font-semibold font-poppins">Install Crevia</p>
-                <p className="text-[10px] text-muted-foreground font-poppins">Add to your home screen</p>
-              </div>
-              <Button
-                size="sm"
-                onClick={install}
-                className="h-7 px-3 bg-bronze hover:bg-bronze-dark text-background text-[11px] font-poppins font-semibold"
-              >
-                Install
-              </Button>
-              <button
-                onClick={() => setInstallDismissed(true)}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
-        )}
       </section>
 
 
