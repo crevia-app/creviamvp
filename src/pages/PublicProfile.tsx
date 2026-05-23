@@ -381,7 +381,7 @@ const PublicProfile = () => {
             <Sparkles className="w-4 h-4" />
             Get your Crevia Link
           </a>
-          <p className="text-xs mt-2 opacity-40 font-poppins">Powered by Crevia</p>
+          <p className="text-xs mt-2 opacity-40 font-poppins">Built with Crevia</p>
         </div>
 
       </div>
