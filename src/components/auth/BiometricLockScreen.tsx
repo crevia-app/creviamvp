@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Fingerprint, LogOut, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { authenticateWithBiometric } from "@/hooks/use-biometrics";
+import { signOutWithCleanup } from "@/lib/device-session";
 
 interface Props {
   credentialId: string;
@@ -26,7 +26,7 @@ export function BiometricLockScreen({ credentialId, onUnlock }: Props) {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOutWithCleanup();
     window.location.href = "/auth";
   };
 
