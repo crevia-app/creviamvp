@@ -14,8 +14,15 @@ const MFAVerify = () => {
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(true);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
-  const sendOTP = useCallback(async (userEmail: string) => {
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const id = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(id);
+  }, [resendCooldown]);
+
+  const sendOTP = useCallback(async (userEmail: string, isResend = false) => {
     setIsSending(true);
     try {
       const { error } = await supabase.auth.signInWithOtp({
@@ -23,6 +30,7 @@ const MFAVerify = () => {
         options: { shouldCreateUser: false },
       });
       if (error) throw error;
+      if (isResend) setResendCooldown(60);
     } catch (err: any) {
       toast({
         title: "Failed to send code",
@@ -127,11 +135,15 @@ const MFAVerify = () => {
           </Button>
 
           <button
-            onClick={() => sendOTP(email)}
-            disabled={isSending || !email}
-            className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
+            onClick={() => sendOTP(email, true)}
+            disabled={isSending || !email || resendCooldown > 0}
+            className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors py-1 disabled:opacity-40"
           >
-            {isSending ? "Sending..." : "Didn't get it? Resend code"}
+            {isSending
+              ? "Sending..."
+              : resendCooldown > 0
+              ? `Resend in ${resendCooldown}s`
+              : "Didn't get it? Resend code"}
           </button>
 
           <Button
