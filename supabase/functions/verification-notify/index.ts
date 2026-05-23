@@ -28,13 +28,32 @@ serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
   try {
+    // ── Auth gate: caller must be authenticated ──────────────────────────────
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: authErr } = await anonClient.auth.getUser();
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+    const callerUserId = user.id;
+
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (!resendKey) throw new Error("RESEND_API_KEY not configured");
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
 
     const { request_id } = await req.json();
     if (!request_id) throw new Error("request_id is required");
@@ -47,6 +66,21 @@ serve(async (req: Request) => {
       .single();
 
     if (vrErr || !vr) throw new Error("Verification request not found");
+
+    // ── Ownership check: caller must own the request or be an admin ──────────
+    const { data: callerProfile } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", callerUserId)
+      .single();
+    const isAdmin = (callerProfile as any)?.is_admin === true;
+
+    if (!isAdmin && (vr as any).user_id !== callerUserId) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
 
     const profile     = (vr as any).profiles ?? {};
     const name        = profile.display_name || profile.handle || "Unknown";

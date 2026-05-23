@@ -30,24 +30,32 @@ serve(async (req: Request) => {
   }
 
   try {
+    // ── Auth gate: caller must be authenticated ──────────────────────────────
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (!resendKey) throw new Error("RESEND_API_KEY not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    // Verify caller is authenticated (can be called by webhook or authenticated user)
-    const authHeader = req.headers.get("Authorization");
-    let callerUserId: string | null = null;
-    if (authHeader) {
-      const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-      const userClient = createClient(supabaseUrl, anonKey, {
-        global: { headers: { Authorization: authHeader } },
+    const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: authErr } = await anonClient.auth.getUser();
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...cors, "Content-Type": "application/json" },
       });
-      const { data: { user } } = await userClient.auth.getUser();
-      callerUserId = user?.id ?? null;
     }
+    const callerUserId = user.id;
 
     const body = await req.json();
     const { feedback_id, message, type, user_email, user_name } = body;
@@ -67,6 +75,21 @@ serve(async (req: Request) => {
         .single();
 
       if (fbErr || !fb) throw new Error("Feedback record not found");
+
+      // ── Ownership check: caller must own this feedback or be an admin ──────
+      if (fb.user_id && fb.user_id !== callerUserId) {
+        const { data: callerProfile } = await supabase
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", callerUserId)
+          .single();
+        if ((callerProfile as any)?.is_admin !== true) {
+          return new Response(JSON.stringify({ error: "Forbidden" }), {
+            status: 403,
+            headers: { ...cors, "Content-Type": "application/json" },
+          });
+        }
+      }
 
       feedbackMessage = fb.message;
       feedbackType = fb.type;
