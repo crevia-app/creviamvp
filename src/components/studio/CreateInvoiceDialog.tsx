@@ -1,4 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
+
+const toDateStr = (d: Date) => d.toISOString().split("T")[0];
+const addDays = (dateStr: string, days: number) => {
+  const d = new Date(dateStr); d.setDate(d.getDate() + days); return toDateStr(d);
+};
 import SuccessOverlay from "@/components/ui/SuccessOverlay";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -102,8 +107,9 @@ const CreateInvoiceDialog = ({
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientAddress, setClientAddress] = useState("");
-  const [issueDate, setIssueDate] = useState(new Date().toISOString().split("T")[0]);
-  const [dueDate, setDueDate] = useState("");
+  const today = toDateStr(new Date());
+  const [issueDate, setIssueDate] = useState(today);
+  const [dueDate, setDueDate] = useState(addDays(today, 30));
   const [currency, setCurrency] = useState("KES");
   const [taxRate, setTaxRate] = useState<string>("");
   const [discountAmount, setDiscountAmount] = useState<string>("");
@@ -150,8 +156,9 @@ const CreateInvoiceDialog = ({
       // Immediate sync reset with defaults (settings will override below)
       generateInvoiceNumber();
       setClientName(""); setClientEmail(""); setClientAddress("");
-      setIssueDate(new Date().toISOString().split("T")[0]);
-      setDueDate(""); setDiscountAmount(""); setNotes("");
+      const t = toDateStr(new Date());
+      setIssueDate(t);
+      setDueDate(addDays(t, 30)); setDiscountAmount(""); setNotes("");
       setCurrency("KES");
       setTaxRate("");
       setTerms("Payment is due within 30 days of invoice date.");
@@ -483,7 +490,13 @@ const CreateInvoiceDialog = ({
               <Input
                 type="date"
                 value={issueDate}
-                onChange={(e) => setIssueDate(e.target.value)}
+                min={editingInvoice ? undefined : today}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setIssueDate(val);
+                  // Keep due date at least 1 day ahead of the new issue date
+                  if (dueDate && dueDate <= val) setDueDate(addDays(val, 30));
+                }}
                 className="mt-1 h-11 text-base"
               />
             </div>
@@ -492,6 +505,7 @@ const CreateInvoiceDialog = ({
               <Input
                 type="date"
                 value={dueDate}
+                min={issueDate || today}
                 onChange={(e) => setDueDate(e.target.value)}
                 className="mt-1 h-11 text-base"
               />
