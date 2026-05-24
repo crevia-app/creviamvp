@@ -66,6 +66,20 @@ serve(async (req: Request) => {
     }
     const callerUserId = user.id;
 
+    // Rate limit: 5 requests per day per user
+    const { data: rlAllowed } = await supabase.rpc("check_rate_limit", {
+      p_user_id: callerUserId,
+      p_endpoint: "feedback-notify",
+      p_limit: 5,
+      p_window_secs: 86400,
+    });
+    if (!rlAllowed) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+        status: 429,
+        headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
     const body = await req.json();
     const { feedback_id, message, type, user_email, user_name } = body;
 

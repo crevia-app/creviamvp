@@ -77,6 +77,26 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // Identify caller for rate limiting
+    const { data: { user: caller } } = await adminClient.auth.getUser(authHeader.replace("Bearer ", ""));
+    if (!caller) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+    // Rate limit: 10 requests per minute per user
+    const { data: rlAllowed } = await adminClient.rpc("check_rate_limit", {
+      p_user_id: caller.id,
+      p_endpoint: "invoice-send",
+      p_limit: 10,
+      p_window_secs: 60,
+    });
+    if (!rlAllowed) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please slow down." }), {
+        status: 429, headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+
     // Fetch invoice as the authenticated user — RLS ensures they can only see their own
     const { data: invoice, error: invErr } = await userClient
       .from("invoices")

@@ -29,6 +29,20 @@ serve(async (req) => {
     const { data: { user }, error: authErr } = await userClient.auth.getUser();
     if (authErr || !user) throw new Error("Unauthorized");
 
+    // Rate limit: 3 requests per day per user
+    const { data: rlAllowed } = await supabase.rpc("check_rate_limit", {
+      p_user_id: user.id,
+      p_endpoint: "cancel-subscription",
+      p_limit: 3,
+      p_window_secs: 86400,
+    });
+    if (!rlAllowed) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+        status: 429,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     // Fetch subscription identifiers
     const { data: profile, error: profErr } = await supabase
       .from("profiles")

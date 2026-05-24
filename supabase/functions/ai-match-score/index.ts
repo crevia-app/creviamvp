@@ -53,6 +53,24 @@ serve(async (req) => {
     }
     // === END AUTH VALIDATION ===
 
+    // Rate limit: 20 requests per hour per user
+    const serviceClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    );
+    const { data: rlAllowed } = await serviceClient.rpc('check_rate_limit', {
+      p_user_id: claimsData.claims.sub,
+      p_endpoint: 'ai-match-score',
+      p_limit: 20,
+      p_window_secs: 3600,
+    });
+    if (!rlAllowed) {
+      return new Response(JSON.stringify({ error: 'Too many requests. Please slow down.' }), {
+        status: 429,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { campaign, creator } = await req.json();
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 

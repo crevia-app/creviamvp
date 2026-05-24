@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,9 @@ const Auth = () => {
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const inPasswordResetFlow = useRef(false);
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(hasOAuthCallback);
+  const hcaptchaRef = useRef<HCaptcha>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const hcaptchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY as string | undefined;
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -170,14 +174,26 @@ const Auth = () => {
           setIsLoading(false);
           return;
         }
+        // Require CAPTCHA token before signup when hCaptcha is configured
+        if (hcaptchaSiteKey && !captchaToken) {
+          hcaptchaRef.current?.execute();
+          setIsLoading(false);
+          return;
+        }
+
         const { data: signUpData, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
             data: { user_type: "creator" },
+            ...(captchaToken ? { captchaToken } : {}),
           },
         });
+
+        // Reset captcha after use
+        hcaptchaRef.current?.resetCaptcha();
+        setCaptchaToken(null);
 
         if (error) {
           const msg = error.message.toLowerCase();
@@ -604,6 +620,21 @@ const Auth = () => {
                 isSignup ? "Create Account" : "Sign In"
               )}
             </Button>
+
+            {/* hCaptcha — only rendered when VITE_HCAPTCHA_SITE_KEY is set */}
+            {hcaptchaSiteKey && isSignup && (
+              <HCaptcha
+                ref={hcaptchaRef}
+                sitekey={hcaptchaSiteKey}
+                size="invisible"
+                onVerify={(token) => {
+                  setCaptchaToken(token);
+                  // Auto-submit once token is received
+                  document.querySelector<HTMLFormElement>("form")?.requestSubmit();
+                }}
+                onExpire={() => setCaptchaToken(null)}
+              />
+            )}
           </form>
 
           <p className="text-center mt-5 text-sm text-white/30 font-poppins">

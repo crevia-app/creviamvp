@@ -49,6 +49,20 @@ serve(async (req) => {
       });
     }
 
+    // Rate limit: 20 requests per hour per user
+    const { data: rlAllowed } = await supabase.rpc('check_rate_limit', {
+      p_user_id: user.id,
+      p_endpoint: 'kira-suggestions',
+      p_limit: 20,
+      p_window_secs: 3600,
+    });
+    if (!rlAllowed) {
+      return new Response(JSON.stringify({ error: 'Too many requests. Please slow down.' }), {
+        status: 429,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { type, profile, campaigns } = await req.json();
 
     let systemPrompt = '';
