@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const ADMIN_EMAIL = "anthony.onyango@student.moringaschool.com";
 const FROM_EMAIL  = "noreply@crevia.app";
 const RESEND_URL  = "https://api.resend.com/emails";
 
@@ -54,6 +53,16 @@ serve(async (req: Request) => {
 
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (!resendKey) throw new Error("RESEND_API_KEY not configured");
+
+    // Resolve admin email dynamically from the portal
+    const { data: adminProfile } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("is_admin", true)
+      .limit(1)
+      .single();
+    const adminEmail = adminProfile?.email;
+    if (!adminEmail) throw new Error("No admin account found");
 
     const { request_id } = await req.json();
     if (!request_id) throw new Error("request_id is required");
@@ -157,7 +166,7 @@ serve(async (req: Request) => {
       headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: `Crevia Admin <${FROM_EMAIL}>`,
-        to:   [ADMIN_EMAIL],
+        to:   [adminEmail],
         subject: `[Crevia] Verification request from ${name}`,
         html,
       }),

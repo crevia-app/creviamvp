@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const ADMIN_EMAIL = "anthony.onyango@student.moringaschool.com";
 const FROM_EMAIL = "noreply@crevia.app";
 const RESEND_URL = "https://api.resend.com/emails";
 
@@ -44,6 +43,16 @@ serve(async (req: Request) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    // Resolve admin email dynamically from the portal
+    const { data: adminProfile } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("is_admin", true)
+      .limit(1)
+      .single();
+    const adminEmail = adminProfile?.email;
+    if (!adminEmail) throw new Error("No admin account found");
 
     const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
@@ -171,7 +180,7 @@ serve(async (req: Request) => {
       },
       body: JSON.stringify({
         from: `Crevia Feedback <${FROM_EMAIL}>`,
-        to: [ADMIN_EMAIL],
+        to: [adminEmail],
         subject: `[Crevia Feedback] ${typeLabel} from ${submitterName}`,
         html,
       }),
