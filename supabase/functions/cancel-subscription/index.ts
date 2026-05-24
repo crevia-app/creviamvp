@@ -37,6 +37,8 @@ serve(async (req) => {
       p_window_secs: 86400,
     });
     if (!rlAllowed) {
+      supabase.rpc("log_security_event", { p_event_type: "rate_limit", p_user_id: user.id, p_endpoint: "cancel-subscription", p_detail: "Daily limit exceeded" }).catch(() => {});
+      console.warn(`[security] rate_limit endpoint=cancel-subscription user=${user.id}`);
       return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
         status: 429,
         headers: { "Content-Type": "application/json" },

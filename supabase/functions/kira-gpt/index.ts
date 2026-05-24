@@ -267,6 +267,8 @@ serve(async (req) => {
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
+      supabase.rpc("log_security_event", { p_event_type: "auth_failure", p_endpoint: "kira-gpt", p_detail: "Token validation failed" }).catch(() => {});
+      console.warn("[security] auth_failure endpoint=kira-gpt");
       return new Response(JSON.stringify({ error: 'Invalid Session' }), { status: 401, headers: cors });
     }
 
@@ -332,6 +334,8 @@ serve(async (req) => {
       });
     }
     if (!allowed) {
+      supabase.rpc("log_security_event", { p_event_type: "rate_limit", p_user_id: user.id, p_endpoint: "kira-gpt", p_detail: "Daily action limit reached" }).catch(() => {});
+      console.warn(`[security] rate_limit endpoint=kira-gpt user=${user.id}`);
       return new Response(JSON.stringify({
         error: 'Daily Kira limit reached. Upgrade to Pro for 40 actions per day.'
       }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });

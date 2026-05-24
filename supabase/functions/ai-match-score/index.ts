@@ -65,6 +65,8 @@ serve(async (req) => {
       p_window_secs: 3600,
     });
     if (!rlAllowed) {
+      serviceClient.rpc("log_security_event", { p_event_type: "rate_limit", p_user_id: claimsData.claims.sub, p_endpoint: "ai-match-score", p_detail: "Hourly limit exceeded" }).catch(() => {});
+      console.warn(`[security] rate_limit endpoint=ai-match-score user=${claimsData.claims.sub}`);
       return new Response(JSON.stringify({ error: 'Too many requests. Please slow down.' }), {
         status: 429,
         headers: { ...cors, 'Content-Type': 'application/json' },

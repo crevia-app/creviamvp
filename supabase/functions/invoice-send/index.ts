@@ -80,6 +80,8 @@ serve(async (req) => {
     // Identify caller for rate limiting
     const { data: { user: caller } } = await adminClient.auth.getUser(authHeader.replace("Bearer ", ""));
     if (!caller) {
+      adminClient.rpc("log_security_event", { p_event_type: "auth_failure", p_endpoint: "invoice-send", p_detail: "Token validation failed" }).catch(() => {});
+      console.warn("[security] auth_failure endpoint=invoice-send");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...cors, "Content-Type": "application/json" },
       });
@@ -92,6 +94,8 @@ serve(async (req) => {
       p_window_secs: 60,
     });
     if (!rlAllowed) {
+      adminClient.rpc("log_security_event", { p_event_type: "rate_limit", p_user_id: caller.id, p_endpoint: "invoice-send", p_detail: "Per-minute limit exceeded" }).catch(() => {});
+      console.warn(`[security] rate_limit endpoint=invoice-send user=${caller.id}`);
       return new Response(JSON.stringify({ error: "Too many requests. Please slow down." }), {
         status: 429, headers: { ...cors, "Content-Type": "application/json" },
       });

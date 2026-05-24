@@ -43,6 +43,8 @@ serve(async (req) => {
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
+      supabase.rpc("log_security_event", { p_event_type: "auth_failure", p_endpoint: "kira-suggestions", p_detail: "Token validation failed" }).catch(() => {});
+      console.warn("[security] auth_failure endpoint=kira-suggestions");
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...cors, 'Content-Type': 'application/json' },
@@ -57,6 +59,8 @@ serve(async (req) => {
       p_window_secs: 3600,
     });
     if (!rlAllowed) {
+      supabase.rpc("log_security_event", { p_event_type: "rate_limit", p_user_id: user.id, p_endpoint: "kira-suggestions", p_detail: "Hourly limit exceeded" }).catch(() => {});
+      console.warn(`[security] rate_limit endpoint=kira-suggestions user=${user.id}`);
       return new Response(JSON.stringify({ error: 'Too many requests. Please slow down.' }), {
         status: 429,
         headers: { ...cors, 'Content-Type': 'application/json' },

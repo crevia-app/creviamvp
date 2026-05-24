@@ -45,6 +45,18 @@ export default function middleware(request: Request): Response | undefined {
   entry.count++;
   if (entry.count > limit) {
     const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
+    // Structured log — visible in Vercel log drain and dashboard
+    console.warn(JSON.stringify({
+      level: "warn",
+      event: "rate_limit_blocked",
+      ip,
+      bucket,
+      path: url.pathname,
+      count: entry.count,
+      limit,
+      retryAfter,
+      ts: new Date().toISOString(),
+    }));
     return new Response("Too Many Requests", {
       status: 429,
       headers: {

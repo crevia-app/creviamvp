@@ -59,6 +59,8 @@ serve(async (req: Request) => {
     });
     const { data: { user }, error: authErr } = await anonClient.auth.getUser();
     if (authErr || !user) {
+      supabase.rpc("log_security_event", { p_event_type: "auth_failure", p_endpoint: "feedback-notify", p_detail: "Token validation failed" }).catch(() => {});
+      console.warn("[security] auth_failure endpoint=feedback-notify");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...cors, "Content-Type": "application/json" },
@@ -74,6 +76,8 @@ serve(async (req: Request) => {
       p_window_secs: 86400,
     });
     if (!rlAllowed) {
+      supabase.rpc("log_security_event", { p_event_type: "rate_limit", p_user_id: callerUserId, p_endpoint: "feedback-notify", p_detail: "Daily limit exceeded" }).catch(() => {});
+      console.warn(`[security] rate_limit endpoint=feedback-notify user=${callerUserId}`);
       return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
         status: 429,
         headers: { ...cors, "Content-Type": "application/json" },
@@ -107,6 +111,8 @@ serve(async (req: Request) => {
           .eq("id", callerUserId)
           .single();
         if ((callerProfile as any)?.is_admin !== true) {
+          supabase.rpc("log_security_event", { p_event_type: "forbidden", p_user_id: callerUserId, p_endpoint: "feedback-notify", p_detail: `IDOR attempt on feedback_id=${feedback_id}` }).catch(() => {});
+          console.warn(`[security] forbidden endpoint=feedback-notify user=${callerUserId} feedback_id=${feedback_id}`);
           return new Response(JSON.stringify({ error: "Forbidden" }), {
             status: 403,
             headers: { ...cors, "Content-Type": "application/json" },
