@@ -61,6 +61,8 @@ serve(async (req) => {
     const token = authHeader.replace('Bearer ', '');
     const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
     if (claimsError || !claimsData?.claims) {
+      supabase.rpc("log_security_event", { p_event_type: "auth_failure", p_endpoint: "invoices-create", p_detail: "Token validation failed" }).catch(() => {});
+      console.warn("[security] auth_failure endpoint=invoices-create");
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...cors, 'Content-Type': 'application/json' },
@@ -78,6 +80,8 @@ serve(async (req) => {
       p_window_secs: 60,
     });
     if (!allowed) {
+      supabase.rpc("log_security_event", { p_event_type: "rate_limit", p_user_id: userId, p_endpoint: "invoices-create", p_detail: "Per-minute limit exceeded" }).catch(() => {});
+      console.warn(`[security] rate_limit endpoint=invoices-create user=${userId}`);
       return new Response(JSON.stringify({ error: 'Too many requests. Please slow down.' }), {
         status: 429,
         headers: { ...cors, 'Content-Type': 'application/json' },

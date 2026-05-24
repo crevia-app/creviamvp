@@ -70,6 +70,8 @@ serve(async (req) => {
     const token = authHeader.replace('Bearer ', '');
     const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
     if (claimsError || !claimsData?.claims) {
+      supabase.rpc("log_security_event", { p_event_type: "auth_failure", p_endpoint: "approve-action", p_detail: "Token validation failed" }).catch(() => {});
+      console.warn("[security] auth_failure endpoint=approve-action");
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...cors, 'Content-Type': 'application/json' },
