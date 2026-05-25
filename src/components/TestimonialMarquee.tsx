@@ -30,8 +30,8 @@ const TestimonialMarquee = () => {
             Real Voices
           </p>
           <h2 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl font-bold">
-            Trusted by creatives{" "}
-            <span className="text-gradient-bronze">across the continent.</span>
+            Trusted by creatives and businesses{" "}
+            <span className="text-gradient-bronze">building something real.</span>
           </h2>
         </ScrollReveal>
 
