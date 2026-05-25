@@ -259,9 +259,9 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                   A world where impact outweighs influence.
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Where success is measured by businesses built and income earned — not followers
-                  gained and content posted. Athar House is the physical embodiment of this
-                  community. Crevia is the digital infrastructure.
+                  Where the measure of success is what you built — the deals closed,
+                  the businesses scaled, the value created. Crevia is the infrastructure
+                  behind that outcome.
                 </p>
               </div>
             </ScrollReveal>
@@ -277,13 +277,10 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
               Co-Founder's Note
             </p>
             <blockquote className="font-vollkorn text-xl md:text-2xl font-bold leading-relaxed text-foreground italic mb-6">
-              "I started by hosting summits at iHub Nairobi — bringing creatives into the same room
-              to share, collaborate, and build. What I kept seeing was the same problem: immense
-              talent, zero infrastructure. People leaving deals on the table. Getting paid late,
-              or not at all. Running their businesses on WhatsApp threads and gut instinct.
-              I stopped organizing the ecosystem and started building the hard infrastructure
-              it actually needs. Crevia is the digital backbone.
-              The goal has never changed — impact over vanity. Businesses built. Money moved. Stories owned."
+              "Every room I walked into — undeniable talent, real ambition, zero infrastructure.
+              Deals slipping. Payments missed. Serious businesses running on scattered tools
+              and good intentions. The problem was never the people. It was always the foundation.
+              Crevia is that foundation."
             </blockquote>
             <p className="font-poppins font-semibold text-foreground">Amin Hassan Hussein</p>
             <p className="text-sm text-muted-foreground">Co-Founder & CEO, Crevia</p>

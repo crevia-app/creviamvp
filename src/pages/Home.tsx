@@ -130,20 +130,6 @@ const Home = () => {
                   your operations — Kira is the intelligent partner in your corner.
                   Strategy, scoping, and guidance, exactly when you need it.
                 </p>
-                <ul className="space-y-3">
-                  {[
-                    "Deal scoping and pricing guidance",
-                    "Campaign and partnership strategy",
-                    "Business intelligence, on demand",
-                  ].map((item, i) => (
-                    <ScrollReveal key={item} delay={0.08 * i} variant="fade-left">
-                      <li className="flex items-center gap-3 text-foreground">
-                        <div className="w-1.5 h-1.5 rounded-full bg-bronze flex-shrink-0" />
-                        <span className="font-poppins">{item}</span>
-                      </li>
-                    </ScrollReveal>
-                  ))}
-                </ul>
               </div>
             </div>
           </ScrollReveal>
