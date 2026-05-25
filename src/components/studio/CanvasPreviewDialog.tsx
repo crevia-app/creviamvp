@@ -161,11 +161,13 @@ const CanvasPreviewDialog = ({
   const [isFullscreen, setIsFullscreen]                 = useState(false);
   const [printing, setPrinting]                         = useState(false);
   const [showSendDialog, setShowSendDialog]             = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus]             = useState<"idle" | "saving" | "saved">("idle");
 
   // ref on the INNER content padding div — DraggableSig lives inside here
   const contentAreaRef = useRef<HTMLDivElement>(null);
   // ref on the text content div — used to measure its exact Y offset for printing
   const textDivRef = useRef<HTMLDivElement>(null);
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { ref: docRef, download, downloading } = useDownloadPDF(
     canvas ? `Canvas-${canvas.title?.replace(/\s+/g, "-")}` : "Canvas"
@@ -307,6 +309,30 @@ const CanvasPreviewDialog = ({
     onCanvasUpdate?.();
   };
 
+  // Debounced auto-save: fires 2s after the user stops typing in edit mode
+  useEffect(() => {
+    if (!isEditingDetails || !localCanvas) return;
+    const canvasId = localCanvas.id;
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(async () => {
+      setAutoSaveStatus("saving");
+      const { error } = await supabase
+        .from("canvases")
+        .update({ content: editableContent || null })
+        .eq("id", canvasId);
+      if (!error) {
+        setLocalCanvas(prev => ({ ...prev, content: editableContent || null }));
+        setAutoSaveStatus("saved");
+        setTimeout(() => setAutoSaveStatus(s => s === "saved" ? "idle" : s), 3000);
+      } else {
+        setAutoSaveStatus("idle");
+      }
+    }, 2000);
+    return () => {
+      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    };
+  }, [editableContent, isEditingDetails]);
+
   if (!canvas || !localCanvas) return null;
 
   const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
@@ -410,7 +436,13 @@ const CanvasPreviewDialog = ({
                 <div className="p-6 md:p-10 space-y-6">
                   <div className="flex items-center justify-between">
                     <h2 className="font-vollkorn text-xl font-bold text-foreground">Edit Canvas</h2>
-                    <div className="flex gap-1.5">
+                    <div className="flex items-center gap-1.5">
+                      {autoSaveStatus === "saving" && (
+                        <span className="text-[11px] text-muted-foreground">Saving…</span>
+                      )}
+                      {autoSaveStatus === "saved" && (
+                        <span className="text-[11px] text-emerald-600">Autosaved</span>
+                      )}
                       <Button size="sm" variant="ghost"
                         onClick={() => { setIsEditingDetails(false); setEditableContent(localCanvas.content || ""); }}
                         className="gap-1 h-8 text-xs rounded-lg"
