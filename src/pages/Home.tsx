@@ -38,6 +38,7 @@ const Home = () => {
       {/* ═══════════════ HERO ═══════════════ */}
       <section className="relative pt-28 md:pt-40 pb-20 md:pb-32 px-4 md:px-6 min-h-[90vh] flex items-center overflow-hidden">
         <HeroPattern />
+        <div className="hero-radial-glow" aria-hidden="true" />
         <div className="container mx-auto max-w-5xl relative z-10">
           <div className="max-w-3xl space-y-6 md:space-y-8">
             <ScrollReveal delay={0}>
@@ -49,7 +50,7 @@ const Home = () => {
             <ScrollReveal delay={0.12} variant="hero" duration={0.8}>
               <h1 className="font-vollkorn text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] font-bold leading-[1.08]">
                 The infrastructure to scale your{" "}
-                <span className="text-gradient-bronze">creative operations.</span>
+                <span className="text-gradient-h1">creative operations.</span>
               </h1>
             </ScrollReveal>
             <ScrollReveal delay={0.26}>

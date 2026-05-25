@@ -53,7 +53,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
           <ScrollReveal delay={0.1}>
             <h1 className="font-vollkorn text-4xl sm:text-5xl md:text-5xl lg:text-6xl font-bold mb-6 leading-[1.08]">
               Every story deserves{" "}
-              <span className="text-gradient-bronze">infrastructure.</span>
+              <span className="text-gradient-h1">infrastructure.</span>
             </h1>
           </ScrollReveal>
           <ScrollReveal delay={0.2}>
@@ -313,7 +313,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                 </Link>
               )}
               <Link to="/pricing">
-                <Button size="lg" variant="outline" className="font-poppins font-semibold px-10 py-7 text-lg border-2 border-bronze/30 hover:border-bronze hover:bg-bronze/10">
+                <Button size="lg" variant="outline" className="font-poppins font-semibold px-10 py-7 text-lg btn-ghost-bronze">
                   See Pricing
                 </Button>
               </Link>

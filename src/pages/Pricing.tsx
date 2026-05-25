@@ -254,8 +254,10 @@ const Pricing = () => {
                   transition={{ duration: 0.5, delay: 0.08 * i, ease: [0.25, 0.46, 0.45, 0.94] }}
                   className={`relative flex flex-col rounded-2xl p-6 md:p-8 transition-all duration-300 hover:shadow-xl ${
                     plan.highlighted
-                      ? "border-2 border-bronze bg-gradient-to-br from-bronze/8 to-background shadow-lg shadow-bronze/10"
-                      : "border border-border bg-card"
+                      ? "border-gradient-bronze bg-gradient-to-br from-bronze/8 to-background shadow-lg shadow-bronze/10"
+                      : plan.name === "Business"
+                        ? "border-gradient-bronze bg-card"
+                        : "border border-border bg-card"
                   }`}
                 >
                   {plan.badge && (
@@ -337,7 +339,7 @@ const Pricing = () => {
                     <a href="mailto:hello@crevia.app">
                       <Button
                         variant="outline"
-                        className="w-full font-poppins font-semibold border-border hover:border-bronze/50 hover:bg-bronze/5"
+                        className="w-full font-poppins font-semibold btn-ghost-bronze"
                         size="lg"
                       >
                         <Zap className="mr-2 w-4 h-4" />
