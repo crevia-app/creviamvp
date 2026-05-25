@@ -8,28 +8,13 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Printer, Send, CheckCircle2, Clock, AlertCircle, Maximize2, Minimize2, Download, Lock, Palette, X } from "lucide-react";
+import { Printer, Send, CheckCircle2, Clock, AlertCircle, Maximize2, Minimize2, Download, X } from "lucide-react";
 import { useDownloadPDF } from "@/hooks/use-download-pdf";
 import { useSubscription } from "@/hooks/use-subscription";
 import { SendDocumentDialog } from "@/components/studio/SendDocumentDialog";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-
-const INVOICE_THEMES = [
-  { name: "Crevia Gold",  hex: "#B07D3A", pro: false },
-  { name: "Noir",         hex: "#18181B", pro: true  },
-  { name: "Cobalt",       hex: "#1E40AF", pro: true  },
-  { name: "Emerald",      hex: "#065F46", pro: true  },
-  { name: "Amethyst",     hex: "#5B21B6", pro: true  },
-  { name: "Crimson",      hex: "#991B1B", pro: true  },
-  { name: "Slate",        hex: "#1E293B", pro: true  },
-  { name: "Copper",       hex: "#92400E", pro: true  },
-  { name: "Rose",         hex: "#9D174D", pro: true  },
-  { name: "Teal",         hex: "#0F4C5C", pro: true  },
-  { name: "Graphite",     hex: "#374151", pro: true  },
-  { name: "Midnight",     hex: "#0C1445", pro: true  },
-] as const;
 
 const DEFAULT_COLOR = "#B07D3A";
 
@@ -54,8 +39,6 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
   const [isFullscreen, setIsFullscreen]         = useState(false);
   const [showSendDialog, setShowSendDialog]     = useState(false);
   const [accentColor, setAccentColor]           = useState(DEFAULT_COLOR);
-  const [savingColor, setSavingColor]           = useState(false);
-  const [showPalette, setShowPalette]           = useState(false);
 
   const { isPro, isBrandWorkspace, isBusiness } = useSubscription();
   const isProUser = isPro || isBrandWorkspace || isBusiness;
@@ -155,22 +138,6 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
     }
   };
 
-  const handleColorSelect = async (hex: string, isPro: boolean) => {
-    if (isPro && !isProUser) {
-      toast.error("Pro feature", { description: "Upgrade to Pro to unlock all invoice color themes." });
-      return;
-    }
-    setAccentColor(hex);
-    setShowPalette(false);
-    setSavingColor(true);
-    const { error } = await supabase
-      .from("invoices")
-      .update({ accent_color: hex } as any)
-      .eq("id", invoice.id);
-    if (error) toast.error("Couldn't save color", { description: error.message });
-    setSavingColor(false);
-  };
-
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("en-KE", {
       style: "currency",
@@ -195,7 +162,6 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
     return `rgba(${r},${g},${b},${alpha})`;
   };
 
-  const currentTheme = INVOICE_THEMES.find((t) => t.hex === accentColor) || INVOICE_THEMES[0];
   const businessName = businessSettings?.business_name || profile?.display_name || profile?.handle || "Your Name";
 
   return (
@@ -216,70 +182,6 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
           </DialogTitle>
 
           <div className="flex items-center gap-1 flex-shrink-0">
-            {/* Theme picker */}
-            <div className="relative">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowPalette((v) => !v)}
-                className="h-8 w-8 p-0"
-                title="Color theme"
-              >
-                <span
-                  className="w-3.5 h-3.5 rounded-full border border-border/40"
-                  style={{ background: accentColor }}
-                />
-              </Button>
-
-              {showPalette && (
-                <div className="absolute right-0 top-10 z-50 w-56 rounded-2xl bg-card border border-border shadow-2xl p-3 space-y-2.5">
-                  <div className="flex items-center justify-between px-0.5">
-                    <p className="text-xs font-semibold text-foreground">Invoice Theme</p>
-                    {!isProUser && (
-                      <span className="text-[10px] font-bold text-bronze bg-bronze/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                        Pro
-                      </span>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-6 gap-2">
-                    {INVOICE_THEMES.map((theme) => {
-                      const locked = theme.pro && !isProUser;
-                      const active = accentColor === theme.hex;
-                      return (
-                        <button
-                          key={theme.hex}
-                          title={theme.name}
-                          onClick={() => handleColorSelect(theme.hex, theme.pro)}
-                          className={cn(
-                            "relative w-8 h-8 rounded-xl transition-all duration-150",
-                            active ? "ring-2 ring-offset-2 ring-foreground scale-110" : "hover:scale-105",
-                            locked ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-                          )}
-                          style={{ background: theme.hex }}
-                        >
-                          {locked && (
-                            <span className="absolute inset-0 flex items-center justify-center">
-                              <Lock className="w-3 h-3 text-white drop-shadow" />
-                            </span>
-                          )}
-                          {active && !locked && (
-                            <span className="absolute inset-0 flex items-center justify-center">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-white drop-shadow" />
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {!isProUser && (
-                    <p className="text-[11px] text-muted-foreground text-center pt-1 border-t border-border/50">
-                      Upgrade to Pro to unlock all 12 themes
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
             <Button variant="outline" size="sm" onClick={() => setShowSendDialog(true)} className="h-8 w-8 p-0" title="Send">
               <Send className="h-3.5 w-3.5" />
             </Button>

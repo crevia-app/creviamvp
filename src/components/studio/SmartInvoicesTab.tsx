@@ -23,6 +23,7 @@ import {
   TrendingUp,
   DollarSign,
   Sparkles,
+  SlidersHorizontal,
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, isAfter } from "date-fns";
@@ -41,6 +42,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CreateInvoiceDialog from "./CreateInvoiceDialog";
+import InvoiceSettingsDialog from "./InvoiceSettingsDialog";
 import { useSubscription } from "@/hooks/use-subscription";
 import InvoicePreviewDialog from "./InvoicePreviewDialog";
 import ReceiptPreviewDialog from "./ReceiptPreviewDialog";
@@ -72,6 +74,7 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
   const [receiptInvoice, setReceiptInvoice] = useState<Invoice | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [businessSettings, setBusinessSettings] = useState<{
     business_name: string;
     business_email: string;
@@ -305,26 +308,37 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
             Create, send, and track professional invoices
           </p>
         </div>
-        <Button
-          onClick={() => {
-            if (invoiceLimitReached) {
-              toast.error("Monthly limit reached", {
-                description: `Free plan allows ${limits.invoicesPerMonth} invoices per month. Upgrade to Pro or Business for unlimited.`,
-              });
-              return;
-            }
-            setCreateDialogOpen(true);
-          }}
-          className="gap-2 bg-bronze hover:bg-bronze/90 shadow-lg shadow-bronze/20 w-full md:w-auto"
-        >
-          <Plus className="h-4 w-4" />
-          New Invoice
-          {isFree && (
-            <span className="ml-1 text-[10px] opacity-70">
-              {limits.invoicesPerMonth - invoicesUsedThisMonth} left
-            </span>
-          )}
-        </Button>
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setSettingsOpen(true)}
+            className="h-10 w-10 flex-shrink-0"
+            title="Invoice settings"
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+          </Button>
+          <Button
+            onClick={() => {
+              if (invoiceLimitReached) {
+                toast.error("Monthly limit reached", {
+                  description: `Free plan allows ${limits.invoicesPerMonth} invoices per month. Upgrade to Pro or Business for unlimited.`,
+                });
+                return;
+              }
+              setCreateDialogOpen(true);
+            }}
+            className="gap-2 bg-bronze hover:bg-bronze/90 shadow-lg shadow-bronze/20 flex-1 md:flex-none"
+          >
+            <Plus className="h-4 w-4" />
+            New Invoice
+            {isFree && (
+              <span className="ml-1 text-[10px] opacity-70">
+                {limits.invoicesPerMonth - invoicesUsedThisMonth} left
+              </span>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -592,6 +606,11 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
         open={!!receiptInvoice}
         onOpenChange={(open) => !open && setReceiptInvoice(null)}
         invoice={receiptInvoice}
+      />
+      <InvoiceSettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        onSaved={fetchBusinessSettings}
       />
     </div>
   );

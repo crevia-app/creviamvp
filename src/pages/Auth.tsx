@@ -314,7 +314,7 @@ const Auth = () => {
   };
 
   // ── Shared background elements ─────────────────────────────────
-  const DarkBg = () => (
+  const PageBg = () => (
     <>
       <div
         className="absolute inset-0 opacity-[0.03] pointer-events-none"
@@ -328,11 +328,11 @@ const Auth = () => {
   // ── OAuth loading ──────────────────────────────────────────────
   if (isProcessingOAuth) {
     return (
-      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center p-4 relative overflow-hidden">
-        <DarkBg />
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+        <PageBg />
         <div className="relative z-10 flex flex-col items-center gap-4 text-center">
           <Loader2 className="w-10 h-10 animate-spin text-bronze" />
-          <p className="font-poppins text-white/50 text-sm">Signing you in…</p>
+          <p className="font-poppins text-muted-foreground text-sm">Signing you in…</p>
         </div>
       </div>
     );
@@ -341,23 +341,20 @@ const Auth = () => {
   // ── Welcome screen (immediate signup — no email confirmation) ──
   if (showWelcomeScreen) {
     return (
-      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center p-6 relative overflow-hidden">
-        <DarkBg />
+      <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
+        <PageBg />
         <div className="relative z-10 w-full max-w-sm animate-fade-in">
           <div className="flex items-center justify-center gap-2.5 mb-10">
-            <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-full ring-1 ring-white/10" />
-            <span className="font-vollkorn text-2xl font-bold text-white">Crevia</span>
+            <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-full ring-1 ring-border" />
+            <span className="font-vollkorn text-2xl font-bold text-foreground">Crevia</span>
           </div>
 
-          <div
-            className="bg-white/[0.04] border border-white/10 rounded-2xl p-8 text-center backdrop-blur-sm"
-            style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.04), 0 24px 64px rgba(0,0,0,0.4)" }}
-          >
+          <div className="bg-card border border-border rounded-2xl p-8 text-center backdrop-blur-sm shadow-xl">
             <div className="w-20 h-20 rounded-2xl bg-bronze/15 border border-bronze/25 flex items-center justify-center mx-auto mb-6">
               <BadgeCheck className="w-10 h-10 text-bronze" />
             </div>
-            <h1 className="font-vollkorn text-2xl font-bold text-white mb-2">Welcome to Crevia!</h1>
-            <p className="text-white/45 text-sm font-poppins mb-8 leading-relaxed">
+            <h1 className="font-vollkorn text-2xl font-bold text-foreground mb-2">Welcome to Crevia!</h1>
+            <p className="text-muted-foreground text-sm font-poppins mb-8 leading-relaxed">
               Your account has been created. You're all set to start building.
             </p>
             <button
@@ -369,7 +366,7 @@ const Auth = () => {
             </button>
           </div>
 
-          <p className="text-center text-white/15 text-xs font-poppins mt-8">
+          <p className="text-center text-muted-foreground/50 text-xs font-poppins mt-8">
             © {new Date().getFullYear()} Crevia. All rights reserved.
           </p>
         </div>
@@ -380,17 +377,15 @@ const Auth = () => {
   // ── Email confirmation pending ─────────────────────────────────
   if (emailConfirmPending) {
     return (
-      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center p-6 relative overflow-hidden">
-        <DarkBg />
+      <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
+        <PageBg />
         <div className="relative z-10 w-full max-w-sm animate-fade-in">
           <div className="flex items-center justify-center gap-2.5 mb-10">
-            <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-full ring-1 ring-white/10" />
-            <span className="font-vollkorn text-2xl font-bold text-white">Crevia</span>
+            <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-full ring-1 ring-border" />
+            <span className="font-vollkorn text-2xl font-bold text-foreground">Crevia</span>
           </div>
 
-          <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-8 text-center backdrop-blur-sm"
-            style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.04), 0 24px 64px rgba(0,0,0,0.4)" }}
-          >
+          <div className="bg-card border border-border rounded-2xl p-8 text-center backdrop-blur-sm shadow-xl">
             {/* Account created badge */}
             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-bronze/15 border border-bronze/30 mb-5">
               <BadgeCheck className="w-3.5 h-3.5 text-bronze" />
@@ -403,8 +398,8 @@ const Auth = () => {
               </svg>
             </div>
 
-            <h1 className="font-vollkorn text-2xl font-bold text-white mb-2">Check your inbox</h1>
-            <p className="text-white/50 text-sm font-poppins mb-1">We sent a confirmation link to</p>
+            <h1 className="font-vollkorn text-2xl font-bold text-foreground mb-2">Check your inbox</h1>
+            <p className="text-muted-foreground text-sm font-poppins mb-1">We sent a confirmation link to</p>
             <p className="text-bronze font-semibold font-poppins text-sm mb-6 truncate">{pendingEmail}</p>
 
             <div className="space-y-3 mb-8 text-left">
@@ -417,7 +412,7 @@ const Auth = () => {
                   <span className="w-6 h-6 rounded-full bg-bronze/20 border border-bronze/30 flex items-center justify-center flex-shrink-0 text-xs font-bold text-bronze font-poppins">
                     {n}
                   </span>
-                  <span className="text-sm text-white/60 font-poppins">{label}</span>
+                  <span className="text-sm text-foreground/70 font-poppins">{label}</span>
                 </div>
               ))}
             </div>
@@ -434,7 +429,7 @@ const Auth = () => {
               Open Gmail
             </a>
 
-            <p className="text-white/30 text-xs font-poppins mb-4">Didn't get it? Check your spam folder.</p>
+            <p className="text-muted-foreground/60 text-xs font-poppins mb-4">Didn't get it? Check your spam folder.</p>
 
             <button
               onClick={handleResendConfirmation}
@@ -449,7 +444,7 @@ const Auth = () => {
             </button>
           </div>
 
-          <p className="text-center text-white/20 text-xs font-poppins mt-8">
+          <p className="text-center text-muted-foreground/40 text-xs font-poppins mt-8">
             © {new Date().getFullYear()} Crevia. All rights reserved.
           </p>
         </div>
@@ -459,27 +454,24 @@ const Auth = () => {
 
   // ── Main auth form ─────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center p-4 md:p-6 relative overflow-hidden">
-      <DarkBg />
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 md:p-6 relative overflow-hidden">
+      <PageBg />
 
       <div className="relative z-10 w-full max-w-md animate-fade-in">
         {/* Logo */}
         <Link to="/" className="flex items-center justify-center gap-2.5 mb-8 hover:opacity-80 transition-opacity">
-          <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-full ring-1 ring-white/10 transition-transform hover:scale-105" />
-          <span className="font-vollkorn text-2xl font-bold text-white">Crevia</span>
+          <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-full ring-1 ring-border transition-transform hover:scale-105" />
+          <span className="font-vollkorn text-2xl font-bold text-foreground">Crevia</span>
         </Link>
 
         {/* Card */}
-        <div
-          className="bg-white/[0.04] border border-white/10 rounded-2xl p-8 backdrop-blur-sm"
-          style={{ boxShadow: "0 0 0 1px rgba(255,255,255,0.04), 0 24px 64px rgba(0,0,0,0.4)" }}
-        >
+        <div className="bg-card border border-border rounded-2xl p-8 backdrop-blur-sm shadow-xl">
           {/* Heading */}
           <div className="mb-7">
-            <h1 className="font-vollkorn text-2xl md:text-[28px] font-bold text-white mb-1.5 leading-tight">
+            <h1 className="font-vollkorn text-2xl md:text-[28px] font-bold text-foreground mb-1.5 leading-tight">
               {isSignup ? "Create your account" : "Welcome back"}
             </h1>
-            <p className="text-sm text-white/40 font-poppins">
+            <p className="text-sm text-muted-foreground font-poppins">
               {isSignup
                 ? "Join thousands of creators and brands on Crevia"
                 : "Sign in to continue to your workspace"}
@@ -489,7 +481,7 @@ const Auth = () => {
           {/* Google */}
           <Button
             variant="outline"
-            className="w-full h-12 mb-5 bg-white/[0.04] border-white/[0.12] hover:bg-white/[0.08] text-white font-poppins font-medium transition-all rounded-xl"
+            className="w-full h-12 mb-5 bg-secondary/50 border-border hover:bg-secondary text-foreground font-poppins font-medium transition-all rounded-xl"
             onClick={handleGoogleSignIn}
             disabled={isGoogleLoading}
           >
@@ -508,17 +500,17 @@ const Auth = () => {
 
           {/* Divider */}
           <div className="flex items-center gap-3 mb-5">
-            <div className="flex-1 border-t border-white/[0.08]" />
-            <span className="text-xs text-white/25 font-poppins">
+            <div className="flex-1 border-t border-border/50" />
+            <span className="text-xs text-muted-foreground/60 font-poppins">
               {isSignup ? "or sign up with email" : "or sign in with email"}
             </span>
-            <div className="flex-1 border-t border-white/[0.08]" />
+            <div className="flex-1 border-t border-border/50" />
           </div>
 
           <form onSubmit={handleAuth} className="space-y-4">
             {/* Email */}
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-white/45 text-[11px] font-poppins font-semibold uppercase tracking-widest">
+              <Label htmlFor="email" className="text-muted-foreground text-[11px] font-poppins font-semibold uppercase tracking-widest">
                 Email
               </Label>
               <Input
@@ -529,14 +521,14 @@ const Auth = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-12 bg-white/[0.05] border-white/[0.10] text-white placeholder:text-white/20 focus:border-bronze/50 focus-visible:ring-bronze/20 rounded-xl"
+                className="h-12 bg-background border-border text-foreground placeholder:text-muted-foreground/40 focus:border-bronze/50 focus-visible:ring-bronze/20 rounded-xl"
               />
             </div>
 
             {/* Password */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-white/45 text-[11px] font-poppins font-semibold uppercase tracking-widest">
+                <Label htmlFor="password" className="text-muted-foreground text-[11px] font-poppins font-semibold uppercase tracking-widest">
                   Password
                 </Label>
                 {!isSignup && (
@@ -558,12 +550,12 @@ const Auth = () => {
                   value={password}
                   onChange={(e) => handlePasswordChange(e.target.value)}
                   required
-                  className="h-12 pr-12 bg-white/[0.05] border-white/[0.10] text-white placeholder:text-white/20 focus:border-bronze/50 focus-visible:ring-bronze/20 rounded-xl"
+                  className="h-12 pr-12 bg-background border-border text-foreground placeholder:text-muted-foreground/40 focus:border-bronze/50 focus-visible:ring-bronze/20 rounded-xl"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/55 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -573,11 +565,11 @@ const Auth = () => {
 
             {/* Password strength */}
             {isSignup && password.length > 0 && (
-              <div className="space-y-1.5 rounded-xl bg-white/[0.03] border border-white/[0.07] p-3">
+              <div className="space-y-1.5 rounded-xl bg-secondary/30 border border-border/50 p-3">
                 {["At least 8 characters", "One uppercase letter", "One lowercase letter", "One number", "One special character"].map((rule) => (
                   <div key={rule} className="flex items-center gap-2 text-xs">
-                    <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", passwordErrors.includes(rule) ? "bg-white/15" : "bg-emerald-400")} />
-                    <span className={cn("font-poppins transition-colors", passwordErrors.includes(rule) ? "text-white/30" : "text-emerald-400")}>{rule}</span>
+                    <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", passwordErrors.includes(rule) ? "bg-muted-foreground/30" : "bg-emerald-400")} />
+                    <span className={cn("font-poppins transition-colors", passwordErrors.includes(rule) ? "text-muted-foreground/50" : "text-emerald-500")}>{rule}</span>
                   </div>
                 ))}
               </div>
@@ -590,9 +582,9 @@ const Auth = () => {
                   id="terms"
                   checked={termsAccepted}
                   onCheckedChange={(checked) => setTermsAccepted(checked === true)}
-                  className="mt-0.5 shrink-0 border-white/20 data-[state=checked]:bg-bronze data-[state=checked]:border-bronze"
+                  className="mt-0.5 shrink-0 border-border data-[state=checked]:bg-bronze data-[state=checked]:border-bronze"
                 />
-                <label htmlFor="terms" className="text-xs text-white/35 leading-relaxed cursor-pointer select-none font-poppins">
+                <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none font-poppins">
                   By signing up, you agree to the{" "}
                   <Link to="/terms-of-service" className="text-bronze/80 hover:text-bronze underline underline-offset-2" onClick={(e) => e.stopPropagation()}>
                     Terms of Use
@@ -637,7 +629,7 @@ const Auth = () => {
             )}
           </form>
 
-          <p className="text-center mt-5 text-sm text-white/30 font-poppins">
+          <p className="text-center mt-5 text-sm text-muted-foreground font-poppins">
             {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
             <button
               onClick={() => { setIsSignup((v) => !v); setTermsAccepted(false); setPassword(""); setPasswordErrors([]); }}
@@ -648,31 +640,31 @@ const Auth = () => {
           </p>
         </div>
 
-        <p className="text-center text-white/15 text-xs font-poppins mt-6">
+        <p className="text-center text-muted-foreground/40 text-xs font-poppins mt-6">
           © {new Date().getFullYear()} Crevia. All rights reserved.
         </p>
       </div>
 
       {/* Forgot Password Dialog — 3-step: email → OTP → new password */}
       <Dialog open={showForgotPassword} onOpenChange={(open) => { setShowForgotPassword(open); if (!open) clearResetState(); }}>
-        <DialogContent className="sm:max-w-md bg-[#141414] border-white/10">
+        <DialogContent className="sm:max-w-md bg-card border-border">
 
           {resetStep === 1 && (
             <>
               <DialogHeader>
-                <DialogTitle className="font-vollkorn text-2xl text-white">Reset your password</DialogTitle>
-                <DialogDescription className="text-white/45">Enter your email and we'll send a verification code.</DialogDescription>
+                <DialogTitle className="font-vollkorn text-2xl text-foreground">Reset your password</DialogTitle>
+                <DialogDescription className="text-muted-foreground">Enter your email and we'll send a verification code.</DialogDescription>
               </DialogHeader>
               <form onSubmit={handleForgotPassword} className="space-y-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="reset-email" className="text-white/45 text-[11px] font-poppins font-semibold uppercase tracking-widest">Email</Label>
+                  <Label htmlFor="reset-email" className="text-muted-foreground text-[11px] font-poppins font-semibold uppercase tracking-widest">Email</Label>
                   <Input id="reset-email" type="email" placeholder="you@example.com" autoComplete="email" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} required
-                    className="h-12 bg-white/[0.05] border-white/10 text-white placeholder:text-white/20 focus:border-bronze/50 rounded-xl" />
+                    className="h-12 bg-background border-border text-foreground placeholder:text-muted-foreground/40 focus:border-bronze/50 rounded-xl" />
                 </div>
                 <DialogFooter className="flex-col sm:flex-row gap-2">
                   <Button type="button" variant="outline" onClick={() => setShowForgotPassword(false)}
-                    className="h-12 bg-white/[0.04] border-white/15 text-white hover:bg-white/[0.08]">Cancel</Button>
-                  <Button type="submit" disabled={isResetting} className="h-12 bg-bronze hover:bg-bronze/90 font-semibold">
+                    className="h-12 bg-secondary/30 border-border text-foreground hover:bg-secondary">Cancel</Button>
+                  <Button type="submit" disabled={isResetting} className="h-12 bg-bronze hover:bg-bronze/90 text-white font-semibold">
                     {isResetting ? "Sending..." : "Send Code"}
                   </Button>
                 </DialogFooter>
@@ -683,22 +675,22 @@ const Auth = () => {
           {resetStep === 2 && (
             <>
               <DialogHeader>
-                <DialogTitle className="font-vollkorn text-2xl text-white">Enter the code</DialogTitle>
-                <DialogDescription className="text-white/45">
-                  We sent a 6-digit code to <span className="font-semibold text-white/70">{resetEmail}</span>.
+                <DialogTitle className="font-vollkorn text-2xl text-foreground">Enter the code</DialogTitle>
+                <DialogDescription className="text-muted-foreground">
+                  We sent a 6-digit code to <span className="font-semibold text-foreground/70">{resetEmail}</span>.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleVerifyOtp} className="space-y-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="otp-code" className="text-white/45 text-[11px] font-poppins font-semibold uppercase tracking-widest">Verification code</Label>
+                  <Label htmlFor="otp-code" className="text-muted-foreground text-[11px] font-poppins font-semibold uppercase tracking-widest">Verification code</Label>
                   <Input id="otp-code" type="text" inputMode="numeric" placeholder="123456" maxLength={6} value={resetOtpCode}
                     onChange={(e) => setResetOtpCode(e.target.value.replace(/\D/g, ""))} required autoFocus
-                    className="h-12 text-center text-xl tracking-widest font-mono bg-white/[0.05] border-white/10 text-white placeholder:text-white/20 focus:border-bronze/50 rounded-xl" />
+                    className="h-12 text-center text-xl tracking-widest font-mono bg-background border-border text-foreground placeholder:text-muted-foreground/40 focus:border-bronze/50 rounded-xl" />
                 </div>
                 <DialogFooter className="flex-col sm:flex-row gap-2">
                   <Button type="button" variant="outline" onClick={() => setResetStep(1)}
-                    className="h-12 bg-white/[0.04] border-white/15 text-white hover:bg-white/[0.08]">Back</Button>
-                  <Button type="submit" disabled={isVerifyingOtp || resetOtpCode.length < 6} className="h-12 bg-bronze hover:bg-bronze/90 font-semibold">
+                    className="h-12 bg-secondary/30 border-border text-foreground hover:bg-secondary">Back</Button>
+                  <Button type="submit" disabled={isVerifyingOtp || resetOtpCode.length < 6} className="h-12 bg-bronze hover:bg-bronze/90 text-white font-semibold">
                     {isVerifyingOtp ? "Verifying..." : "Verify Code"}
                   </Button>
                 </DialogFooter>
@@ -709,38 +701,38 @@ const Auth = () => {
           {resetStep === 3 && (
             <>
               <DialogHeader>
-                <DialogTitle className="font-vollkorn text-2xl text-white">Set new password</DialogTitle>
-                <DialogDescription className="text-white/45">Choose a strong password for your account.</DialogDescription>
+                <DialogTitle className="font-vollkorn text-2xl text-foreground">Set new password</DialogTitle>
+                <DialogDescription className="text-muted-foreground">Choose a strong password for your account.</DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSetNewPassword} className="space-y-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="new-pw" className="text-white/45 text-[11px] font-poppins font-semibold uppercase tracking-widest">New Password</Label>
+                  <Label htmlFor="new-pw" className="text-muted-foreground text-[11px] font-poppins font-semibold uppercase tracking-widest">New Password</Label>
                   <div className="relative">
                     <Input id="new-pw" type={showResetPassword ? "text" : "password"} placeholder="••••••••" value={resetNewPassword}
                       onChange={(e) => setResetNewPassword(e.target.value)} required autoFocus
-                      className="h-12 pr-12 bg-white/[0.05] border-white/10 text-white placeholder:text-white/20 focus:border-bronze/50 rounded-xl" />
+                      className="h-12 pr-12 bg-background border-border text-foreground placeholder:text-muted-foreground/40 focus:border-bronze/50 rounded-xl" />
                     <button type="button" onClick={() => setShowResetPassword(!showResetPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/55 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                       aria-label={showResetPassword ? "Hide password" : "Show password"}>
                       {showResetPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
                 {resetNewPassword.length > 0 && (
-                  <div className="space-y-1.5 rounded-xl bg-white/[0.03] border border-white/[0.07] p-3">
+                  <div className="space-y-1.5 rounded-xl bg-secondary/30 border border-border/50 p-3">
                     {["At least 8 characters", "One uppercase letter", "One lowercase letter", "One number", "One special character"].map((rule) => {
                       const passing = !validatePassword(resetNewPassword).includes(rule);
                       return (
                         <div key={rule} className="flex items-center gap-2 text-xs">
-                          <div className={`w-1.5 h-1.5 rounded-full ${passing ? "bg-emerald-400" : "bg-white/15"}`} />
-                          <span className={`font-poppins ${passing ? "text-emerald-400" : "text-white/30"}`}>{rule}</span>
+                          <div className={`w-1.5 h-1.5 rounded-full ${passing ? "bg-emerald-400" : "bg-muted-foreground/30"}`} />
+                          <span className={`font-poppins ${passing ? "text-emerald-500" : "text-muted-foreground/50"}`}>{rule}</span>
                         </div>
                       );
                     })}
                   </div>
                 )}
                 <DialogFooter>
-                  <Button type="submit" disabled={isUpdatingPassword} className="w-full h-12 bg-bronze hover:bg-bronze/90 font-semibold">
+                  <Button type="submit" disabled={isUpdatingPassword} className="w-full h-12 bg-bronze hover:bg-bronze/90 text-white font-semibold">
                     {isUpdatingPassword ? "Saving..." : "Set Password"}
                   </Button>
                 </DialogFooter>

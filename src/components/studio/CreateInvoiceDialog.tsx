@@ -103,6 +103,7 @@ const CreateInvoiceDialog = ({
 }: CreateInvoiceDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [invoiceAccentColor, setInvoiceAccentColor] = useState("#B07D3A");
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
@@ -197,15 +198,20 @@ const CreateInvoiceDialog = ({
       const { data: { session } } = await supabase.auth.getSession();
       if (cancelled || !session) return;
 
-      const { data: bs } = await supabase
+      const { data: bs } = await (supabase as any)
         .from("business_settings")
-        .select("default_currency, default_payment_terms")
+        .select("default_currency, default_payment_terms, invoice_accent_color, invoice_payment_details")
         .eq("user_id", session.user.id)
         .maybeSingle();
 
       if (cancelled || !bs) return;
       if (bs.default_currency) setCurrency(bs.default_currency);
       if (bs.default_payment_terms) setTerms(bs.default_payment_terms);
+      if (bs.invoice_accent_color) setInvoiceAccentColor(bs.invoice_accent_color);
+      if (bs.invoice_payment_details?.method) {
+        setPaymentDetails({ ...defaultPaymentDetails, ...bs.invoice_payment_details });
+        setShowPaymentDetails(true);
+      }
     })();
 
     return () => { cancelled = true; };
@@ -379,6 +385,7 @@ const CreateInvoiceDialog = ({
             terms: terms || null,
             payment_details: (showPaymentDetails && paymentDetails.method)
               ? paymentDetails as any : null,
+            accent_color: invoiceAccentColor,
           })
           .select()
           .single();
