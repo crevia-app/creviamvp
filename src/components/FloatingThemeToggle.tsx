@@ -18,7 +18,7 @@ export function FloatingThemeToggle() {
 
   useEffect(() => {
     setMounted(true);
-    const saved = localStorage.getItem("theme") || "light";
+    const saved = localStorage.getItem("theme") || "system";
     setSelected(saved);
   }, []);
 
@@ -33,10 +33,7 @@ export function FloatingThemeToggle() {
   }, [open]);
 
   const handleSelect = (value: string) => {
-    const applied = value === "system" ? "light" : value;
-    localStorage.setItem("app-theme", applied);
-    localStorage.setItem("theme", value);
-    setTheme(applied);
+    setTheme(value);
     setSelected(value);
     setOpen(false);
   };

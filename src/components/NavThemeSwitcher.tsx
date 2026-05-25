@@ -33,10 +33,7 @@ export function NavThemeSwitcher() {
   }, [open]);
 
   const handleSelect = (value: string) => {
-    const applied = value === "system" ? "light" : value;
-    localStorage.setItem("app-theme", applied);
-    localStorage.setItem("theme", value);
-    setTheme(applied);
+    setTheme(value);
     setSelected(value);
     setOpen(false);
   };

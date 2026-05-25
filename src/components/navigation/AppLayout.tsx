@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { useTheme } from "next-themes";
 import { supabase } from "@/integrations/supabase/client";
 import MainSidebar from "./MainSidebar";
 import MobileBottomNav from "./MobileBottomNav";
@@ -14,14 +13,10 @@ interface AppLayoutProps {
 
 const AppLayout = ({ children }: AppLayoutProps) => {
   const location = useLocation();
-  const { setTheme } = useTheme();
   const [profile, setProfile] = useState<any>(null);
   const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
 
   useEffect(() => {
-    const appTheme = localStorage.getItem("app-theme");
-    if (appTheme) setTheme(appTheme);
-
     let realtimeChannel: ReturnType<typeof supabase.channel> | null = null;
 
     const init = async () => {

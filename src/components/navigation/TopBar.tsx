@@ -44,7 +44,7 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
 
   useEffect(() => {
     setMounted(true);
-    setSelected(localStorage.getItem("theme") || "light");
+    setSelected(localStorage.getItem("theme") || "system");
   }, []);
 
   useEffect(() => {
@@ -58,10 +58,7 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
   }, [themeOpen]);
 
   const handleThemeSelect = (value: string) => {
-    const applied = value === "system" ? "light" : value;
-    localStorage.setItem("app-theme", applied);
-    localStorage.setItem("theme", value);
-    setTheme(applied);
+    setTheme(value);
     setSelected(value);
     setThemeOpen(false);
   };

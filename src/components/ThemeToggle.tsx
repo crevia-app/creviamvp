@@ -14,9 +14,6 @@ export function ThemeToggle() {
   }, []);
 
   const handleSetTheme = (value: string) => {
-    // Store as app-level preference (only affects post-login)
-    localStorage.setItem("app-theme", value);
-    localStorage.setItem("theme", value);
     setTheme(value);
   };
 

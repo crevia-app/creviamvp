@@ -246,7 +246,7 @@ function AppContent() {
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="theme">
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem={true} storageKey="theme">
         <LanguageProvider>
           <TooltipProvider>
             <Toaster />
