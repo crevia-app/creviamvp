@@ -645,6 +645,28 @@ async function toolGetNotifications(args: any, userId: string, supabase: any): P
 
 // ── Tool Dispatcher ───────────────────────────────────────────────────────────
 
+// Strips prompt-injection patterns from tool results before they enter the
+// OpenAI context. Prevents users from embedding instructions in their own
+// stored data (invoice client names, canvas titles, etc.) to hijack Kira.
+function sanitizeToolResult(result: unknown): unknown {
+  try {
+    const str = JSON.stringify(result);
+    const cleaned = str
+      .replace(/ignore\s+(all\s+)?(previous\s+|above\s+)?instructions/gi, '[blocked]')
+      .replace(/you\s+are\s+now\b/gi, '[blocked]')
+      .replace(/forget\s+(your\s+|all\s+)?instructions/gi, '[blocked]')
+      .replace(/pretend\s+(you\s+are|to\s+be)/gi, '[blocked]')
+      .replace(/reveal\s+(your|the)\s+(system|internal)\s+prompt/gi, '[blocked]')
+      .replace(/output\s+(your|the)\s+(system|full)\s+prompt/gi, '[blocked]')
+      .replace(/system\s+prompt/gi, '[blocked]')
+      .replace(/jailbreak/gi, '[blocked]')
+      .replace(/DAN\s+mode/gi, '[blocked]');
+    return JSON.parse(cleaned);
+  } catch {
+    return result;
+  }
+}
+
 async function executeTool(
   name: string,
   // deno-lint-ignore no-explicit-any
@@ -653,22 +675,24 @@ async function executeTool(
   // deno-lint-ignore no-explicit-any
   supabase: any,
 ): Promise<unknown> {
+  let result: unknown;
   switch (name) {
-    case 'get_invoices':          return await toolGetInvoices(args, userId, supabase);
-    case 'get_invoice_detail':    return await toolGetInvoiceDetail(args, userId, supabase);
-    case 'get_revenue_summary':   return await toolGetRevenueSummary(args, userId, supabase);
-    case 'get_canvases':          return await toolGetCanvases(args, userId, supabase);
-    case 'get_canvas_detail':     return await toolGetCanvasDetail(args, userId, supabase);
-    case 'get_business_settings': return await toolGetBusinessSettings(args, userId, supabase);
-    case 'get_link_profile':      return await toolGetLinkProfile(args, userId, supabase);
-    case 'get_saved_clients':     return await toolGetSavedClients(args, userId, supabase);
-    case 'get_profile':           return await toolGetProfile(args, userId, supabase);
-    case 'save_client':           return await toolSaveClient(args, userId, supabase);
-    case 'save_memory':           return await toolSaveMemory(args, userId, supabase);
-    case 'get_notifications':     return await toolGetNotifications(args, userId, supabase);
+    case 'get_invoices':          result = await toolGetInvoices(args, userId, supabase); break;
+    case 'get_invoice_detail':    result = await toolGetInvoiceDetail(args, userId, supabase); break;
+    case 'get_revenue_summary':   result = await toolGetRevenueSummary(args, userId, supabase); break;
+    case 'get_canvases':          result = await toolGetCanvases(args, userId, supabase); break;
+    case 'get_canvas_detail':     result = await toolGetCanvasDetail(args, userId, supabase); break;
+    case 'get_business_settings': result = await toolGetBusinessSettings(args, userId, supabase); break;
+    case 'get_link_profile':      result = await toolGetLinkProfile(args, userId, supabase); break;
+    case 'get_saved_clients':     result = await toolGetSavedClients(args, userId, supabase); break;
+    case 'get_profile':           result = await toolGetProfile(args, userId, supabase); break;
+    case 'save_client':           result = await toolSaveClient(args, userId, supabase); break;
+    case 'save_memory':           result = await toolSaveMemory(args, userId, supabase); break;
+    case 'get_notifications':     result = await toolGetNotifications(args, userId, supabase); break;
     default:
       return { error: `Unknown tool: ${name}` };
   }
+  return sanitizeToolResult(result);
 }
 
 // ── Agent Loop ────────────────────────────────────────────────────────────────
