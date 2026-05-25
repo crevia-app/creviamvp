@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 const toDateStr = (d: Date) => d.toISOString().split("T")[0];
 const addDays = (dateStr: string, days: number) => {
@@ -45,7 +45,7 @@ interface CreateInvoiceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editingInvoice?: any;
-  onSuccess: () => void;
+  onSuccess: (invoice?: any) => void;
   onCreated?: (id: string) => void;
   kiraContext?: Record<string, unknown> | null;
 }
@@ -103,6 +103,7 @@ const CreateInvoiceDialog = ({
 }: CreateInvoiceDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const createdInvoiceRef = useRef<any>(null);
   const [invoiceAccentColor, setInvoiceAccentColor] = useState("#B07D3A");
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [clientName, setClientName] = useState("");
@@ -405,7 +406,10 @@ const CreateInvoiceDialog = ({
 
         if (itemsError) throw itemsError;
 
-        if (invoice?.id) onCreated?.(invoice.id);
+        if (invoice?.id) {
+          createdInvoiceRef.current = invoice;
+          onCreated?.(invoice.id);
+        }
 
         // Save client to address book if requested
         if (saveToBook && clientName) {
@@ -452,7 +456,7 @@ const CreateInvoiceDialog = ({
       show={showSuccess}
       title="Invoice Created"
       subtitle="Your invoice is ready to send"
-      onComplete={() => { setShowSuccess(false); onSuccess(); }}
+      onComplete={() => { setShowSuccess(false); onSuccess(createdInvoiceRef.current); createdInvoiceRef.current = null; }}
     />
     <ClientAddressBook
       open={addressBookOpen}

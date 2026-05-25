@@ -592,7 +592,10 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
           if (!open) setEditingInvoice(null);
         }}
         editingInvoice={editingInvoice}
-        onSuccess={fetchInvoices}
+        onSuccess={(invoice) => {
+          if (invoice) setInvoices((prev) => [invoice, ...prev]);
+          fetchInvoices();
+        }}
         businessSettings={businessSettings}
       />
 
