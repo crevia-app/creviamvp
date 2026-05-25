@@ -855,6 +855,7 @@ serve(async (req) => {
       .from('profiles')
       .select(`
         display_name,
+        handle,
         user_type,
         bio,
         kira_memory,
@@ -889,7 +890,7 @@ serve(async (req) => {
 
     if (referenceMemories) {
       const contextLines: string[] = [
-        `- Name: ${(memory.nickname as string) || profile?.display_name || 'not set'}`,
+        `- Name: ${(memory.nickname as string) || profile?.display_name || profile?.handle || 'not set'}`,
         `- Type: ${isCreator ? 'Creator' : 'Brand'}`,
       ];
       if (profile?.bio && !hasInjectionPattern(profile.bio)) contextLines.push(`- Bio: ${profile.bio}`);

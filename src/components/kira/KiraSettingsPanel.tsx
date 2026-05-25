@@ -93,7 +93,7 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
     load();
   }, [open, userId]);
 
-  const persistMemory = useCallback(async (updated: KiraMemory) => {
+  const persistMemory = useCallback(async (updated: KiraMemory): Promise<boolean> => {
     const { data: current } = await supabase.from("profiles").select("kira_memory").eq("id", userId).single();
     const merged = {
       ...(current?.kira_memory as object || {}),
@@ -104,7 +104,8 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
       more_about_you: updated.more_about_you,
       custom_instructions: updated.custom_instructions,
     };
-    await supabase.from("profiles").update({ kira_memory: merged }).eq("id", userId);
+    const { error } = await supabase.from("profiles").update({ kira_memory: merged }).eq("id", userId);
+    return !error;
   }, [userId]);
 
   const handleToggle = async (
@@ -119,7 +120,16 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
 
   const saveTextFields = async () => {
     setIsSaving(true);
-    await persistMemory(memory);
+    const saved = await persistMemory(memory);
+    if (!saved) {
+      toast({ title: "Save failed", description: "Could not save settings. Please try again.", variant: "destructive" });
+      setIsSaving(false);
+      return;
+    }
+    if (memory.nickname) {
+      await supabase.from("profiles").update({ display_name: memory.nickname }).eq("id", userId);
+      setDisplayName(memory.nickname);
+    }
     toast({ title: "Saved", description: "Kira will use this going forward." });
     setIsSaving(false);
   };
