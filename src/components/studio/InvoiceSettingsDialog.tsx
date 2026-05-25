@@ -126,10 +126,10 @@ const InvoiceSettingsDialog = ({ open, onOpenChange, onSaved }: Props) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { setUploading(false); return; }
     const ext = file.name.split(".").pop();
-    const path = `business-logos/${session.user.id}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("chat-files").upload(path, file);
+    const path = `${session.user.id}/business-logo-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("avatars").upload(path, file);
     if (error) { toast.error("Upload failed: " + error.message); setUploading(false); return; }
-    const { data: { publicUrl } } = supabase.storage.from("chat-files").getPublicUrl(path);
+    const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
     await (supabase as any).from("business_settings").update({ logo_url: publicUrl }).eq("id", settingsId);
     setLogoUrl(publicUrl);
     setUploading(false);
