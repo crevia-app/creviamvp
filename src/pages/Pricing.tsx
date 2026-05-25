@@ -384,10 +384,6 @@ const Pricing = () => {
                 a: "All major credit and debit cards, and M-Pesa for local payments across Africa.",
               },
               {
-                q: "What is the Client Portal?",
-                a: "A professional branded room link you can share with clients for a premium experience. Available on Pro and Business plans.",
-              },
-              {
                 q: "What happens to my data if I downgrade?",
                 a: "Your data is always safe. You retain access to everything you created — new activity is simply limited to your new plan's limits.",
               },
