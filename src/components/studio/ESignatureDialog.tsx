@@ -89,6 +89,8 @@ const ESignatureDialog = ({
     }
   }, [open, activeTab]);
 
+  const isDarkMode = () => document.documentElement.classList.contains("dark");
+
   const initCanvas = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -99,12 +101,36 @@ const ESignatureDialog = ({
     canvas.width = rect.width * 2;
     canvas.height = rect.height * 2;
     ctx.scale(2, 2);
-    ctx.strokeStyle = "#1a1a1a";
+    // In dark mode draw with light ink so the canvas is comfortable to use;
+    // exportSignature() inverts back to dark pixels before storing so the PNG
+    // always has dark ink on transparent — works with blend modes in both modes.
+    ctx.strokeStyle = isDarkMode() ? "#e8e8e8" : "#1a1a1a";
     ctx.lineWidth = 2.5;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     // No fillRect — canvas stays transparent so exported PNG has no white background
     setHasSignature(false);
+  };
+
+  // Normalise to dark-ink PNG regardless of drawing mode so stored data is
+  // always dark pixels on transparent — safe to invert in CSS for dark mode display.
+  const exportSignature = (): string => {
+    const canvas = canvasRef.current;
+    if (!canvas) return "";
+    if (!isDarkMode()) return canvas.toDataURL("image/png");
+    // Invert light ink → dark ink for storage
+    const tmp = document.createElement("canvas");
+    tmp.width = canvas.width;
+    tmp.height = canvas.height;
+    const ctx2 = tmp.getContext("2d")!;
+    ctx2.drawImage(canvas, 0, 0);
+    const imgData = ctx2.getImageData(0, 0, tmp.width, tmp.height);
+    const d = imgData.data;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i + 3] > 0) { d[i] = 255 - d[i]; d[i + 1] = 255 - d[i + 1]; d[i + 2] = 255 - d[i + 2]; }
+    }
+    ctx2.putImageData(imgData, 0, 0);
+    return tmp.toDataURL("image/png");
   };
 
   const getCoordinates = (e: React.MouseEvent | React.TouchEvent) => {
@@ -145,9 +171,8 @@ const ESignatureDialog = ({
     if (activeTab === "saved" && savedSignature) {
       signatureData = savedSignature.data;
     } else if (activeTab === "draw") {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      signatureData = canvas.toDataURL("image/png");
+      if (!canvasRef.current) return;
+      signatureData = exportSignature();
     } else {
       signatureData = typedSignature;
     }
@@ -242,7 +267,7 @@ const ESignatureDialog = ({
                 </div>
                 <div className="h-24 flex items-center justify-center border-b-2 border-border/40">
                   {savedSignature.type === "draw" ? (
-                    <img src={savedSignature.data} alt="Saved signature" className="max-h-20 object-contain" />
+                    <img src={savedSignature.data} alt="Saved signature" className="max-h-20 object-contain dark:invert" />
                   ) : (
                     <span className={cn("text-3xl text-foreground/70", fonts.find(f => f.id === savedSignature.font)?.className)}>
                       {savedSignature.data}
@@ -270,7 +295,7 @@ const ESignatureDialog = ({
               <div className="relative">
                 <canvas
                   ref={canvasRef}
-                  className="w-full h-44 border-2 border-dashed border-border rounded-xl cursor-crosshair bg-white touch-none"
+                  className="w-full h-44 border-2 border-dashed border-border rounded-xl cursor-crosshair bg-white dark:bg-zinc-900 touch-none"
                   onMouseDown={startDrawing}
                   onMouseMove={draw}
                   onMouseUp={stopDrawing}

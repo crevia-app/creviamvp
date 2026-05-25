@@ -208,15 +208,18 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     setCreatingFolder(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { setCreatingFolder(false); return; }
-    const { error } = await (supabase as any)
+    const { data: newFolder, error } = await (supabase as any)
       .from("canvas_folders")
-      .insert({ name, user_id: session.user.id });
+      .insert({ name, user_id: session.user.id })
+      .select()
+      .single();
     setCreatingFolder(false);
     if (error) { toast.error("Failed to create folder"); return; }
+    // Optimistic update — folder appears instantly, no refetch wait
+    setFolders(prev => [...prev, { ...newFolder, canvasCount: 0 }].sort((a: Folder, b: Folder) => a.name.localeCompare(b.name)));
     toast.success("Folder created");
     setCreateFolderOpen(false);
     setFolderName("");
-    fetchFolders();
   };
 
   const deleteFolder = async (folder: Folder) => {
@@ -841,7 +844,15 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
         }}
         editingCanvas={editingCanvas}
         folderId={currentFolderId}
-        onSuccess={() => fetchCanvases(currentFolderId)}
+        onSuccess={(newCanvas?: any) => {
+          if (newCanvas && !editingCanvas) {
+            // Optimistic prepend — list updates before the success animation ends
+            setCanvases(prev => [newCanvas as Canvas, ...prev]);
+          } else {
+            // Edit path: full refetch to reflect changes
+            fetchCanvases(currentFolderId);
+          }
+        }}
       />
 
       <UploadCanvasDialog
@@ -854,7 +865,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
         open={!!previewCanvas}
         onOpenChange={(open) => !open && setPreviewCanvas(null)}
         canvas={previewCanvas}
-        onCanvasUpdate={fetchCanvases}
+        onCanvasUpdate={() => fetchCanvases(currentFolderId)}
       />
     </div>
   );

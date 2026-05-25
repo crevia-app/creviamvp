@@ -9,8 +9,14 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import {
   Printer, CheckCircle2, PenTool,
-  Edit3, Save, X, Maximize2, Minimize2, Download, Send,
+  Edit3, Save, X, Maximize2, Minimize2, Download, Send, MoreHorizontal,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -105,7 +111,7 @@ const DraggableSig = ({ pos, signature, onChange }: DraggableSigProps) => {
         onPointerUp={onBodyUp}
       >
         {signature.startsWith("data:image") ? (
-          <img src={signature} alt="sig" className="max-w-full max-h-full object-contain p-1 mix-blend-multiply dark:mix-blend-screen" draggable={false} />
+          <img src={signature} alt="sig" className="max-w-full max-h-full object-contain p-1 mix-blend-multiply dark:invert dark:mix-blend-screen" draggable={false} />
         ) : (
           <span className="font-vollkorn italic text-foreground/85 truncate px-2 pointer-events-none" style={{ fontSize: fs }}>
             {signature}
@@ -320,17 +326,20 @@ const CanvasPreviewDialog = ({
     <Dialog open={open} onOpenChange={v => { if (!v) { setIsFullscreen(false); setPlacementMode(null); } onOpenChange(v); }}>
       <DialogContent className={cn(
         "overflow-hidden flex flex-col p-0 gap-0 transition-all duration-300",
-        isFullscreen ? "max-w-[100vw] w-screen h-screen max-h-screen rounded-none" : "max-w-4xl max-h-[92vh] rounded-2xl"
+        isFullscreen ? "max-w-[100vw] w-screen h-screen max-h-screen rounded-none" : "w-[calc(100vw-16px)] max-w-4xl max-h-[92dvh] rounded-2xl"
       )}>
 
         {/* ── Top Bar ── */}
-        <div className="print:hidden sticky top-0 z-10 bg-background border-b border-border/50 px-3 py-2 flex items-center justify-between gap-1.5">
-          <div className="flex items-center gap-2 min-w-0">
-            <DialogTitle className="font-vollkorn text-sm sm:text-base truncate">{localCanvas.title}</DialogTitle>
-            <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium flex-shrink-0", status.bg, status.color)}>
+        <div className="print:hidden sticky top-0 z-10 bg-background border-b border-border/50 px-3 py-2 flex items-center gap-1.5">
+          {/* Title + status — flex-1 so it shrinks before buttons overflow */}
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <DialogTitle className="font-vollkorn text-sm sm:text-base truncate min-w-0">{localCanvas.title}</DialogTitle>
+            <span className={cn("hidden xs:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium flex-shrink-0", status.bg, status.color)}>
               {status.label}
             </span>
           </div>
+
+          {/* Action buttons — always right-aligned, never wrap */}
           <div className="flex items-center gap-1 flex-shrink-0">
             {!isEditingDetails && !placementMode && (
               <Button variant="ghost" size="sm" title="Edit"
@@ -348,19 +357,42 @@ const CanvasPreviewDialog = ({
                 <PenTool className="h-3.5 w-3.5" />
               </Button>
             )}
+
             {!placementMode && (
               <>
-                <Button variant="ghost" size="sm" title="Send" onClick={() => setShowSendDialog(true)} className="h-8 w-8 p-0 rounded-lg">
+                {/* Desktop: individual Send / Download / Print buttons */}
+                <Button variant="ghost" size="sm" title="Send" onClick={() => setShowSendDialog(true)} className="hidden sm:flex h-8 w-8 p-0 rounded-lg">
                   <Send className="h-3.5 w-3.5" />
                 </Button>
-                <Button variant="ghost" size="sm" title="Download" onClick={download} disabled={downloading} className="h-8 w-8 p-0 rounded-lg">
+                <Button variant="ghost" size="sm" title="Download" onClick={download} disabled={downloading} className="hidden sm:flex h-8 w-8 p-0 rounded-lg">
                   <Download className="h-3.5 w-3.5" />
                 </Button>
-                <Button variant="ghost" size="sm" title="Print" onClick={handlePrint} disabled={printing} className="h-8 w-8 p-0 rounded-lg">
+                <Button variant="ghost" size="sm" title="Print" onClick={handlePrint} disabled={printing} className="hidden sm:flex h-8 w-8 p-0 rounded-lg">
                   <Printer className="h-3.5 w-3.5" />
                 </Button>
+
+                {/* Mobile: collapse into a single overflow menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="sm:hidden h-8 w-8 p-0 rounded-lg">
+                      <MoreHorizontal className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44 rounded-xl">
+                    <DropdownMenuItem onClick={() => setShowSendDialog(true)} className="rounded-lg gap-2 text-sm">
+                      <Send className="h-3.5 w-3.5" /> Send
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={download} disabled={downloading} className="rounded-lg gap-2 text-sm">
+                      <Download className="h-3.5 w-3.5" /> Download
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handlePrint} disabled={printing} className="rounded-lg gap-2 text-sm">
+                      <Printer className="h-3.5 w-3.5" /> Print
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             )}
+
             <Button variant="ghost" size="sm" title={isFullscreen ? "Exit fullscreen" : "Fullscreen"} onClick={() => setIsFullscreen(f => !f)} className="h-8 w-8 p-0 rounded-lg">
               {isFullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
             </Button>
@@ -504,7 +536,7 @@ const CanvasPreviewDialog = ({
                     return (
                       <div className="absolute pointer-events-none" style={sigStyle}>
                         {localCanvas.creator_signature.startsWith("data:image") ? (
-                          <img src={localCanvas.creator_signature} alt="Signature" className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-screen" draggable={false} />
+                          <img src={localCanvas.creator_signature} alt="Signature" className="w-full h-full object-contain mix-blend-multiply dark:invert dark:mix-blend-screen" draggable={false} />
                         ) : (
                           <span
                             className="font-vollkorn italic text-foreground/85 flex items-center justify-center w-full h-full"
@@ -525,34 +557,33 @@ const CanvasPreviewDialog = ({
         {/* ── Placement action bar ── */}
         {placementMode && (
           <div
-            className="print:hidden shrink-0 border-t border-primary/20 bg-background/97 backdrop-blur-md px-4 py-3 flex items-center gap-3"
+            className="print:hidden shrink-0 border-t border-primary/20 bg-background/97 backdrop-blur-md px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3"
             onClick={e => e.stopPropagation()}
           >
-            {/* Signature thumbnail */}
-            <div className="h-11 w-24 rounded-lg border border-dashed border-primary/40 bg-primary/5 flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {/* Signature thumbnail — hidden on very small screens */}
+            <div className="hidden sm:flex h-10 w-20 rounded-lg border border-dashed border-primary/40 bg-primary/5 items-center justify-center flex-shrink-0 overflow-hidden">
               {placementMode.signature.startsWith("data:image")
-                ? <img src={placementMode.signature} alt="sig" className="max-h-9 object-contain" />
-                : <span className="text-sm font-vollkorn italic text-foreground/80 truncate px-1">{placementMode.signature}</span>
+                ? <img src={placementMode.signature} alt="sig" className="max-h-8 object-contain dark:invert" />
+                : <span className="text-xs font-vollkorn italic text-foreground/80 truncate px-1">{placementMode.signature}</span>
               }
             </div>
 
             <div className="flex-1 min-w-0">
               {!placementMode.pos ? (
-                <>
-                  <p className="text-xs font-semibold text-foreground">Tap anywhere on the document to place your signature</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">You can move and resize it after placing</p>
-                </>
+                <p className="text-xs font-semibold text-foreground leading-tight">
+                  Tap the document to place your signature
+                  <span className="hidden sm:inline"> — drag to reposition</span>
+                </p>
               ) : (
-                <>
-                  <p className="text-xs font-semibold text-foreground">Drag to move · Drag corners to resize</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Tap Confirm when you're happy with the position</p>
-                </>
+                <p className="text-xs font-semibold text-foreground leading-tight">
+                  Drag to move · corners to resize
+                </p>
               )}
             </div>
 
             {placementMode.pos && (
               <Button size="sm" onClick={handleConfirm} disabled={savingSignature}
-                className="h-8 text-xs rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 flex-shrink-0"
+                className="h-8 text-xs rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white gap-1 flex-shrink-0 px-3"
               >
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 {savingSignature ? "Saving…" : "Confirm"}
@@ -560,9 +591,10 @@ const CanvasPreviewDialog = ({
             )}
 
             <Button size="sm" variant="ghost" onClick={() => setPlacementMode(null)}
-              className="h-8 text.xs rounded-lg text-muted-foreground hover:text-foreground flex-shrink-0"
+              className="h-8 w-8 p-0 rounded-lg text-muted-foreground hover:text-foreground flex-shrink-0"
+              title="Cancel"
             >
-              <X className="h-3.5 w-3.5 mr-1" /> Cancel
+              <X className="h-3.5 w-3.5" />
             </Button>
           </div>
         )}

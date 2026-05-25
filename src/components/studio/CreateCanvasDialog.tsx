@@ -24,7 +24,7 @@ interface CreateCanvasDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editingCanvas?: any;
-  onSuccess: () => void;
+  onSuccess: (canvas?: any) => void;
   onCreated?: (id: string) => void;
   kiraContext?: Record<string, unknown> | null;
   applicationContext?: ApplicationContext | null;
@@ -157,10 +157,12 @@ const CreateCanvasDialog = ({
         const { data: created, error } = await supabase
           .from("canvases")
           .insert({ ...contractData, folder_id: folderId ?? null } as any)
-          .select("id")
+          .select("*")
           .single();
         if (error) throw error;
         if (created?.id) onCreated?.(created.id);
+        // Notify parent immediately with the full row for optimistic list update
+        onSuccess(created);
         onOpenChange(false);
         setShowSuccess(true);
       }
@@ -183,7 +185,7 @@ const CreateCanvasDialog = ({
         show={showSuccess}
         title="Canvas Created"
         subtitle="Your Canvas is ready"
-        onComplete={() => { setShowSuccess(false); onSuccess(); }}
+        onComplete={() => setShowSuccess(false)}
       />
 
       <Dialog open={open} onOpenChange={onOpenChange}>
