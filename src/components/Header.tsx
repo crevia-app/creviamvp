@@ -51,13 +51,18 @@ const Header = () => {
           </Link>
         </div>
 
-        {/* Desktop Theme Switcher */}
-        <div className="hidden lg:flex items-center">
-          <NavThemeSwitcher />
-        </div>
-
         {/* Mobile Menu & User Actions */}
         <div className="flex items-center gap-2 md:gap-3">
+          {/* Desktop Theme Switcher */}
+          <div className="hidden lg:flex items-center">
+            <NavThemeSwitcher />
+          </div>
+
+          {/* Mobile Theme Switcher — beside the hamburger */}
+          <div className="flex lg:hidden items-center">
+            <NavThemeSwitcher />
+          </div>
+
           {/* Mobile Menu */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild className="lg:hidden">
@@ -90,11 +95,6 @@ const Header = () => {
                 >
                   About
                 </Link>
-
-                <div className="pt-2 border-t border-border">
-                  <p className="text-xs text-muted-foreground font-poppins mb-3">Theme</p>
-                  <NavThemeSwitcher />
-                </div>
 
                 {!isLoggedIn && (
                   <div className="flex flex-col gap-3 pt-4 border-t border-border">
