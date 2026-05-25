@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// ── CORS ──────────────────────────────────────────────────────────────────────
+
 const ALLOWED_ORIGINS = [
   'https://crevia.app',
   'https://www.crevia.app',
@@ -18,6 +20,8 @@ function getCorsHeaders(req: Request) {
     'Vary': 'Origin',
   };
 }
+
+// ── Input sanitisation ────────────────────────────────────────────────────────
 
 function sanitizePrompt(prompt: string): string {
   return prompt
@@ -50,8 +54,10 @@ function isPromptAbuse(prompt: string): boolean {
     /jailbreak/i,
     /DAN mode/i,
   ];
-  return abusePatterns.some(pattern => pattern.test(prompt));
+  return abusePatterns.some(p => p.test(prompt));
 }
+
+// ── System prompt ─────────────────────────────────────────────────────────────
 
 const KIRA_SYSTEM_PROMPT = `IDENTITY
 You are Kira, the highly intelligent AI embedded within Crevia (a premium infrastructure to scale business operations). You are a trusted, high-agency partner to the user.
@@ -69,11 +75,33 @@ FORMATTING (MUST FOLLOW)
 2. DO NOT use markdown. Write plain text only.
 3. Write naturally — like texting a sharp colleague.
 4. Use numbered lists only when listing 2 or more distinct actionable items.
-5. No lengthy intros or pleasantries — get straight to the point.`;
+5. No lengthy intros or pleasantries — get straight to the point.
+
+TOOLS
+You have access to tools that read the user's live Crevia data. Use a tool only when the user's question requires live data — e.g. asking about their invoices, revenue, clients, canvases, link profile, or account details. For general advice, strategy, pricing guidance, or creative questions, answer directly without calling any tool. Never call a tool just to appear thorough.`;
 
 const openaiApiKey = Deno.env.get("OPENAI_API_KEY")!;
 
-// ── Raw OpenAI helpers ────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+type ContentPart =
+  | { type: 'text'; text: string }
+  | { type: 'image_url'; image_url: { url: string } };
+
+interface ToolCall {
+  id: string;
+  type: 'function';
+  function: { name: string; arguments: string };
+}
+
+interface OAIMsg {
+  role: string;
+  content: string | ContentPart[] | null;
+  tool_calls?: ToolCall[];
+  tool_call_id?: string;
+}
+
+// ── OpenAI helpers ────────────────────────────────────────────────────────────
 
 async function embedText(text: string): Promise<number[]> {
   const res = await fetch("https://api.openai.com/v1/embeddings", {
@@ -111,14 +139,36 @@ async function chatComplete(
   return data.choices[0]?.message?.content?.trim() ?? '';
 }
 
+// deno-lint-ignore no-explicit-any
+async function callOpenAIWithTools(messages: OAIMsg[], tools: any[], toolChoice: string | object = "auto"): Promise<any> {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${openaiApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "gpt-5.4-mini",
+      messages,
+      tools,
+      tool_choice: toolChoice,
+      max_completion_tokens: 1000,
+      temperature: 0,
+    }),
+  });
+  if (!res.ok) {
+    const errBody = await res.text();
+    throw new Error(`OpenAI tool call error: ${res.status} - ${errBody}`);
+  }
+  return await res.json();
+}
+
 // ── Memory helpers ────────────────────────────────────────────────────────────
 
 // deno-lint-ignore no-explicit-any
 async function fetchSimilarMemories(prompt: string, userId: string, supabase: any): Promise<string> {
   try {
     const queryVector = await embedText(prompt);
-
-    // Parallel: semantic search + 2 most-recent memories as fallback for low-similarity facts (e.g. name)
     const [{ data: similar }, { data: recent }] = await Promise.all([
       supabase.rpc('match_kira_memories', {
         query_embedding: queryVector,
@@ -137,7 +187,6 @@ async function fetchSimilarMemories(prompt: string, userId: string, supabase: an
       .filter(m => m.similarity > 0.68)
       .map(m => m.content.slice(0, 150));
 
-    // Merge recent facts deduped against similarity results
     const seen = new Set(topSimilar);
     const all = [...topSimilar];
     for (const m of ((recent as Array<{ content: string }>) || [])) {
@@ -164,6 +213,23 @@ async function fetchConversationSummary(conversationId: string, supabase: any): 
   } catch {
     return '';
   }
+}
+
+// deno-lint-ignore no-explicit-any
+async function storeSingleMemory(fact: string, userId: string, supabase: any, source = 'conversation'): Promise<void> {
+  const vector = await embedText(fact);
+  const { data: existing } = await supabase.rpc('match_kira_memories', {
+    query_embedding: vector,
+    match_count: 1,
+    filter: { user_id: userId },
+  });
+  if ((existing as Array<{ similarity: number }>)?.[0]?.similarity > 0.92) return;
+  await supabase.from('kira_memories').insert({
+    user_id: userId,
+    content: fact,
+    embedding: vector,
+    metadata: { source, extracted_at: new Date().toISOString() },
+  });
 }
 
 async function extractAndStoreMemories(
@@ -197,22 +263,7 @@ async function extractAndStoreMemories(
     .slice(0, 3);
 
   for (const fact of facts) {
-    const vector = await embedText(fact);
-
-    // Skip insert if a nearly-identical memory already exists (deduplication)
-    const { data: existing } = await supabase.rpc('match_kira_memories', {
-      query_embedding: vector,
-      match_count: 1,
-      filter: { user_id: userId },
-    });
-    if ((existing as Array<{ similarity: number }>)?.[0]?.similarity > 0.92) continue;
-
-    await supabase.from('kira_memories').insert({
-      user_id: userId,
-      content: fact,
-      embedding: vector,
-      metadata: { source: 'conversation', extracted_at: new Date().toISOString() },
-    });
+    await storeSingleMemory(fact, userId, supabase).catch(() => {});
   }
 }
 
@@ -248,7 +299,441 @@ async function updateConversationSummary(
   });
 }
 
+// ── Tool Definitions ──────────────────────────────────────────────────────────
+
+const KIRA_TOOLS = [
+  {
+    type: "function",
+    function: {
+      name: "get_invoices",
+      description: "Get the user's invoices. Use when asked about invoices, billing, clients, or revenue.",
+      parameters: {
+        type: "object",
+        properties: {
+          status: {
+            type: "string",
+            enum: ["draft", "sent", "paid", "overdue", "cancelled"],
+            description: "Filter by status",
+          },
+          limit: { type: "number", description: "Max invoices to return (default 10, max 20)" },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_invoice_detail",
+      description: "Get full details of a specific invoice including all line items.",
+      parameters: {
+        type: "object",
+        properties: {
+          invoice_id: { type: "string", description: "UUID of the invoice" },
+        },
+        required: ["invoice_id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_revenue_summary",
+      description: "Get a revenue summary: total paid, pending, overdue amounts, and invoice counts by status.",
+      parameters: { type: "object", properties: {}, required: [] },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_canvases",
+      description: "Get the user's canvases (contracts/agreements). Use when asked about contracts, deals, or canvases.",
+      parameters: {
+        type: "object",
+        properties: {
+          status: {
+            type: "string",
+            enum: ["draft", "sent", "signed", "active", "completed", "cancelled"],
+            description: "Filter by status",
+          },
+          limit: { type: "number", description: "Max canvases to return (default 10, max 20)" },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_canvas_detail",
+      description: "Get full details of a specific canvas/contract.",
+      parameters: {
+        type: "object",
+        properties: {
+          canvas_id: { type: "string", description: "UUID of the canvas" },
+        },
+        required: ["canvas_id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_business_settings",
+      description: "Get the user's business settings: name, email, bank details, tax info, default currency.",
+      parameters: { type: "object", properties: {}, required: [] },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_link_profile",
+      description: "Get the user's Crevia Link profile, theme, and their link buttons with click counts.",
+      parameters: { type: "object", properties: {}, required: [] },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_saved_clients",
+      description: "Get the user's saved client address book.",
+      parameters: { type: "object", properties: {}, required: [] },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_profile",
+      description: "Get the user's Crevia profile: display name, bio, user type, goals, and niche.",
+      parameters: { type: "object", properties: {}, required: [] },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "save_client",
+      description: "Save or update a client in the user's address book.",
+      parameters: {
+        type: "object",
+        properties: {
+          client_name: { type: "string", description: "Client's full name or business name" },
+          client_email: { type: "string", description: "Client's email address" },
+          client_phone: { type: "string", description: "Client's phone number" },
+          billing_address: { type: "string", description: "Client's billing address" },
+        },
+        required: ["client_name"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "save_memory",
+      description: "Permanently save a specific fact about the user for future conversations. Use when the user explicitly asks Kira to remember something, or when a key fact (rate, preference, client detail) surfaces that is worth keeping.",
+      parameters: {
+        type: "object",
+        properties: {
+          fact: {
+            type: "string",
+            description: "The fact to save, stated clearly (e.g. 'User charges KES 50,000 for sponsored reels')",
+          },
+        },
+        required: ["fact"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_notifications",
+      description: "Get the user's recent notifications.",
+      parameters: {
+        type: "object",
+        properties: {
+          limit: { type: "number", description: "Number of notifications (default 5, max 10)" },
+        },
+        required: [],
+      },
+    },
+  },
+];
+
+// ── Tool Handlers ─────────────────────────────────────────────────────────────
+
+// deno-lint-ignore no-explicit-any
+async function toolGetInvoices(args: any, userId: string, supabase: any): Promise<unknown> {
+  const limit = Math.min(Number(args.limit) || 10, 20);
+  let query = supabase
+    .from('invoices')
+    .select('id, invoice_number, client_name, client_email, status, subtotal, tax_amount, discount_amount, total, currency, issue_date, due_date')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (args.status) query = query.eq('status', args.status);
+  const { data, error } = await query;
+  if (error) return { error: error.message };
+  return { count: (data || []).length, invoices: data || [] };
+}
+
+// deno-lint-ignore no-explicit-any
+async function toolGetInvoiceDetail(args: any, userId: string, supabase: any): Promise<unknown> {
+  const { data: invoice, error } = await supabase
+    .from('invoices')
+    .select('*')
+    .eq('id', args.invoice_id)
+    .eq('user_id', userId)
+    .single();
+  if (error || !invoice) return { error: 'Invoice not found' };
+  const { data: items } = await supabase
+    .from('invoice_items')
+    .select('description, quantity, unit_price, total')
+    .eq('invoice_id', args.invoice_id);
+  return { ...invoice, items: items || [] };
+}
+
+// deno-lint-ignore no-explicit-any
+async function toolGetRevenueSummary(_args: unknown, userId: string, supabase: any): Promise<unknown> {
+  const { data, error } = await supabase
+    .from('invoices')
+    .select('status, total, currency')
+    .eq('user_id', userId);
+  if (error) return { error: error.message };
+  const invoices = (data || []) as Array<{ status: string; total: number; currency: string }>;
+  const byStatus: Record<string, { count: number; total: number }> = {};
+  for (const inv of invoices) {
+    if (!byStatus[inv.status]) byStatus[inv.status] = { count: 0, total: 0 };
+    byStatus[inv.status].count++;
+    byStatus[inv.status].total += Number(inv.total) || 0;
+  }
+  return {
+    total_invoices: invoices.length,
+    by_status: byStatus,
+    total_paid: byStatus['paid']?.total || 0,
+    total_pending: byStatus['sent']?.total || 0,
+    total_overdue: byStatus['overdue']?.total || 0,
+    currency: invoices[0]?.currency || 'KES',
+  };
+}
+
+// deno-lint-ignore no-explicit-any
+async function toolGetCanvases(args: any, userId: string, supabase: any): Promise<unknown> {
+  const limit = Math.min(Number(args.limit) || 10, 20);
+  let query = supabase
+    .from('canvases')
+    .select('id, title, client_name, client_email, contract_type, status, value, currency, start_date, end_date, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (args.status) query = query.eq('status', args.status);
+  const { data, error } = await query;
+  if (error) return { error: error.message };
+  return { count: (data || []).length, canvases: data || [] };
+}
+
+// deno-lint-ignore no-explicit-any
+async function toolGetCanvasDetail(args: any, userId: string, supabase: any): Promise<unknown> {
+  const { data, error } = await supabase
+    .from('canvases')
+    .select('*')
+    .eq('id', args.canvas_id)
+    .eq('user_id', userId)
+    .single();
+  if (error || !data) return { error: 'Canvas not found' };
+  return data;
+}
+
+// deno-lint-ignore no-explicit-any
+async function toolGetBusinessSettings(_args: unknown, userId: string, supabase: any): Promise<unknown> {
+  const { data, error } = await supabase
+    .from('business_settings')
+    .select('business_name, business_email, business_phone, business_address, logo_url, tax_id, default_currency, default_tax_rate, default_payment_terms, bank_name, bank_account_name, bank_account_number, mpesa_till_number')
+    .eq('user_id', userId)
+    .single();
+  if (error || !data) return { message: 'No business settings configured yet.' };
+  return data;
+}
+
+// deno-lint-ignore no-explicit-any
+async function toolGetLinkProfile(_args: unknown, userId: string, supabase: any): Promise<unknown> {
+  const { data: profile, error } = await supabase
+    .from('link_profiles')
+    .select('id, username, display_name, bio, theme, total_visits')
+    .eq('user_id', userId)
+    .single();
+  if (error || !profile) return { message: 'No Crevia Link profile set up yet.' };
+  const { data: buttons } = await supabase
+    .from('link_buttons')
+    .select('title, url, clicks, visible')
+    .eq('profile_id', profile.id)
+    .eq('visible', true)
+    .order('order_index');
+  return { ...profile, buttons: buttons || [] };
+}
+
+// deno-lint-ignore no-explicit-any
+async function toolGetSavedClients(_args: unknown, userId: string, supabase: any): Promise<unknown> {
+  const { data, error } = await supabase
+    .from('saved_clients')
+    .select('client_name, client_email, client_phone, billing_address')
+    .eq('user_id', userId)
+    .order('client_name');
+  if (error) return { error: error.message };
+  return { count: (data || []).length, clients: data || [] };
+}
+
+// deno-lint-ignore no-explicit-any
+async function toolGetProfile(_args: unknown, userId: string, supabase: any): Promise<unknown> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(`
+      display_name, handle, bio, user_type, is_verified, avatar_url,
+      creator_profiles (creator_types, goals, follower_count, engagement_rate),
+      brand_profiles (business_type, company_description, website_url)
+    `)
+    .eq('id', userId)
+    .single();
+  if (error || !data) return { error: 'Profile not found' };
+  return data;
+}
+
+// deno-lint-ignore no-explicit-any
+async function toolSaveClient(args: any, userId: string, supabase: any): Promise<unknown> {
+  if (!args.client_name || typeof args.client_name !== 'string') {
+    return { error: 'client_name is required' };
+  }
+  const { error } = await supabase
+    .from('saved_clients')
+    .upsert(
+      {
+        user_id: userId,
+        client_name: String(args.client_name).slice(0, 200),
+        client_email: args.client_email || null,
+        client_phone: args.client_phone || null,
+        billing_address: args.billing_address || null,
+      },
+      { onConflict: 'user_id,client_name' },
+    );
+  if (error) return { error: error.message };
+  return { success: true, message: `Saved "${args.client_name}" to your client address book.` };
+}
+
+// deno-lint-ignore no-explicit-any
+async function toolSaveMemory(args: any, userId: string, supabase: any): Promise<unknown> {
+  if (!args.fact || typeof args.fact !== 'string' || args.fact.length < 5) {
+    return { error: 'fact must be a non-empty string' };
+  }
+  try {
+    await storeSingleMemory(String(args.fact).slice(0, 500), userId, supabase, 'user_explicit');
+    return { success: true, message: `Got it. I'll remember: "${String(args.fact).slice(0, 100)}"` };
+  } catch (e) {
+    return { error: String(e) };
+  }
+}
+
+// deno-lint-ignore no-explicit-any
+async function toolGetNotifications(args: any, userId: string, supabase: any): Promise<unknown> {
+  const limit = Math.min(Number(args.limit) || 5, 10);
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('title, body, type, read, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) return { error: error.message };
+  return { count: (data || []).length, notifications: data || [] };
+}
+
+// ── Tool Dispatcher ───────────────────────────────────────────────────────────
+
+async function executeTool(
+  name: string,
+  // deno-lint-ignore no-explicit-any
+  args: Record<string, unknown>,
+  userId: string,
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+): Promise<unknown> {
+  switch (name) {
+    case 'get_invoices':          return await toolGetInvoices(args, userId, supabase);
+    case 'get_invoice_detail':    return await toolGetInvoiceDetail(args, userId, supabase);
+    case 'get_revenue_summary':   return await toolGetRevenueSummary(args, userId, supabase);
+    case 'get_canvases':          return await toolGetCanvases(args, userId, supabase);
+    case 'get_canvas_detail':     return await toolGetCanvasDetail(args, userId, supabase);
+    case 'get_business_settings': return await toolGetBusinessSettings(args, userId, supabase);
+    case 'get_link_profile':      return await toolGetLinkProfile(args, userId, supabase);
+    case 'get_saved_clients':     return await toolGetSavedClients(args, userId, supabase);
+    case 'get_profile':           return await toolGetProfile(args, userId, supabase);
+    case 'save_client':           return await toolSaveClient(args, userId, supabase);
+    case 'save_memory':           return await toolSaveMemory(args, userId, supabase);
+    case 'get_notifications':     return await toolGetNotifications(args, userId, supabase);
+    default:
+      return { error: `Unknown tool: ${name}` };
+  }
+}
+
+// ── Agent Loop ────────────────────────────────────────────────────────────────
+// ReAct pattern: think → call tool(s) → observe → repeat (max 3 iterations)
+// Returns the final messages array ready for the streaming response call.
+
+async function runAgentLoop(
+  initialMessages: OAIMsg[],
+  userId: string,
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
+): Promise<OAIMsg[]> {
+  const messages = [...initialMessages];
+  const MAX_ITER = 3;
+
+  for (let i = 0; i < MAX_ITER; i++) {
+    // Force no more tool calls on the last iteration to prevent an infinite loop
+    const toolChoice = i === MAX_ITER - 1 ? "none" : "auto";
+
+    let response;
+    try {
+      response = await callOpenAIWithTools(messages, KIRA_TOOLS, toolChoice);
+    } catch (e) {
+      console.warn('[Kira] Agent loop call failed:', e);
+      break;
+    }
+
+    const msg = response.choices[0].message;
+
+    // No tool calls — messages are ready for the streaming call
+    if (!msg.tool_calls || msg.tool_calls.length === 0) break;
+
+    // Append assistant message with tool_calls
+    messages.push({
+      role: 'assistant',
+      content: msg.content ?? null,
+      tool_calls: msg.tool_calls,
+    });
+
+    // Execute all tool calls in parallel
+    const toolResults = await Promise.all(
+      (msg.tool_calls as ToolCall[]).map(async (tc) => {
+        let args: Record<string, unknown> = {};
+        try { args = JSON.parse(tc.function.arguments); } catch { /* use empty args */ }
+        const result = await executeTool(tc.function.name, args, userId, supabase);
+        console.log(`[Kira tool] ${tc.function.name} → ${JSON.stringify(result).slice(0, 120)}`);
+        return { tool_call_id: tc.id, result };
+      }),
+    );
+
+    // Append tool result messages
+    for (const { tool_call_id, result } of toolResults) {
+      messages.push({
+        role: 'tool',
+        content: JSON.stringify(result),
+        tool_call_id,
+      });
+    }
+  }
+
+  return messages;
+}
+
 // ── Main handler ──────────────────────────────────────────────────────────────
+
 serve(async (req) => {
   const cors = getCorsHeaders(req);
   if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
@@ -261,7 +746,7 @@ serve(async (req) => {
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
     const token = authHeader.replace('Bearer ', '');
@@ -330,7 +815,7 @@ serve(async (req) => {
     if (gateError) {
       console.error('Feature gate error:', gateError.message);
       return new Response(JSON.stringify({ error: 'Something went wrong. Please try again.' }), {
-        status: 500, headers: cors
+        status: 500, headers: cors,
       });
     }
     if (!allowed) {
@@ -341,7 +826,7 @@ serve(async (req) => {
       }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
-    // Fetch profile
+    // Fetch profile for personalisation
     const { data: profile } = await supabase
       .from('profiles')
       .select(`
@@ -375,7 +860,7 @@ serve(async (req) => {
         : Promise.resolve(''),
     ]);
 
-    // Build system prompt
+    // Build system prompt with user context
     let systemPrompt = KIRA_SYSTEM_PROMPT;
 
     if (referenceMemories) {
@@ -391,12 +876,8 @@ serve(async (req) => {
       if (isCreator && Array.isArray(creatorProfile?.goals) && creatorProfile.goals.length > 0) {
         contextLines.push(`- Goals: ${(creatorProfile.goals as string[]).join(', ')}`);
       }
-      if (!isCreator && brandProfile?.business_type) {
-        contextLines.push(`- Business type: ${brandProfile.business_type}`);
-      }
-      if (!isCreator && brandProfile?.company_description) {
-        contextLines.push(`- Company: ${brandProfile.company_description}`);
-      }
+      if (!isCreator && brandProfile?.business_type) contextLines.push(`- Business type: ${brandProfile.business_type}`);
+      if (!isCreator && brandProfile?.company_description) contextLines.push(`- Company: ${brandProfile.company_description}`);
       if (memory.more_about_you && !hasInjectionPattern(String(memory.more_about_you))) contextLines.push(`- About: ${memory.more_about_you}`);
 
       systemPrompt += `\n\nUSER CONTEXT (personalise every response — do not repeat verbatim):\n${contextLines.join('\n')}`;
@@ -407,7 +888,6 @@ serve(async (req) => {
       }
     }
 
-    // Inject active project context (sent from the client when a project is selected)
     if (projectContext && typeof projectContext === 'object') {
       const pc = projectContext as Record<string, unknown>;
       if (pc.name && !hasInjectionPattern(String(pc.name))) {
@@ -426,10 +906,7 @@ serve(async (req) => {
       systemPrompt += `\n\n${summaryContext}`;
     }
 
-    // Build OpenAI messages array (content can be string or vision array)
-    type ContentPart = { type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } };
-    type OAIMsg = { role: string; content: string | ContentPart[] };
-
+    // Build user content (handles image/text file attachments)
     const userContent: string | ContentPart[] =
       safeFileType === 'image' && safeFileContent
         ? [
@@ -440,16 +917,18 @@ serve(async (req) => {
           ? `[Attached file — use as context]\n\n${safeFileContent}\n\n${sanitizedPrompt}`
           : sanitizedPrompt;
 
-    const openaiMessages: OAIMsg[] = [
+    const initialMessages: OAIMsg[] = [
       { role: 'system', content: systemPrompt },
       ...(summaryContext && activeHistory.length > 4
         ? activeHistory.slice(-4)
-        : activeHistory
-      ),
+        : activeHistory),
       { role: 'user', content: userContent },
     ];
 
-    // Stream response via raw OpenAI SSE
+    // Run agent loop: resolves any tool calls before streaming the final answer
+    const agentMessages = await runAgentLoop(initialMessages, user.id, supabase);
+
+    // Stream final answer — no tools passed here, this is pure text output
     const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
     const writer = writable.getWriter();
     const encoder = new TextEncoder();
@@ -466,7 +945,7 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             model: "gpt-5.4-mini",
-            messages: openaiMessages,
+            messages: agentMessages,
             max_completion_tokens: 1000,
             stream: true,
           }),
@@ -522,7 +1001,7 @@ serve(async (req) => {
               { role: 'user', content: sanitizedPrompt },
               { role: 'assistant', content: fullResponse },
             ],
-            supabase
+            supabase,
           ).catch(e => console.warn('[Kira] Summary update failed:', e));
         }
       }
@@ -543,7 +1022,7 @@ serve(async (req) => {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("Function Error:", msg);
     return new Response(JSON.stringify({ error: 'Something went wrong. Please try again.' }), {
-      status: 500, headers: cors
+      status: 500, headers: cors,
     });
   }
 });
