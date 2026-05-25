@@ -65,7 +65,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
   const isCrevidAI = location.pathname === "/crevia-ai";
   const isStudio   = location.pathname === "/crevia-studio";
-  const isSubPage  = ["/profile/", "/privacy-policy", "/terms-of-service", "/app/about", "/admin"].some(
+  const isSubPage  = ["/profile/", "/privacy-policy", "/terms-of-service", "/app/about", "/crv-9x4m2k"].some(
     (p) => location.pathname.startsWith(p)
   );
 

@@ -19,6 +19,7 @@ import { BiometricLockScreen } from "./components/auth/BiometricLockScreen";
 import AppLayout from "./components/navigation/AppLayout";
 import PublicPageWrapper from "./components/PublicPageWrapper";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import AdminRoute from "./components/auth/AdminRoute";
 
 // Eagerly loaded — the landing page only; everything else deferred
 import Home from "./pages/Home";
@@ -166,7 +167,7 @@ function AppContent() {
 
 
   // Admin path always bypasses maintenance so the toggle can be turned off
-  if (maintenance && !location.pathname.startsWith("/admin")) return <MaintenancePage />;
+  if (maintenance && !location.pathname.startsWith("/crv-9x4m2k")) return <MaintenancePage />;
 
   return (
     <>
@@ -234,11 +235,12 @@ function AppContent() {
           <Route path="/profile/settings" element={<ProtectedRoute><AppLayout><Settings /></AppLayout></ProtectedRoute>} />
           <Route path="/profile/help" element={<ProtectedRoute><AppLayout><Help /></AppLayout></ProtectedRoute>} />
           <Route path="/profile/feedback" element={<ProtectedRoute><AppLayout><Feedback /></AppLayout></ProtectedRoute>} />
-          <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+          <Route path="/crv-9x4m2k" element={<AdminRoute><Admin /></AdminRoute>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
+      {!location.pathname.startsWith("/crv-9x4m2k") && <UpdateBanner />}
     </>
   );
 }
@@ -253,7 +255,6 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <AppContent />
-              <UpdateBanner />
             </BrowserRouter>
           </TooltipProvider>
         </LanguageProvider>
