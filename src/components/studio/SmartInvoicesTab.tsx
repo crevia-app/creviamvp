@@ -154,7 +154,7 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
       return;
     }
     toast.success("Invoice deleted");
-    fetchInvoices();
+    setInvoices((prev) => prev.filter((i) => i.id !== id));
   };
 
   const handleDuplicate = async (invoice: Invoice) => {
