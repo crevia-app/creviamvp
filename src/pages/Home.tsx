@@ -89,7 +89,7 @@ const Home = () => {
           </ScrollReveal>
           <ScrollReveal delay={0.12}>
             <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-              Talent is everywhere. What most businesses and creators lack is the
+              Talent is everywhere. What most businesses and creatives lack is the
               infrastructure to convert it into structured, scalable revenue.
               Crevia closes that gap.
             </p>
@@ -126,9 +126,9 @@ const Home = () => {
                   <span className="text-gradient-bronze">Your AI Chief of Staff.</span>
                 </h3>
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  Kira negotiates, scopes, and strategizes — so you stop undercharging
-                  and start closing deals that hold. Not generic AI. Context-aware
-                  business intelligence, built for how deals actually work.
+                  Whether you're a creative building your business or a brand scaling
+                  your operations — Kira is the intelligent partner in your corner.
+                  Strategy, scoping, and guidance, exactly when you need it.
                 </p>
                 <ul className="space-y-3">
                   {[
