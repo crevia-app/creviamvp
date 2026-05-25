@@ -1,8 +1,10 @@
 import { Card } from "@/components/ui/card";
+import { SEO } from "@/components/SEO";
 
 const TermsOfService = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Terms of Service" description="Read Crevia's Terms of Service. Understand your rights and responsibilities when using the Crevia platform." url="/terms-of-service" />
 
       <main className="container max-w-4xl px-4 py-8 md:py-16">
         <div className="mb-8 md:mb-12">

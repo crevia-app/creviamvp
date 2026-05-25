@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { SEO } from "@/components/SEO";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowRight, Sparkles, Zap } from "lucide-react";
@@ -175,6 +176,11 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen bg-background page-bg-warm overflow-x-hidden">
+      <SEO
+        title="Pricing"
+        description="Simple, transparent pricing for creators. Start free and upgrade when you're ready. Crevia Pro, Creative Pro, and Business plans available."
+        url="/pricing"
+      />
       <Header />
 
       {/* Hero */}

@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import { SEO } from "@/components/SEO";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Brain, FileText, Link2, MessageCircle, Receipt, Shield } from "lucide-react";
@@ -33,6 +34,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background page-bg-warm overflow-x-hidden">
+      <SEO url="/" />
       <Header />
 
       {/* ═══════════════ HERO ═══════════════ */}

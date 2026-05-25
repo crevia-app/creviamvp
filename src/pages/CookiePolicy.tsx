@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="space-y-3">
@@ -36,6 +37,7 @@ const CookiePolicy = () => {
   const navigate = useNavigate();
   return (
   <div className="max-w-3xl mx-auto px-4 py-12 sm:px-6">
+    <SEO title="Cookie Policy" description="Read Crevia's Cookie Policy. Learn how we use cookies to improve your experience on the platform." url="/cookie-policy" />
     {/* Back button */}
     <button
       onClick={() => navigate(-1)}

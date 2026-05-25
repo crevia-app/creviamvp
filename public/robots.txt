@@ -1,14 +1,17 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+Disallow: /auth
+Disallow: /mfa-verify
+Disallow: /crv-9x4m2k
+Disallow: /studio
+Disallow: /crevia-link
+Disallow: /crevia-studio
+Disallow: /crevia-invoice
+Disallow: /crevia-contracts
+Disallow: /crevia-workspace
+Disallow: /kira
+Disallow: /profile/
+Disallow: /received
+Disallow: /crevia-ai
+
+Sitemap: https://creviamvp.vercel.app/sitemap.xml
