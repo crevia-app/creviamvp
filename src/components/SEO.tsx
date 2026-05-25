@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 
-const BASE_URL = "https://creviamvp.vercel.app";
+const BASE_URL = "https://www.crevia.app";
 const DEFAULT_IMAGE = `${BASE_URL}/og-image.png`;
 
 interface SEOProps {

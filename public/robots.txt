@@ -14,4 +14,4 @@ Disallow: /profile/
 Disallow: /received
 Disallow: /crevia-ai
 
-Sitemap: https://creviamvp.vercel.app/sitemap.xml
+Sitemap: https://www.crevia.app/sitemap.xml
