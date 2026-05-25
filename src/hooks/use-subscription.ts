@@ -77,9 +77,9 @@ const BUSINESS_LIMITS: SubscriptionLimits = {
 
 const PLAN_LIMITS: Record<SubscriptionPlan, SubscriptionLimits> = {
   free: {
-    kiraActionsPerDay: 10,
-    invoicesPerMonth: 3,
-    canvasesPerMonth: 5,
+    kiraActionsPerDay: 40,
+    invoicesPerMonth: 40,
+    canvasesPerMonth: 40,
     hasESignature: false,
     hasPremiumThemes: false,
     hasClientPortal: false,
@@ -107,7 +107,7 @@ export const useSubscription = (): SubscriptionState => {
   const [status, setStatus] = useState("inactive");
   const [isLoading, setIsLoading] = useState(true);
   const [kiraActionsToday, setKiraActionsToday] = useState(0);
-  const [kiraActionsLimit, setKiraActionsLimit] = useState(10);
+  const [kiraActionsLimit, setKiraActionsLimit] = useState(40);
   const [invoicesUsedThisMonth, setInvoicesUsedThisMonth] = useState(0);
   const [canvasesUsedThisMonth, setCanvasesUsedThisMonth] = useState(0);
 
@@ -115,7 +115,7 @@ export const useSubscription = (): SubscriptionState => {
     setPlan((profile.subscription_plan as SubscriptionPlan) || "free");
     setStatus((profile.subscription_status as string) || "inactive");
     setKiraActionsToday((profile.kira_actions_used as number) || 0);
-    setKiraActionsLimit((profile.kira_actions_limit as number) || 10);
+    setKiraActionsLimit((profile.kira_actions_limit as number) || 40);
     setInvoicesUsedThisMonth((profile.invoices_used_this_month as number) || 0);
     setCanvasesUsedThisMonth((profile.canvases_used_this_month as number) || 0);
   };
