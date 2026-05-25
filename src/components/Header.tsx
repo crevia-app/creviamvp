@@ -12,6 +12,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ChevronDown, User, CreditCard, Bell, Shield, Settings, HelpCircle, MessageSquare, LogOut, Link2, LayoutDashboard, Menu, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { NavThemeSwitcher } from "@/components/NavThemeSwitcher";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -50,6 +51,11 @@ const Header = () => {
           </Link>
         </div>
 
+        {/* Desktop Theme Switcher */}
+        <div className="hidden lg:flex items-center">
+          <NavThemeSwitcher />
+        </div>
+
         {/* Mobile Menu & User Actions */}
         <div className="flex items-center gap-2 md:gap-3">
           {/* Mobile Menu */}
@@ -84,6 +90,11 @@ const Header = () => {
                 >
                   About
                 </Link>
+
+                <div className="pt-2 border-t border-border">
+                  <p className="text-xs text-muted-foreground font-poppins mb-3">Theme</p>
+                  <NavThemeSwitcher />
+                </div>
 
                 {!isLoggedIn && (
                   <div className="flex flex-col gap-3 pt-4 border-t border-border">
