@@ -104,6 +104,14 @@ const InvoiceSettingsDialog = ({ open, onOpenChange, onSaved }: Props) => {
         setPayment(data.invoice_payment_details
           ? { ...emptyPayment, ...data.invoice_payment_details }
           : emptyPayment);
+      } else {
+        // Row doesn't exist yet — create it so saves don't silently fail
+        const { data: inserted } = await (supabase as any)
+          .from("business_settings")
+          .insert({ user_id: session.user.id })
+          .select("id")
+          .single();
+        if (inserted) setSettingsId(inserted.id);
       }
     })();
   }, [open]);
