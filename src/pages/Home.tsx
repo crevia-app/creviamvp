@@ -55,9 +55,9 @@ const Home = () => {
             </ScrollReveal>
             <ScrollReveal delay={0.26}>
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground font-poppins leading-relaxed max-w-2xl">
-                Creatives need to get paid on time. Brands need compliant,
-                structured partnerships. Crevia is the infrastructure where
-                both happen — without the chaos.
+                Build a business that runs as well as it creates.
+                Kira brings the intelligence. Crevia Studio handles the operations.
+                Crevia is the infrastructure where both happen — without the chaos.
               </p>
             </ScrollReveal>
             <ScrollReveal delay={0.38}>
