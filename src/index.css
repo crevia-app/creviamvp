@@ -444,6 +444,52 @@ All colors MUST be HSL.
   }
 
   /* ============================================================
+     PAGE BACKGROUND TREATMENT
+     Two ambient radials — background-image only so they layer
+     cleanly on top of bg-background without any conflict.
+
+     Top-right: primary warm bloom (65% × 50% ellipse, 5.5% light / 9% dark)
+     Bottom-left: secondary trace (45% × 35% ellipse, 2.8% light / 5% dark)
+
+     Values are intentionally below the threshold of "obvious."
+     The goal is warmth, not colour.
+  ============================================================ */
+  .page-bg-warm {
+    background-image:
+      radial-gradient(ellipse 65% 50% at 88% 0%,   hsl(23 87% 56% / 0.055) 0%, transparent 62%),
+      radial-gradient(ellipse 45% 35% at  6% 100%, hsl(23 87% 56% / 0.028) 0%, transparent 58%);
+  }
+
+  .dark .page-bg-warm {
+    background-image:
+      radial-gradient(ellipse 65% 50% at 88% 0%,   hsl(23 87% 56% / 0.09) 0%, transparent 62%),
+      radial-gradient(ellipse 45% 35% at  6% 100%, hsl(23 87% 56% / 0.05) 0%, transparent 58%);
+  }
+
+  /* ============================================================
+     SECTION TINT
+     Applied to bg-secondary/30 alternating sections.
+     Adds a single linear fade at the top edge — as if the page's
+     ambient warmth bleeds through into the section.
+     background-image stacks over background-color, no conflicts.
+  ============================================================ */
+  .section-tint-warm {
+    background-image: linear-gradient(
+      180deg,
+      hsl(23 87% 56% / 0.038) 0%,
+      transparent 28%
+    );
+  }
+
+  .dark .section-tint-warm {
+    background-image: linear-gradient(
+      180deg,
+      hsl(23 87% 56% / 0.055) 0%,
+      transparent 28%
+    );
+  }
+
+  /* ============================================================
      EFFECT 1 — Sub-Surface Hero Glow
      Large radial bloom behind the H1. Reads as ambient warmth,
      not colour. Dark mode lifts it slightly since dark backgrounds

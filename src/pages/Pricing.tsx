@@ -174,7 +174,7 @@ const Pricing = () => {
   const plans = PLANS(billingCycle, proPrice, enterprisePrice);
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className="min-h-screen bg-background page-bg-warm overflow-x-hidden">
       <Header />
 
       {/* Hero */}
@@ -364,7 +364,7 @@ const Pricing = () => {
       </section>
 
       {/* FAQ */}
-      <section className="py-16 md:py-24 px-4 md:px-6 bg-secondary/30">
+      <section className="py-16 md:py-24 px-4 md:px-6 bg-secondary/30 section-tint-warm">
         <div className="container mx-auto max-w-3xl">
           <ScrollReveal>
             <h2 className="font-vollkorn text-3xl md:text-4xl font-bold text-center mb-12">

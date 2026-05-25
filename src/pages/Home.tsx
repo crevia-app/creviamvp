@@ -32,7 +32,7 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className="min-h-screen bg-background page-bg-warm overflow-x-hidden">
       <Header />
 
       {/* ═══════════════ HERO ═══════════════ */}
@@ -98,7 +98,7 @@ const Home = () => {
       </section>
 
       {/* ═══════════════ TWO LAYERS ═══════════════ */}
-      <section className="py-16 md:py-24 px-4 md:px-6 bg-secondary/30">
+      <section className="py-16 md:py-24 px-4 md:px-6 bg-secondary/30 section-tint-warm">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16 md:mb-20">
             <ScrollReveal>

@@ -33,7 +33,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className="min-h-screen bg-background page-bg-warm overflow-x-hidden">
       {!isEmbedded && <Header />}
 
       {/* ═══════════════ HERO ═══════════════ */}
@@ -270,7 +270,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
       </section>
 
       {/* ═══════════════ FOUNDER ═══════════════ */}
-      <section className="py-20 md:py-28 px-4 md:px-6 bg-secondary/30">
+      <section className="py-20 md:py-28 px-4 md:px-6 bg-secondary/30 section-tint-warm">
         <div className="container mx-auto max-w-3xl text-center">
           <ScrollReveal variant="blur">
             <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase mb-6">
