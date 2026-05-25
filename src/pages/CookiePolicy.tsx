@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="space-y-3">
@@ -31,8 +32,19 @@ const Table = ({ rows }: { rows: { name: string; type: string; purpose: string; 
   </div>
 );
 
-const CookiePolicy = () => (
+const CookiePolicy = () => {
+  const navigate = useNavigate();
+  return (
   <div className="max-w-3xl mx-auto px-4 py-12 sm:px-6">
+    {/* Back button */}
+    <button
+      onClick={() => navigate(-1)}
+      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8 group"
+    >
+      <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+      Back
+    </button>
+
     {/* Header */}
     <div className="mb-10 space-y-2">
       <p className="text-xs font-semibold uppercase tracking-widest text-bronze">Legal</p>
@@ -136,6 +148,7 @@ const CookiePolicy = () => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export default CookiePolicy;

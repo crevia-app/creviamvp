@@ -22,7 +22,7 @@ const Footer = () => {
               <a href="https://www.instagram.com/creviahq" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-bronze hover:text-white transition-colors">
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="https://youtube.com/@creviahq" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-bronze hover:text-white transition-colors">
+              <a href="https://www.youtube.com/@crevia-hq" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-bronze hover:text-white transition-colors">
                 <Youtube className="w-5 h-5" />
               </a>
               <a href="https://www.tiktok.com/@crevia.app" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-bronze hover:text-white transition-colors">

@@ -111,7 +111,7 @@ const DraggableSig = ({ pos, signature, onChange }: DraggableSigProps) => {
         onPointerUp={onBodyUp}
       >
         {signature.startsWith("data:image") ? (
-          <img src={signature} alt="sig" className="max-w-full max-h-full object-contain p-1 mix-blend-multiply dark:invert dark:mix-blend-screen" draggable={false} />
+          <img src={signature} alt="sig" className="max-w-full max-h-full object-contain p-1 dark:invert" draggable={false} />
         ) : (
           <span className="font-vollkorn italic text-foreground/85 truncate px-2 pointer-events-none" style={{ fontSize: fs }}>
             {signature}
@@ -536,7 +536,7 @@ const CanvasPreviewDialog = ({
                     return (
                       <div className="absolute pointer-events-none" style={sigStyle}>
                         {localCanvas.creator_signature.startsWith("data:image") ? (
-                          <img src={localCanvas.creator_signature} alt="Signature" className="w-full h-full object-contain mix-blend-multiply dark:invert dark:mix-blend-screen" draggable={false} />
+                          <img src={localCanvas.creator_signature} alt="Signature" className="w-full h-full object-contain dark:invert" draggable={false} />
                         ) : (
                           <span
                             className="font-vollkorn italic text-foreground/85 flex items-center justify-center w-full h-full"
