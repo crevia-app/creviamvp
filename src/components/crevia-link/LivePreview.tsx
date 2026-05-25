@@ -24,8 +24,9 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
   // Resolve theme from LINK_THEMES; fall back to obsidian
   const themeData = LINK_THEMES.find(t => t.value === themeId);
   const bgValue    = themeData?.previewBg   || "#080808";
-  const textColor  = themeData?.previewText || "#FFFFFF";
-  const accentColor = themeData?.accentColor || textColor;
+  // For custom image: force white text + bronze accent over the dark overlay
+  const textColor  = isCustomImage ? "#FFFFFF" : (themeData?.previewText || "#FFFFFF");
+  const accentColor = isCustomImage ? "#B07D3A" : (themeData?.accentColor || textColor);
   // Determine if text is light based on luminance heuristic
   const lightText = !(textColor === "#0A0A0A" || textColor === "#1A1A1A" || textColor === "#2B241E" || textColor === "#000000");
 

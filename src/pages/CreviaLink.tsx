@@ -65,10 +65,46 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [uploadingPicture, setUploadingPicture] = useState(false);
+  const [uploadingBg, setUploadingBg] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  
+  const bgImageRefEmb = useRef<HTMLInputElement>(null);
+  const bgImageRefStandalone = useRef<HTMLInputElement>(null);
+
+
   const currentTab = new URLSearchParams(location.search).get("tab") || "profile";
+  const hasCustomBg = linkProfile?.theme === "custom_image" && !!linkProfile?.background?.custom_bg_url;
+
+  const handleBgImageUpload = async (file: File) => {
+    if (!file.type.startsWith("image/")) { toast({ title: "Please upload an image file", variant: "destructive" }); return; }
+    if (file.size > 10 * 1024 * 1024) { toast({ title: "Max file size is 10 MB", variant: "destructive" }); return; }
+    setUploadingBg(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { setUploadingBg(false); return; }
+    const ext = file.name.split(".").pop();
+    const path = `${session.user.id}/bg-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("avatars").upload(path, file);
+    if (error) {
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+      setUploadingBg(false);
+      return;
+    }
+    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+    setLinkProfile((prev: any) => ({
+      ...prev,
+      theme: "custom_image",
+      background: { ...prev?.background, style: "custom_image", custom_bg_url: urlData.publicUrl },
+    }));
+    setUploadingBg(false);
+    toast({ title: "Background image uploaded!" });
+  };
+
+  const handleRemoveBgImage = () => {
+    setLinkProfile((prev: any) => ({
+      ...prev,
+      theme: "elite_obsidian",
+      background: { ...prev?.background, custom_bg_url: null, style: "solid" },
+    }));
+  };
 
   useEffect(() => {
     checkAuth();
@@ -693,21 +729,30 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                   <div className="space-y-6">
                     <div>
                       <Label className="text-sm font-medium mb-4 block">Color Scheme</Label>
-                      <ThemeSelector
-                        value={linkProfile?.theme || "elite_obsidian"}
-                        onChange={(themeId, fontKey) =>
-                          setLinkProfile({ ...linkProfile, theme: themeId, background: { ...linkProfile?.background, style: "solid", font_family: fontKey } })
-                        }
-                        isProUser={isProUser}
-                        onUpgrade={() => navigate("/profile/payments-billing")}
-                      />
+                      <div className={cn("relative", hasCustomBg && "pointer-events-none select-none")}>
+                        {hasCustomBg && (
+                          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/80 backdrop-blur-sm border border-border/50">
+                            <p className="text-xs text-muted-foreground text-center px-3">Remove background image to change colour scheme</p>
+                          </div>
+                        )}
+                        <ThemeSelector
+                          value={linkProfile?.theme || "elite_obsidian"}
+                          onChange={(themeId, fontKey) =>
+                            setLinkProfile({ ...linkProfile, theme: themeId, background: { ...linkProfile?.background, style: "solid", font_family: fontKey, custom_bg_url: null } })
+                          }
+                          isProUser={isProUser}
+                          onUpgrade={() => navigate("/profile/payments-billing")}
+                        />
+                      </div>
                     </div>
 
                     {/* Custom Background Image */}
-                    <div className="pt-4 border-t border-border/40">
+                    <div className={cn("pt-4 border-t border-border/40", !hasCustomBg && linkProfile?.theme && linkProfile.theme !== "custom_image" && "")}>
                       <Label className="text-sm font-medium mb-2 block">Custom Background Image</Label>
                       <div className="space-y-3">
-                        <Label className="text-xs text-muted-foreground block">Upload your own background image</Label>
+                        <Label className="text-xs text-muted-foreground block">
+                          {hasCustomBg ? "Active — remove to switch back to a colour scheme" : "Upload your own background image"}
+                        </Label>
                         {linkProfile?.background?.custom_bg_url && (
                           <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
                             <img src={linkProfile.background.custom_bg_url} alt="Background" className="w-full h-full object-cover" />
@@ -715,52 +760,32 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                               variant="destructive"
                               size="sm"
                               className="absolute top-2 right-2 h-7 text-xs"
-                              onClick={() => setLinkProfile({
-                                ...linkProfile,
-                                theme: linkProfile?.theme === "custom_image" ? "dark" : linkProfile?.theme,
-                                background: { ...linkProfile?.background, custom_bg_url: null, style: "solid" }
-                              })}
+                              onClick={handleRemoveBgImage}
                             >
                               Remove
                             </Button>
                           </div>
                         )}
-                        <div>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            id="emb-bg-image-upload"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              const { data: { session } } = await supabase.auth.getSession();
-                              if (!session) return;
-                              const ext = file.name.split(".").pop();
-                              const path = `${session.user.id}/bg-${Date.now()}.${ext}`;
-                              const { error } = await supabase.storage.from("avatars").upload(path, file);
-                              if (error) {
-                                toast({ title: "Upload failed", description: error.message, variant: "destructive" });
-                                return;
-                              }
-                              const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
-                              setLinkProfile({
-                                ...linkProfile,
-                                theme: "custom_image",
-                                background: { ...linkProfile?.background, style: "custom_image", custom_bg_url: urlData.publicUrl }
-                              });
-                              toast({ title: "Background uploaded!" });
-                            }}
-                          />
-                          <Button
-                            variant="outline"
-                            className="w-full border-dashed border-2 border-bronze/40 hover:border-bronze"
-                            onClick={() => document.getElementById("emb-bg-image-upload")?.click()}
-                          >
-                            <ImageIcon className="w-4 h-4 mr-2" />
-                            Choose Image
-                          </Button>
-                        </div>
+                        {!hasCustomBg && (
+                          <div>
+                            <input
+                              ref={bgImageRefEmb}
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleBgImageUpload(f); e.target.value = ""; }}
+                            />
+                            <Button
+                              variant="outline"
+                              className="w-full border-dashed border-2 border-bronze/40 hover:border-bronze"
+                              onClick={() => bgImageRefEmb.current?.click()}
+                              disabled={uploadingBg}
+                            >
+                              <ImageIcon className="w-4 h-4 mr-2" />
+                              {uploadingBg ? "Uploading…" : "Choose Image"}
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1264,21 +1289,30 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 <div className="space-y-6 md:space-y-10">
                   <div>
                     <Label className="text-sm sm:text-base md:text-lg font-medium mb-3 md:mb-6 block">Color Scheme</Label>
-                    <ThemeSelector
-                      value={linkProfile?.theme || "elite_obsidian"}
-                      onChange={(themeId, fontKey) =>
-                        setLinkProfile({ ...linkProfile, theme: themeId, background: { ...linkProfile?.background, style: "solid", font_family: fontKey } })
-                      }
-                      isProUser={isProUser}
-                      onUpgrade={() => navigate("/profile/payments-billing")}
-                    />
+                    <div className={cn("relative", hasCustomBg && "pointer-events-none select-none")}>
+                      {hasCustomBg && (
+                        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/80 backdrop-blur-sm border border-border/50">
+                          <p className="text-xs sm:text-sm text-muted-foreground text-center px-4">Remove background image to change colour scheme</p>
+                        </div>
+                      )}
+                      <ThemeSelector
+                        value={linkProfile?.theme || "elite_obsidian"}
+                        onChange={(themeId, fontKey) =>
+                          setLinkProfile({ ...linkProfile, theme: themeId, background: { ...linkProfile?.background, style: "solid", font_family: fontKey, custom_bg_url: null } })
+                        }
+                        isProUser={isProUser}
+                        onUpgrade={() => navigate("/profile/payments-billing")}
+                      />
+                    </div>
                   </div>
 
                   {/* Custom Background Image */}
                   <div className="pt-4 border-t border-border/40">
                     <Label className="text-sm sm:text-base font-medium mb-2 block">Custom Background Image</Label>
                     <div className="space-y-3">
-                      <Label className="text-xs text-muted-foreground block">Upload your own background image</Label>
+                      <Label className="text-xs text-muted-foreground block">
+                        {hasCustomBg ? "Active — remove to switch back to a colour scheme" : "Upload your own background image"}
+                      </Label>
                       {linkProfile?.background?.custom_bg_url && (
                         <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
                           <img src={linkProfile.background.custom_bg_url} alt="Background" className="w-full h-full object-cover" />
@@ -1286,52 +1320,32 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                             variant="destructive"
                             size="sm"
                             className="absolute top-2 right-2 h-7 text-xs"
-                            onClick={() => setLinkProfile({
-                              ...linkProfile,
-                              theme: linkProfile?.theme === "custom_image" ? "dark" : linkProfile?.theme,
-                              background: { ...linkProfile?.background, custom_bg_url: null, style: "solid" }
-                            })}
+                            onClick={handleRemoveBgImage}
                           >
                             Remove
                           </Button>
                         </div>
                       )}
-                      <div>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          id="bg-image-upload"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            const { data: { session } } = await supabase.auth.getSession();
-                            if (!session) return;
-                            const ext = file.name.split(".").pop();
-                            const path = `${session.user.id}/bg-${Date.now()}.${ext}`;
-                            const { error } = await supabase.storage.from("avatars").upload(path, file);
-                            if (error) {
-                              toast({ title: "Upload failed", description: error.message, variant: "destructive" });
-                              return;
-                            }
-                            const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
-                            setLinkProfile({
-                              ...linkProfile,
-                              theme: "custom_image",
-                              background: { ...linkProfile?.background, style: "custom_image", custom_bg_url: urlData.publicUrl }
-                            });
-                            toast({ title: "Background uploaded!" });
-                          }}
-                        />
-                        <Button
-                          variant="outline"
-                          className="w-full border-dashed border-2 border-bronze/40 hover:border-bronze"
-                          onClick={() => document.getElementById("bg-image-upload")?.click()}
-                        >
-                          <ImageIcon className="w-4 h-4 mr-2" />
-                          Choose Image
-                        </Button>
-                      </div>
+                      {!hasCustomBg && (
+                        <div>
+                          <input
+                            ref={bgImageRefStandalone}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleBgImageUpload(f); e.target.value = ""; }}
+                          />
+                          <Button
+                            variant="outline"
+                            className="w-full border-dashed border-2 border-bronze/40 hover:border-bronze"
+                            onClick={() => bgImageRefStandalone.current?.click()}
+                            disabled={uploadingBg}
+                          >
+                            <ImageIcon className="w-4 h-4 mr-2" />
+                            {uploadingBg ? "Uploading…" : "Choose Image"}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
