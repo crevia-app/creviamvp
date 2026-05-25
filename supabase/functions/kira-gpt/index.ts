@@ -904,7 +904,7 @@ serve(async (req) => {
       if (!isCreator && brandProfile?.company_description) contextLines.push(`- Company: ${brandProfile.company_description}`);
       if (memory.more_about_you && !hasInjectionPattern(String(memory.more_about_you))) contextLines.push(`- About: ${memory.more_about_you}`);
 
-      systemPrompt += `\n\nUSER CONTEXT (personalise every response — do not repeat verbatim):\n${contextLines.join('\n')}`;
+      systemPrompt += `\n\nUSER CONTEXT (use to ground every response — answer directly when asked about these details):\n${contextLines.join('\n')}`;
 
       if (memoryContext) systemPrompt += `\n\n${memoryContext}`;
       if (memory.custom_instructions && !hasInjectionPattern(String(memory.custom_instructions))) {
