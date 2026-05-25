@@ -58,8 +58,8 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
           </ScrollReveal>
           <ScrollReveal delay={0.2}>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              We're building the operating system for the creative industry — 
-              so creatives and brands can stop surviving and start scaling.
+              The creative industry is not short of talent. It is short of infrastructure.
+              We are building it.
             </p>
           </ScrollReveal>
         </div>
@@ -125,10 +125,10 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                 </h2>
                 <div className="h-1 w-16 bg-gradient-to-r from-bronze to-bronze-light rounded-full" />
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  Look at our logo. Those dots? Each one represents you — whether you're a creator 
-                  turning passion into a profession, or a brand searching for authentic partnerships. 
-                  Some small, some large — all equal. We don't measure value by numbers. 
-                  We measure it by the stories told and the businesses built.
+                  Those dots in our logo are not decoration. Each one is a creative, a brand,
+                  a story in motion. Some at the start. Some mid-scale. All equal in what they
+                  deserve — the infrastructure to be taken seriously. We do not measure value
+                  by follower counts. We measure it by businesses built and money moved.
                 </p>
               </div>
             </ScrollReveal>
@@ -241,11 +241,12 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                   Our Mission
                 </p>
                 <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">
-                  Give creatives and brands the tools to build scalable businesses.
+                  Replace the chaos of the creative economy with structured, scalable business infrastructure.
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Not content calendars. Not vanity metrics. Real business infrastructure — 
-                  intelligence, invoicing, Canvas, communication, and payments — in one place.
+                  Kira handles the intelligence. Crevia Studio handles the operations.
+                  Together, they replace the scattered tools, missed payments, and lost
+                  deals that define the industry today.
                 </p>
               </div>
             </ScrollReveal>
@@ -258,8 +259,9 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                   A creative industry where impact outweighs influence.
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Where every creative and brand — regardless of size — owns their narrative. 
-                  Where partnerships are built on substance, not status. Where your story is enough.
+                  Where success is measured by businesses built and income earned — not followers
+                  gained and content posted. Athar House is the physical embodiment of this
+                  community. Crevia is the digital infrastructure.
                 </p>
               </div>
             </ScrollReveal>
@@ -275,14 +277,16 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
               Founder's Note
             </p>
             <blockquote className="font-vollkorn text-xl md:text-2xl font-bold leading-relaxed text-foreground italic mb-6">
-              "We see a future where your story doesn't need permission to thrive. 
-              Where creatives and brands are measured by impact, not metrics. Crevia exists to make this real."
+              "I started by hosting summits at iHub Nairobi — bringing creatives into the same room
+              to share, collaborate, and build. What I kept seeing was the same problem: immense
+              talent, zero infrastructure. People leaving deals on the table. Getting paid late,
+              or not at all. Running their businesses on WhatsApp threads and gut instinct.
+              I stopped organizing the ecosystem and started building the hard infrastructure
+              it actually needs. Athar House is the physical space. Crevia is the digital backbone.
+              The goal has never changed — impact over vanity. Businesses built. Money moved. Stories owned."
             </blockquote>
-            <p className="text-muted-foreground leading-relaxed mb-4">
-              Create. Via. Us. Because every story deserves to be heard.
-            </p>
-            <p className="font-poppins font-semibold text-foreground">Amin Hussein</p>
-            <p className="text-sm text-muted-foreground">Founder & CEO</p>
+            <p className="font-poppins font-semibold text-foreground">Amin Hassan Hussein</p>
+            <p className="text-sm text-muted-foreground">Founder & CEO, Crevia</p>
           </ScrollReveal>
         </div>
       </section>

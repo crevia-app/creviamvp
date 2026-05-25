@@ -26,7 +26,7 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterpriseP
       priceYearly: "$0",
       period: "",
       seatNote: null,
-      description: "Everything you need to get started.",
+      description: "Your first look at what structured operations feel like.",
       features: [
         "1 seat",
         "Crevia Link — basic templates",
@@ -49,7 +49,7 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterpriseP
       priceYearly: fmt(proYearly),
       period: billingCycle === "monthly" ? "/mo" : "/yr",
       seatNote: null,
-      description: "Advanced tools for independent professionals.",
+      description: "Turn yourself into a one-person enterprise.",
       features: [
         "1 seat",
         "Verified badge on your profile",
@@ -74,7 +74,7 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterpriseP
       priceYearly: fmt(businessYearly),
       period: billingCycle === "monthly" ? "/mo" : "/yr",
       seatNote: "+ $14.99 per extra seat",
-      description: "Built for brands, agencies, and B2B teams.",
+      description: "The command center for brands and agencies that operate at scale.",
       features: [
         "3 seats included",
         "200 Kira AI actions/day — multi-workspace context",
@@ -98,7 +98,7 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterpriseP
       priceYearly: enterprisePrice > 0 ? fmt(entYearly) : "Custom",
       period: enterprisePrice > 0 ? (billingCycle === "monthly" ? "/mo" : "/yr") : "",
       seatNote: "Custom volume",
-      description: "For large agencies and high-volume brands.",
+      description: "For organisations where volume, compliance, and control are non-negotiable.",
       features: [
         "Custom seats",
         "Priority Kira processing — no throttling",
@@ -197,7 +197,7 @@ const Pricing = () => {
           </ScrollReveal>
           <ScrollReveal delay={0.16}>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-              One platform. Every tool you need to run your creative business.
+              Pay for what moves your business forward. Nothing else.
             </p>
           </ScrollReveal>
 

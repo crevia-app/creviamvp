@@ -48,14 +48,15 @@ const Home = () => {
             {/* variant="hero" — larger 40px travel, no blur, clean typographic entrance */}
             <ScrollReveal delay={0.12} variant="hero" duration={0.8}>
               <h1 className="font-vollkorn text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] font-bold leading-[1.08]">
-                The operating system for the{" "}
-                <span className="text-gradient-bronze">creative industry.</span>
+                The infrastructure to scale your{" "}
+                <span className="text-gradient-bronze">creative operations.</span>
               </h1>
             </ScrollReveal>
             <ScrollReveal delay={0.26}>
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground font-poppins leading-relaxed max-w-2xl">
-                Crevia gives creatives and brands the intelligence, tools, and
-                infrastructure to build scalable businesses — not just content.
+                Creatives need to get paid on time. Brands need compliant,
+                structured partnerships. Crevia is the infrastructure where
+                both happen — without the chaos.
               </p>
             </ScrollReveal>
             <ScrollReveal delay={0.38}>
@@ -65,20 +66,9 @@ const Home = () => {
                     size="lg"
                     className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-sm sm:text-base md:text-lg px-6 sm:px-10 py-5 sm:py-7 font-poppins font-semibold shadow-lg hover-scale"
                   >
-                    {isLoggedIn ? "Own Your Story" : "Start Free"} <ArrowRight className="ml-2 w-5 h-5" />
+                    {isLoggedIn ? "Open Crevia" : "Start free"} <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
-                {!isLoggedIn && (
-                  <Link to="/pricing" className="w-full sm:w-auto">
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="w-full sm:w-auto text-sm sm:text-base md:text-lg px-6 sm:px-10 py-5 sm:py-7 font-poppins font-semibold border-2 border-bronze/30 hover:border-bronze hover:bg-bronze/10 transition-premium"
-                    >
-                      See Pricing
-                    </Button>
-                  </Link>
-                )}
               </div>
             </ScrollReveal>
           </div>
@@ -92,15 +82,15 @@ const Home = () => {
         <div className="container mx-auto max-w-4xl text-center">
           <ScrollReveal variant="hero">
             <h2 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl font-bold mb-6 leading-tight">
-              Creatives aren't broke.{" "}
-              <span className="text-gradient-bronze">They're under-tooled.</span>
+              Talent is not the problem.{" "}
+              <span className="text-gradient-bronze">Infrastructure is.</span>
             </h2>
           </ScrollReveal>
           <ScrollReveal delay={0.12}>
             <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-              You don't need another content calendar. You need an operating system —
-              one place to price, scope, invoice, build Canvas, communicate, and get paid.
-              That's Crevia.
+              The creative industry has talent in abundance. What it lacks is the
+              infrastructure to convert that talent into structured, scalable revenue.
+              Crevia closes that gap — for the independent creative and the brand building with them.
             </p>
           </ScrollReveal>
         </div>
@@ -132,18 +122,18 @@ const Home = () => {
                 </div>
                 <h3 className="font-vollkorn text-3xl md:text-4xl font-bold leading-tight">
                   Meet Kira.{" "}
-                  <span className="text-gradient-bronze">Think sharper.</span>
+                  <span className="text-gradient-bronze">Your AI Chief of Staff.</span>
                 </h3>
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  Kira brings African market intelligence into your business logic.
-                  No copy-pasted global playbooks — real data on pricing, scoping, and
-                  structuring deals that make sense for your market.
+                  Kira negotiates, scopes, and strategizes — so you stop undercharging
+                  and start closing deals that hold. Not generic AI. Context-aware
+                  business intelligence, built for the creative economy.
                 </p>
                 <ul className="space-y-3">
                   {[
-                    "Market-aware pricing suggestions",
-                    "Scope & structure recommendations",
-                    "Campaign strategy powered by local data",
+                    "Deal scoping and pricing guidance",
+                    "Campaign and partnership strategy",
+                    "Business intelligence, on demand",
                   ].map((item, i) => (
                     <ScrollReveal key={item} delay={0.08 * i} variant="fade-left">
                       <li className="flex items-center gap-3 text-foreground">
@@ -169,12 +159,12 @@ const Home = () => {
                 </div>
                 <h3 className="font-vollkorn text-3xl md:text-4xl font-bold leading-tight">
                   Crevia Studio.{" "}
-                  <span className="text-gradient-bronze">Run everything.</span>
+                  <span className="text-gradient-bronze">The complete operations layer.</span>
                 </h3>
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  Links, Canvas, invoices, and communication — all moving in one flow.
-                  For creatives, it turns individuals into companies. For brands,
-                  it turns chaos into structured creative operations.
+                  Crevia Canvas seals the deal. Crevia Invoice closes the books.
+                  Crevia Workspace keeps teams aligned. Crevia Link puts your brand
+                  in front of clients. Every workflow. One system.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-md">
                   {OPS_CARDS.map(({ icon: Icon, label, path }, i) => (
@@ -202,8 +192,8 @@ const Home = () => {
         <div className="container mx-auto max-w-6xl">
           <ScrollReveal className="text-center mb-14 md:mb-20">
             <h2 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl font-bold">
-              Built for people who{" "}
-              <span className="text-gradient-bronze">build things.</span>
+              Built for those who run{" "}
+              <span className="text-gradient-bronze">a real business.</span>
             </h2>
           </ScrollReveal>
 
@@ -214,12 +204,12 @@ const Home = () => {
                   One platform. Every workflow.
                 </p>
                 <h3 className="font-vollkorn text-2xl sm:text-3xl md:text-4xl font-bold leading-tight">
-                  The operating system for the creative economy.
+                  For the creator running a business. And the brand that needs one to run efficiently.
                 </h3>
                 <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
-                  Creatives still chase invoices over WhatsApp and lose Canvas in email threads.
-                  Crevia fixes that — one workspace for invoicing, legally binding Canvas,
-                  secure payments, and client collaboration. Everything connected, nothing scattered.
+                  Invoice disputes. Contract loops. Scattered client communication. Crevia
+                  eliminates all of it — one workspace where every deal is documented, every
+                  payment is tracked, and every client interaction is professional.
                 </p>
               </div>
             </div>
@@ -239,8 +229,7 @@ const Home = () => {
           </ScrollReveal>
           <ScrollReveal delay={0.12}>
             <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-              Join the creatives and brands building real businesses on Crevia.
-              Start free. Scale when you're ready.
+              The infrastructure is ready. Your move.
             </p>
           </ScrollReveal>
           <ScrollReveal delay={0.24} variant="scale">
