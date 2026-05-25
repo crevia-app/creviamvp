@@ -274,7 +274,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
         <div className="container mx-auto max-w-3xl text-center">
           <ScrollReveal variant="blur">
             <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase mb-6">
-              Founder's Note
+              Co-Founder's Note
             </p>
             <blockquote className="font-vollkorn text-xl md:text-2xl font-bold leading-relaxed text-foreground italic mb-6">
               "I started by hosting summits at iHub Nairobi — bringing creatives into the same room
@@ -282,11 +282,11 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
               talent, zero infrastructure. People leaving deals on the table. Getting paid late,
               or not at all. Running their businesses on WhatsApp threads and gut instinct.
               I stopped organizing the ecosystem and started building the hard infrastructure
-              it actually needs. Athar House is the physical space. Crevia is the digital backbone.
+              it actually needs. Crevia is the digital backbone.
               The goal has never changed — impact over vanity. Businesses built. Money moved. Stories owned."
             </blockquote>
             <p className="font-poppins font-semibold text-foreground">Amin Hassan Hussein</p>
-            <p className="text-sm text-muted-foreground">Founder & CEO, Crevia</p>
+            <p className="text-sm text-muted-foreground">Co-Founder & CEO, Crevia</p>
           </ScrollReveal>
         </div>
       </section>
