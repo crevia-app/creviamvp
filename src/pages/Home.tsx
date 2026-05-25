@@ -202,15 +202,17 @@ const Home = () => {
             <div className="p-8 sm:p-10 md:p-12 rounded-2xl border border-border bg-card hover:border-bronze/30 card-interactive">
               <div className="max-w-3xl space-y-6">
                 <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase">
-                  One platform. Every workflow.
+                  Built for both sides of the table
                 </p>
                 <h3 className="font-vollkorn text-2xl sm:text-3xl md:text-4xl font-bold leading-tight">
-                  For the creator running a business. And the brand that needs one to run efficiently.
+                  Every deal deserves{" "}
+                  <span className="text-gradient-bronze">a foundation.</span>
                 </h3>
                 <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
-                  Invoice disputes. Contract loops. Scattered client communication. Crevia
-                  eliminates all of it — one workspace where every deal is documented, every
-                  payment is tracked, and every client interaction is professional.
+                  Creatives use Crevia to show up like the business they are — structured proposals,
+                  sharp invoices, and a client experience that commands respect. Brands use it to
+                  brief, align, and deliver without the back-and-forth that kills momentum.
+                  One platform. Both sides. No chaos.
                 </p>
               </div>
             </div>
