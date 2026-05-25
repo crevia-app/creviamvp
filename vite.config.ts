@@ -12,7 +12,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['crevia-logo.png', 'robots.txt'],
       manifest: {
         name: 'Crevia - Own Your Story',
