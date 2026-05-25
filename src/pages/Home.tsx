@@ -88,9 +88,9 @@ const Home = () => {
           </ScrollReveal>
           <ScrollReveal delay={0.12}>
             <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-              The creative industry has talent in abundance. What it lacks is the
-              infrastructure to convert that talent into structured, scalable revenue.
-              Crevia closes that gap — for the independent creative and the brand building with them.
+              Talent is everywhere. What most businesses and creators lack is the
+              infrastructure to convert it into structured, scalable revenue.
+              Crevia closes that gap.
             </p>
           </ScrollReveal>
         </div>
@@ -127,7 +127,7 @@ const Home = () => {
                 <p className="text-lg text-muted-foreground leading-relaxed">
                   Kira negotiates, scopes, and strategizes — so you stop undercharging
                   and start closing deals that hold. Not generic AI. Context-aware
-                  business intelligence, built for the creative economy.
+                  business intelligence, built for how deals actually work.
                 </p>
                 <ul className="space-y-3">
                   {[

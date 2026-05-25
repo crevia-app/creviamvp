@@ -58,7 +58,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
           </ScrollReveal>
           <ScrollReveal delay={0.2}>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              The creative industry is not short of talent. It is short of infrastructure.
+              Creatives and businesses deserve infrastructure that works as hard as they do.
               We are building it.
             </p>
           </ScrollReveal>
@@ -241,7 +241,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                   Our Mission
                 </p>
                 <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">
-                  Replace the chaos of the creative economy with structured, scalable business infrastructure.
+                  Give creatives and businesses the infrastructure to operate, close deals, and scale — without the chaos.
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
                   Kira handles the intelligence. Crevia Studio handles the operations.
@@ -256,7 +256,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                   Our Vision
                 </p>
                 <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">
-                  A creative industry where impact outweighs influence.
+                  A world where impact outweighs influence.
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
                   Where success is measured by businesses built and income earned — not followers
