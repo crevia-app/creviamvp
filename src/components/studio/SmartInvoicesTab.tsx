@@ -3,11 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { 
-  Plus, 
-  Search, 
-  FileText, 
-  Send, 
+import {
+  Plus,
+  Search,
+  FileText,
+  Send,
   Eye,
   MoreHorizontal,
   Edit,
@@ -25,6 +25,7 @@ import {
   Sparkles,
   SlidersHorizontal,
 } from "lucide-react";
+import { SendDocumentDialog } from "@/components/studio/SendDocumentDialog";
 import { toast } from "sonner";
 import { format, isAfter } from "date-fns";
 import {
@@ -74,6 +75,7 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
   const [receiptInvoice, setReceiptInvoice] = useState<Invoice | null>(null);
+  const [sendInvoice, setSendInvoice] = useState<Invoice | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [businessSettings, setBusinessSettings] = useState<{
     business_name: string;
@@ -215,17 +217,10 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   };
 
   const handleStatusChange = async (id: string, status: string) => {
-    const { error } = await supabase
-      .from("invoices")
-      .update({ status })
-      .eq("id", id);
-
-    if (error) {
-      toast.error("Failed to update status");
-      return;
-    }
+    const { error } = await supabase.from("invoices").update({ status }).eq("id", id);
+    if (error) { toast.error("Failed to update status"); return; }
     toast.success(`Invoice marked as ${status}`);
-    fetchInvoices();
+    setInvoices(prev => prev.map(i => i.id === id ? { ...i, status } : i));
   };
 
   const getStatusBadge = (status: string) => {
@@ -544,18 +539,16 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSendInvoice(invoice)}>
+                          <Send className="h-4 w-4 mr-2" />
+                          Send
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleDuplicate(invoice)}>
                           <Copy className="h-4 w-4 mr-2" />
                           Duplicate
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        {invoice.status === "draft" && (
-                          <DropdownMenuItem onClick={() => handleStatusChange(invoice.id, "sent")}>
-                            <Send className="h-4 w-4 mr-2" />
-                            Mark as Sent
-                          </DropdownMenuItem>
-                        )}
-                        {(invoice.status === "sent" || invoice.status === "overdue") && (
+                        {!["paid", "cancelled"].includes(invoice.status) && (
                           <DropdownMenuItem onClick={() => handleStatusChange(invoice.id, "paid")}>
                             <CheckCircle2 className="h-4 w-4 mr-2" />
                             Mark as Paid
@@ -593,8 +586,11 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
         }}
         editingInvoice={editingInvoice}
         onSuccess={(invoice) => {
-          if (invoice) setInvoices((prev) => [invoice, ...prev]);
-          fetchInvoices();
+          if (invoice) {
+            setInvoices((prev) => [invoice, ...prev]);
+          } else {
+            fetchInvoices();
+          }
         }}
         businessSettings={businessSettings}
       />
@@ -615,6 +611,18 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
         onOpenChange={setSettingsOpen}
         onSaved={fetchBusinessSettings}
       />
+
+      {sendInvoice && (
+        <SendDocumentDialog
+          open={!!sendInvoice}
+          onOpenChange={(open) => !open && setSendInvoice(null)}
+          type="invoice"
+          documentId={sendInvoice.id}
+          defaultEmail={sendInvoice.client_email || ""}
+          documentLabel={`Invoice ${sendInvoice.invoice_number} · ${sendInvoice.client_name}`}
+          onSent={() => setSendInvoice(null)}
+        />
+      )}
     </div>
   );
 };

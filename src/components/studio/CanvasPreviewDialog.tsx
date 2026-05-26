@@ -524,7 +524,6 @@ const CanvasPreviewDialog = ({
 
                     {/* Agreement body */}
                     <div>
-                      <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-semibold mb-4">Full Agreement</p>
                       {localCanvas.content ? (
                         <div ref={textDivRef} className="whitespace-pre-wrap break-all text-sm text-foreground/80 leading-relaxed font-mono p-4 rounded-xl bg-muted/20 border border-border/20 overflow-hidden">
                           {localCanvas.content}

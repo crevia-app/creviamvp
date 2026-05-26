@@ -59,6 +59,7 @@ import { useSubscription } from "@/hooks/use-subscription";
 import UpgradePrompt from "@/components/subscription/UpgradePrompt";
 import CanvasPreviewDialog from "./CanvasPreviewDialog";
 import UploadCanvasDialog from "./UploadCanvasDialog";
+import { SendDocumentDialog } from "@/components/studio/SendDocumentDialog";
 
 interface Canvas {
   id: string;
@@ -122,6 +123,7 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
   const [editingCanvas, setEditingCanvas] = useState<Canvas | null>(null);
   const [previewCanvas, setPreviewCanvas] = useState<Canvas | null>(null);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [sendCanvas, setSendCanvas] = useState<Canvas | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
 
@@ -467,15 +469,6 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <Button
-            variant="outline"
-            onClick={() => setUploadDialogOpen(true)}
-            className="gap-2 h-10 rounded-xl border-dashed hover:border-bronze/50 hover:bg-bronze/5 transition-all flex-1 md:flex-none"
-          >
-            <Upload className="h-4 w-4" />
-            <span>Upload</span>
-          </Button>
-
           {/* Universal "New" dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -542,7 +535,6 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
           <SelectContent>
             <SelectItem value="newest">Newest</SelectItem>
             <SelectItem value="oldest">Oldest</SelectItem>
-            <SelectItem value="value">Highest Value</SelectItem>
           </SelectContent>
         </Select>
       </motion.div>
@@ -745,6 +737,10 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setSendCanvas(canvas)} className="rounded-lg">
+                            <Send className="h-4 w-4 mr-2" />
+                            Send
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => { setRenamingId(canvas.id); setRenameValue(canvas.title); }}
                             className="rounded-lg"
@@ -757,12 +753,6 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                             Duplicate
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          {canvas.status === "draft" && (
-                            <DropdownMenuItem onClick={() => handleStatusChange(canvas.id, "sent")} className="rounded-lg">
-                              <Send className="h-4 w-4 mr-2" />
-                              Mark as Sent
-                            </DropdownMenuItem>
-                          )}
                           {canvas.status === "sent" && (
                             <DropdownMenuItem onClick={() => handleStatusChange(canvas.id, "signed")} className="rounded-lg">
                               <FileSignature className="h-4 w-4 mr-2" />
@@ -867,6 +857,18 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
         canvas={previewCanvas}
         onCanvasUpdate={() => fetchCanvases(currentFolderId)}
       />
+
+      {sendCanvas && (
+        <SendDocumentDialog
+          open={!!sendCanvas}
+          onOpenChange={(open) => !open && setSendCanvas(null)}
+          type="canvas"
+          documentId={sendCanvas.id}
+          defaultEmail={sendCanvas.client_email || ""}
+          documentLabel={sendCanvas.title}
+          onSent={() => setSendCanvas(null)}
+        />
+      )}
     </div>
   );
 };

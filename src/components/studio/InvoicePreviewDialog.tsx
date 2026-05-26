@@ -166,7 +166,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
 
   return (
   <>
-    <Dialog open={open} onOpenChange={(v) => { if (!v) { setIsFullscreen(false); setShowPalette(false); } onOpenChange(v); }}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) { setIsFullscreen(false); } onOpenChange(v); }}>
       {/* Hide shadcn's auto-generated close button — we have our own in the toolbar */}
       <DialogContent className={cn(
         "overflow-hidden p-0 transition-all duration-300 [&>button:last-child]:hidden",
@@ -210,21 +210,22 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
               <div className="h-1.5" style={{ background: accentColor }} />
               <div className="p-4 sm:p-8">
 
-                {/* ── Header: INVOICE + business info ── */}
-                {/* Mobile: stacked; Desktop: side-by-side */}
+                {/* ── Header: INVOICE title + logo always top-right ── */}
+                <div className="flex justify-between items-start gap-3 mb-2">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">INVOICE</h1>
+                  {businessSettings?.logo_url && (
+                    <img
+                      src={businessSettings.logo_url}
+                      alt="Business Logo"
+                      className="w-12 h-12 object-contain rounded-lg flex-shrink-0"
+                    />
+                  )}
+                </div>
+
+                {/* Invoice number + business info */}
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-6">
-                  <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">INVOICE</h1>
-                    <p className="text-gray-400 mt-0.5 text-xs sm:text-base font-mono">{invoice.invoice_number}</p>
-                  </div>
+                  <p className="text-gray-400 text-xs sm:text-base font-mono">{invoice.invoice_number}</p>
                   <div className="sm:text-right">
-                    {businessSettings?.logo_url && (
-                      <img
-                        src={businessSettings.logo_url}
-                        alt="Business Logo"
-                        className="w-12 h-12 object-contain sm:ml-auto mb-1.5 rounded-lg"
-                      />
-                    )}
                     <h2 className="text-base font-bold text-gray-900">{businessName}</h2>
                     {(businessSettings?.business_email || profile?.email) && (
                       <p className="text-gray-500 text-xs mt-0.5 break-all">{businessSettings?.business_email || profile?.email}</p>
