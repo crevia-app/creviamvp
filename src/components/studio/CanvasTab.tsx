@@ -593,8 +593,8 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
                 <div className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
-                        <MoreHorizontal className="h-3.5 w-3.5" />
+                      <button className="w-7 h-7 flex items-center justify-center rounded-lg bg-background/80 border border-border/60 shadow-sm text-foreground hover:bg-muted transition-colors">
+                        <MoreHorizontal className="h-4 w-4" />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-36 rounded-xl">
