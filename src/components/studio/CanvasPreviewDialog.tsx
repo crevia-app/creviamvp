@@ -528,7 +528,7 @@ const CanvasPreviewDialog = ({
                     {/* Agreement body */}
                     <div>
                       {localCanvas.content ? (
-                        <div ref={textDivRef} className="whitespace-pre-wrap break-all text-sm text-foreground/80 leading-relaxed font-mono p-4 rounded-xl bg-muted/20 border border-border/20 overflow-hidden">
+                        <div ref={textDivRef} className="whitespace-pre-wrap break-words text-sm text-foreground/80 leading-relaxed font-mono p-4 rounded-xl bg-muted/20 border border-border/20 overflow-hidden">
                           {localCanvas.content}
                         </div>
                       ) : (
@@ -537,15 +537,40 @@ const CanvasPreviewDialog = ({
                         </div>
                       )}
                     </div>
+
+                    {/* ── SAVED SIGNATURE — always below content in document flow ── */}
+                    {!placementMode && localCanvas.creator_signature && (
+                      <div className="pt-2 border-t border-border/40">
+                        <div className="flex items-end gap-6">
+                          <div className="flex-1 min-w-0">
+                            <div className="h-14 flex items-end pb-1">
+                              {localCanvas.creator_signature.startsWith("data:image") ? (
+                                <img
+                                  src={localCanvas.creator_signature}
+                                  alt="Signature"
+                                  className="max-h-12 max-w-[180px] object-contain dark:invert"
+                                  draggable={false}
+                                />
+                              ) : (
+                                <span className="font-vollkorn italic text-2xl text-foreground/85 truncate">
+                                  {localCanvas.creator_signature}
+                                </span>
+                              )}
+                            </div>
+                            <div className="h-px bg-border/60 mb-1.5" />
+                            <p className="text-[11px] text-muted-foreground">
+                              {localCanvas.creator_signed_at
+                                ? `Signed ${format(new Date(localCanvas.creator_signed_at), "MMM d, yyyy 'at' h:mm a")}`
+                                : "Creator Signature"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   {/* End regular content ------------------------------------ */}
 
-                  {/*
-                   * ── ACTIVE SIGNATURE WIDGET ──
-                   * Rendered inside contentAreaRef so it appears visually INSIDE
-                   * the document body at exactly the coordinates the user tapped.
-                   * Not clipped by overflow-hidden (outer card has none).
-                   */}
+                  {/* ── ACTIVE SIGNATURE WIDGET (placement mode only) ── */}
                   {placementMode?.pos && (
                     <DraggableSig
                       pos={placementMode.pos}
@@ -553,35 +578,6 @@ const CanvasPreviewDialog = ({
                       onChange={pos => setPlacementMode(prev => prev ? { ...prev, pos } : prev)}
                     />
                   )}
-
-                  {/*
-                   * ── SAVED SIGNATURE DISPLAY ──
-                   * Rendered at the exact saved coordinates so it appears
-                   * permanently in the right spot on the document.
-                   */}
-                  {!placementMode && savedPos && localCanvas.creator_signature && (() => {
-                    const isPct = savedPos.xPct !== undefined;
-                    const sigStyle = isPct
-                      ? { left: `${savedPos.xPct! * 100}%`, top: `${savedPos.yPct! * 100}%`, width: `${savedPos.wPct! * 100}%`, height: `${savedPos.hPct! * 100}%`, zIndex: 5 }
-                      : { left: savedPos.x, top: savedPos.y, width: savedPos.w, height: savedPos.h, zIndex: 5 };
-                    const approxH = isPct
-                      ? (savedPos.hPct! * (contentAreaRef.current?.clientHeight ?? 300))
-                      : (savedPos.h ?? 88);
-                    return (
-                      <div className="absolute pointer-events-none" style={sigStyle}>
-                        {localCanvas.creator_signature.startsWith("data:image") ? (
-                          <img src={localCanvas.creator_signature} alt="Signature" className="w-full h-full object-contain dark:invert" draggable={false} />
-                        ) : (
-                          <span
-                            className="font-vollkorn italic text-foreground/85 flex items-center justify-center w-full h-full"
-                            style={{ fontSize: Math.max(14, Math.min(approxH * 0.40, 48)) }}
-                          >
-                            {localCanvas.creator_signature}
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })()}
                 </div>
               </div>
             )}
