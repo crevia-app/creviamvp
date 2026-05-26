@@ -356,7 +356,10 @@ const CanvasPreviewDialog = ({
       )}>
 
         {/* ── Top Bar ── */}
-        <div className="print:hidden sticky top-0 z-10 bg-background border-b border-border/50 px-3 py-2 flex items-center gap-1.5">
+        <div className={cn(
+          "print:hidden sticky top-0 z-10 bg-background border-b border-border/50 px-3 py-2 flex items-center gap-1.5",
+          isFullscreen && "[padding-top:max(8px,env(safe-area-inset-top))]"
+        )}>
           {/* Title + status — flex-1 so it shrinks before buttons overflow */}
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <DialogTitle className="font-vollkorn text-sm sm:text-base truncate min-w-0">{localCanvas.title}</DialogTitle>

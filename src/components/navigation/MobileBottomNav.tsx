@@ -61,7 +61,7 @@ const MobileBottomNav = () => {
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/85 backdrop-blur-2xl border-t border-white/[0.06] safe-area-pb">
-      <div className="grid grid-cols-3 h-[60px]">
+      <div className="grid grid-cols-3 h-[52px]">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
