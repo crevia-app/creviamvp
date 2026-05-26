@@ -10,99 +10,105 @@ const PrivacyPolicy = () => {
         <div className="mb-8 md:mb-12">
           <h1 className="font-vollkorn text-3xl md:text-5xl font-bold mb-4">Privacy Policy</h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Effective Date: March 8th, 2026
+            Last Updated: May 26, 2026
           </p>
         </div>
 
         <Card className="p-6 md:p-8 space-y-8">
-          {/* Section 1 */}
+
           <section>
             <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">1. Introduction</h2>
             <p className="text-muted-foreground leading-relaxed">
-              At Crevia Ventures, we respect your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or use our mobile application. We are committed to compliance with the Data Protection Act of Kenya (2019).
+              Crevia Ventures Limited ("we," "us," "our") respects your privacy. This Privacy Policy explains how we collect, use, and protect your personal and corporate data when you use the Crevia platform and any other current or future products we provide. We operate in compliance with the Kenya Data Protection Act, 2019.
             </p>
           </section>
 
-          {/* Section 2 */}
           <section>
-            <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">2. Collection of Your Information</h2>
-            <div className="text-muted-foreground leading-relaxed space-y-4">
-              <div>
-                <h3 className="font-poppins font-semibold text-foreground mb-2">2.1 Personal Data</h3>
-                <p>Personally identifiable information, such as your name, email address, telephone number, and demographic information that you voluntarily give to us when you register.</p>
-              </div>
-              <div>
-                <h3 className="font-poppins font-semibold text-foreground mb-2">2.2 Business Data</h3>
-                <p>Information related to your business activities, Canvas, invoices, and client lists uploaded to Crevia Studio.</p>
-              </div>
-              <div>
-                <h3 className="font-poppins font-semibold text-foreground mb-2">2.3 AI Interactions</h3>
-                <p>Text inputs, prompts, and feedback provided by you when interacting with Kira.</p>
-              </div>
-              <div>
-                <h3 className="font-poppins font-semibold text-foreground mb-2">2.4 Financial Data</h3>
-                <p>Financial information, such as data related to your payment method (e.g., valid credit card number, card brand, expiration date) that we may collect when you purchase our services. Note: We store only very limited, if any, financial information that we collect. Otherwise, all financial information is stored by our payment processor (e.g., Paystack, Stripe, or DPO).</p>
-              </div>
-            </div>
-          </section>
-
-          {/* Section 3 */}
-          <section>
-            <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">3. Use of Your Information</h2>
-            <div className="text-muted-foreground leading-relaxed">
-              <p className="mb-3">We use the information we collect to:</p>
+            <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">2. Information We Collect</h2>
+            <div className="text-muted-foreground leading-relaxed space-y-3">
+              <p>We collect the following types of information:</p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Provide, operate, and maintain our Service.</li>
-                <li>Improve, personalize, and expand our Service.</li>
-                <li>Process your transactions and manage your orders.</li>
-                <li>Send you emails, push notifications, and other communications.</li>
-                <li><strong>Train Kira AI:</strong> We use anonymized and aggregated interaction data to improve the Kira model's understanding of the African context. We do NOT use your confidential Canvas or private documents to train our public models.</li>
+                <li><strong>Account Data:</strong> Name, email address, phone number, and billing information.</li>
+                <li><strong>Business Data:</strong> Client rosters, brand assets, and organizational hierarchies for workspace management.</li>
+                <li><strong>Document Data:</strong> Information inputted into Crevia Canvas (documents, clauses, MSAs) and Crevia Invoice (line items, pricing, counterparty details).</li>
+                <li><strong>AI Interaction Data:</strong> Prompts, queries, and contextual data submitted to our AI assistant (Kira) to improve deal structuring and platform functionality.</li>
+                <li><strong>Usage Data:</strong> Analytics regarding your interaction with Crevia Link pages, including visitor tracking.</li>
               </ul>
             </div>
           </section>
 
-          {/* Section 4 */}
           <section>
-            <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">4. Disclosure of Your Information</h2>
-            <div className="text-muted-foreground leading-relaxed">
-              <p className="mb-3">We may share information we have collected about you in certain situations:</p>
+            <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">3. How We Use Your Information</h2>
+            <div className="text-muted-foreground leading-relaxed space-y-3">
+              <p>We use your data strictly to operate and improve the platform:</p>
               <ul className="list-disc pl-6 space-y-2">
-                <li><strong>Third-Party Service Providers:</strong> We may share information with third parties that perform services for us or on our behalf, including payment processing, data analysis, email delivery, hosting services, and customer service.</li>
-                <li><strong>Legal Requirements:</strong> If we believe the release of information about you is necessary to respond to legal process, to investigate or remedy potential violations of our policies, or to protect the rights, property, and safety of others.</li>
+                <li>To facilitate document generation, e-signatures, and invoice routing.</li>
+                <li>To provide contextual intelligence across your workspaces via Kira.</li>
+                <li>To manage subscription billing and enforce Role-Based Access Control.</li>
+                <li>To track usage metrics for Pro and Business tier analytics.</li>
               </ul>
             </div>
           </section>
 
-          {/* Section 5 */}
           <section>
-            <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">5. Data Retention and Security</h2>
+            <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">4. Data Sharing and Disclosure</h2>
+            <div className="text-muted-foreground leading-relaxed space-y-3">
+              <p>We do not sell your data to data brokers. We only share information under the following circumstances:</p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li><strong>Service Providers:</strong> With trusted cloud hosting providers and payment gateways necessary to run our infrastructure.</li>
+                <li><strong>Legal Compliance:</strong> If required by law, subpoena, or government request (e.g., KRA audits), we will disclose data as legally mandated.</li>
+                <li><strong>Counterparties:</strong> When you send an invoice or a Canvas document to a client, the necessary data on that document is shared with the recipient.</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">5. Artificial Intelligence and Data Privacy</h2>
             <p className="text-muted-foreground leading-relaxed">
-              We use administrative, technical, and physical security measures to help protect your personal information. While we have taken reasonable steps to secure the personal information you provide to us, please be aware that despite our efforts, no security measures are perfect or impenetrable, and no method of data transmission can be guaranteed against any interception or other type of misuse.
+              When you interact with Kira, your prompts and uploaded workspace context are processed to generate immediate responses. We implement strict siloing for Business tiers to ensure that one brand's proprietary MSA data or financial information is never used to train the AI models answering queries for a different brand.
             </p>
           </section>
 
-          {/* Section 6 */}
           <section>
-            <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">6. Changes to This Privacy Policy</h2>
+            <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">6. Data Security</h2>
             <p className="text-muted-foreground leading-relaxed">
-              We may update our Privacy Policy from time to time to reflect changes in our practices, technology (including updates to Kira AI), or legal requirements. We will notify you of any material changes by posting the new Privacy Policy on this page and updating the "Last Updated" date at the top. By continuing to use Crevia after those changes become effective, you acknowledge and agree to the revised policy.
+              We implement enterprise-grade security measures to protect your documents and financial routing information. However, no digital infrastructure is 100% secure. You are responsible for securing your account credentials and managing access for your team members.
             </p>
           </section>
 
-          {/* Section 7 */}
           <section>
-            <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">7. Contact Us</h2>
+            <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">7. Your Rights</h2>
+            <div className="text-muted-foreground leading-relaxed space-y-3">
+              <p>Under the Kenya Data Protection Act, you have the right to:</p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>Access the personal data we hold about you.</li>
+                <li>Request the correction of inaccurate data.</li>
+                <li>Request the deletion of your account and associated personal data (subject to legal data retention requirements for financial records).</li>
+                <li>Object to the processing of your data for direct marketing.</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">8. Contact Us</h2>
             <p className="text-muted-foreground leading-relaxed">
-              If you have questions or comments about this Privacy Policy, please contact us at:
+              For any questions regarding this Privacy Policy or to exercise your data rights, please contact our team:
             </p>
             <div className="mt-4 p-4 bg-muted/50 rounded-lg">
               <p className="font-poppins text-sm">
-                <strong>Phone:</strong> +254795284028<br />
-                <strong>Location:</strong> Nairobi, Kenya<br />
-                <strong>Email:</strong> hi@crevia.app
+                <strong>Email:</strong> hi@crevia.app<br />
+                <strong>Location:</strong> Nairobi, Kenya
               </p>
             </div>
           </section>
+
+          <section>
+            <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">9. Changes to this Privacy Policy</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              We may update this Privacy Policy from time to time to reflect changes in our technology, legal requirements, or business operations. We will notify you of any significant changes by posting the new Privacy Policy on this page and updating the "Last Updated" date. We encourage you to review this Privacy Policy periodically. Continued use of Crevia after updates are published constitutes your acknowledgment and consent to the revised policy.
+            </p>
+          </section>
+
         </Card>
       </main>
     </div>
