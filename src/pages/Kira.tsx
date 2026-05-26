@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useVisualViewport } from "@/hooks/use-visual-viewport";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -309,6 +310,7 @@ function detectKiraIntent(text: string): string | null {
 const Kira = () => {
   const { toast } = useToast();
   const { kiraActionsToday, kiraActionsLimit } = useSubscription();
+  const { keyboardOpen } = useVisualViewport();
   const isAtKiraLimit = kiraActionsToday >= kiraActionsLimit;
   const [userType, setUserType] = useState<'creator' | 'brand' | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -977,7 +979,7 @@ const Kira = () => {
   // };
 
   return (
-    <div ref={chatContainerRef} className="h-[calc(100dvh-64px-64px)] md:h-[calc(100dvh-64px)] flex bg-background overscroll-none">
+    <div ref={chatContainerRef} className="h-full flex bg-background overscroll-none">
       {/* Desktop Sidebar */}
       <div 
         className={`hidden md:flex flex-col bg-card/50 border-r border-border/50 transition-all duration-300 ${
@@ -1527,7 +1529,7 @@ const Kira = () => {
           </div>
 
           {/* Input Area */}
-          <div className="flex-shrink-0 pt-3 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:p-6 bg-background">
+          <div className={`flex-shrink-0 pt-3 px-4 bg-background md:p-6 ${keyboardOpen ? "pb-3" : "pb-[calc(52px+0.75rem+env(safe-area-inset-bottom,0px))]"}`}>
             <div className="max-w-2xl mx-auto">
               {/* File attachment preview */}
               {selectedFile && (

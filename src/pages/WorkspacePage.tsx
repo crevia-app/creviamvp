@@ -161,8 +161,7 @@ const WorkspacePage = () => {
   const activeIndex = DEAL_STAGES.findIndex(s => s.id === activeStage);
 
   return (
-    // subtract topbar (64px) + mobile bottom nav (64px) on mobile, topbar only on desktop
-    <div className="flex flex-col h-[calc(100vh-128px)] md:h-[calc(100vh-64px)] overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden">
 
       {/* Deal Tracker */}
       <div className="flex-shrink-0 border-b border-border/50 bg-card/50 px-4 py-3">

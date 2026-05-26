@@ -6,6 +6,7 @@ import MobileBottomNav from "./MobileBottomNav";
 import TopBar from "./TopBar";
 import ProfileDrawer from "./ProfileDrawer";
 import { BackButton } from "@/components/BackButton";
+import { useVisualViewport } from "@/hooks/use-visual-viewport";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -63,9 +64,12 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     }
   };
 
-  const isCrevidAI = location.pathname === "/crevia-ai";
-  const isStudio   = location.pathname === "/crevia-studio";
-  const isSubPage  = ["/profile/", "/privacy-policy", "/terms-of-service", "/app/about", "/crv-9x4m2k"].some(
+  const { keyboardOpen } = useVisualViewport();
+
+  const isCrevidAI  = location.pathname === "/crevia-ai";
+  const isStudio    = location.pathname === "/crevia-studio";
+  const isChatRoute = location.pathname === "/kira" || location.pathname.startsWith("/crevia-workspace/");
+  const isSubPage   = ["/profile/", "/privacy-policy", "/terms-of-service", "/app/about", "/crv-9x4m2k"].some(
     (p) => location.pathname.startsWith(p)
   );
 
@@ -83,7 +87,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           onProfileClick={() => setProfileDrawerOpen(true)}
         />
 
-        <main className={`flex-1 min-h-0 md:ml-[100px] ${isStudio ? "overflow-hidden h-full" : "overflow-auto pb-[calc(60px+env(safe-area-inset-bottom,0px))] md:pb-0"}`}>
+        <main className={`flex-1 min-h-0 md:ml-[100px] ${isStudio || isChatRoute ? "overflow-hidden h-full" : "overflow-auto pb-[calc(52px+env(safe-area-inset-bottom,0px))] md:pb-0"}`}>
           {isSubPage && (
             <div className="px-4 md:px-6 pt-3 pb-1">
               <BackButton fallback="/kira" />
@@ -93,7 +97,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         </main>
       </div>
 
-      <MobileBottomNav />
+      {!keyboardOpen && <MobileBottomNav />}
 
       <ProfileDrawer
         isOpen={profileDrawerOpen}
