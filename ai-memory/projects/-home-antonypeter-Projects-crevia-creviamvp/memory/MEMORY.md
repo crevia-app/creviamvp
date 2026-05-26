@@ -1,0 +1,9 @@
+# Memory Index
+
+- [User Profile](user_profile.md) — Senior Software/Lead Developer at Crevia, student at Moringa School
+- [Project Context](project_context.md) — Crevia MVP: prod URL, stack, launch deadline, blocked items
+- [Security Architecture](security_architecture.md) — E2EE key backup v1/v2 scheme, migration flow, key files
+- [Remaining Work](remaining_work.md) — Feature gaps before May 4 launch: SMTP, lead-to-contract, feature gating, bank integration
+- [Mobile UI Patterns](feedback_mobile_patterns.md) — Validated responsive patterns: dialogs, stats grids, revenue cards, filter rows, sub-tabs
+- [Kira LangChain Fix](project_kira_langchain_fix.md) — LangChain npm: imports crash kira-gpt on startup (CORS 500); fix by replacing with raw fetch() to OpenAI API
+- [Git Push Preference](feedback_git_push.md) — User sometimes pushes to git themselves; don't auto-run git push

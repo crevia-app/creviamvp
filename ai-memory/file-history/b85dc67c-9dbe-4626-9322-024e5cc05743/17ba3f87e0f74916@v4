@@ -1,0 +1,107 @@
+# Crevia — Current Task: Invoice Autofill + Remaining Work
+
+## COMPLETED ✓
+- STEP 1: Resend SMTP (configured by user 3 days ago)
+- STEP 2: Kira limit mismatch fixed (`20260429100000_feature_gating_rpcs.sql`)
+- STEP 3: `consume_kira_action` RPC created (same file)
+- STEP 4: `kira-gpt` edge function wired to RPC, broken `increment_kira_tokens` removed
+- Signup fix: `handle_new_user` trigger now generates unique handles with WHILE loop collision avoidance
+
+## CURRENT TASK — Kira AI Production Readiness + Full App Smoke Test
+
+### Deadline: May 9 | Today: May 6 | 3 days left
+
+---
+
+## MAY 6 — TODAY (Kira Production Fixes)
+
+### Fix 1 — Content-Length Limit (CRITICAL BUG)
+**File:** `supabase/functions/kira-gpt/index.ts` line 97
+
+**What:** Current limit is `10,000 bytes`. We now send conversation history (up to 10 messages × 1,500 chars = 15KB). Any conversation longer than 5 messages will get a 413 "Request too large" error and Kira silently breaks.
+
+**Why:** When we added conversation memory, we forgot to raise the size limit on the incoming request check.
+
+**Fix:** Raise to `50,000 bytes`. Safe ceiling — the sanitizePrompt function already caps the user message at 2,000 chars. Total max with history is ~20KB well under 50KB.
+
+### Fix 2 — Reduce History from 10 to 6 Messages
+**File:** `src/pages/Kira.tsx` line 306
+
+**What:** Currently sending `userMessages.slice(-11, -1)` = 10 previous messages. Reduce to `slice(-7, -1)` = 6 messages (3 user turns + 3 Kira replies).
+
+**Why:** 6 messages gives full conversational context for 95% of use cases. 10 messages bloats the request and approaches the OpenAI token limit for the combined prompt + history + response, which could cause silent truncation.
+
+### Fix 3 — Delete Dead Broken Edge Functions
+**Functions to delete from Supabase:**
+- `kira-chat` — references `kira_tokens_used_today` (column doesn't exist). No client calls it. Actively broken.
+- `reset-kira-tokens` — references `kira_tokens_used_today`. Monthly reset is now handled inline by `consume_kira_action` RPC. This function is redundant AND broken.
+
+**Why:** Deployed broken functions that aren't called are a liability. They consume Supabase function quota, appear in the dashboard creating confusion, and if accidentally triggered they error silently.
+
+**How:** `supabase functions delete kira-chat` and `supabase functions delete reset-kira-tokens`
+
+### Fix 4 — Deploy + Commit + Push
+Deploy updated kira-gpt (with content-length fix), then commit and push all pending changes:
+- `supabase/functions/kira-gpt/index.ts`
+- `supabase/functions/kira-suggestions/index.ts`
+- `src/components/kira/VoiceChatDialog.tsx`
+- `src/pages/Kira.tsx`
+- `supabase/functions/paystack-webhook/index.ts`
+- `src/components/studio/StudioSettingsTab.tsx`
+- `src/components/studio/CreateInvoiceDialog.tsx`
+
+---
+
+## MAY 7 — Full App Smoke Test + Bug Fixes
+
+Go through every critical user flow and fix anything broken. Checklist:
+
+### Auth
+- Email signup → receives confirmation email → confirms → can log in
+- Email login → lands on correct dashboard
+- Google OAuth → works, terms checkbox enforced
+- Password reset flow
+
+### Kira AI
+- Send 8+ messages in one conversation — Kira remembers context from earlier messages
+- Hit the daily limit — see "Daily Kira limit reached. Upgrade to Pro" (not generic error)
+- Suggestions tabs in Crevia Connect load without error (now on OpenAI)
+- Voice chat sends and receives a response
+
+### Studio / Invoices
+- Go to Studio → Settings for first time → business_settings auto-created
+- Open Create Invoice — FROM card shows "Auto-filled from Settings" badge
+- Create a full invoice → generates correctly
+
+### Crevia Connect
+- Brand and Creator views load
+- Campaigns display correctly
+
+### Subscription / Payments
+- Pro upgrade flow with Paystack initiates correctly
+- isPro flag reflects correctly after payment
+
+### E2EE
+- New account generates key pair, no crash
+- Existing account on new device prompts for recovery password
+
+---
+
+## MAY 8 — Buffer / Polish
+
+- Fix any bugs discovered during May 7 testing
+- Final review of all user-facing error messages
+- Confirm Vercel deployment is stable
+
+---
+
+## POST-LAUNCH — Kira V2 Roadmap (from LangChain doc)
+- Week 1: Switch OpenAI → Gemini 1.5 Pro
+- Month 2: LangGraph agentic tools (invoice creation via chat)
+- Month 2: Persistent cross-session memory
+- Month 2: Platform insights tool (anonymised creator rates)
+
+---
+
+## REMAINING NON-CODE ITEMS
+- Bank Integration USD: Finalise Paystack merchant account (dashboard only, no code)

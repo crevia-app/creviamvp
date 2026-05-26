@@ -1,0 +1,35 @@
+---
+name: project-context
+description: "Crevia MVP — prod URL, stack, launch status, completed features"
+metadata: 
+  node_type: memory
+  type: project
+  originSessionId: 4ccc2eea-20db-4970-9039-2ca6cb66255a
+---
+
+Production URL: https://creviamvp.vercel.app
+Admin account email: hi@crevia.app
+Primary branch: main (deploys directly to Vercel)
+
+Stack: React + TypeScript (Vite), Supabase (Postgres + Auth + Realtime + Storage), Vercel, Paystack (payments), Web Crypto API (E2EE).
+
+## Status (2026-05-16)
+App is live and deployed. Launch-critical work is done.
+
+## Admin dashboard (src/pages/Admin.tsx)
+Fully built out. Sections: Overview, Users, Billing, Documents, Templates, Support, Settings.
+
+## Key decisions
+- Plans are Free / Pro / Enterprise (no "Creative Pro" / "Brand Workspace" — those portals were removed)
+- DB stores plan as "free" / "pro" / "enterprise"
+- Plan prices stored in app_settings (keys: plan_price_pro, plan_price_enterprise) — admin changes reflect on Pricing page and Paystack charge amount
+- Ops layer cards: Crevia Link + Chat → /crevia-studio, Invoice → /crevia-invoice, Contracts → /crevia-contracts
+- Auth guard on ops cards: unauthenticated users redirected to /auth?mode=signup&redirect=<path>
+
+## Pending post-launch work
+- Switch Kira to GPT-5.4-mini on a separate branch `feat/gpt-5-4-mini`. Currently reverted to `gpt-4o-mini` on main. The 400 error cause (parameter mismatch vs full Responses API rewrite) needs investigation. Estimated 1-4 hours.
+
+## Migrations applied to prod (all through 20260516200000)
+- support_ticket_replies (admin_reply, replied_at on support_tickets)
+- soft_delete_documents (deleted_at on invoices and contracts)
+- support_ticket_type (type column on support_tickets)

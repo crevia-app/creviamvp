@@ -1,0 +1,26 @@
+---
+name: Project Context
+description: Crevia MVP — prod URL, stack, launch date, current branch
+type: project
+originSessionId: 5575c1c2-2ae2-40d7-b4ef-59c8f88d8717
+---
+Production URL: https://creviamvp.vercel.app
+Primary branch: main (deploys directly to Vercel)
+Hard launch deadline: 2026-05-04
+
+**Why:** 5-day runway as of 2026-04-29. All remaining work must be scoped to launch-critical only.
+
+**How to apply:** Prioritize unblocking signup (SMTP) and server-side feature gating above all else. Deprioritize anything cosmetic or non-blocking.
+
+Stack: React + TypeScript (Vite), Supabase (Postgres + Auth + Realtime + Storage), Vercel, Paystack (payments), Web Crypto API (E2EE). Supabase free tier — rate limits apply (3 confirmation emails/hour).
+
+Completed as of 2026-04-29:
+- E2EE key backup v1→v2 security fix (deployed)
+- Recovery Password UI (RecoveryPasswordModal, SetRecoveryPasswordDialog) (deployed)
+- Auth terms enforcement + improved error messages (deployed)
+- handle_new_user trigger uniqueness fix (migration applied to prod)
+- Supabase Redirect URLs wildcard added for creviamvp.vercel.app
+
+Blocked as of 2026-04-29:
+- Email/password signup returns 500 — Supabase free-tier SMTP rate limit hit (3/hr). Fix: configure Resend SMTP (smtp.resend.com, port 465) or temporarily disable email confirmation
+- Recovery password flow not user-tested (blocked by signup being broken)

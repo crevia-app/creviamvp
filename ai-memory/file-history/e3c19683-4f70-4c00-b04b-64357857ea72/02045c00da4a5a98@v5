@@ -1,0 +1,660 @@
+import { useState, useEffect, useCallback } from "react";
+import SuccessOverlay from "@/components/ui/SuccessOverlay";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus, Trash2, Receipt, Building2, CheckCircle2, Settings } from "lucide-react";
+import { Link } from "react-router-dom";
+import { toast } from "sonner";
+
+interface InvoiceItem {
+  id?: string;
+  description: string;
+  quantity: string;
+  unit_price: string;
+  total: number;
+}
+
+interface BusinessSettings {
+  business_name: string;
+  business_email: string;
+  business_phone: string;
+  business_address: string;
+  logo_url: string;
+  tax_id: string;
+  default_currency: string;
+  default_tax_rate: number;
+  default_payment_terms: string;
+}
+
+interface CreateInvoiceDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  editingInvoice?: any;
+  onSuccess: () => void;
+  onCreated?: (id: string) => void;
+  kiraContext?: Record<string, unknown> | null;
+  businessSettings?: BusinessSettings | null;
+}
+
+const currencies = [
+  { code: "KES", name: "Kenyan Shilling" },
+  { code: "USD", name: "US Dollar" },
+  { code: "EUR", name: "Euro" },
+  { code: "GBP", name: "British Pound" },
+  { code: "NGN", name: "Nigerian Naira" },
+  { code: "ZAR", name: "South African Rand" },
+  { code: "GHS", name: "Ghanaian Cedi" },
+  { code: "TZS", name: "Tanzanian Shilling" },
+  { code: "UGX", name: "Ugandan Shilling" },
+];
+
+const CreateInvoiceDialog = ({
+  open,
+  onOpenChange,
+  editingInvoice,
+  onSuccess,
+  onCreated,
+  kiraContext,
+}: CreateInvoiceDialogProps) => {
+  const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [clientName, setClientName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientAddress, setClientAddress] = useState("");
+  const [issueDate, setIssueDate] = useState(new Date().toISOString().split("T")[0]);
+  const [dueDate, setDueDate] = useState("");
+  const [currency, setCurrency] = useState("KES");
+  const [taxRate, setTaxRate] = useState<string>("");
+  const [discountAmount, setDiscountAmount] = useState<string>("");
+  const [notes, setNotes] = useState("");
+  const [terms, setTerms] = useState("Payment is due within 30 days of invoice date.");
+  const [items, setItems] = useState<InvoiceItem[]>([
+    { description: "", quantity: "", unit_price: "", total: 0 },
+  ]);
+  const [loadedSettings, setLoadedSettings] = useState<BusinessSettings | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    if (editingInvoice) {
+      setInvoiceNumber(editingInvoice.invoice_number);
+      setClientName(editingInvoice.client_name);
+      setClientEmail(editingInvoice.client_email || "");
+      setClientAddress(editingInvoice.client_address || "");
+      setIssueDate(editingInvoice.issue_date);
+      setDueDate(editingInvoice.due_date);
+      setCurrency(editingInvoice.currency);
+      setTaxRate(editingInvoice.tax_rate ? String(editingInvoice.tax_rate) : "");
+      setDiscountAmount(editingInvoice.discount_amount ? String(editingInvoice.discount_amount) : "");
+      setNotes(editingInvoice.notes || "");
+      setTerms(editingInvoice.terms || "");
+      fetchItems(editingInvoice.id);
+    } else {
+      initNewInvoice();
+    }
+  }, [editingInvoice, kiraContext, open]);
+
+  const fetchItems = async (invoiceId: string) => {
+    const { data } = await supabase
+      .from("invoice_items")
+      .select("*")
+      .eq("invoice_id", invoiceId);
+
+    if (data && data.length > 0) {
+      setItems(data.map((item) => ({
+        id: item.id,
+        description: item.description,
+        quantity: String(item.quantity),
+        unit_price: String(item.unit_price),
+        total: Number(item.total),
+      })));
+    }
+  };
+
+  const generateInvoiceNumber = () => {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, "0");
+    setInvoiceNumber(`INV-${year}${month}-${random}`);
+  };
+
+  const initNewInvoice = async () => {
+    generateInvoiceNumber();
+
+    // Fetch settings directly — no dependency on parent prop timing
+    let bs: BusinessSettings | null = null;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const { data } = await supabase
+        .from("business_settings")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .single();
+      if (data) bs = data as BusinessSettings;
+    }
+    setLoadedSettings(bs);
+
+    const defaultCurrency = bs?.default_currency || "KES";
+    const defaultTaxRate  = bs?.default_tax_rate ? String(bs.default_tax_rate) : "";
+    const defaultTerms    = bs?.default_payment_terms || "Payment is due within 30 days of invoice date.";
+
+    setClientName("");
+    setClientEmail("");
+    setClientAddress("");
+    setIssueDate(new Date().toISOString().split("T")[0]);
+    setDueDate("");
+    setCurrency(defaultCurrency);
+    setTaxRate(defaultTaxRate);
+    setDiscountAmount("");
+    setNotes("");
+    setTerms(defaultTerms);
+    setItems([{ description: "", quantity: "", unit_price: "", total: 0 }]);
+
+    // Kira context layered on top of settings defaults
+    if (kiraContext) {
+      if (kiraContext.client_name) setClientName(kiraContext.client_name as string);
+      if (kiraContext.client_email) setClientEmail(kiraContext.client_email as string);
+      if (kiraContext.currency) setCurrency(kiraContext.currency as string);
+      if (kiraContext.notes) setNotes(kiraContext.notes as string);
+      if (Array.isArray(kiraContext.items) && kiraContext.items.length > 0) {
+        setItems(
+          (kiraContext.items as Array<{ description: string; quantity: number; unit_price: number }>).map(
+            (item) => ({
+              description: item.description || "",
+              quantity: String(item.quantity || 1),
+              unit_price: String(item.unit_price || 0),
+              total: (item.quantity || 1) * (item.unit_price || 0),
+            })
+          )
+        );
+      }
+    }
+  };
+
+  const updateItemTotal = (index: number, field: string, value: string) => {
+    const newItems = [...items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    
+    if (field === "quantity" || field === "unit_price") {
+      const qty = parseFloat(newItems[index].quantity) || 0;
+      const price = parseFloat(newItems[index].unit_price) || 0;
+      newItems[index].total = qty * price;
+    }
+    
+    setItems(newItems);
+  };
+
+  const addItem = () => {
+    setItems([...items, { description: "", quantity: "", unit_price: "", total: 0 }]);
+  };
+
+  const removeItem = (index: number) => {
+    if (items.length > 1) {
+      setItems(items.filter((_, i) => i !== index));
+    }
+  };
+
+  const calculateTotals = () => {
+    const subtotal = items.reduce((acc, item) => acc + item.total, 0);
+    const numTaxRate = parseFloat(taxRate) || 0;
+    const numDiscount = parseFloat(discountAmount) || 0;
+    const taxAmount = subtotal * (numTaxRate / 100);
+    const total = subtotal + taxAmount - numDiscount;
+    return { subtotal, taxAmount, total };
+  };
+
+  const handleSubmit = async () => {
+    if (!clientName || !dueDate || items.some((i) => !i.description)) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Please log in to create invoices");
+        return;
+      }
+
+      const { subtotal, taxAmount, total } = calculateTotals();
+
+      if (editingInvoice) {
+        // Update invoice
+        const { error: invoiceError } = await supabase
+          .from("invoices")
+          .update({
+            invoice_number: invoiceNumber,
+            client_name: clientName,
+            client_email: clientEmail || null,
+            client_address: clientAddress || null,
+            issue_date: issueDate,
+            due_date: dueDate,
+            currency,
+            tax_rate: parseFloat(taxRate) || 0,
+            tax_amount: taxAmount,
+            discount_amount: parseFloat(discountAmount) || 0,
+            subtotal,
+            total,
+            notes: notes || null,
+            terms: terms || null,
+          })
+          .eq("id", editingInvoice.id);
+
+        if (invoiceError) throw invoiceError;
+
+        // Delete existing items and insert new ones
+        await supabase.from("invoice_items").delete().eq("invoice_id", editingInvoice.id);
+
+        const { error: itemsError } = await supabase.from("invoice_items").insert(
+          items.map((item) => ({
+            invoice_id: editingInvoice.id,
+            description: item.description,
+            quantity: parseFloat(item.quantity) || 0,
+            unit_price: parseFloat(item.unit_price) || 0,
+            total: item.total,
+          }))
+        );
+
+        if (itemsError) throw itemsError;
+
+        onSuccess();
+        onOpenChange(false);
+        toast.success("Invoice updated");
+      } else {
+        const { data: invoice, error: invoiceError } = await supabase
+          .from("invoices")
+          .insert({
+            user_id: session.user.id,
+            invoice_number: invoiceNumber,
+            client_name: clientName,
+            client_email: clientEmail || null,
+            client_address: clientAddress || null,
+            issue_date: issueDate,
+            due_date: dueDate,
+            currency,
+            tax_rate: parseFloat(taxRate) || 0,
+            tax_amount: taxAmount,
+            discount_amount: parseFloat(discountAmount) || 0,
+            subtotal,
+            total,
+            notes: notes || null,
+            terms: terms || null,
+          })
+          .select()
+          .single();
+
+        if (invoiceError) throw invoiceError;
+
+        // Insert items
+        const { error: itemsError } = await supabase.from("invoice_items").insert(
+          items.map((item) => ({
+            invoice_id: invoice.id,
+            description: item.description,
+            quantity: parseFloat(item.quantity) || 0,
+            unit_price: parseFloat(item.unit_price) || 0,
+            total: item.total,
+          }))
+        );
+
+        if (itemsError) throw itemsError;
+
+        if (invoice?.id) onCreated?.(invoice.id);
+        onOpenChange(false);
+        setShowSuccess(true);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save invoice");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const { subtotal, taxAmount, total } = calculateTotals();
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-KE", {
+      style: "currency",
+      currency: currency,
+    }).format(amount);
+  };
+
+  return (
+    <>
+    <SuccessOverlay
+      show={showSuccess}
+      title="Invoice Created"
+      subtitle="Your invoice is ready to send"
+      onComplete={() => { setShowSuccess(false); onSuccess(); }}
+    />
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 font-vollkorn text-xl">
+            <Receipt className="h-5 w-5 text-bronze" />
+            {editingInvoice ? "Edit Invoice" : "Create New Invoice"}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Invoice Details */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label>Invoice Number</Label>
+              <Input
+                value={invoiceNumber}
+                onChange={(e) => setInvoiceNumber(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label>Issue Date</Label>
+              <Input
+                type="date"
+                value={issueDate}
+                onChange={(e) => setIssueDate(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label>Due Date *</Label>
+              <Input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          {/* From — autofilled from Studio Settings */}
+          <div className="space-y-3 p-4 rounded-xl border border-border bg-muted/20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-bronze" />
+                <h3 className="font-semibold text-foreground text-sm">From (Your Business)</h3>
+              </div>
+              {loadedSettings?.business_name ? (
+                <span className="flex items-center gap-1 text-xs text-emerald-500 font-medium">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Auto-filled from Settings
+                </span>
+              ) : (
+                <Link
+                  to="/crevia-studio?tab=settings"
+                  onClick={() => onOpenChange(false)}
+                  className="flex items-center gap-1 text-xs text-bronze hover:underline font-medium"
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                  Complete your Studio Settings
+                </Link>
+              )}
+            </div>
+
+            {loadedSettings?.business_name ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="flex items-start gap-2.5">
+                  {loadedSettings.logo_url && (
+                    <img src={loadedSettings.logo_url} alt="logo" className="w-9 h-9 rounded-lg object-cover flex-shrink-0 border border-border" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm text-foreground truncate">{loadedSettings.business_name}</p>
+                    {loadedSettings.business_email && <p className="text-xs text-muted-foreground truncate">{loadedSettings.business_email}</p>}
+                    {loadedSettings.business_phone && <p className="text-xs text-muted-foreground">{loadedSettings.business_phone}</p>}
+                  </div>
+                </div>
+                <div className="text-xs text-muted-foreground space-y-0.5">
+                  {loadedSettings.business_address && <p className="whitespace-pre-line">{loadedSettings.business_address}</p>}
+                  {loadedSettings.tax_id && <p>Tax ID: {loadedSettings.tax_id}</p>}
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                No business info saved yet. Go to Studio → Settings to set up your business profile — it will auto-fill here on every invoice.
+              </p>
+            )}
+          </div>
+
+          {/* Client Details */}
+          <div className="space-y-4 p-4 bg-muted/30 rounded-xl">
+            <h3 className="font-semibold text-foreground">Client Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Client Name *</Label>
+                <Input
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                  placeholder="Company or individual name"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Client Email</Label>
+                <Input
+                  type="email"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                  placeholder="client@example.com"
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Client Address</Label>
+              <Textarea
+                value={clientAddress}
+                onChange={(e) => setClientAddress(e.target.value)}
+                placeholder="Full address"
+                className="mt-1"
+                rows={2}
+              />
+            </div>
+          </div>
+
+          {/* Line Items */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-foreground">Line Items</h3>
+              <Button variant="outline" size="sm" onClick={addItem} className="gap-1">
+                <Plus className="h-4 w-4" />
+                Add Item
+              </Button>
+            </div>
+
+            {/* Column Headers */}
+            <div className="grid grid-cols-12 gap-2 mb-1">
+              <div className="col-span-5">
+                <Label className="text-xs text-muted-foreground font-medium">Description</Label>
+              </div>
+              <div className="col-span-2">
+                <Label className="text-xs text-muted-foreground font-medium">Quantity</Label>
+              </div>
+              <div className="col-span-2">
+                <Label className="text-xs text-muted-foreground font-medium">Unit Price</Label>
+              </div>
+              <div className="col-span-2">
+                <Label className="text-xs text-muted-foreground font-medium">Total</Label>
+              </div>
+              <div className="col-span-1" />
+            </div>
+
+            <div className="space-y-3">
+              {items.map((item, index) => (
+                <div key={index} className="grid grid-cols-12 gap-2 items-start">
+                  <div className="col-span-5">
+                    <Input
+                      placeholder="Service or product name"
+                      value={item.description}
+                      onChange={(e) => updateItemTotal(index, "description", e.target.value)}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Input
+                      type="number"
+                      placeholder="1"
+                      value={item.quantity}
+                      onChange={(e) => updateItemTotal(index, "quantity", e.target.value)}
+                      min={1}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Input
+                      type="number"
+                      placeholder="0.00"
+                      value={item.unit_price}
+                      onChange={(e) => updateItemTotal(index, "unit_price", e.target.value)}
+                      min={0}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Input
+                      value={formatCurrency(item.total)}
+                      disabled
+                      className="bg-muted"
+                    />
+                  </div>
+                  <div className="col-span-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeItem(index)}
+                      disabled={items.length === 1}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Currency and Tax */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <Label>Currency</Label>
+              <Select value={currency} onValueChange={setCurrency}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {currencies.map((c) => (
+                    <SelectItem key={c.code} value={c.code}>
+                      {c.code} - {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Tax Rate (%)</Label>
+              <Input
+                type="number"
+                value={taxRate}
+                onChange={(e) => setTaxRate(e.target.value)}
+                placeholder="0"
+                className="mt-1"
+                min={0}
+                max={100}
+              />
+            </div>
+            <div>
+              <Label>Discount</Label>
+              <Input
+                type="number"
+                value={discountAmount}
+                onChange={(e) => setDiscountAmount(e.target.value)}
+                placeholder="0"
+                className="mt-1"
+                min={0}
+              />
+            </div>
+          </div>
+
+          {/* Totals */}
+          <div className="bg-gradient-to-r from-bronze/10 to-transparent p-4 rounded-xl space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span className="font-medium">{formatCurrency(subtotal)}</span>
+            </div>
+            {(parseFloat(taxRate) || 0) > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Tax ({taxRate}%)</span>
+                <span className="font-medium">{formatCurrency(taxAmount)}</span>
+              </div>
+            )}
+            {(parseFloat(discountAmount) || 0) > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Discount</span>
+                <span className="font-medium text-emerald-500">-{formatCurrency(parseFloat(discountAmount) || 0)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-lg font-semibold pt-2 border-t border-border">
+              <span>Total</span>
+              <span className="text-bronze">{formatCurrency(total)}</span>
+            </div>
+          </div>
+
+          {/* Notes and Terms */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Notes</Label>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Additional notes for the client"
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label>Payment Terms</Label>
+              <Textarea
+                value={terms}
+                onChange={(e) => setTerms(e.target.value)}
+                placeholder="Payment terms and conditions"
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="bg-bronze hover:bg-bronze/90"
+            >
+              {loading ? "Saving..." : editingInvoice ? "Update Invoice" : "Create Invoice"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
+  );
+};
+
+export default CreateInvoiceDialog;

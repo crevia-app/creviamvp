@@ -1,0 +1,217 @@
+import { useState, useEffect, lazy, Suspense } from "react";
+
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { LanguageProvider } from "@/i18n/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useInitializeE2EE } from "@/hooks/use-initialize-e2ee";
+import { RecoveryPasswordModal } from "@/components/auth/RecoveryPasswordModal";
+import { SetRecoveryPasswordDialog } from "@/components/auth/SetRecoveryPasswordDialog";
+import ScrollToTop from "./components/ScrollToTop";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { CookieConsent } from "./components/CookieConsent";
+import AppLayout from "./components/navigation/AppLayout";
+import PublicPageWrapper from "./components/PublicPageWrapper";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+
+// Eagerly loaded — tiny or always needed immediately
+import Home from "./pages/Home";
+import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
+import NotFound from "./pages/NotFound";
+import MFAVerify from "./components/auth/MFAVerify";
+
+// Lazy-loaded — split into separate chunks to reduce initial bundle
+const ResetPassword    = lazy(() => import("./pages/ResetPassword"));
+const Kira             = lazy(() => import("./pages/Kira"));
+const CreviaLink       = lazy(() => import("./pages/CreviaLink"));
+const CreviaStudio     = lazy(() => import("./pages/CreviaStudio"));
+const CreviaInvoice    = lazy(() => import("./pages/CreviaInvoice"));
+const CreviaContracts  = lazy(() => import("./pages/CreviaContracts"));
+const WorkspacesList   = lazy(() => import("./pages/WorkspacesList"));
+const WorkspacePage    = lazy(() => import("./pages/WorkspacePage"));
+const WorkspaceInvitePage = lazy(() => import("./pages/WorkspaceInvitePage"));
+const PublicProfile    = lazy(() => import("./pages/PublicProfile"));
+const ReceivedDocuments = lazy(() => import("./pages/ReceivedDocuments"));
+const PaymentsBilling  = lazy(() => import("./pages/profile/PaymentsBilling"));
+const Notifications    = lazy(() => import("./pages/profile/Notifications"));
+const Verification     = lazy(() => import("./pages/profile/Verification"));
+const Settings         = lazy(() => import("./pages/profile/Settings"));
+const Help             = lazy(() => import("./pages/profile/Help"));
+const Feedback         = lazy(() => import("./pages/profile/Feedback"));
+const Admin            = lazy(() => import("./pages/Admin"));
+const Pricing          = lazy(() => import("./pages/Pricing"));
+const About            = lazy(() => import("./pages/About"));
+const PrivacyPolicy    = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService   = lazy(() => import("./pages/TermsOfService"));
+const CookiePolicy     = lazy(() => import("./pages/CookiePolicy"));
+
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="w-8 h-8 rounded-full border-2 border-bronze border-t-transparent animate-spin" />
+  </div>
+);
+
+const MaintenancePage = () => (
+  <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 text-center">
+    <img src="/crevia-logo.png" alt="Crevia" className="w-14 h-14 rounded-full ring-1 ring-border mb-8" />
+    <h1 className="font-vollkorn text-3xl md:text-4xl font-bold mb-3">Down for maintenance</h1>
+    <p className="text-muted-foreground text-sm max-w-sm leading-relaxed">
+      We're making some improvements to Crevia. We'll be back shortly — thank you for your patience.
+    </p>
+  </div>
+);
+
+const queryClient = new QueryClient();
+
+// AppContent lives inside BrowserRouter so routing hooks are available.
+// useInitializeE2EE is called HERE — at the very top of this component,
+// before any conditional returns — so React's rules of hooks are never violated.
+function AppContent() {
+  const [userId, setUserId] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [maintenance, setMaintenance] = useState(false);
+
+  // MUST be called before any early returns.
+  // Receives "" until the auth state resolves, then fires the full init flow.
+  const {
+    error: e2eeError,
+    needsRecoveryPassword,
+    needsMigration,
+    provideRecoveryPassword,
+    clearMigrationFlag,
+  } = useInitializeE2EE(userId);
+
+  const [migrationDialogOpen, setMigrationDialogOpen] = useState(false);
+
+  // Open the migration dialog as soon as the flag is raised, but only once per session.
+  useEffect(() => {
+    if (needsMigration) setMigrationDialogOpen(true);
+  }, [needsMigration]);
+
+  useEffect(() => {
+    // onAuthStateChange fires immediately with the current session
+    // (INITIAL_SESSION event) AND fires again on every sign-in / sign-out.
+    // This is more reliable than getSession() which can return null on the
+    // first tick in OAuth / server-redirect flows.
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const uid = session?.user?.id ?? "";
+      setUserId(uid);
+      if (uid) {
+        const { data } = await supabase.from("profiles").select("is_admin").eq("id", uid).single();
+        setIsAdmin((data as any)?.is_admin === true);
+      } else {
+        setIsAdmin(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    supabase.from("app_settings" as any).select("value").eq("key", "maintenance_mode").single()
+      .then(({ data }) => setMaintenance((data as any)?.value === "true"));
+
+    const ch = supabase.channel("maintenance-gate")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "app_settings" }, (payload) => {
+        if ((payload.new as any)?.key === "maintenance_mode") {
+          setMaintenance((payload.new as any)?.value === "true");
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(ch); };
+  }, []);
+
+  if (maintenance && !isAdmin) return <MaintenancePage />;
+
+  return (
+    <>
+      <ScrollToTop />
+      <CookieConsent />
+
+      {/* Non-dismissible: shown on a new device when a v2 backup exists */}
+      <RecoveryPasswordModal
+        open={needsRecoveryPassword}
+        error={e2eeError}
+        onSubmit={provideRecoveryPassword}
+      />
+
+      {/* Dismissible: nudges v1 users and new users to set a recovery password */}
+      <SetRecoveryPasswordDialog
+        open={migrationDialogOpen}
+        userId={userId}
+        onOpenChange={setMigrationDialogOpen}
+        onComplete={clearMigrationFlag}
+      />
+
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<PublicPageWrapper><Home /></PublicPageWrapper>} />
+          <Route path="/auth" element={<PublicPageWrapper><Auth /></PublicPageWrapper>} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/reset-password" element={<PublicPageWrapper><ResetPassword /></PublicPageWrapper>} />
+          <Route path="/pricing" element={<PublicPageWrapper><Pricing /></PublicPageWrapper>} />
+          <Route path="/about" element={<PublicPageWrapper><About /></PublicPageWrapper>} />
+          <Route path="/app/about" element={<AppLayout><About isEmbedded /></AppLayout>} />
+          <Route path="/privacy-policy" element={<AppLayout><PrivacyPolicy /></AppLayout>} />
+          <Route path="/terms-of-service" element={<AppLayout><TermsOfService /></AppLayout>} />
+          <Route path="/cookie-policy" element={<AppLayout><CookiePolicy /></AppLayout>} />
+          <Route path="/user-type-selection" element={<Navigate to="/auth" replace />} />
+          <Route path="/signup/creator" element={<Navigate to="/auth?mode=signup" replace />} />
+          <Route path="/signup/brand" element={<Navigate to="/auth?mode=signup" replace />} />
+          <Route path="/:username" element={<PublicPageWrapper><PublicProfile /></PublicPageWrapper>} />
+
+          {/* Protected routes */}
+          <Route path="/dashboard" element={<Navigate to="/kira" replace />} />
+          <Route path="/kira" element={<ProtectedRoute><AppLayout><Kira /></AppLayout></ProtectedRoute>} />
+          <Route path="/crevia-link" element={<ProtectedRoute><AppLayout><CreviaLink /></AppLayout></ProtectedRoute>} />
+          <Route path="/crevia-studio" element={<ProtectedRoute><AppLayout><CreviaStudio /></AppLayout></ProtectedRoute>} />
+          <Route path="/crevia-invoice" element={<ProtectedRoute><AppLayout><CreviaInvoice /></AppLayout></ProtectedRoute>} />
+          <Route path="/crevia-contracts" element={<ProtectedRoute><AppLayout><CreviaContracts /></AppLayout></ProtectedRoute>} />
+          <Route path="/mfa-verify" element={<MFAVerify />} />
+          <Route path="/crevia-workspace" element={<ProtectedRoute><AppLayout><WorkspacesList /></AppLayout></ProtectedRoute>} />
+          <Route path="/crevia-workspace/:id" element={<ProtectedRoute><AppLayout><WorkspacePage /></AppLayout></ProtectedRoute>} />
+          <Route path="/invite/:token" element={<WorkspaceInvitePage />} />
+          <Route path="/received" element={<ProtectedRoute><AppLayout><ReceivedDocuments /></AppLayout></ProtectedRoute>} />
+          <Route path="/profile/payments-billing" element={<ProtectedRoute><AppLayout><PaymentsBilling /></AppLayout></ProtectedRoute>} />
+          <Route path="/profile/notifications" element={<ProtectedRoute><AppLayout><Notifications /></AppLayout></ProtectedRoute>} />
+          <Route path="/profile/verification" element={<ProtectedRoute><AppLayout><Verification /></AppLayout></ProtectedRoute>} />
+          <Route path="/profile/settings" element={<ProtectedRoute><AppLayout><Settings /></AppLayout></ProtectedRoute>} />
+          <Route path="/profile/help" element={<ProtectedRoute><AppLayout><Help /></AppLayout></ProtectedRoute>} />
+          <Route path="/profile/feedback" element={<ProtectedRoute><AppLayout><Feedback /></AppLayout></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    </>
+  );
+}
+
+const App = () => (
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="theme">
+        <LanguageProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+          </TooltipProvider>
+        </LanguageProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
+);
+
+export default App;

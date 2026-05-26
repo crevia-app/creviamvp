@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
+    <title>Crevia - Own Your Story</title>
+    <meta name="description" content="Empowering creators to own their digital careers. Tools that help you collaborate, grow, and earn — all in one simple platform." />
+    <meta name="author" content="Crevia" />
+
+    <meta property="og:title" content="Crevia - Own Your Story" />
+    <meta property="og:description" content="Empowering creators to own their digital careers." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/crevia-logo.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@Crevia" />
+    <meta name="twitter:image" content="/crevia-logo.png" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/crevia-logo.png" />
+    
+    <!-- Google Fonts — non-blocking -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Core UI fonts load immediately -->
+    <link rel="preload" as="style" onload="this.rel='stylesheet'"
+      href="https://fonts.googleapis.com/css2?family=Vollkorn:wght@400;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap">
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vollkorn:wght@400;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap">
+    </noscript>
+    <!-- Signature fonts only needed in invoice/canvas — deferred -->
+    <link rel="preload" as="style" onload="this.rel='stylesheet'"
+      href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Great+Vibes&family=Caveat:wght@400;500;600;700&display=swap">
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Great+Vibes&family=Caveat:wght@400;500;600;700&display=swap">
+    </noscript>
+    <!-- Crevia Link elite theme fonts — deferred -->
+    <link rel="preload" as="style" onload="this.rel='stylesheet'"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&family=DM+Serif+Display&display=swap">
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&family=DM+Serif+Display&display=swap">
+    </noscript>
+    <!-- Paystack deferred — does not block page render -->
+    <script src="https://js.paystack.co/v1/inline.js" defer></script>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

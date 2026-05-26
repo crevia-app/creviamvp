@@ -1,0 +1,116 @@
+# Crevia Frontend Overhaul — UI/UX + Production Polish
+
+## Context
+Deep frontend pass to make the app fully production-ready: premium animations, an interactive hero spotlight, notification UX fixes, a Pro verified badge system, and clear brand/creator account differentiation in the profile menu. Framer-motion is already installed (v12.23.26). ScrollReveal and HeroPattern components exist but need upgrading. The subscription hook already exposes `limits.hasVerifiedBadge` and `isPro`.
+
+---
+
+## Feature 1 — Interactive Hero Spotlight (Cursor Pattern Reveal)
+
+**Files:** `src/components/HeroPattern.tsx`, `src/pages/Home.tsx`
+
+**Approach:**
+- Add `spotlight?: boolean` prop to `HeroPattern`
+- When `spotlight=true`, attach a `useRef` container + native `mousemove` listener
+- On each move: call `el.style.setProperty('--mx', x + 'px')` and `--my` directly — zero React re-renders, 60fps
+- Render a second SVG pattern layer at 3× the base opacity (the "revealed" layer)
+- Mask it with: `mask-image: radial-gradient(circle 340px at var(--mx, 50%) var(--my, 50%), black 0%, transparent 100%)`
+- Overlay has `pointer-events-none` — never blocks clicks
+- Dark mode: reveal layer uses `text-slate-300`; light mode: `text-slate-600` — set via Tailwind `dark:` class on the SVG rect
+- Reset `--mx`/`--my` to `50% 50%` on `mouseleave` for a graceful fallback
+- Pass `<HeroPattern spotlight />` only in the hero section of `Home.tsx` (not the CTA HeroPattern)
+
+---
+
+## Feature 2 — Global Animation Engine Upgrade
+
+**Files:** `src/components/ui/ScrollReveal.tsx`, `src/index.css`
+
+**Approach:**
+- In `ScrollReveal.tsx`: upgrade easing from `[0.25, 0.46, 0.45, 0.94]` to `[0.16, 1, 0.3, 1]` (luxury deceleration — heavy, deliberate, Apple-Stripe tier)
+- Increase intersection `threshold` from `0.1` to `0.15` so animations fire when element is meaningfully in view
+- Keep `once: true` default
+- In `src/index.css`: upgrade `.hover-scale` and `.card-interactive` transition easing to `cubic-bezier(0.16, 1, 0.3, 1)` with `duration-500`; add a new `.animate-fade-up` keyframe with the luxury curve for hero stagger targets
+- No changes needed in Home/Pricing/About — ScrollReveal is already applied; the easing upgrade flows automatically
+
+---
+
+## Feature 3 — Notifications: Real Content + Navigate to Specific Chat Room
+
+**Files:** `src/components/notifications/NotificationSheet.tsx`, `src/pages/CreviaStudio.tsx`, `src/components/studio/workspaces/StudioWorkspacesHub.tsx`
+
+**Problem 1 — "🔒 Encrypted message" body:**
+The DB trigger correctly stores this text for E2EE messages (can't change without a migration). Fix in UI only:
+- In `NotificationSheet.tsx`, add a helper: if `n.type === 'message'` and `n.body === '🔒 Encrypted message'`, replace the displayed body with `"Tap to open conversation"` in muted style
+
+**Problem 2 — Navigate to specific chat room:**
+The `notification.data.room_id` already contains the room ID. Wire it up:
+1. In `NotificationSheet.tsx` → `handleClick`: for `type === 'message'`, build URL: `` `/crevia-studio?tab=chat&roomId=${n.data?.room_id}` `` instead of the static nav string
+2. In `CreviaStudio.tsx`: read `searchParams.get("roomId")` and pass it as `initialRoomId` prop to `<StudioWorkspacesHub initialRoomId={activeRoomId} />`
+3. In `StudioWorkspacesHub.tsx`: accept `initialRoomId?: string` prop and pass it through as `externalRoomId` to the `CreviaChat` component (which already supports this prop)
+
+---
+
+## Feature 4 — Verified Blue Badge for Pro Subscribers
+
+**New file:** `src/components/ui/VerifiedBadge.tsx`  
+**Files modified:** `src/components/navigation/ProfileDrawer.tsx`, `src/pages/PublicProfile.tsx`
+
+**VerifiedBadge component:**
+```tsx
+// Uses lucide BadgeCheck — filled blue, Instagram-style
+export function VerifiedBadge({ className }: { className?: string }) {
+  return <BadgeCheck className={cn("text-blue-500 fill-blue-500 w-4 h-4", className)} />;
+}
+```
+
+**ProfileDrawer.tsx:**
+- Import and call `useSubscription()` hook (it reads from Supabase, already used across the app)
+- Render `<VerifiedBadge />` inline next to the display name if `subscription.limits.hasVerifiedBadge`
+- Conditionally show "Upgrade to Pro" link only when `subscription.isFree`; otherwise show "Manage Subscription"
+
+**PublicProfile.tsx:**
+- The page already fetches the profile. Add `subscription_plan` and `subscription_status` to the select query
+- Show `<VerifiedBadge />` next to the display name when `subscription_plan IN ('creative_pro', 'brand_workspace') AND subscription_status IN ('active', 'trialing')`
+
+---
+
+## Feature 5 — Brand/Creator Account Type ✅ Already Implemented
+
+`ProfileDrawer.tsx` already shows a "Creator" badge (bronze) for creators and a "Brand" badge (blue) for brands. No changes needed.
+
+---
+
+## Mobile Responsiveness Pass
+
+**Files:** `src/pages/Home.tsx`, `src/pages/Pricing.tsx`, `src/pages/About.tsx`
+
+Audit and fix the most impactful mobile issues:
+- Hero section: ensure `text-4xl sm:text-5xl md:text-7xl` scaling is smooth; avoid text overflow
+- Pricing cards: verify the plan toggle and cards stack correctly on `< sm` breakpoints; fix any `min-w` overflow
+- About gallery: already uses `animate-scroll-left` — confirm it doesn't cause horizontal scroll on mobile (add `overflow-x: hidden` to the section)
+- Button tap targets: ensure all buttons have at least `h-10` (already default)
+- ProfileDrawer: already `w-full sm:w-[320px]` — verify content doesn't overflow on very small screens
+
+---
+
+## Execution Order
+
+1. `VerifiedBadge` component (new file, no deps)
+2. `ProfileDrawer` updates (Features 4 + 5 together — same file, same `useSubscription` call)
+3. `PublicProfile` verified badge
+4. `NotificationSheet` body fix + room navigation
+5. `CreviaStudio` + `StudioWorkspacesHub` roomId wiring
+6. `ScrollReveal` easing upgrade + `index.css` animation polish
+7. `HeroPattern` spotlight effect
+8. `Home.tsx` — pass `spotlight` prop + mobile audit
+9. `Pricing.tsx` + `About.tsx` — mobile audit
+
+## Verification
+- Open Create Invoice dialog → From section shows business info
+- Click a message notification → navigates to `/crevia-studio?tab=chat&roomId=...`, correct room opens
+- Hover the hero on desktop → spotlight reveals richer pattern under cursor, no jank
+- Scroll Home/Pricing/About → sections animate in with heavy, deliberate deceleration (no bounce)
+- Pro subscriber: blue BadgeCheck next to name in ProfileDrawer and PublicProfile
+- Free user: "Upgrade to Pro" shows; Pro user: it's replaced with "Manage Subscription"
+- ProfileDrawer clearly labels "Creator Account" or "Brand Account" with icon

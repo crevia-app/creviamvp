@@ -1,0 +1,29 @@
+# Three Tasks: Notification Migration + Mobile Spotlight + Mobile Audit
+
+## Task 1 — Notification Migration
+Run `npx supabase db push` to deploy `20260505000000_message_notification_preview.sql`.
+This creates the `update_message_notification_preview` RPC that patches encrypted notification bodies with real plaintext after a message is sent.
+
+## Task 2 — Hero Spotlight on Mobile (Touch Support)
+**File:** `src/components/HeroPattern.tsx`
+
+`mousemove` doesn't fire on touch screens. Add `touchmove` + `touchend` alongside the existing mouse handlers:
+- `touchmove`: read `e.touches[0].clientX/Y`, set `--mx`/`--my` same as mouse
+- `touchend`: reset to `50% 50%` same as mouseleave
+- Use `{ passive: true }` on the touchmove listener for scroll performance
+
+## Task 3 — Full Mobile Responsiveness Audit
+Audit and fix issues across all main pages and layout components. Focus areas:
+- **Navigation**: TopBar, MobileBottomNav, ProfileDrawer — tap targets, overflow
+- **Home**: Hero CTA buttons full-width on mobile, feature card grid
+- **Pricing**: Plan cards, toggle switches, FAQ section
+- **About**: Gallery scroll, events section, founder section
+- **CreviaStudio**: Tab bar horizontal scroll, dialog/sheet sizes
+- **Dialogs & Sheets**: All dialogs need `max-h-[90vh] overflow-y-auto`, full-width on small screens
+- **Forms**: Input/textarea padding on mobile keyboards
+- **Typography**: Ensure no text overflows containers on 320px screens
+
+## Execution Order
+1. Run migration (supabase db push)
+2. Touch support in HeroPattern.tsx
+3. Mobile audit pass — fix issues found page by page

@@ -1,0 +1,6 @@
+# Memory Index
+
+- [User Profile](user_profile.md) — Senior Software/Lead Developer at Crevia, student at Moringa School
+- [Project Context](project_context.md) — Crevia MVP: prod URL, stack, launch deadline, blocked items
+- [Security Architecture](security_architecture.md) — E2EE key backup v1/v2 scheme, migration flow, key files
+- [Remaining Work](remaining_work.md) — Feature gaps before May 4 launch: SMTP, lead-to-contract, feature gating, bank integration

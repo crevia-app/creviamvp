@@ -1,0 +1,21 @@
+---
+name: Remaining Work Before Launch
+description: Feature gaps that must be addressed before the 2026-05-04 hard launch
+type: project
+originSessionId: 5575c1c2-2ae2-40d7-b4ef-59c8f88d8717
+---
+As of 2026-04-29, these items are not yet done:
+
+1. **SMTP fix** (BLOCKER) — Email/password signup is broken. Supabase free tier rate-limited. Fix: configure Resend SMTP (smtp.resend.com, port 465) in Supabase Auth settings, or temporarily disable email confirmation to unblock testing.
+
+2. **Recovery password E2E test** — Blocked by signup. Once SMTP is fixed, must test full new-device + recovery password flow end-to-end with a real user.
+
+3. **Lead-to-Contract workflow** — Not started.
+
+4. **Server-side feature gating** — Client-side limits exist but no server-side RPC guard. A determined user could bypass client checks. Needs a Postgres RPC or edge function that enforces plan limits before writing.
+
+5. **Bank Integration (USD)** — Not started.
+
+**Why:** Hard launch 2026-05-04. Items 1 and 4 are highest risk; 3 and 5 are product features.
+
+**How to apply:** When the user asks what to work on next, surface SMTP fix first, then server-side gating, then the product features.

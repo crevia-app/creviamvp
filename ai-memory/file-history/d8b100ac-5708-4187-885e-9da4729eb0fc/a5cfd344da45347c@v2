@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "@supabase/functions-js": "jsr:@supabase/functions-js@^2",
+    "@langchain/openai": "npm:@langchain/openai@0.5.6",
+    "@langchain/core": "npm:@langchain/core@0.3.26"
+  }
+}

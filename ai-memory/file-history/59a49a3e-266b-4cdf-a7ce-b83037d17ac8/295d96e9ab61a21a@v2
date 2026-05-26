@@ -1,0 +1,79 @@
+# Plan: Email Confirmation Flow — Status & Card Text Update
+
+## Context
+
+The user wants to know if the email confirmation flow works end-to-end, and wants to update the "check your inbox" card text. Email/password signup is currently working **directly** (no confirmation email) because email confirmation is **OFF** in Supabase. The user wants it ON so users receive a confirmation email, and for the confirmation link to redirect to Kira.
+
+---
+
+## Current State (confirmed by database + code review)
+
+| Item | Status |
+|---|---|
+| Email/password signup | ✅ Working (6 users total, 2 email/password) |
+| Email confirmation | ❌ OFF — users go directly to Kira, no email sent |
+| Confirmation link redirect to Kira | ✅ Already coded correctly |
+| "Check your inbox" card | ✅ Already coded — only text needs changing |
+| Trigger (handle_new_user) | ✅ Working (profiles created for email/pw users) |
+
+---
+
+## How the confirmation redirect already works (no code change needed)
+
+When a user clicks the confirmation link in their email:
+1. They land on `/auth?token_hash=abc123&type=email`
+2. `hasOAuthCallback()` detects the `token_hash` param → sets `isProcessingOAuth = true`
+3. A spinner shows: "Signing you in…"
+4. Supabase automatically processes the token in the background
+5. `onAuthStateChange` fires `SIGNED_IN` → `navigate("/kira", { replace: true })`
+
+**This flow is already correctly coded. No changes required.**
+
+---
+
+## What needs to change
+
+### Code change — Auth.tsx: Update the card text
+
+**File:** `src/pages/Auth.tsx` (lines 289–313)
+
+Current text:
+- Title: `"Check your inbox"`
+- Body: `"We sent a confirmation link to {email}. Click the link in your email to activate your account and access Kira. Check your spam folder if you don't see it."`
+
+Proposed new text:
+- Title: `"Confirm your email"`
+- Body: `"An email was sent to {email}. Kindly click the link in the email to confirm your account and get access to Kira. Check your spam folder if you don't see it."`
+
+### Dashboard action (user must do this) — Turn email confirmation ON
+
+The card will never show unless this is done:
+
+1. Go to **Supabase Dashboard → Authentication → Providers → Email**
+2. Toggle **"Confirm email"** → ON
+3. Save
+
+Once ON:
+- New signups will receive a confirmation email
+- The card will be shown to new users
+- Clicking the link takes them to Kira (already works)
+
+> If Resend SMTP is configured in Project Settings → Auth → SMTP Settings, emails will come from your custom domain. If not, Supabase's default SMTP sends them (limited to ~3/hour on free plan).
+
+---
+
+## What I will change (code only)
+
+1. **`src/pages/Auth.tsx`** — Update the `emailConfirmPending` card:
+   - Change h1 from "Check your inbox" → "Confirm your email"
+   - Change body text to: "An email was sent to `{pendingEmail}`. Kindly click the link in the email to confirm your account and get access to Kira."
+   - Keep the "Back to sign in" button unchanged
+   - Keep the spam folder note
+
+## Verification
+
+After the code change and after toggling confirmation ON in Supabase:
+1. Sign up with a new email/password
+2. The card should appear with the new text
+3. Check email inbox → click the link
+4. Should land on spinner at `/auth` → automatically navigate to `/kira`
