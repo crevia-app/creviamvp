@@ -836,9 +836,37 @@ serve(async (req) => {
         }))
       : [];
 
-    // Atomic rate-limit gate
-    const { data: allowed, error: gateError } = await supabase
-      .rpc('consume_kira_action', { p_user_id: user.id });
+    // ── Fire all independent pre-stream operations in parallel ───────────────
+    // Rate-limit gate, profile fetch, vector memory search, and conversation
+    // summary all run simultaneously — previously this was a sequential waterfall
+    // that added ~400-600 ms of cold latency before the first token.
+    const [
+      { data: allowed, error: gateError },
+      { data: profile },
+      prefetchedMemory,
+      prefetchedSummary,
+    ] = await Promise.all([
+      supabase.rpc('consume_kira_action', { p_user_id: user.id }),
+      supabase
+        .from('profiles')
+        .select(`
+          display_name,
+          handle,
+          user_type,
+          bio,
+          kira_memory,
+          creator_profiles (creator_types, goals),
+          brand_profiles (business_type, company_description)
+        `)
+        .eq('id', user.id)
+        .single(),
+      // Fetch memories optimistically — most users have referenceMemories=true.
+      // Result is discarded below if the user has turned the setting off.
+      fetchSimilarMemories(sanitizedPrompt, user.id, supabase),
+      conversationId
+        ? fetchConversationSummary(conversationId, supabase)
+        : Promise.resolve(''),
+    ]);
 
     if (gateError) {
       console.error('Feature gate error:', gateError.message);
@@ -854,21 +882,6 @@ serve(async (req) => {
       }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
-    // Fetch profile for personalisation
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select(`
-        display_name,
-        handle,
-        user_type,
-        bio,
-        kira_memory,
-        creator_profiles (creator_types, goals),
-        brand_profiles (business_type, company_description)
-      `)
-      .eq('id', user.id)
-      .single();
-
     const memory = (profile?.kira_memory as Record<string, unknown>) ?? {};
     // deno-lint-ignore no-explicit-any
     const creatorProfile = (profile as any)?.creator_profiles;
@@ -880,14 +893,9 @@ serve(async (req) => {
     const referenceChatHistory = memory.reference_chat_history !== false;
     const activeHistory = referenceChatHistory ? conversationHistory : [];
 
-    const [memoryContext, summaryContext] = await Promise.all([
-      referenceMemories
-        ? fetchSimilarMemories(sanitizedPrompt, user.id, supabase)
-        : Promise.resolve(''),
-      referenceChatHistory && conversationId
-        ? fetchConversationSummary(conversationId, supabase)
-        : Promise.resolve(''),
-    ]);
+    // Use or discard the optimistically prefetched results
+    const memoryContext = referenceMemories ? prefetchedMemory : '';
+    const summaryContext = (referenceChatHistory && conversationId) ? prefetchedSummary : '';
 
     // Build system prompt with user context
     let systemPrompt = KIRA_SYSTEM_PROMPT;
@@ -929,7 +937,7 @@ serve(async (req) => {
       }
     }
 
-    if (summaryContext && activeHistory.length > 4) {
+    if (summaryContext && activeHistory.length >= 4) {
       systemPrompt += `\n\n${summaryContext}`;
     }
 
@@ -946,14 +954,24 @@ serve(async (req) => {
 
     const initialMessages: OAIMsg[] = [
       { role: 'system', content: systemPrompt },
-      ...(summaryContext && activeHistory.length > 4
+      ...(summaryContext && activeHistory.length >= 4
         ? activeHistory.slice(-4)
         : activeHistory),
       { role: 'user', content: userContent },
     ];
 
-    // Run agent loop: resolves any tool calls before streaming the final answer
-    const agentMessages = await runAgentLoop(initialMessages, user.id, supabase);
+    // ── Agent loop (only when live data is actually needed) ───────────────────
+    // The agent loop adds one full non-streaming OpenAI round-trip (~300-500 ms)
+    // before streaming starts. For purely conversational messages it provides
+    // zero benefit, so we skip it with a conservative keyword heuristic.
+    // Phrases like "my invoices", "show my revenue", "what are my clients" etc.
+    // are clear signals that live Supabase data is needed.
+    const LIVE_DATA_PATTERN = /\bmy (invoice|invoices|canvas|canvases|contract|contracts|revenue|client|clients|link profile|link|notification|notifications|payment|balance|business settings|settings|profile)\b|\b(show|get|check|list|fetch|what('s| is| are)) (my|the) (invoice|invoices|canvas|canvases|contract|revenue|client|clients|notification|payment|balance)\b/i;
+    const needsLiveData = LIVE_DATA_PATTERN.test(sanitizedPrompt);
+
+    const agentMessages = needsLiveData
+      ? await runAgentLoop(initialMessages, user.id, supabase)
+      : initialMessages;
 
     // Stream final answer — no tools passed here, this is pure text output
     const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
@@ -1013,13 +1031,22 @@ serve(async (req) => {
         }
       } finally {
         await writer.close().catch(() => {});
+      }
 
-        if (referenceMemories && fullResponse) {
+      // ── Post-stream background tasks ─────────────────────────────────────────
+      // Awaited here so pump() only resolves after DB writes are confirmed.
+      // This prevents the Deno runtime from killing the function before they finish.
+      const bgTasks: Promise<void>[] = [];
+
+      if (referenceMemories && fullResponse) {
+        bgTasks.push(
           extractAndStoreMemories(sanitizedPrompt, fullResponse, user.id, supabase)
-            .catch(e => console.warn('[Kira] Memory extraction failed:', e));
-        }
+            .catch(e => console.warn('[Kira] Memory extraction failed:', e)),
+        );
+      }
 
-        if (conversationId && fullResponse && activeHistory.length >= 4) {
+      if (conversationId && fullResponse && activeHistory.length >= 4) {
+        bgTasks.push(
           updateConversationSummary(
             conversationId,
             user.id,
@@ -1029,12 +1056,24 @@ serve(async (req) => {
               { role: 'assistant', content: fullResponse },
             ],
             supabase,
-          ).catch(e => console.warn('[Kira] Summary update failed:', e));
-        }
+          ).catch(e => console.warn('[Kira] Summary update failed:', e)),
+        );
       }
+
+      await Promise.all(bgTasks);
     };
 
-    pump();
+    const pumpDone = pump();
+
+    // Tell the Supabase/Deno runtime to keep this function alive until
+    // pump() — including the post-stream DB writes — fully completes.
+    // Without this, the runtime can terminate the function the moment
+    // the response stream closes, silently dropping the memory writes.
+    // deno-lint-ignore no-explicit-any
+    if (typeof (globalThis as any).EdgeRuntime !== 'undefined') {
+      // deno-lint-ignore no-explicit-any
+      (globalThis as any).EdgeRuntime.waitUntil(pumpDone);
+    }
 
     return new Response(readable, {
       headers: {
