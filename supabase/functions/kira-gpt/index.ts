@@ -847,17 +847,12 @@ serve(async (req) => {
       prefetchedSummary,
     ] = await Promise.all([
       supabase.rpc('consume_kira_action', { p_user_id: user.id }),
+      // No joins — creator_profiles/brand_profiles joins were silently failing
+      // for some accounts and returning null for the entire profile row, which
+      // wiped name/memory data. kira_memory already covers equivalent context.
       supabase
         .from('profiles')
-        .select(`
-          display_name,
-          handle,
-          user_type,
-          bio,
-          kira_memory,
-          creator_profiles (creator_types, goals),
-          brand_profiles (business_type, company_description)
-        `)
+        .select('display_name, handle, user_type, bio, kira_memory')
         .eq('id', user.id)
         .single(),
       // Fetch memories optimistically — most users have referenceMemories=true.
@@ -882,11 +877,12 @@ serve(async (req) => {
       }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
+    if (!profile) {
+      // Log so we can catch this in Supabase function logs
+      console.warn(`[Kira] Profile fetch returned null for user ${user.id}`);
+    }
+
     const memory = (profile?.kira_memory as Record<string, unknown>) ?? {};
-    // deno-lint-ignore no-explicit-any
-    const creatorProfile = (profile as any)?.creator_profiles;
-    // deno-lint-ignore no-explicit-any
-    const brandProfile = (profile as any)?.brand_profiles;
     const isCreator = profile?.user_type === 'creator';
 
     const referenceMemories = memory.reference_saved_memories !== false;
@@ -897,23 +893,18 @@ serve(async (req) => {
     const memoryContext = referenceMemories ? prefetchedMemory : '';
     const summaryContext = (referenceChatHistory && conversationId) ? prefetchedSummary : '';
 
-    // Build system prompt with user context
+    // Build system prompt with user context.
+    // All personalisation comes from kira_memory (set via Kira Settings) —
+    // no creator_profiles/brand_profiles joins needed.
     let systemPrompt = KIRA_SYSTEM_PROMPT;
 
+    const userName = (memory.nickname as string) || profile?.display_name || profile?.handle || '';
     const contextLines: string[] = [
-      `- Name: ${(memory.nickname as string) || profile?.display_name || profile?.handle || 'not set'}`,
+      `- Name: ${userName || 'not set'}`,
       `- Type: ${isCreator ? 'Creator' : 'Brand'}`,
     ];
     if (profile?.bio && !hasInjectionPattern(profile.bio)) contextLines.push(`- Bio: ${profile.bio}`);
     if (memory.occupation && !hasInjectionPattern(String(memory.occupation))) contextLines.push(`- Occupation: ${memory.occupation}`);
-    if (isCreator && Array.isArray(creatorProfile?.creator_types) && creatorProfile.creator_types.length > 0) {
-      contextLines.push(`- Niche: ${(creatorProfile.creator_types as string[]).join(', ')}`);
-    }
-    if (isCreator && Array.isArray(creatorProfile?.goals) && creatorProfile.goals.length > 0) {
-      contextLines.push(`- Goals: ${(creatorProfile.goals as string[]).join(', ')}`);
-    }
-    if (!isCreator && brandProfile?.business_type) contextLines.push(`- Business type: ${brandProfile.business_type}`);
-    if (!isCreator && brandProfile?.company_description) contextLines.push(`- Company: ${brandProfile.company_description}`);
     if (memory.more_about_you && !hasInjectionPattern(String(memory.more_about_you))) contextLines.push(`- About: ${memory.more_about_you}`);
 
     systemPrompt += `\n\nUSER CONTEXT (use to ground every response — answer directly when asked about these details). If the user's name is present, do not say it is unknown or unset:\n${contextLines.join('\n')}`;
