@@ -404,7 +404,7 @@ const KIRA_TOOLS = [
     type: "function",
     function: {
       name: "get_profile",
-      description: "Get the user's Crevia profile: display name, bio, user type, goals, and niche.",
+      description: "Get the user's Crevia profile and Kira memory: display name, nickname, bio, occupation, user type, goals, niche, and saved personalization fields.",
       parameters: { type: "object", properties: {}, required: [] },
     },
   },
@@ -586,14 +586,18 @@ async function toolGetProfile(_args: unknown, userId: string, supabase: any): Pr
   const { data, error } = await supabase
     .from('profiles')
     .select(`
-      display_name, handle, bio, user_type, is_verified, avatar_url,
+      display_name, handle, bio, user_type, is_verified, avatar_url, kira_memory,
       creator_profiles (creator_types, goals, follower_count, engagement_rate),
       brand_profiles (business_type, company_description, website_url)
     `)
     .eq('id', userId)
     .single();
   if (error || !data) return { error: 'Profile not found' };
-  return data;
+  const memory = (data as any)?.kira_memory as Record<string, unknown> | null;
+  return {
+    ...data,
+    user_name: data.display_name || memory?.nickname || data.handle || null,
+  };
 }
 
 // deno-lint-ignore no-explicit-any
@@ -904,7 +908,7 @@ serve(async (req) => {
     if (!isCreator && brandProfile?.company_description) contextLines.push(`- Company: ${brandProfile.company_description}`);
     if (memory.more_about_you && !hasInjectionPattern(String(memory.more_about_you))) contextLines.push(`- About: ${memory.more_about_you}`);
 
-    systemPrompt += `\n\nUSER CONTEXT (use to ground every response — answer directly when asked about these details):\n${contextLines.join('\n')}`;
+    systemPrompt += `\n\nUSER CONTEXT (use to ground every response — answer directly when asked about these details). If the user's name is present, do not say it is unknown or unset:\n${contextLines.join('\n')}`;
 
     if (referenceMemories && memoryContext) systemPrompt += `\n\n${memoryContext}`;
     if (memory.custom_instructions && !hasInjectionPattern(String(memory.custom_instructions))) {
