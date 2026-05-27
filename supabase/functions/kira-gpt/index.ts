@@ -128,7 +128,7 @@ async function chatComplete(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-5.4-mini",
+      model: "gpt-4o-mini",
       messages,
       max_completion_tokens: maxTokens,
       temperature: 0,
@@ -148,7 +148,7 @@ async function callOpenAIWithTools(messages: OAIMsg[], tools: any[], toolChoice:
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-5.4-mini",
+      model: "gpt-4o-mini",
       messages,
       tools,
       tool_choice: toolChoice,
@@ -888,29 +888,27 @@ serve(async (req) => {
     // Build system prompt with user context
     let systemPrompt = KIRA_SYSTEM_PROMPT;
 
-    if (referenceMemories) {
-      const contextLines: string[] = [
-        `- Name: ${(memory.nickname as string) || profile?.display_name || profile?.handle || 'not set'}`,
-        `- Type: ${isCreator ? 'Creator' : 'Brand'}`,
-      ];
-      if (profile?.bio && !hasInjectionPattern(profile.bio)) contextLines.push(`- Bio: ${profile.bio}`);
-      if (memory.occupation && !hasInjectionPattern(String(memory.occupation))) contextLines.push(`- Occupation: ${memory.occupation}`);
-      if (isCreator && Array.isArray(creatorProfile?.creator_types) && creatorProfile.creator_types.length > 0) {
-        contextLines.push(`- Niche: ${(creatorProfile.creator_types as string[]).join(', ')}`);
-      }
-      if (isCreator && Array.isArray(creatorProfile?.goals) && creatorProfile.goals.length > 0) {
-        contextLines.push(`- Goals: ${(creatorProfile.goals as string[]).join(', ')}`);
-      }
-      if (!isCreator && brandProfile?.business_type) contextLines.push(`- Business type: ${brandProfile.business_type}`);
-      if (!isCreator && brandProfile?.company_description) contextLines.push(`- Company: ${brandProfile.company_description}`);
-      if (memory.more_about_you && !hasInjectionPattern(String(memory.more_about_you))) contextLines.push(`- About: ${memory.more_about_you}`);
+    const contextLines: string[] = [
+      `- Name: ${(memory.nickname as string) || profile?.display_name || profile?.handle || 'not set'}`,
+      `- Type: ${isCreator ? 'Creator' : 'Brand'}`,
+    ];
+    if (profile?.bio && !hasInjectionPattern(profile.bio)) contextLines.push(`- Bio: ${profile.bio}`);
+    if (memory.occupation && !hasInjectionPattern(String(memory.occupation))) contextLines.push(`- Occupation: ${memory.occupation}`);
+    if (isCreator && Array.isArray(creatorProfile?.creator_types) && creatorProfile.creator_types.length > 0) {
+      contextLines.push(`- Niche: ${(creatorProfile.creator_types as string[]).join(', ')}`);
+    }
+    if (isCreator && Array.isArray(creatorProfile?.goals) && creatorProfile.goals.length > 0) {
+      contextLines.push(`- Goals: ${(creatorProfile.goals as string[]).join(', ')}`);
+    }
+    if (!isCreator && brandProfile?.business_type) contextLines.push(`- Business type: ${brandProfile.business_type}`);
+    if (!isCreator && brandProfile?.company_description) contextLines.push(`- Company: ${brandProfile.company_description}`);
+    if (memory.more_about_you && !hasInjectionPattern(String(memory.more_about_you))) contextLines.push(`- About: ${memory.more_about_you}`);
 
-      systemPrompt += `\n\nUSER CONTEXT (use to ground every response — answer directly when asked about these details):\n${contextLines.join('\n')}`;
+    systemPrompt += `\n\nUSER CONTEXT (use to ground every response — answer directly when asked about these details):\n${contextLines.join('\n')}`;
 
-      if (memoryContext) systemPrompt += `\n\n${memoryContext}`;
-      if (memory.custom_instructions && !hasInjectionPattern(String(memory.custom_instructions))) {
-        systemPrompt += `\n\nUSER INSTRUCTIONS (follow in all responses):\n${memory.custom_instructions}`;
-      }
+    if (referenceMemories && memoryContext) systemPrompt += `\n\n${memoryContext}`;
+    if (memory.custom_instructions && !hasInjectionPattern(String(memory.custom_instructions))) {
+      systemPrompt += `\n\nUSER INSTRUCTIONS (follow in all responses):\n${memory.custom_instructions}`;
     }
 
     if (projectContext && typeof projectContext === 'object') {
@@ -969,7 +967,7 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "gpt-5.4-mini",
+            model: "gpt-4o-mini",
             messages: agentMessages,
             max_completion_tokens: 1000,
             stream: true,
