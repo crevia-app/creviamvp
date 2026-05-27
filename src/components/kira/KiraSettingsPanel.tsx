@@ -193,7 +193,7 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
                   </button>
                 </div>
 
-                <ScrollArea className="flex-1">
+                <ScrollArea className="flex-1 min-h-0">
                   <div className="px-6 pb-6 space-y-6">
                     {/* Avatar + name */}
                     <div className="flex flex-col items-center gap-3">
@@ -268,7 +268,9 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
                   <span className="font-poppins font-semibold text-base flex-1 text-center pr-8">Memory</span>
                 </div>
 
-                <ScrollArea className="flex-1">
+                {/* min-h-0 lets the ScrollArea shrink in the flex column so the
+                    Save button (flex-shrink-0) is always visible on small screens */}
+                <ScrollArea className="flex-1 min-h-0">
                   <div className="p-4 space-y-4">
                     {/* Toggles */}
                     <div className="rounded-xl border border-border/50 bg-background divide-y divide-border/50 overflow-hidden">
@@ -375,7 +377,7 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
                   </button>
                   <span className="font-poppins font-semibold text-base flex-1 text-center pr-8">Saved Memories</span>
                 </div>
-                <ScrollArea className="flex-1">
+                <ScrollArea className="flex-1 min-h-0">
                   <div className="p-4 space-y-4">
                     {/* Manual memories */}
                     {savedItems.length > 0 && (
@@ -463,7 +465,7 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
                   </button>
                   <span className="font-poppins font-semibold text-base flex-1 text-center pr-8">Personalization</span>
                 </div>
-                <ScrollArea className="flex-1">
+                <ScrollArea className="flex-1 min-h-0">
                   <div className="p-4 space-y-4">
                     <div className="rounded-xl border border-border/50 bg-background p-4 space-y-3">
                       <div>

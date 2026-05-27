@@ -842,14 +842,14 @@ serve(async (req) => {
     // that added ~400-600 ms of cold latency before the first token.
     const [
       { data: allowed, error: gateError },
-      { data: profile },
+      { data: profile, error: profileError },
       prefetchedMemory,
       prefetchedSummary,
     ] = await Promise.all([
       supabase.rpc('consume_kira_action', { p_user_id: user.id }),
-      // No joins — creator_profiles/brand_profiles joins were silently failing
-      // for some accounts and returning null for the entire profile row, which
-      // wiped name/memory data. kira_memory already covers equivalent context.
+      // Simple fetch — no joins. creator_profiles/brand_profiles joins were
+      // silently failing for some accounts and nulling the entire row.
+      // All personalisation context comes from kira_memory (Kira Settings).
       supabase
         .from('profiles')
         .select('display_name, handle, user_type, bio, kira_memory')
@@ -877,9 +877,11 @@ serve(async (req) => {
       }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
-    if (!profile) {
-      // Log so we can catch this in Supabase function logs
-      console.warn(`[Kira] Profile fetch returned null for user ${user.id}`);
+    // Log profile fetch failures so we can see the exact error in Supabase logs
+    if (profileError) {
+      console.error(`[Kira] Profile fetch error uid=${user.id} code=${profileError.code} msg=${profileError.message}`);
+    } else if (!profile) {
+      console.warn(`[Kira] Profile fetch returned null uid=${user.id}`);
     }
 
     const memory = (profile?.kira_memory as Record<string, unknown>) ?? {};
@@ -898,7 +900,13 @@ serve(async (req) => {
     // no creator_profiles/brand_profiles joins needed.
     let systemPrompt = KIRA_SYSTEM_PROMPT;
 
-    const userName = (memory.nickname as string) || profile?.display_name || profile?.handle || '';
+    // Name resolution — check every possible source so the name is never "not set"
+    // when it genuinely exists somewhere.
+    // user.user_metadata has full_name for Google OAuth signups.
+    // deno-lint-ignore no-explicit-any
+    const authMeta = (user as any).user_metadata ?? {};
+    const authName = (authMeta.full_name as string) || (authMeta.name as string) || '';
+    const userName = (memory.nickname as string) || profile?.display_name || authName || profile?.handle || '';
     const contextLines: string[] = [
       `- Name: ${userName || 'not set'}`,
       `- Type: ${isCreator ? 'Creator' : 'Brand'}`,
