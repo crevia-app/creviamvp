@@ -371,8 +371,11 @@ const Kira = () => {
   const [mobileLongPressChat, setMobileLongPressChat] = useState<ChatHistory | null>(null);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const streamBufferRef = useRef('');
-  const animFrameRef = useRef<number | null>(null);
+  const animFrameRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const networkDoneRef = useRef(false);
+  // Index of the single message that should animate in. -1 = none (history load).
+  // Only the message the user just sent or the new assistant reply gets a fade-in.
+  const newMessageIndexRef = useRef<number>(-1);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   // Smart auto-scroll: only pull to bottom if the user is already near it.
   // When the user scrolls up to read history, streaming chars don't fight them.
@@ -450,6 +453,8 @@ const Kira = () => {
         .order('created_at', { ascending: true });
 
       if (!error && msgs) {
+        // History load — suppress all entry animations so the list renders instantly.
+        newMessageIndexRef.current = -1;
         setMessages(msgs.map(m => ({
           role: m.role as "user" | "assistant",
           content: m.content,
@@ -523,16 +528,19 @@ const Kira = () => {
     return projects.find(p => p.id === activeProjectId);
   };
 
-  // Character-reveal animation: drains streamBufferRef at ~6 chars/frame (~360 chars/sec)
-  // so tokens appear smoothly instead of jumping in as large batches.
+  // Text-reveal: drains streamBufferRef at 25fps (40 ms intervals).
+  // Using setTimeout instead of requestAnimationFrame cuts re-renders by ~58%
+  // (25 vs 60 per second) while still feeling smooth on mobile.
+  // We drain ALL buffered chars per tick so the text never lags behind the
+  // network — the interval just throttles how often React re-renders.
   useEffect(() => {
     if (!isStreaming) return;
-    const CHARS_PER_FRAME = 6;
+    const INTERVAL_MS = 40; // 25 fps
 
     const tick = () => {
       if (streamBufferRef.current.length > 0) {
-        const batch = streamBufferRef.current.slice(0, CHARS_PER_FRAME);
-        streamBufferRef.current = streamBufferRef.current.slice(CHARS_PER_FRAME);
+        const batch = streamBufferRef.current;
+        streamBufferRef.current = '';
         setMessages(prev => {
           const updated = [...prev];
           const last = updated[updated.length - 1];
@@ -543,17 +551,17 @@ const Kira = () => {
         });
       }
 
-      if (streamBufferRef.current.length === 0 && networkDoneRef.current) {
+      if (networkDoneRef.current) {
         setIsStreaming(false);
         return;
       }
 
-      animFrameRef.current = requestAnimationFrame(tick);
+      animFrameRef.current = setTimeout(tick, INTERVAL_MS);
     };
 
-    animFrameRef.current = requestAnimationFrame(tick);
+    animFrameRef.current = setTimeout(tick, INTERVAL_MS);
     return () => {
-      if (animFrameRef.current !== null) cancelAnimationFrame(animFrameRef.current);
+      if (animFrameRef.current !== null) clearTimeout(animFrameRef.current);
     };
   }, [isStreaming]);
 
@@ -608,7 +616,11 @@ const Kira = () => {
     if (contentType.includes('text/plain') && response.body) {
       streamBufferRef.current = '';
       networkDoneRef.current = false;
-      setMessages(prev => [...prev, { role: 'assistant', content: '', timestamp: new Date() }]);
+      setMessages(prev => {
+        // Mark the new assistant bubble as the one that should fade in.
+        newMessageIndexRef.current = prev.length;
+        return [...prev, { role: 'assistant', content: '', timestamp: new Date() }];
+      });
       setIsStreaming(true);
 
       const reader = response.body.getReader();
@@ -715,6 +727,8 @@ const Kira = () => {
     const attachType = selectedFileType;
     // User just sent — always scroll to their message regardless of where they were.
     isNearBottomRef.current = true;
+    // Only the newly-sent user message + the upcoming assistant reply animate in.
+    newMessageIndexRef.current = updatedMessages.length - 1;
     setMessages(updatedMessages);
     if (!overrideInput) setInput("");
     setSelectedFile(null);
@@ -1428,9 +1442,9 @@ const Kira = () => {
                       {messages.map((msg, idx) => (
                         <motion.div
                           key={idx}
-                          initial={{ opacity: 0, y: 12, filter: "blur(3px)" }}
-                          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                          transition={{ duration: 0.4, delay: idx === messages.length - 1 ? 0.05 : 0, ease: [0.25, 0.46, 0.45, 0.94] }}
+                          initial={idx === newMessageIndexRef.current ? { opacity: 0, y: 6 } : false}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.18, ease: "easeOut" }}
                           onMouseEnter={() => setHoveredIdx(idx)}
                           onMouseLeave={() => setHoveredIdx(null)}
                           className="group"

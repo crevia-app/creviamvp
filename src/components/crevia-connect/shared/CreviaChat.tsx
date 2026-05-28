@@ -349,19 +349,50 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     initChat();
   }, []);
 
-  // Sync external room selection into the chat when controlled from hub
+  // Sync external room selection into the chat when controlled from hub.
+  // Fast path (hideRoomList=true): skip loading all rooms — fetch just this one
+  // room + its members in 3 parallel queries so the chat opens immediately.
   useEffect(() => {
-    if (!externalRoomId || loadingRooms) return;
+    if (!externalRoomId || !currentUserId) return;
     if (selectedExternalRef.current === externalRoomId) return;
-    const room = rooms.find((r) => r.id === externalRoomId);
-    if (!room) {
-      setExternalRoomNotFound(true);
+
+    if (hideRoomList) {
+      selectedExternalRef.current = externalRoomId;
+      (async () => {
+        // 2 parallel queries first (room info + member list)
+        const [{ data: roomData }, { data: memberRows }] = await Promise.all([
+          supabase.from("chat_rooms").select("*").eq("id", externalRoomId).single(),
+          supabase.from("chat_room_members").select("user_id, role").eq("room_id", externalRoomId),
+        ]);
+        if (!roomData) { setExternalRoomNotFound(true); return; }
+
+        // 1 query to batch-load all member profiles
+        const memberIds = (memberRows || []).map((m: any) => m.user_id as string);
+        const { data: profileRows } = memberIds.length
+          ? await supabase.from("profiles").select("id, display_name, handle, avatar_url, user_type").in("id", memberIds)
+          : { data: [] };
+        const pMap = new Map<string, any>((profileRows || []).map((p: any) => [p.id, p]));
+
+        const members: RoomMember[] = (memberRows || []).map((m: any) => ({
+          user_id: m.user_id,
+          role: m.role,
+          profile: pMap.get(m.user_id),
+        }));
+
+        setExternalRoomNotFound(false);
+        await selectRoom({ ...roomData, members, lastMessage: null, unreadCount: 0 });
+      })();
       return;
     }
+
+    // Normal path (room list is visible): wait for all rooms to finish loading.
+    if (loadingRooms) return;
+    const room = rooms.find((r) => r.id === externalRoomId);
+    if (!room) { setExternalRoomNotFound(true); return; }
     setExternalRoomNotFound(false);
-    selectedExternalRef.current = externalRoomId;
     selectRoom(room);
-  }, [externalRoomId, rooms, loadingRooms]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalRoomId, currentUserId, rooms, loadingRooms]);
 
   // Subscribe to new/updated messages — scoped to the active room only.
   // Depends on selectedRoom?.id (string) not the full object so the channel
@@ -672,7 +703,13 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     setCurrentUserId(user.id);
-    await fetchRooms();
+    if (hideRoomList) {
+      // Room list is not shown — skip the heavy fetchRooms() (30+ queries).
+      // The externalRoomId effect will load just the one needed room directly.
+      setLoadingRooms(false);
+    } else {
+      await fetchRooms();
+    }
   };
 
   useEffect(() => {
