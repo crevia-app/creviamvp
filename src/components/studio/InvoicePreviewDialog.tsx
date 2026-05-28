@@ -374,7 +374,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
         <p className="text-gray-300 text-[10px] mt-0.5">Generated with Crevia Studio · {format(new Date(), "yyyy")}</p>
       </div>
       {!isProUser && (
-        <div className="mt-4 -mx-8 -mb-8 px-6 py-2 border-t border-gray-100 text-center">
+        <div className="mt-4 -mx-4 -mb-4 sm:-mx-8 sm:-mb-8 px-6 py-2 border-t border-gray-100 text-center">
           <p className="text-[10px] text-gray-300 font-medium tracking-wide">Powered by Crevia</p>
         </div>
       )}
