@@ -84,7 +84,20 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           onProfileClick={() => setProfileDrawerOpen(true)}
         />
 
-        <main className={`flex-1 min-h-0 md:ml-[100px] ${isStudio || isChatRoute ? "overflow-hidden h-full" : "overflow-auto pb-[calc(52px+env(safe-area-inset-bottom,0px))] md:pb-0"}`}>
+        <main
+          className={`flex-1 min-h-0 md:ml-[100px] ${isStudio || isChatRoute ? "overflow-hidden h-full" : "overflow-auto"}`}
+          style={
+            !isStudio && !isChatRoute
+              ? {
+                  // Padding mirrors the nav bar height and animates away in sync
+                  // when the nav slides off-screen on mobile.
+                  // On desktop --nav-bottom-offset is always 0px (set in :root).
+                  paddingBottom: "var(--nav-bottom-offset)",
+                  transition: "padding-bottom 300ms ease-in-out",
+                }
+              : undefined
+          }
+        >
           {isSubPage && (
             <div className="px-4 md:px-6 pt-3 pb-1">
               <BackButton fallback="/kira" />

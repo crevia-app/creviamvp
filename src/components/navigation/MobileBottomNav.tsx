@@ -127,6 +127,20 @@ const MobileBottomNav = () => {
     fetchProfile();
   }, []);
 
+  // ── Sync <main> bottom padding via CSS variable ──────────────────────────
+  // Writing to a CSS variable is decoupled from AppLayout and lets the main
+  // content area animate its padding in exact sync with the nav slide.
+  // Guard: desktop (≥ 768 px) never has a bottom nav, so variable stays 0.
+  useEffect(() => {
+    if (typeof window === "undefined" || window.innerWidth >= 768) return;
+    document.documentElement.style.setProperty(
+      "--nav-bottom-offset",
+      visible
+        ? "calc(52px + env(safe-area-inset-bottom, 0px))"
+        : "0px"
+    );
+  }, [visible]);
+
   const isActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(path + "/");
 
