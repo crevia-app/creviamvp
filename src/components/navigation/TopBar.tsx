@@ -43,16 +43,16 @@ const KiraMenuIcon = () => (
 const StudioMenuIcon = () => (
   <div className="flex flex-col gap-[5.5px]">
     <span
-      className="block h-[1.5px] rounded-full transition-all duration-300 ease-out group-hover:opacity-100"
-      style={{ width: 18, background: "currentColor", opacity: 0.72 }}
+      className="block h-[1.5px] rounded-full transition-all duration-300 ease-out"
+      style={{ width: 18, background: "#ffffff" }}
     />
     <span
       className="block h-[1.5px] rounded-full transition-all duration-300 ease-out"
-      style={{ width: 11, background: "currentColor", opacity: 0.38 }}
+      style={{ width: 11, background: "#ffffff", opacity: 0.6 }}
     />
     <span
       className="block h-[1.5px] rounded-full transition-all duration-300 ease-out"
-      style={{ width: 18, background: "#CF8150" }}
+      style={{ width: 18, background: "#ffffff" }}
     />
   </div>
 );
@@ -124,15 +124,13 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
                 className={[
                   "group relative flex items-center justify-center",
                   "w-10 h-10 rounded-xl flex-shrink-0",
-                  "bg-card/90 backdrop-blur-sm",
-                  "border border-border/60",
-                  "shadow-[0_1px_3px_rgba(0,0,0,0.07)]",
-                  "hover:border-[rgba(207,129,80,0.35)]",
-                  "hover:shadow-[0_0_0_1px_rgba(207,129,80,0.12),0_4px_14px_rgba(207,129,80,0.08),0_1px_4px_rgba(0,0,0,0.07)]",
+                  "border border-white/20",
+                  "hover:border-[rgba(207,129,80,0.5)]",
+                  "hover:shadow-[0_0_0_1px_rgba(207,129,80,0.15),0_4px_14px_rgba(207,129,80,0.10)]",
                   "active:scale-[0.91]",
                   "transition-all duration-200 ease-out",
-                  "text-foreground/70 hover:text-foreground",
                 ].join(" ")}
+                style={{ background: "rgba(30,30,30,0.72)", backdropFilter: "blur(8px)" }}
               >
                 <StudioMenuIcon />
               </button>
