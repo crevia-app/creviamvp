@@ -50,6 +50,7 @@ import {
   MoreVertical,
   Pin,
   PinOff,
+  Share2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -94,11 +95,12 @@ interface DesktopChatItemProps {
   onStartRename: () => void;
   onPin: () => void;
   onDelete: () => void;
+  onShare: () => void;
 }
 
 function DesktopChatItem({
   chat, isActive, isRenaming, renameValue, indent = false,
-  onSelect, onRenameChange, onRenameSubmit, onRenameCancel, onStartRename, onPin, onDelete,
+  onSelect, onRenameChange, onRenameSubmit, onRenameCancel, onStartRename, onPin, onDelete, onShare,
 }: DesktopChatItemProps) {
   const [hovered, setHovered] = useState(false);
   const showMenu = isActive || hovered;
@@ -156,6 +158,13 @@ function DesktopChatItem({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem
+            onClick={(e) => { e.stopPropagation(); onShare(); }}
+            className="gap-2 cursor-pointer"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            Share
+          </DropdownMenuItem>
           <DropdownMenuItem
             onClick={(e) => { e.stopPropagation(); onPin(); }}
             className="gap-2 cursor-pointer"
@@ -862,6 +871,29 @@ const Kira = () => {
     }
   };
 
+  const handleShareChat = async (chatId: string, chatTitle: string) => {
+    const url = `${window.location.origin}/kira`;
+    const shareData = {
+      title: chatTitle,
+      text: `Kira AI conversation: "${chatTitle}"`,
+      url,
+    };
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share(shareData);
+      } catch {
+        // user cancelled — no toast needed
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        toast({ title: "Link copied", description: chatTitle });
+      } catch {
+        toast({ title: "Couldn't copy link", variant: "destructive" });
+      }
+    }
+  };
+
   const handleLongPressStart = (chat: ChatHistory) => {
     longPressTimerRef.current = setTimeout(() => {
       setMobileLongPressChat(chat);
@@ -998,18 +1030,7 @@ const Kira = () => {
           sidebarCollapsed ? 'w-16' : 'w-72'
         }`}
       >
-        {/* Toggle button — above New Chat */}
-        <div className={`flex pt-3 pb-1 px-3 ${sidebarCollapsed ? 'justify-center' : 'justify-start'}`}>
-          <button
-            onClick={() => setSidebarCollapsed(prev => !prev)}
-            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {sidebarCollapsed ? <PanelLeft className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
-          </button>
-        </div>
-
-        <div className="px-3 pb-3">
+        <div className="px-3 pt-3 pb-3">
           <Button
             onClick={() => handleNewChat(null)}
             className={`w-full gap-2 bg-bronze hover:bg-bronze/90 text-background font-poppins ${
@@ -1106,6 +1127,7 @@ const Kira = () => {
                             onStartRename={() => { setRenamingChatId(chat.id); setRenameValue(chat.title); }}
                             onPin={() => handlePinChat(chat.id, !!chat.pinned)}
                             onDelete={() => setChatToDelete(chat.id)}
+                            onShare={() => handleShareChat(chat.id, chat.title)}
                           />
                         ))}
                       </div>
@@ -1126,6 +1148,7 @@ const Kira = () => {
                         onStartRename={() => { setRenamingChatId(chat.id); setRenameValue(chat.title); }}
                         onPin={() => handlePinChat(chat.id, !!chat.pinned)}
                         onDelete={() => setChatToDelete(chat.id)}
+                        onShare={() => handleShareChat(chat.id, chat.title)}
                       />
                     ))}
 
@@ -1158,6 +1181,7 @@ const Kira = () => {
                                 onStartRename={() => { setRenamingChatId(chat.id); setRenameValue(chat.title); }}
                                 onPin={() => handlePinChat(chat.id, !!chat.pinned)}
                                 onDelete={() => setChatToDelete(chat.id)}
+                                onShare={() => handleShareChat(chat.id, chat.title)}
                               />
                             ))}
                           </div>
@@ -1346,30 +1370,6 @@ const Kira = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile-only top bar */}
-        <div className="md:hidden flex items-center gap-2 px-2 border-b border-border/50 bg-card/50 flex-shrink-0 h-12">
-          <button
-            onClick={() => setMobileSidebarOpen(true)}
-            className="flex items-center justify-center w-11 h-11 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted transition-colors flex-shrink-0"
-            aria-label="Open sidebar"
-          >
-            <PanelLeft className="w-5 h-5" />
-          </button>
-          <div className="flex-1 flex items-center justify-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-bronze to-bronze-dark flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-3 h-3 text-background" />
-            </div>
-            <span className="font-poppins font-semibold text-sm">Kira AI</span>
-          </div>
-          <button
-            onClick={() => handleNewChat(null)}
-            className="flex items-center justify-center w-11 h-11 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted transition-colors flex-shrink-0"
-            style={{ touchAction: 'manipulation' }}
-            aria-label="New chat"
-          >
-            <Plus className="w-5 h-5" />
-          </button>
-        </div>
 
         {viewMode === "projects" ? (
           <ProjectsView
@@ -1667,9 +1667,17 @@ const Kira = () => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && !isLoading && !isAtKiraLimit && handleSend()}
-                  placeholder={isAtKiraLimit ? `Daily limit reached · Upgrade to continue` : activeProject ? `Ask Kira about ${activeProject.name}...` : "Ask Kira anything..."}
+                  placeholder={
+                    isAtKiraLimit
+                      ? 'Daily limit reached · Upgrade to continue'
+                      : isLoading
+                        ? 'Kira is responding...'
+                        : activeProject
+                          ? `Ask Kira about ${activeProject.name}...`
+                          : 'Ask Kira anything...'
+                  }
                   className="border-0 bg-transparent h-9 text-base focus-visible:ring-0 px-2 flex-1 min-w-0 placeholder:text-muted-foreground/60"
-                  disabled={isLoading || isAtKiraLimit}
+                  disabled={isAtKiraLimit}
                 />
 
                 {/* Usage counter */}
@@ -1757,10 +1765,20 @@ const Kira = () => {
           <div className="space-y-1">
             <button
               onClick={() => {
+                handleShareChat(mobileLongPressChat!.id, mobileLongPressChat!.title);
+                setMobileLongPressChat(null);
+              }}
+              className="w-full flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl hover:bg-muted transition-colors text-left"
+            >
+              <Share2 className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Share conversation</span>
+            </button>
+            <button
+              onClick={() => {
                 handlePinChat(mobileLongPressChat!.id, !!mobileLongPressChat!.pinned);
                 setMobileLongPressChat(null);
               }}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-muted transition-colors text-left"
+              className="w-full flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl hover:bg-muted transition-colors text-left"
             >
               {mobileLongPressChat?.pinned
                 ? <PinOff className="w-4 h-4 text-muted-foreground" />
@@ -1775,7 +1793,7 @@ const Kira = () => {
                 setMobileLongPressChat(null);
                 setMobileSidebarOpen(true);
               }}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-muted transition-colors text-left"
+              className="w-full flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl hover:bg-muted transition-colors text-left"
             >
               <Pencil className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm font-medium">Rename</span>
@@ -1785,7 +1803,7 @@ const Kira = () => {
                 setChatToDelete(mobileLongPressChat!.id);
                 setMobileLongPressChat(null);
               }}
-              className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-destructive/10 text-destructive transition-colors text-left"
+              className="w-full flex items-center gap-3 px-3 py-3 min-h-[44px] rounded-xl hover:bg-destructive/10 text-destructive transition-colors text-left"
             >
               <Trash2 className="w-4 h-4" />
               <span className="text-sm font-medium">Delete</span>

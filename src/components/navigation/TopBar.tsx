@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Bell, Monitor, Sun, Moon } from "lucide-react";
+import { Bell, Monitor, Sun, Moon, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/use-notifications";
 import NotificationSheet from "@/components/notifications/NotificationSheet";
@@ -69,8 +69,18 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
         {/* Left side */}
         <div className="flex items-center gap-2">
           {isKira ? (
-            /* Kira: wordmark only — sidebar toggle lives inside the sidebar */
-            <span className="font-vollkorn text-xl font-bold text-foreground tracking-tight">Kira</span>
+            /* Kira: sidebar toggle + wordmark — toggle fires into Kira page via event */
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent("kira:toggle-sidebar"))}
+                className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted/70 transition-colors flex-shrink-0"
+                aria-label="Toggle sidebar"
+                style={{ touchAction: "manipulation" }}
+              >
+                <PanelLeft className="w-5 h-5" />
+              </button>
+              <span className="font-vollkorn text-xl font-bold text-foreground tracking-tight">Kira</span>
+            </div>
           ) : isStudio ? (
             /* Studio name — mobile only, desktop has the sidebar */
             <span className="flex md:hidden font-vollkorn text-xl font-semibold text-foreground tracking-tight">Crevia Studio</span>
