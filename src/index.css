@@ -503,6 +503,25 @@ All colors MUST be HSL.
   }
 
   /* ============================================================
+     PHOTO SECTION OVERLAY
+     Used on the "The Problem" section which has a heavily-blurred
+     photo background. The gradient is radial (bright centre →
+     dark/light edges) so the text in the middle stays crisp while
+     the photo peeks through subtly at the centre.
+
+     Light mode: near-white overlay so dark text reads perfectly.
+     Dark mode:  near-black overlay so light text reads perfectly.
+  ============================================================ */
+  .bg-gradient-radial-overlay {
+    background: radial-gradient(
+      ellipse 80% 100% at 50% 50%,
+      hsl(var(--background) / 0.72) 0%,
+      hsl(var(--background) / 0.90) 55%,
+      hsl(var(--background) / 0.97) 100%
+    );
+  }
+
+  /* ============================================================
      EFFECT 1 — Sub-Surface Hero Glow
      Large radial bloom behind the H1. Reads as ambient warmth,
      not colour. Dark mode lifts it slightly since dark backgrounds

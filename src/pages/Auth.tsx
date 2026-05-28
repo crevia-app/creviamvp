@@ -473,8 +473,8 @@ const Auth = () => {
             </h1>
             <p className="text-sm text-muted-foreground font-poppins">
               {isSignup
-                ? "Join thousands of creators and brands on Crevia"
-                : "Sign in to continue to your workspace"}
+                ? "Built for those who are ready to own their story."
+                : "Your story continues here."}
             </p>
           </div>
 

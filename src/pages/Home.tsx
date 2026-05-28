@@ -7,7 +7,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HeroPattern from "@/components/HeroPattern";
 import ScrollReveal from "@/components/ui/ScrollReveal";
-import TestimonialMarquee from "@/components/TestimonialMarquee";
 import { supabase } from "@/integrations/supabase/client";
 
 const OPS_CARDS = [
@@ -81,8 +80,31 @@ const Home = () => {
 
 
       {/* ═══════════════ THE PROBLEM ═══════════════ */}
-      <section className="py-20 md:py-28 px-4 md:px-6">
-        <div className="container mx-auto max-w-4xl text-center">
+      {/*
+        Photo background: heavily blurred so text is always legible.
+        scale-125 + blur-[72px] pushes blur artefacts past the section boundary.
+        The gradient overlay (bg-background/90 → /80 → /90) creates a subtle
+        vignette that works in both light and dark modes because Tailwind's
+        `background` CSS variable already adapts to the active theme.
+      */}
+      <section className="relative py-24 md:py-36 px-4 md:px-6 overflow-hidden">
+
+        {/* ── Blurred photo layer ──────────────────────────────────────── */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+        >
+          <img
+            src="/workspace-bg.jpg"
+            alt=""
+            className="w-full h-full object-cover scale-125 blur-[72px] opacity-100"
+          />
+          {/* Radial vignette — light mode: near-white; dark mode: near-black */}
+          <div className="absolute inset-0 bg-gradient-radial-overlay" />
+        </div>
+
+        {/* ── Content ─────────────────────────────────────────────────── */}
+        <div className="container mx-auto max-w-4xl text-center relative z-10">
           <ScrollReveal variant="hero">
             <h2 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl font-bold mb-6 leading-tight">
               Talent is not the problem.{" "}
@@ -173,8 +195,6 @@ const Home = () => {
           </ScrollReveal>
         </div>
       </section>
-
-      <TestimonialMarquee />
 
       {/* ═══════════════ FOR WHO ═══════════════ */}
       <section className="py-20 md:py-28 px-4 md:px-6">
