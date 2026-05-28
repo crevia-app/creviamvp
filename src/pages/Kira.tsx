@@ -1691,6 +1691,11 @@ const Kira = () => {
                   }
                   className="border-0 bg-transparent h-9 text-base focus-visible:ring-0 px-2 flex-1 min-w-0 placeholder:text-muted-foreground/60"
                   disabled={isAtKiraLimit}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="sentences"
+                  spellCheck={false}
+                  data-form-type="other"
                 />
 
                 {/* Usage counter */}

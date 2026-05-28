@@ -134,7 +134,7 @@ const Home = () => {
             </h2>
           </ScrollReveal>
           <ScrollReveal delay={0.12}>
-            <p className="text-lg md:text-xl text-white/75 leading-relaxed max-w-3xl mx-auto">
+            <p className="text-lg md:text-xl text-white leading-relaxed max-w-3xl mx-auto">
               Talent is everywhere. What most businesses and creatives lack is the
               infrastructure to convert it into structured, scalable revenue.
               Crevia closes that gap.
