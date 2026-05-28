@@ -113,12 +113,14 @@ const Home = () => {
                 "radial-gradient(ellipse 90% 80% at 50% 50%, transparent 30%, rgba(0,0,0,0.35) 100%)",
             }}
           />
-          {/* Top & bottom bleed into surrounding sections */}
+          {/* Top & bottom dark vignette — pure black so it works in both light + dark mode.
+              Never uses hsl(var(--background)) which is white in light mode and would
+              create a jarring white smear against the dark photo overlay. */}
           <div
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 12%, transparent 88%, hsl(var(--background)) 100%)",
+                "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 18%, transparent 82%, rgba(0,0,0,0.55) 100%)",
             }}
           />
         </div>
