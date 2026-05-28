@@ -93,14 +93,15 @@ const CreviaStudio = () => {
 
       {/* ═══════════════════════════════════════════════════════════════════
           HEADER
-          Mobile:  compact single-row  [≡]  Crevia Studio · Feature name
-          Desktop: full title + horizontal tab bar
+          All screens: [≡] Crevia Studio › Feature  (top row)
+          Desktop:     horizontal tab bar below
+          Mobile:      Link sub-sections row (only on Link tab)
       ═══════════════════════════════════════════════════════════════════ */}
       <div className="border-b border-border bg-background z-30 flex-shrink-0">
         <div className="mx-auto w-full max-w-7xl">
 
-          {/* ── MOBILE header row ────────────────────────────────────────── */}
-          <div className="md:hidden flex items-center gap-3 px-4 py-2.5">
+          {/* ── Universal top row — ALL screen sizes ─────────────────────── */}
+          <div className="flex items-center gap-3 px-4 py-2.5">
             {/* Sidebar toggle */}
             <button
               onClick={() => setSidebarOpen(true)}
@@ -114,7 +115,7 @@ const CreviaStudio = () => {
               <PanelLeft className="w-4 h-4 text-foreground/70" />
             </button>
 
-            {/* Title + active feature */}
+            {/* Breadcrumb: Crevia Studio › Active feature */}
             <div className="flex items-center gap-1.5 min-w-0 flex-1">
               <span className="font-vollkorn text-base font-semibold text-foreground truncate">
                 Crevia Studio
@@ -129,12 +130,8 @@ const CreviaStudio = () => {
             </div>
           </div>
 
-          {/* ── DESKTOP header (unchanged) ──────────────────────────────── */}
-          <div className="hidden md:block px-6 py-4">
-            <h1 className="font-vollkorn text-2xl font-semibold text-foreground mb-4">
-              {t("studio.title")}
-            </h1>
-            {/* Desktop tab bar */}
+          {/* ── Desktop tab bar (no title — breadcrumb replaces it) ──────── */}
+          <div className="hidden md:block px-4 pb-3">
             <div className="flex items-stretch gap-1 -mb-px">
               {STUDIO_TABS.map((tab) => {
                 const Icon     = tab.icon;
@@ -160,11 +157,9 @@ const CreviaStudio = () => {
             </div>
           </div>
 
-          {/* ── Link sub-sections (mobile only — compact icon row) ────────
-              Appears below the header when on the Link tab.
-              Labels removed to save vertical space; tooltips via title. */}
+          {/* ── Link sub-sections (mobile only — compact icon + label row) ── */}
           {activeTab === "link" && (
-            <div className="md:hidden border-t border-border/40 -mx-0">
+            <div className="md:hidden border-t border-border/40">
               <div className="flex w-full px-2 py-1">
                 {LINK_SECTIONS.map((section) => {
                   const Icon     = section.icon;
