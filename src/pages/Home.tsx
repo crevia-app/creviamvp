@@ -80,16 +80,18 @@ const Home = () => {
 
 
       {/* ═══════════════ THE PROBLEM ═══════════════ */}
-      {/*
-        Photo background: heavily blurred so text is always legible.
-        scale-125 + blur-[72px] pushes blur artefacts past the section boundary.
-        The gradient overlay (bg-background/90 → /80 → /90) creates a subtle
-        vignette that works in both light and dark modes because Tailwind's
-        `background` CSS variable already adapts to the active theme.
-      */}
       <section className="relative py-24 md:py-36 px-4 md:px-6 overflow-hidden">
 
-        {/* ── Blurred photo layer ──────────────────────────────────────── */}
+        {/* ── Blurred photo background ─────────────────────────────────
+            blur-2xl (40 px) — soft enough to be abstract, light enough
+            to actually be visible. scale-110 hides the blurred edges.
+            Two overlay layers:
+              1. Top/bottom linear vignette fades the image into the page
+              2. A fixed bg-background/55 at the centre so text is crisp
+                 (45 % of the blurred image still shows through)
+            bg-background is a CSS variable that adapts automatically to
+            light/dark mode — no separate dark: selector needed.
+        ── */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
@@ -97,10 +99,10 @@ const Home = () => {
           <img
             src="/workspace-bg.jpg"
             alt=""
-            className="w-full h-full object-cover scale-125 blur-[72px] opacity-100"
+            className="w-full h-full object-cover scale-110 blur-2xl opacity-95"
           />
-          {/* Radial vignette — light mode: near-white; dark mode: near-black */}
-          <div className="absolute inset-0 bg-gradient-radial-overlay" />
+          {/* Vignette: edges fade to background, centre stays semi-transparent */}
+          <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/50 to-background/90" />
         </div>
 
         {/* ── Content ─────────────────────────────────────────────────── */}
