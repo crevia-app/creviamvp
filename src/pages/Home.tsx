@@ -94,11 +94,17 @@ const Home = () => {
               3. Inline gradient vignette: solid background at edges → transparent
                  at centre, so image fades cleanly into surrounding sections
         ── */}
+        {/*
+          NO -z-10 here. The section is position:relative with no z-index,
+          so it does NOT form a stacking context. A -z-10 child would escape
+          the section and paint behind the entire page background — invisible.
+          Fix: absolute inset-0 (z:auto) for the photo, explicit z-10 on content.
+        */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10"
+          className="pointer-events-none absolute inset-0"
         >
-          {/* Layer 1 — the blurred photo */}
+          {/* Layer 1 — blurred photo */}
           <div
             className="absolute inset-0"
             style={{
@@ -109,12 +115,12 @@ const Home = () => {
               transform:          "scale(1.12)",
             }}
           />
-          {/* Layer 2 — semi-transparent background wash so text is always legible */}
+          {/* Layer 2 — background wash at 60% CSS opacity (40% photo shows through) */}
           <div
             className="absolute inset-0 bg-background"
             style={{ opacity: 0.6 }}
           />
-          {/* Layer 3 — top/bottom vignette fades into surrounding sections */}
+          {/* Layer 3 — top/bottom vignette */}
           <div
             className="absolute inset-0"
             style={{
