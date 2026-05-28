@@ -887,11 +887,13 @@ serve(async (req) => {
       }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
-    // Log profile fetch failures so we can see the exact error in Supabase logs
+    // Log profile fetch result so we can see exactly what's happening
     if (profileError) {
       console.error(`[Kira] Profile fetch error uid=${user.id} code=${profileError.code} msg=${profileError.message}`);
     } else if (!profile) {
       console.warn(`[Kira] Profile fetch returned null uid=${user.id}`);
+    } else {
+      console.log(`[Kira] Profile OK uid=${user.id} display_name=${profile.display_name} nickname=${(profile.kira_memory as any)?.nickname} kira_memory_keys=${Object.keys((profile.kira_memory as any) ?? {}).join(',')}`);
     }
 
     const memory = (profile?.kira_memory as Record<string, unknown>) ?? {};
