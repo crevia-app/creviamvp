@@ -1230,11 +1230,8 @@ const Kira = () => {
       <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
         <SheetContent side="left" className="w-80 p-0 bg-card">
           <SheetHeader className="h-14 flex items-center px-4 border-b border-border/50">
-            <SheetTitle className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-bronze to-bronze-dark flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-background" />
-              </div>
-              <span className="font-poppins font-semibold text-sm">Kira AI</span>
+            <SheetTitle className="font-vollkorn text-2xl font-bold text-foreground tracking-tight">
+              Kira
             </SheetTitle>
           </SheetHeader>
           
