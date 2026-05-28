@@ -3,12 +3,12 @@ import { useEffect, useRef, useState } from "react";
 /**
  * useBottomNavVisibility — Smart Auto-Hide for the mobile bottom nav.
  *
- * Uses THREE independent scroll signals merged into a single `visible` boolean:
+ * Uses FOUR independent scroll signals merged into a single `visible` boolean:
  *
  *  1. touchmove (hysteresis)
  *     Primary signal for iOS and most Android scenarios.
  *     HIDE : accumulated downward movement ≥ 30 px in one gesture.
- *     SHOW : upward reversal ≥ 8 px.
+ *     SHOW : upward reversal ≥ 8 px (only when no input is focused).
  *     Counter resets on direction change — one gesture can both hide and show.
  *
  *  2. scroll capture (document, capture-phase)
@@ -18,9 +18,18 @@ import { useEffect, useRef, useState } from "react";
  *     compositor back to the main thread. capture:true catches ALL scrollable
  *     elements (inner divs, window, etc.) without needing event bubbling.
  *
- *  3. Input focus
- *     Any INPUT/TEXTAREA gaining focus → instant hide (keyboard about to open).
- *     150 ms debounced blur → show (avoids flash when tabbing between fields).
+ *  3. Input focus / blur
+ *     Any INPUT/TEXTAREA/contentEditable gaining focus → instant hide + sets
+ *     `inputFocusedRef = true`, which BLOCKS all show() calls from signals 1
+ *     and 2. This is the critical Android keyboard guard:
+ *
+ *       Android keyboard-open sequence:
+ *         a) focusin fires  → hide() + inputFocused = true
+ *         b) page reflows   → scroll event fires with delta < 0 (content up)
+ *         c) onScrollCapture would normally call show() for delta < 0
+ *            BUT: show() is gated — inputFocused = true → no-op ✓
+ *
+ *     150 ms debounced blur → inputFocused = false → show() if no input active.
  *
  *  4. VisualViewport — keyboard ONLY, NEVER address-bar
  *     CRITICAL Android fix: when the user scrolls, Chrome collapses its address
@@ -38,15 +47,22 @@ import { useEffect, useRef, useState } from "react";
 export function useBottomNavVisibility() {
   const [visible, setVisible]  = useState(true);
   // Mirror state in a ref so handlers never carry stale closures and we can
-  // skip redundant setVisible calls (React bails out automatically, but the
-  // ref check avoids even enqueuing the update).
-  const visibleRef = useRef(true);
+  // skip redundant setVisible calls.
+  const visibleRef      = useRef(true);
+  // Guards show() — true while a keyboard-triggering input is focused.
+  // Prevents the Android keyboard reflow scroll from re-showing the nav.
+  const inputFocusedRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.innerWidth >= 768) return;
 
     const show = () => {
+      // ── KEYBOARD GUARD ──────────────────────────────────────────────────────
+      // If any text input is focused, the keyboard is (likely) open.
+      // Any scroll signal that would call show() here is caused by the
+      // keyboard-open page reflow, NOT a real upward scroll by the user.
+      if (inputFocusedRef.current) return;
       if (!visibleRef.current) {
         visibleRef.current = true;
         setVisible(true);
@@ -82,7 +98,7 @@ export function useBottomNavVisibility() {
       touchAcc += Math.abs(delta);
 
       if (d === "down" && touchAcc >= 30) { hide(); touchAcc = 0; }
-      else if (d === "up" && touchAcc >= 8) { show(); touchAcc = 0; }
+      else if (d === "up" && touchAcc >= 8) { show(); touchAcc = 0; } // gated by inputFocusedRef
     };
 
     const onTouchEnd = () => { touchDir = null; touchAcc = 0; };
@@ -107,13 +123,13 @@ export function useBottomNavVisibility() {
 
       const delta = currentY - prev;
       if (Math.abs(delta) > 8) {
-        if (delta > 0)                    hide();
-        else if (delta < 0 || currentY <= 0) show();
+        if (delta > 0)                        hide();
+        else if (delta < 0 || currentY <= 0)  show(); // gated by inputFocusedRef
         scrollPrev.set(el, currentY);
       }
     };
 
-    // ── 3. Input focus ───────────────────────────────────────────────────────
+    // ── 3. Input focus — keyboard guard ─────────────────────────────────────
     const onFocusIn = (e: FocusEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (
@@ -121,6 +137,7 @@ export function useBottomNavVisibility() {
         tag === "TEXTAREA" ||
         (e.target as HTMLElement)?.isContentEditable
       ) {
+        inputFocusedRef.current = true;   // block all show() from scroll signals
         hide();
       }
     };
@@ -133,6 +150,7 @@ export function useBottomNavVisibility() {
           active?.tagName !== "TEXTAREA" &&
           !active?.isContentEditable
         ) {
+          inputFocusedRef.current = false;  // unblock show() — keyboard is gone
           show();
         }
       }, 150);
