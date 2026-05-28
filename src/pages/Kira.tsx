@@ -326,7 +326,11 @@ const Kira = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef    = useRef<HTMLDivElement>(null);
+  // Direct scroll-container ref — used for reliable programmatic scrollToBottom.
+  // scrollIntoView() is unreliable on iOS/Android when the scroll container has
+  // percentage-based children (it can't always identify the scrollable ancestor).
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -508,8 +512,20 @@ const Kira = () => {
     return () => window.removeEventListener("kira:toggle-sidebar", handler);
   }, []);
 
+  // Scroll to bottom whenever messages update.
+  // We scroll the container directly (scrollTop = scrollHeight) rather than
+  // calling scrollIntoView() on the sentinel div because scrollIntoView relies
+  // on the browser correctly identifying the "nearest scrollable ancestor" —
+  // which fails on iOS/Android when the scroll container has min-height:100%
+  // or complex flex children that confuse the scroll-ancestor walk.
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    // Use requestAnimationFrame so the DOM has painted the new message before
+    // we measure scrollHeight (avoids scrolling to the pre-render position).
+    requestAnimationFrame(() => {
+      el.scrollTop = el.scrollHeight;
+    });
   }, [messages]);
 
   const saveMessage = async (conversationId: string, role: "user" | "assistant", content: string, fileName?: string) => {
@@ -1402,24 +1418,39 @@ const Kira = () => {
               limit={kiraActionsLimit}
               feature="Kira AI actions"
             />
-            <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y">
-              <div className="min-h-full flex flex-col px-4 py-6">
-                <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col">
-                  {messages.length === 0 ? (
-                    <div className="flex-1 flex flex-col items-center justify-center py-12 text-center">
-                      <h1 className="font-vollkorn text-2xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-bronze to-bronze-dark bg-clip-text text-transparent">
-                        {activeProject ? `Working on ${activeProject.name}` : currentGreeting}
-                      </h1>
-                      <p className="text-muted-foreground text-base max-w-md mb-12">
-                        {activeProject 
-                          ? activeProject.description || "Start chatting with project context"
-                          : userType === 'brand' 
-                            ? "I can help with creator discovery, campaign briefs, and strategy"
-                            : "I can help with content ideas, brand pitches, and growth strategies"
-                        }
-                      </p>
-                    </div>
-                  ) : (
+            {/*
+              SCROLL CONTAINER — ref + direct scrollTop control.
+              KEY iOS/Android fix: NO min-h-full or height:100% children.
+              On iOS Safari, min-height:100% inside overflow:auto is calculated
+              against scrollHeight (not clientHeight), creating a circular
+              dependency where scrollHeight always === clientHeight → no scroll.
+              Fix: flat structure with dvh-based empty-state centering.
+            */}
+            <div
+              ref={scrollContainerRef}
+              className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y"
+            >
+              {messages.length === 0 ? (
+                /* Empty state: use min-h in dvh units — avoids % circular
+                   dependency inside overflow:auto on iOS/Android. */
+                <div className="min-h-[55dvh] flex flex-col items-center justify-center px-4 py-12 text-center">
+                  <div className="max-w-md w-full">
+                    <h1 className="font-vollkorn text-2xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-bronze to-bronze-dark bg-clip-text text-transparent">
+                      {activeProject ? `Working on ${activeProject.name}` : currentGreeting}
+                    </h1>
+                    <p className="text-muted-foreground text-base mb-12">
+                      {activeProject
+                        ? activeProject.description || "Start chatting with project context"
+                        : userType === 'brand'
+                          ? "I can help with creator discovery, campaign briefs, and strategy"
+                          : "I can help with content ideas, brand pitches, and growth strategies"
+                      }
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="px-4 py-6">
+                  <div className="max-w-2xl mx-auto w-full">
                     <div className="space-y-6 py-4">
                       {messages.map((msg, idx) => (
                         <motion.div
@@ -1571,11 +1602,11 @@ const Kira = () => {
                         )}
                       </AnimatePresence>
                       <div ref={messagesEndRef} />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>{/* end messages scroll container */}
+                    </div>{/* end space-y-6 */}
+                  </div>{/* end max-w-2xl */}
+                </div>{/* end px-4 py-6 */}
+              )}
+            </div>{/* end scroll container */}
           </div>
 
           {/* Input Area
