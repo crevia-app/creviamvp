@@ -302,18 +302,13 @@ const CreviaStudio = () => {
                         />
                       </div>
 
-                      {/* Labels */}
-                      <div className="flex-1 min-w-0">
-                        <p className={cn(
-                          "text-sm font-semibold font-poppins leading-tight",
-                          isActive ? "text-foreground" : "text-foreground/80"
-                        )}>
-                          {tab.fullLabel}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5 leading-tight">
-                          {tab.description}
-                        </p>
-                      </div>
+                      {/* Label */}
+                      <p className={cn(
+                        "flex-1 min-w-0 text-sm font-semibold font-poppins leading-tight",
+                        isActive ? "text-foreground" : "text-foreground/80"
+                      )}>
+                        {tab.fullLabel}
+                      </p>
 
                       {/* Active dot */}
                       {isActive && (

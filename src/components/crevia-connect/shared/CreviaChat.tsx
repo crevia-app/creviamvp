@@ -69,6 +69,7 @@ import ChatMediaPanel from "./ChatMediaPanel";
 import { useE2EEncryption } from "@/hooks/use-e2e-encryption";
 import { iconOptions } from "@/components/crevia-link/iconOptions";
 import { useIOSKeyboardFit } from "@/hooks/use-keyboard-fit";
+import { useVisualViewport } from "@/hooks/use-visual-viewport";
 
 interface ChatRoom {
   id: string;
@@ -192,6 +193,7 @@ const avatarStyle = (seed: string): React.CSSProperties => {
 
 const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {}) => {
   const navigate = useNavigate();
+  const { keyboardOpen } = useVisualViewport();
   const [currentUserId, setCurrentUserId] = useState("");
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
@@ -790,16 +792,45 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
 
     if (!data) return;
 
-    // Enrich with sender profiles and reply contexts
-    const enriched = await Promise.all(
-      data.map(async (msg: any) => {
-        const withProfile = await loadSenderProfile(msg);
-        if (msg.reply_to_id) {
-          withProfile.replyTo = await loadReplyContext(msg.reply_to_id);
+    // ── Batch load sender profiles (1 query instead of N) ──────────────
+    const senderIds = [...new Set(data.map((m: any) => m.sender_id as string))];
+    const { data: profileRows } = await supabase
+      .from("profiles")
+      .select("id, display_name, handle, avatar_url")
+      .in("id", senderIds);
+    const profileMap = new Map<string, any>((profileRows || []).map((p: any) => [p.id, p]));
+
+    // ── Batch load reply-context messages (1–2 queries instead of N) ───
+    const replyIds = [...new Set(
+      data.filter((m: any) => m.reply_to_id).map((m: any) => m.reply_to_id as string)
+    )];
+    const replyMap = new Map<string, any>();
+    if (replyIds.length > 0) {
+      const { data: replyMsgs } = await supabase
+        .from("chat_messages")
+        .select("id, content, sender_id, is_encrypted, room_id")
+        .in("id", replyIds);
+      if (replyMsgs) {
+        const replySenderIds = [...new Set(replyMsgs.map((m: any) => m.sender_id as string))];
+        const { data: replyProfiles } = await supabase
+          .from("profiles").select("id, display_name, handle").in("id", replySenderIds);
+        const rpMap = new Map<string, any>((replyProfiles || []).map((p: any) => [p.id, p]));
+        for (const rm of replyMsgs) {
+          let content = rm.content;
+          if (rm.is_encrypted && content) {
+            try { content = await decrypt(content, rm.room_id); } catch { content = "🔒 Encrypted message"; }
+          }
+          replyMap.set(rm.id, { id: rm.id, content, sender_id: rm.sender_id, sender: rpMap.get(rm.sender_id) });
         }
-        return withProfile;
-      })
-    );
+      }
+    }
+
+    // Assemble enriched messages — zero per-message DB round-trips
+    const enriched: ChatMessage[] = data.map((msg: any) => ({
+      ...msg,
+      sender: profileMap.get(msg.sender_id),
+      replyTo: msg.reply_to_id ? (replyMap.get(msg.reply_to_id) ?? null) : undefined,
+    }));
 
     const decrypted = await decryptMessages(enriched);
     setMessages(decrypted as ChatMessage[]);
@@ -1655,12 +1686,13 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
               <div className="p-3 md:p-4 border-b bg-background/95 backdrop-blur flex-shrink-0">
                 <div className="flex min-w-0 items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
-                    {!hideRoomList && (
+                    {/* Back button — show in non-embedded mode OR embedded mobile (replaces the removed "All messages" bar) */}
+                    {(!hideRoomList || onBack) && (
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => onBack ? onBack() : setSelectedRoom(null)}
-                        className="md:hidden -ml-2 h-8 w-8 p-0"
+                        className="md:hidden -ml-2 h-8 w-8 p-0 flex-shrink-0"
                       >
                         <ArrowLeft className="h-5 w-5" />
                       </Button>
@@ -2245,8 +2277,21 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                 </div>
               </ScrollArea>
 
-              {/* Input Area — extra bottom padding on mobile clears the fixed MobileBottomNav (52px) when embedded */}
-              <div className={`border-t bg-background/95 backdrop-blur flex-shrink-0 ${hideRoomList ? "px-3 pt-3 pb-[calc(52px+0.75rem+env(safe-area-inset-bottom,0px))] md:p-4" : "pt-3 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:p-4"}`}>
+              {/* Input Area — dynamic bottom padding like Kira: shrinks when keyboard is up */}
+              <div
+                className="border-t bg-background/95 backdrop-blur flex-shrink-0 pt-3 px-3 md:p-4"
+                style={
+                  typeof window !== "undefined" && window.innerWidth < 768
+                    ? {
+                        paddingBottom: keyboardOpen
+                          ? "0.75rem"
+                          : hideRoomList
+                            ? "calc(var(--nav-bottom-offset) + 0.75rem)"
+                            : "calc(0.75rem + env(safe-area-inset-bottom,0px))",
+                      }
+                    : undefined
+                }
+              >
                 <div className="max-w-3xl mx-auto">
                   {/* Reply preview */}
                   {replyingTo && (
@@ -2294,101 +2339,74 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                       isUploading={uploadingVoice}
                     />
                   ) : (
-                    <div className="flex gap-2">
+                    <>
                       <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} />
 
-                      {/* Attach Menu */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="icon" className="flex-shrink-0 h-10 w-10">
-                            <Plus className="h-5 w-5" />
+                      {/* Kira-style pill input bar */}
+                      <div className="flex items-center gap-1 bg-muted/40 rounded-full border border-border/60 px-2 py-1 shadow-sm transition-all duration-200 focus-within:border-bronze/50 focus-within:bg-card focus-within:shadow-md">
+
+                        {/* Attach menu */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-background/80 flex-shrink-0">
+                              <Plus className="h-5 w-5 text-muted-foreground" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start" className="w-52">
+                            <DropdownMenuItem onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = "*/*"; fileInputRef.current.click(); } }}>
+                              <Paperclip className="h-4 w-4 mr-2" />Attach File
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = "image/*"; fileInputRef.current.click(); } }}>
+                              <ImageIcon className="h-4 w-4 mr-2" />Send Image
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = "video/*"; fileInputRef.current.click(); } }}>
+                              <Video className="h-4 w-4 mr-2" />Send Video
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => { fetchInvoices(); setShowInvoicePicker(true); }}>
+                              <Receipt className="h-4 w-4 mr-2" />Attach Invoice
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { fetchContracts(); setShowContractPicker(true); }}>
+                              <FileSignature className="h-4 w-4 mr-2" />Attach Canvas
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        {/* Text input */}
+                        <Textarea
+                          placeholder="Type a message..."
+                          value={newMessage}
+                          onChange={(e) => { setNewMessage(e.target.value); handleTyping(); }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+                          }}
+                          className="flex-1 border-0 bg-transparent focus-visible:ring-0 text-sm resize-none min-h-[2rem] max-h-[120px] py-1.5 px-2 placeholder:text-muted-foreground/60"
+                          disabled={uploadingFile}
+                          rows={1}
+                        />
+
+                        {/* Send / Mic */}
+                        {newMessage.trim() || selectedFile ? (
+                          <Button
+                            onClick={sendMessage}
+                            disabled={uploadingFile || (!newMessage.trim() && !selectedFile)}
+                            size="icon"
+                            className="h-9 w-9 rounded-full bg-bronze hover:bg-bronze/90 text-background flex-shrink-0 disabled:opacity-30"
+                          >
+                            <Send className="h-4 w-4" />
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-52">
-                          <DropdownMenuItem onClick={() => {
-                            if (fileInputRef.current) {
-                              fileInputRef.current.accept = "*/*";
-                              fileInputRef.current.click();
-                            }
-                          }}>
-                            <Paperclip className="h-4 w-4 mr-2" />
-                            Attach File
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => {
-                            if (fileInputRef.current) {
-                              fileInputRef.current.accept = "image/*";
-                              fileInputRef.current.click();
-                            }
-                          }}>
-                            <ImageIcon className="h-4 w-4 mr-2" />
-                            Send Image
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => {
-                            if (fileInputRef.current) {
-                              fileInputRef.current.accept = "video/*";
-                              fileInputRef.current.click();
-                            }
-                          }}>
-                            <Video className="h-4 w-4 mr-2" />
-                            Send Video
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => {
-                              fetchInvoices();
-                              setShowInvoicePicker(true);
-                            }}
+                        ) : (
+                          <Button
+                            onClick={() => setIsRecordingVoice(true)}
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 rounded-full flex-shrink-0 text-bronze hover:bg-bronze/10"
                           >
-                            <Receipt className="h-4 w-4 mr-2" />
-                            Attach Invoice
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              fetchContracts();
-                              setShowContractPicker(true);
-                            }}
-                          >
-                            <FileSignature className="h-4 w-4 mr-2" />
-                            Attach Canvas
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-
-                      <Textarea
-                        placeholder="Type a message..."
-                        value={newMessage}
-                        onChange={(e) => {
-                          setNewMessage(e.target.value);
-                          handleTyping();
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            sendMessage();
-                          }
-                        }}
-                        className="flex-1 min-h-[2.5rem] max-h-[100px] resize-none text-sm py-2.5"
-                        disabled={uploadingFile}
-                      />
-
-                      {newMessage.trim() || selectedFile ? (
-                        <Button
-                          onClick={sendMessage}
-                          disabled={uploadingFile || (!newMessage.trim() && !selectedFile)}
-                          className="self-end bg-bronze hover:bg-bronze/90 text-background flex-shrink-0 h-10 w-10 p-0"
-                        >
-                          <Send className="h-4 w-4" />
-                        </Button>
-                      ) : (
-                        <Button
-                          onClick={() => setIsRecordingVoice(true)}
-                          variant="outline"
-                          className="self-end flex-shrink-0 h-10 w-10 p-0 border-bronze/30 text-bronze hover:bg-bronze/10 hover:text-bronze"
-                        >
-                          <Mic className="h-5 w-5" />
-                        </Button>
-                      )}
-                    </div>
+                            <Mic className="h-5 w-5" />
+                          </Button>
+                        )}
+                      </div>
+                    </>
                   )}
                 </div>
               </div>

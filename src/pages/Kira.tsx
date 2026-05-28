@@ -1405,15 +1405,9 @@ const Kira = () => {
                       </>
                     ) : (
                       <>
-                        <div className="text-5xl mb-5 select-none">👋</div>
                         <h1 className="font-vollkorn text-3xl md:text-4xl font-bold mb-3 text-foreground">
                           Hello{userName ? `, ${userName}` : ""}!
                         </h1>
-                        <p className="text-muted-foreground text-base mb-12">
-                          {userType === 'brand'
-                            ? "I can help with creator discovery, campaign briefs, and strategy"
-                            : "I can help with content ideas, brand pitches, and growth strategies"}
-                        </p>
                       </>
                     )}
                   </div>
