@@ -142,7 +142,7 @@ function DesktopChatItem({
               right: '4px',
               top: '50%',
               transform: 'translateY(-50%)',
-              opacity: showMenu ? 1 : 0.35,
+              opacity: 1,
               pointerEvents: 'auto',
               width: '24px',
               height: '24px',
@@ -150,7 +150,6 @@ function DesktopChatItem({
               alignItems: 'center',
               justifyContent: 'center',
               borderRadius: '4px',
-              transition: 'opacity 0.15s',
               color: 'inherit',
             }}
           >
@@ -375,6 +374,9 @@ const Kira = () => {
   const animFrameRef = useRef<number | null>(null);
   const networkDoneRef = useRef(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  // Smart auto-scroll: only pull to bottom if the user is already near it.
+  // When the user scrolls up to read history, streaming chars don't fight them.
+  const isNearBottomRef = useRef(true);
   useIOSKeyboardFit(chatContainerRef, () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }));
 
   // ── NEW: message interaction state ──
@@ -433,6 +435,8 @@ const Kira = () => {
   }, []);
 
   useEffect(() => {
+    // Always start a newly-opened chat scrolled to the bottom.
+    isNearBottomRef.current = true;
     const loadMessages = async () => {
       if (!activeChat) {
         setMessages([]);
@@ -471,17 +475,15 @@ const Kira = () => {
     return () => window.removeEventListener("kira:toggle-sidebar", handler);
   }, []);
 
-  // Scroll to bottom whenever messages update.
-  // We scroll the container directly (scrollTop = scrollHeight) rather than
-  // calling scrollIntoView() on the sentinel div because scrollIntoView relies
-  // on the browser correctly identifying the "nearest scrollable ancestor" —
-  // which fails on iOS/Android when the scroll container has min-height:100%
-  // or complex flex children that confuse the scroll-ancestor walk.
+  // Smart auto-scroll: pull to bottom only when the user is already near the
+  // bottom (~150 px threshold).  This means streaming chars don't yank the
+  // viewport while the user is scrolling up to read earlier messages.
+  // Force-scroll is triggered explicitly (handleSend / chat switch) by setting
+  // isNearBottomRef.current = true before the messages state update.
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
-    // Use requestAnimationFrame so the DOM has painted the new message before
-    // we measure scrollHeight (avoids scrolling to the pre-render position).
+    if (!isNearBottomRef.current) return;
     requestAnimationFrame(() => {
       el.scrollTop = el.scrollHeight;
     });
@@ -711,6 +713,8 @@ const Kira = () => {
     const updatedMessages = [...messages, newMessage];
     const attachContent = selectedFileContent;
     const attachType = selectedFileType;
+    // User just sent — always scroll to their message regardless of where they were.
+    isNearBottomRef.current = true;
     setMessages(updatedMessages);
     if (!overrideInput) setInput("");
     setSelectedFile(null);
@@ -1388,6 +1392,12 @@ const Kira = () => {
             <div
               ref={scrollContainerRef}
               className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y"
+              onScroll={() => {
+                const el = scrollContainerRef.current;
+                if (!el) return;
+                isNearBottomRef.current =
+                  el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+              }}
             >
               {messages.length === 0 ? (
                 /* Empty state: use min-h in dvh units — avoids % circular
