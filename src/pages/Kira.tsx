@@ -1602,9 +1602,9 @@ const Kira = () => {
                         )}
                       </AnimatePresence>
                       <div ref={messagesEndRef} />
-                    </div>{/* end space-y-6 */}
-                  </div>{/* end max-w-2xl */}
-                </div>{/* end px-4 py-6 */}
+                    </div>
+                  </div>
+                </div>
               )}
             </div>{/* end scroll container */}
           </div>
