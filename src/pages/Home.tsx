@@ -83,26 +83,45 @@ const Home = () => {
       <section className="relative py-24 md:py-36 px-4 md:px-6 overflow-hidden">
 
         {/* ── Blurred photo background ─────────────────────────────────
-            blur-2xl (40 px) — soft enough to be abstract, light enough
-            to actually be visible. scale-110 hides the blurred edges.
-            Two overlay layers:
-              1. Top/bottom linear vignette fades the image into the page
-              2. A fixed bg-background/55 at the centre so text is crisp
-                 (45 % of the blurred image still shows through)
-            bg-background is a CSS variable that adapts automatically to
-            light/dark mode — no separate dark: selector needed.
+            NOTE: bg-background/N Tailwind modifiers do NOT apply opacity
+            because tailwind.config defines background without <alpha-value>.
+            So all overlays use CSS `opacity` or inline `hsl(var(--background))`
+            directly — guaranteed to work in all modes.
+
+            Layer order (bottom → top):
+              1. Blurred image (background-image + CSS filter)
+              2. bg-background at 60% CSS opacity → 40% image shows through
+              3. Inline gradient vignette: solid background at edges → transparent
+                 at centre, so image fades cleanly into surrounding sections
         ── */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
+          className="pointer-events-none absolute inset-0 -z-10"
         >
-          <img
-            src="/workspace-bg.jpg"
-            alt=""
-            className="w-full h-full object-cover scale-110 blur-2xl opacity-95"
+          {/* Layer 1 — the blurred photo */}
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage:    "url(/workspace-bg.jpg)",
+              backgroundSize:     "cover",
+              backgroundPosition: "center",
+              filter:             "blur(28px)",
+              transform:          "scale(1.12)",
+            }}
           />
-          {/* Vignette: edges fade to background, centre stays semi-transparent */}
-          <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/50 to-background/90" />
+          {/* Layer 2 — semi-transparent background wash so text is always legible */}
+          <div
+            className="absolute inset-0 bg-background"
+            style={{ opacity: 0.6 }}
+          />
+          {/* Layer 3 — top/bottom vignette fades into surrounding sections */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 28%, transparent 72%, hsl(var(--background)) 100%)",
+            }}
+          />
         </div>
 
         {/* ── Content ─────────────────────────────────────────────────── */}
