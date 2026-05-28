@@ -81,16 +81,13 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
               </button>
               <span className="font-vollkorn text-xl font-bold text-foreground tracking-tight">Kira</span>
             </div>
-          ) : isStudio ? (
-            /* Studio name — mobile only, desktop has the sidebar */
-            <span className="flex md:hidden font-vollkorn text-xl font-semibold text-foreground tracking-tight">Crevia Studio</span>
           ) : null}
 
-          {/* Crevia logo — desktop always (except Kira), mobile when not on Kira or Studio */}
+          {/* Crevia logo — desktop always (except Kira), mobile always (except Kira) */}
           {!isKira && (
             <Link
               to="/dashboard"
-              className={`flex items-center hover:opacity-80 transition-opacity ${isStudio ? "hidden md:flex" : "flex"}`}
+              className="flex items-center hover:opacity-80 transition-opacity"
             >
               <img
                 src="/crevia-logo.png"
