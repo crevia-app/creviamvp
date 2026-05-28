@@ -585,18 +585,28 @@ async function toolGetSavedClients(_args: unknown, userId: string, supabase: any
 async function toolGetProfile(_args: unknown, userId: string, supabase: any): Promise<unknown> {
   const { data, error } = await supabase
     .from('profiles')
-    .select(`
-      display_name, handle, bio, user_type, is_verified, avatar_url, kira_memory,
-      creator_profiles (creator_types, goals, follower_count, engagement_rate),
-      brand_profiles (business_type, company_description, website_url)
-    `)
+    .select('display_name, handle, bio, user_type, is_verified, avatar_url, kira_memory')
     .eq('id', userId)
     .single();
-  if (error || !data) return { error: 'Profile not found' };
-  const memory = (data as any)?.kira_memory as Record<string, unknown> | null;
+  if (error) {
+    console.error(`[Kira tool:get_profile] fetch error uid=${userId} code=${error.code} msg=${error.message}`);
+    return { error: 'Profile not found' };
+  }
+  if (!data) {
+    console.warn(`[Kira tool:get_profile] fetch returned null uid=${userId}`);
+    return { error: 'Profile not found' };
+  }
+  const memory = (data as any)?.kira_memory as Record<string, unknown> | null ?? {};
   return {
-    ...data,
-    user_name: data.display_name || memory?.nickname || data.handle || null,
+    display_name: data.display_name,
+    handle: data.handle,
+    bio: data.bio,
+    user_type: data.user_type,
+    nickname: memory.nickname || null,
+    occupation: memory.occupation || null,
+    about: memory.more_about_you || null,
+    custom_instructions: memory.custom_instructions || null,
+    user_name: (memory.nickname as string) || data.display_name || data.handle || null,
   };
 }
 
