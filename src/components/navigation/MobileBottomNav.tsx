@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Sparkles, MoreHorizontal, Briefcase, Crown } from "lucide-react";
+import { Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -16,13 +16,101 @@ import { supabase } from "@/integrations/supabase/client";
 import { signOutWithCleanup } from "@/lib/device-session";
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useBottomNavVisibility } from "@/hooks/use-bottom-nav-visibility";
+
+// ── Custom Icons ──────────────────────────────────────────────────────────────
+
+/**
+ * 4-pointed diamond star — Kira
+ * Mirrors the Apple Intelligence / SF Symbols "sparkle" shape:
+ * outer points at cardinal directions (r=10), concave waist at 45° (r≈4√2).
+ */
+const KiraIcon = ({ active }: { active: boolean }) => (
+  <svg
+    viewBox="0 0 24 24"
+    width="22"
+    height="22"
+    aria-hidden="true"
+    fill={active ? "currentColor" : "none"}
+    stroke={active ? "none" : "currentColor"}
+    strokeWidth={1.65}
+    strokeLinejoin="round"
+  >
+    <path d="M12 2 L14.83 9.17 L22 12 L14.83 14.83 L12 22 L9.17 14.83 L2 12 L9.17 9.17 Z" />
+  </svg>
+);
+
+/**
+ * 2×2 rounded-square grid — Studio
+ * Each tile is 8×8 with 2.5 px corner radius; gap between tiles is 2 px.
+ */
+const StudioIcon = ({ active }: { active: boolean }) => (
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+    {([
+      [3, 3],
+      [13, 3],
+      [3, 13],
+      [13, 13],
+    ] as [number, number][]).map(([x, y], i) => (
+      <rect
+        key={i}
+        x={x} y={y} width={8} height={8} rx={2.5}
+        fill={active ? "currentColor" : "none"}
+        stroke={active ? "none" : "currentColor"}
+        strokeWidth={1.65}
+        strokeLinejoin="round"
+      />
+    ))}
+  </svg>
+);
+
+/**
+ * Person silhouette — More / Profile
+ * Circle head + rounded shoulder arc (open arc for inactive, closed body for active).
+ */
+const PersonIcon = ({ active }: { active: boolean }) => (
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+    {active ? (
+      <>
+        {/* Filled head */}
+        <circle cx="12" cy="7.5" r="3.75" fill="currentColor" />
+        {/* Filled body — closed quadratic path */}
+        <path
+          d="M4.5 20.5 C4.5 16.2 7.9 13.75 12 13.75 C16.1 13.75 19.5 16.2 19.5 20.5 Z"
+          fill="currentColor"
+        />
+      </>
+    ) : (
+      <>
+        {/* Outlined head */}
+        <circle
+          cx="12" cy="7.5" r="3.75"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.65}
+        />
+        {/* Open shoulder arc */}
+        <path
+          d="M4.5 20.5 C4.5 16.2 7.9 13.75 12 13.75 C16.1 13.75 19.5 16.2 19.5 20.5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.65}
+          strokeLinecap="round"
+        />
+      </>
+    )}
+  </svg>
+);
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 const MobileBottomNav = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { t } = useLanguage();
-  const [profile, setProfile] = useState<any>(null);
+  const location  = useLocation();
+  const navigate  = useNavigate();
+  const { t }     = useLanguage();
+  const [profile, setProfile]     = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const { visible }               = useBottomNavVisibility();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -39,9 +127,8 @@ const MobileBottomNav = () => {
     fetchProfile();
   }, []);
 
-  const isActive = (path: string) => {
-    return location.pathname === path || location.pathname.startsWith(path + "/");
-  };
+  const isActive = (path: string) =>
+    location.pathname === path || location.pathname.startsWith(path + "/");
 
   const handleSignOut = async () => {
     await signOutWithCleanup();
@@ -55,17 +142,37 @@ const MobileBottomNav = () => {
   };
 
   const navItems = [
-    { id: "kira",   label: "Kira",   icon: Sparkles,  path: "/kira",          prefetch: () => import("@/pages/Kira") },
-    { id: "studio", label: "Studio", icon: Briefcase, path: "/crevia-studio", prefetch: () => import("@/pages/CreviaStudio") },
+    {
+      id: "kira",
+      label: "Kira",
+      path: "/kira",
+      prefetch: () => import("@/pages/Kira"),
+      Icon: KiraIcon,
+    },
+    {
+      id: "studio",
+      label: "Studio",
+      path: "/crevia-studio",
+      prefetch: () => import("@/pages/CreviaStudio"),
+      Icon: StudioIcon,
+    },
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/85 backdrop-blur-2xl border-t border-white/[0.06] safe-area-pb">
+    /* ── Transform-only hide/show — NO conditional rendering ──────────────── */
+    <nav
+      className={cn(
+        "md:hidden fixed bottom-0 left-0 right-0 z-50",
+        "bg-background/85 backdrop-blur-2xl border-t border-white/[0.06] safe-area-pb",
+        "transition-transform duration-300 ease-in-out will-change-transform",
+        visible ? "translate-y-0" : "translate-y-[150%]"
+      )}
+    >
       <div className="grid grid-cols-3 h-[52px]">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.path);
 
+        {/* ── Primary nav items (Kira, Studio) ──────────────────────────── */}
+        {navItems.map((item) => {
+          const active = isActive(item.path);
           return (
             <Link
               key={item.id}
@@ -75,48 +182,56 @@ const MobileBottomNav = () => {
               className="flex items-center justify-center"
             >
               <div className={cn(
-                "flex items-center justify-center w-14 h-9 rounded-2xl transition-all duration-300 ease-out",
+                "flex items-center justify-center",
+                "w-14 h-10 rounded-2xl transition-all duration-300 ease-out",
                 active ? "bg-bronze/15 scale-100" : "bg-transparent scale-95 hover:scale-100"
               )}>
-                <Icon
-                  strokeWidth={active ? 2.2 : 1.7}
-                  className={cn(
-                    "h-[22px] w-[22px] transition-all duration-300 ease-out",
-                    active
-                      ? "text-bronze drop-shadow-[0_0_10px_rgba(207,129,80,0.45)]"
-                      : "text-foreground/40"
-                  )}
-                />
+                <span className={cn(
+                  "transition-all duration-300 ease-out",
+                  active
+                    ? "text-bronze drop-shadow-[0_0_10px_rgba(207,129,80,0.45)]"
+                    : "text-foreground/42"
+                )}>
+                  <item.Icon active={active} />
+                </span>
               </div>
             </Link>
           );
         })}
 
+        {/* ── More sheet (Profile / Settings) ───────────────────────────── */}
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetTrigger asChild>
-            <button className="flex items-center justify-center">
+            <button className="flex items-center justify-center" aria-label="More options">
               <div className={cn(
-                "flex items-center justify-center w-14 h-9 rounded-2xl transition-all duration-300 ease-out",
+                "flex items-center justify-center",
+                "w-14 h-10 rounded-2xl transition-all duration-300 ease-out",
                 sheetOpen ? "bg-bronze/15 scale-100" : "bg-transparent scale-95 hover:scale-100"
               )}>
-                <MoreHorizontal
-                  strokeWidth={sheetOpen ? 2.2 : 1.7}
-                  className={cn(
-                    "h-[22px] w-[22px] transition-all duration-300 ease-out",
-                    sheetOpen
-                      ? "text-bronze drop-shadow-[0_0_10px_rgba(207,129,80,0.45)]"
-                      : "text-foreground/40"
-                  )}
-                />
+                <span className={cn(
+                  "transition-all duration-300 ease-out",
+                  sheetOpen
+                    ? "text-bronze drop-shadow-[0_0_10px_rgba(207,129,80,0.45)]"
+                    : "text-foreground/42"
+                )}>
+                  <PersonIcon active={sheetOpen} />
+                </span>
               </div>
             </button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="bg-background border-border h-[85dvh] max-h-[85dvh] flex flex-col p-0">
+
+          <SheetContent
+            side="bottom"
+            className="bg-background border-border h-[85dvh] max-h-[85dvh] flex flex-col p-0"
+          >
             <SheetHeader className="px-4 pt-4 pb-2 flex-shrink-0">
-              <SheetTitle className="text-foreground font-vollkorn text-lg">{t("nav.moreOptions")}</SheetTitle>
+              <SheetTitle className="text-foreground font-vollkorn text-lg">
+                {t("nav.moreOptions")}
+              </SheetTitle>
             </SheetHeader>
 
             <ScrollArea className="flex-1 px-4">
+              {/* Profile card */}
               {profile && (
                 <div className="flex items-center gap-3 p-3 sm:p-4 rounded-2xl bg-muted/50 border border-border mb-4">
                   <Avatar className="h-11 w-11 sm:h-12 sm:w-12 ring-2 ring-bronze/30 flex-shrink-0">
@@ -135,8 +250,7 @@ const MobileBottomNav = () => {
               )}
 
               <div className="space-y-4 pb-8">
-
-                {/* Upgrade to Pro — always visible */}
+                {/* Upgrade CTA */}
                 <Link
                   to="/pricing"
                   onClick={() => setSheetOpen(false)}
@@ -146,11 +260,13 @@ const MobileBottomNav = () => {
                   <span className="font-poppins text-sm font-semibold">Upgrade to Pro</span>
                 </Link>
 
-
                 <Separator className="bg-border" />
 
+                {/* Account */}
                 <div className="space-y-1">
-                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-2 mb-1">{t("nav.account")}</p>
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-2 mb-1">
+                    {t("nav.account")}
+                  </p>
                   <Button
                     variant="ghost"
                     className="w-full justify-start text-foreground/90 hover:text-bronze hover:bg-muted/50 h-11 text-sm font-medium rounded-xl"
@@ -176,8 +292,11 @@ const MobileBottomNav = () => {
 
                 <Separator className="bg-border" />
 
+                {/* Support */}
                 <div className="space-y-1">
-                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-2 mb-1">{t("nav.support")}</p>
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-2 mb-1">
+                    {t("nav.support")}
+                  </p>
                   <Button
                     variant="ghost"
                     className="w-full justify-start text-foreground/90 hover:text-bronze hover:bg-muted/50 h-11 text-sm font-medium rounded-xl"
@@ -196,8 +315,11 @@ const MobileBottomNav = () => {
 
                 <Separator className="bg-border" />
 
+                {/* Legal */}
                 <div className="space-y-1">
-                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-2 mb-1">{t("nav.legal")}</p>
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-2 mb-1">
+                    {t("nav.legal")}
+                  </p>
                   <div className="flex gap-2">
                     <Button
                       variant="ghost"
@@ -218,8 +340,9 @@ const MobileBottomNav = () => {
 
                 <Separator className="bg-border" />
 
-                <Button 
-                  variant="ghost" 
+                {/* Sign out */}
+                <Button
+                  variant="ghost"
                   className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10 h-11 text-sm font-medium rounded-xl"
                   onClick={handleSignOut}
                 >
@@ -230,7 +353,6 @@ const MobileBottomNav = () => {
           </SheetContent>
         </Sheet>
       </div>
-
     </nav>
   );
 };

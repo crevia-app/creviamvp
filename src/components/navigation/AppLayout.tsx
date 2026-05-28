@@ -6,7 +6,6 @@ import MobileBottomNav from "./MobileBottomNav";
 import TopBar from "./TopBar";
 import ProfileDrawer from "./ProfileDrawer";
 import { BackButton } from "@/components/BackButton";
-import { useVisualViewport } from "@/hooks/use-visual-viewport";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -64,8 +63,6 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     }
   };
 
-  const { keyboardOpen } = useVisualViewport();
-
   const isCrevidAI  = location.pathname === "/crevia-ai";
   const isStudio    = location.pathname === "/crevia-studio";
   const isChatRoute = location.pathname === "/kira" || location.pathname.startsWith("/crevia-workspace/");
@@ -97,7 +94,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         </main>
       </div>
 
-      {!keyboardOpen && <MobileBottomNav />}
+      <MobileBottomNav />
 
       <ProfileDrawer
         isOpen={profileDrawerOpen}
