@@ -35,6 +35,7 @@ export const CreateProjectDialog = ({
   const { toast } = useToast();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [customInstructions, setCustomInstructions] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
   const handleCreate = async () => {
@@ -55,6 +56,7 @@ export const CreateProjectDialog = ({
           user_id: userId,
           name: name.trim(),
           description: description.trim() || null,
+          custom_instructions: customInstructions.trim() || null,
         })
         .select()
         .single();
@@ -64,6 +66,7 @@ export const CreateProjectDialog = ({
       onProjectCreated(data);
       setName("");
       setDescription("");
+      setCustomInstructions("");
       onOpenChange(false);
       toast({
         title: "Project created",
@@ -131,8 +134,24 @@ export const CreateProjectDialog = ({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Describe your project, goals, subject, etc..."
-                className="min-h-[100px] resize-none"
+                className="min-h-[80px] resize-none"
               />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                Custom instructions{" "}
+                <span className="text-muted-foreground font-normal">(optional)</span>
+              </label>
+              <Textarea
+                value={customInstructions}
+                onChange={(e) => setCustomInstructions(e.target.value)}
+                placeholder="How should Kira respond in this project? (e.g. tone, format, expertise level)"
+                className="min-h-[80px] resize-none"
+              />
+              <p className="text-xs text-muted-foreground">
+                Kira will follow these in every conversation within this project.
+              </p>
             </div>
           </div>
 

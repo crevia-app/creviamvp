@@ -756,11 +756,23 @@ const Kira = () => {
         if (intent) setPendingAction(intent);
       }
 
+      const nowIso = new Date().toISOString();
       await supabase
         .from('kira_conversations')
-        .update({ updated_at: new Date().toISOString() })
+        .update({ updated_at: nowIso })
         .eq('id', conversationId);
-        
+
+      // Keep project activity timestamp in sync so "Sort by Activity" is accurate
+      if (activeProjectId) {
+        await supabase
+          .from('kira_projects')
+          .update({ updated_at: nowIso })
+          .eq('id', activeProjectId);
+        setProjects(prev =>
+          prev.map(p => p.id === activeProjectId ? { ...p, updated_at: nowIso } : p),
+        );
+      }
+
     } catch (error) {
       toast({
         title: "Oops!",
@@ -1235,20 +1247,20 @@ const Kira = () => {
 
             <ScrollArea className="flex-1">
               <div className="space-y-1 pb-3 px-2">
-                {/* Pinned mobile */}
-                {filteredChats.filter(c => c.pinned).length > 0 && (
+                {/* Pinned general chats */}
+                {pinnedGeneralChats.length > 0 && (
                   <p className="text-xs font-medium text-muted-foreground px-2 py-1.5 flex items-center gap-1.5">
                     <Pin className="w-3 h-3" /> Pinned
                   </p>
                 )}
-                {filteredChats.filter(c => c.pinned).map((chat) => (
+                {pinnedGeneralChats.map((chat) => (
                   <MobileChatItem
                     key={chat.id}
                     chat={chat}
                     isActive={activeChat === chat.id}
                     isRenaming={renamingChatId === chat.id}
                     renameValue={renameValue}
-                    onSelect={() => { setActiveChat(chat.id); setActiveProjectId(chat.project_id || null); setMobileSidebarOpen(false); setViewMode("chat"); }}
+                    onSelect={() => { setActiveChat(chat.id); setActiveProjectId(null); setMobileSidebarOpen(false); setViewMode("chat"); }}
                     onRenameChange={setRenameValue}
                     onRenameSubmit={() => handleRenameChat(chat.id)}
                     onRenameCancel={() => { setRenamingChatId(null); setRenameValue(""); }}
@@ -1258,15 +1270,15 @@ const Kira = () => {
                   />
                 ))}
 
-                {/* Recent mobile */}
-                {filteredChats.filter(c => !c.pinned).map((chat) => (
+                {/* Unpinned general chats */}
+                {unpinnedGeneralChats.map((chat) => (
                   <MobileChatItem
                     key={chat.id}
                     chat={chat}
                     isActive={activeChat === chat.id}
                     isRenaming={renamingChatId === chat.id}
                     renameValue={renameValue}
-                    onSelect={() => { setActiveChat(chat.id); setActiveProjectId(chat.project_id || null); setMobileSidebarOpen(false); setViewMode("chat"); }}
+                    onSelect={() => { setActiveChat(chat.id); setActiveProjectId(null); setMobileSidebarOpen(false); setViewMode("chat"); }}
                     onRenameChange={setRenameValue}
                     onRenameSubmit={() => handleRenameChat(chat.id)}
                     onRenameCancel={() => { setRenamingChatId(null); setRenameValue(""); }}
@@ -1275,6 +1287,42 @@ const Kira = () => {
                     onLongPressEnd={handleLongPressEnd}
                   />
                 ))}
+
+                {/* Project groups — matches desktop sidebar grouping */}
+                {projects.map(project => {
+                  const projectConversations = projectChats.filter(c => c.project_id === project.id);
+                  if (projectConversations.length === 0) return null;
+                  return (
+                    <div key={project.id} className="mt-3">
+                      <button
+                        onClick={() => { setSelectedProject(project); setProjectDetailOpen(true); setMobileSidebarOpen(false); }}
+                        className="w-full flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors min-h-[36px]"
+                      >
+                        <FolderOpen className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate flex-1">{project.name}</span>
+                        <ChevronRight className="w-3 h-3 flex-shrink-0" />
+                      </button>
+                      <div className="space-y-1 mt-1">
+                        {projectConversations.slice(0, 3).map((chat) => (
+                          <MobileChatItem
+                            key={chat.id}
+                            chat={chat}
+                            isActive={activeChat === chat.id}
+                            isRenaming={renamingChatId === chat.id}
+                            renameValue={renameValue}
+                            onSelect={() => { setActiveChat(chat.id); setActiveProjectId(project.id); setMobileSidebarOpen(false); setViewMode("chat"); }}
+                            onRenameChange={setRenameValue}
+                            onRenameSubmit={() => handleRenameChat(chat.id)}
+                            onRenameCancel={() => { setRenamingChatId(null); setRenameValue(""); }}
+                            onLongPress={() => setMobileLongPressChat(chat)}
+                            onLongPressStart={() => handleLongPressStart(chat)}
+                            onLongPressEnd={handleLongPressEnd}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </ScrollArea>
 
