@@ -782,6 +782,8 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Missing Authorization' }), { status: 401, headers: cors });
     }
 
+    // Admin client — service role, used for auth validation, rate-limiting RPCs,
+    // and any operation that needs to bypass RLS.
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -789,6 +791,19 @@ serve(async (req) => {
 
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    // User-scoped client — anon key + user JWT so PostgREST runs as the
+    // authenticated user. This is the reliable way to query user-owned rows
+    // (profiles, kira_memories, etc.) because auth.uid() resolves correctly
+    // and the service role client can sometimes skip the auth context setup.
+    const userSupabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      {
+        global: { headers: { Authorization: `Bearer ${token}` } },
+        auth: { persistSession: false },
+      },
+    );
     if (authError || !user) {
       supabase.rpc("log_security_event", { p_event_type: "auth_failure", p_endpoint: "kira-gpt", p_detail: "Token validation failed" }).catch(() => {});
       console.warn("[security] auth_failure endpoint=kira-gpt");
@@ -857,19 +872,19 @@ serve(async (req) => {
       prefetchedSummary,
     ] = await Promise.all([
       supabase.rpc('consume_kira_action', { p_user_id: user.id }),
-      // Simple fetch — no joins. creator_profiles/brand_profiles joins were
-      // silently failing for some accounts and nulling the entire row.
-      // All personalisation context comes from kira_memory (Kira Settings).
-      supabase
+      // Use the user-scoped client so PostgREST runs as the authenticated user.
+      // The admin/service-role client was returning null for this query despite
+      // matching UUIDs — the user-scoped client resolves auth.uid() correctly.
+      userSupabase
         .from('profiles')
         .select('display_name, handle, user_type, bio, kira_memory')
         .eq('id', user.id)
         .single(),
       // Fetch memories optimistically — most users have referenceMemories=true.
       // Result is discarded below if the user has turned the setting off.
-      fetchSimilarMemories(sanitizedPrompt, user.id, supabase),
+      fetchSimilarMemories(sanitizedPrompt, user.id, userSupabase),
       conversationId
-        ? fetchConversationSummary(conversationId, supabase)
+        ? fetchConversationSummary(conversationId, userSupabase)
         : Promise.resolve(''),
     ]);
 
@@ -981,7 +996,7 @@ serve(async (req) => {
     const needsLiveData = LIVE_DATA_PATTERN.test(sanitizedPrompt);
 
     const agentMessages = needsLiveData
-      ? await runAgentLoop(initialMessages, user.id, supabase)
+      ? await runAgentLoop(initialMessages, user.id, userSupabase)
       : initialMessages;
 
     // Stream final answer — no tools passed here, this is pure text output
@@ -1051,7 +1066,7 @@ serve(async (req) => {
 
       if (referenceMemories && fullResponse) {
         bgTasks.push(
-          extractAndStoreMemories(sanitizedPrompt, fullResponse, user.id, supabase)
+          extractAndStoreMemories(sanitizedPrompt, fullResponse, user.id, userSupabase)
             .catch(e => console.warn('[Kira] Memory extraction failed:', e)),
         );
       }
@@ -1066,7 +1081,7 @@ serve(async (req) => {
               { role: 'user', content: sanitizedPrompt },
               { role: 'assistant', content: fullResponse },
             ],
-            supabase,
+            userSupabase,
           ).catch(e => console.warn('[Kira] Summary update failed:', e)),
         );
       }
