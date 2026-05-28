@@ -252,29 +252,6 @@ const StudioWorkspacesHub = ({ initialRoomId }: { initialRoomId?: string } = {})
             </motion.div>
           )}
 
-          {isDm && (
-            <motion.div
-              key="dm-bar"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.16 }}
-              className="flex-shrink-0 border-b border-gray-100 dark:border-border/50 px-3 py-1.5 flex items-center gap-2 overflow-hidden"
-            >
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => { setProposeName(""); setProposeDialogOpen(true); }}
-                className="h-7 text-xs gap-1.5 border-bronze/30 text-bronze hover:bg-bronze/8 hover:border-bronze/50 font-medium"
-              >
-                <Sparkles className="w-3 h-3" />
-                Propose Workspace
-              </Button>
-              <span className="text-[10px] text-muted-foreground/50">
-                Invite this person to a deal room
-              </span>
-            </motion.div>
-          )}
         </AnimatePresence>
 
         {/* Main content */}
