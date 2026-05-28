@@ -1390,14 +1390,19 @@ const Kira = () => {
             </button>
           )}
 
-          {/* Messages Area */}
+          {/* Messages Area
+              Native overflow-y-auto is used here instead of Radix <ScrollArea>
+              because Radix injects a display:table wrapper that confuses iOS Safari
+              and Android Chrome touch-scroll detection. A plain div with
+              touch-pan-y + overscroll-y-contain is the correct cross-platform
+              primitive for a chat message list. */}
           <div className="flex-1 overflow-hidden flex flex-col min-h-0">
-          <UsageLimitBanner
-            current={kiraActionsToday}
-            limit={kiraActionsLimit}
-            feature="Kira AI actions"
-          />
-            <ScrollArea className="flex-1 min-h-0">
+            <UsageLimitBanner
+              current={kiraActionsToday}
+              limit={kiraActionsLimit}
+              feature="Kira AI actions"
+            />
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y">
               <div className="min-h-full flex flex-col px-4 py-6">
                 <div className="max-w-2xl mx-auto w-full flex-1 flex flex-col">
                   {messages.length === 0 ? (
@@ -1570,7 +1575,7 @@ const Kira = () => {
                   )}
                 </div>
               </div>
-            </ScrollArea>
+            </div>{/* end messages scroll container */}
           </div>
 
           {/* Input Area */}
