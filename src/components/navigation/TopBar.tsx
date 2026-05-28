@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Bell, Monitor, Sun, Moon, PanelLeft } from "lucide-react";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { Bell, Monitor, Sun, Moon, PanelLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/use-notifications";
 import NotificationSheet from "@/components/notifications/NotificationSheet";
@@ -19,6 +19,13 @@ const themeOptions = [
   { value: "system", label: "System", icon: Monitor },
 ];
 
+const STUDIO_TAB_META: Record<string, { shortLabel: string; color: string }> = {
+  link:     { shortLabel: "Link",      color: "#CF8150" },
+  chat:     { shortLabel: "Workspace", color: "#7C6AF7" },
+  invoices: { shortLabel: "Invoice",   color: "#2BA577" },
+  canvas:   { shortLabel: "Canvas",    color: "#E8834A" },
+};
+
 const KiraMenuIcon = () => (
   <div className="flex flex-col gap-[5px]">
     <span className="block h-[1.5px] w-[18px] rounded-full bg-current" />
@@ -30,8 +37,11 @@ const KiraMenuIcon = () => (
 
 const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const isKira   = location.pathname === "/kira";
   const isStudio = location.pathname.startsWith("/crevia-studio");
+  const studioTab     = isStudio ? (searchParams.get("tab") || "link") : "link";
+  const studioTabMeta = STUDIO_TAB_META[studioTab] ?? STUDIO_TAB_META.link;
   const [sheetOpen, setSheetOpen] = useState(false);
   const { notifications, unreadCount, loading, markRead, markAllRead, clearAll } =
     useNotifications(profile?.id, !!profile?.do_not_disturb);
@@ -69,7 +79,7 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
         {/* Left side */}
         <div className="flex items-center gap-2">
           {isKira ? (
-            /* Kira: sidebar toggle + wordmark — toggle fires into Kira page via event */
+            /* Kira: sidebar toggle + wordmark */
             <div className="flex items-center gap-2">
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent("kira:toggle-sidebar"))}
@@ -81,10 +91,32 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
               </button>
               <span className="font-vollkorn text-xl font-bold text-foreground tracking-tight">Kira</span>
             </div>
-          ) : null}
-
-          {/* Crevia logo — desktop always (except Kira), mobile always (except Kira) */}
-          {!isKira && (
+          ) : isStudio ? (
+            /* Studio: sidebar toggle + breadcrumb — fires into CreviaStudio via event */
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent("studio:toggle-sidebar"))}
+                className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted/70 transition-colors flex-shrink-0"
+                aria-label="Open Studio navigation"
+                style={{ touchAction: "manipulation" }}
+              >
+                <PanelLeft className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="font-vollkorn text-base font-semibold text-foreground">
+                  Crevia Studio
+                </span>
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />
+                <span
+                  className="text-sm font-semibold font-poppins"
+                  style={{ color: studioTabMeta.color }}
+                >
+                  {studioTabMeta.shortLabel}
+                </span>
+              </div>
+            </div>
+          ) : (
+            /* All other pages: Crevia logo */
             <Link
               to="/dashboard"
               className="flex items-center hover:opacity-80 transition-opacity"

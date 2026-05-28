@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Link2, MessageSquare, Receipt, FileSignature,
   User, MousePointerClick, Palette, BarChart2,
-  PanelLeft, X, ChevronRight,
+  X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -79,6 +79,13 @@ const CreviaStudio = () => {
 
   const activeTabDef = STUDIO_TABS.find(t => t.id === activeTab) ?? STUDIO_TABS[0];
 
+  // Listen for TopBar's sidebar-toggle event (same pattern as Kira)
+  useEffect(() => {
+    const handler = () => setSidebarOpen(true);
+    window.addEventListener("studio:toggle-sidebar", handler);
+    return () => window.removeEventListener("studio:toggle-sidebar", handler);
+  }, []);
+
   const handleTabChange = (tabId: string) => {
     setSearchParams({ tab: tabId });
     setSidebarOpen(false);
@@ -92,45 +99,19 @@ const CreviaStudio = () => {
     <div className="h-full flex flex-col bg-background">
 
       {/* ═══════════════════════════════════════════════════════════════════
-          HEADER
-          All screens: [≡] Crevia Studio › Feature  (top row)
-          Desktop:     horizontal tab bar below
-          Mobile:      Link sub-sections row (only on Link tab)
+          SUB-HEADER
+          Desktop: horizontal tab bar
+          Mobile:  Link sub-sections row (only on Link tab)
+          Breadcrumb lives in TopBar — no duplicate row here.
       ═══════════════════════════════════════════════════════════════════ */}
-      <div className="border-b border-border bg-background z-30 flex-shrink-0">
+      <div className={cn(
+        "bg-background z-30 flex-shrink-0 border-b border-border",
+        // On mobile, only render when there's content (link sub-tabs)
+        activeTab !== "link" && "hidden md:block"
+      )}>
         <div className="mx-auto w-full max-w-7xl">
 
-          {/* ── Universal top row — ALL screen sizes ─────────────────────── */}
-          <div className="flex items-center gap-3 px-4 py-2.5">
-            {/* Sidebar toggle */}
-            <button
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open navigation"
-              className={cn(
-                "flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0",
-                "bg-muted/60 hover:bg-muted active:scale-95 transition-all duration-150",
-                "border border-border/60"
-              )}
-            >
-              <PanelLeft className="w-4 h-4 text-foreground/70" />
-            </button>
-
-            {/* Breadcrumb: Crevia Studio › Active feature */}
-            <div className="flex items-center gap-1.5 min-w-0 flex-1">
-              <span className="font-vollkorn text-base font-semibold text-foreground truncate">
-                Crevia Studio
-              </span>
-              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />
-              <span
-                className="text-sm font-semibold font-poppins truncate"
-                style={{ color: activeTabDef.color }}
-              >
-                {activeTabDef.shortLabel}
-              </span>
-            </div>
-          </div>
-
-          {/* ── Desktop tab bar (no title — breadcrumb replaces it) ──────── */}
+          {/* ── Desktop tab bar ──────────────────────────────────────────── */}
           <div className="hidden md:block px-4 pb-3">
             <div className="flex items-stretch gap-1 -mb-px">
               {STUDIO_TABS.map((tab) => {
