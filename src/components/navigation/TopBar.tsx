@@ -34,6 +34,29 @@ const KiraMenuIcon = () => (
   </div>
 );
 
+/**
+ * Premium Studio hamburger icon
+ * — Three asymmetric lines (full / short / full)
+ * — Bottom line is always bronze: a silent brand signature
+ * — Top two lines brighten + extend 2 px on hover
+ */
+const StudioMenuIcon = () => (
+  <div className="flex flex-col gap-[5.5px]">
+    <span
+      className="block h-[1.5px] rounded-full transition-all duration-300 ease-out group-hover:opacity-100"
+      style={{ width: 18, background: "currentColor", opacity: 0.72 }}
+    />
+    <span
+      className="block h-[1.5px] rounded-full transition-all duration-300 ease-out"
+      style={{ width: 11, background: "currentColor", opacity: 0.38 }}
+    />
+    <span
+      className="block h-[1.5px] rounded-full transition-all duration-300 ease-out"
+      style={{ width: 18, background: "#CF8150" }}
+    />
+  </div>
+);
+
 
 const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
   const location = useLocation();
@@ -92,15 +115,26 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
               <span className="font-vollkorn text-xl font-bold text-foreground tracking-tight">Kira</span>
             </div>
           ) : isStudio ? (
-            /* Studio: sidebar toggle + breadcrumb — fires into CreviaStudio via event */
-            <div className="flex items-center gap-2">
+            /* Studio: premium sidebar toggle + breadcrumb */
+            <div className="flex items-center gap-2.5">
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent("studio:toggle-sidebar"))}
-                className="flex items-center justify-center w-9 h-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted/70 transition-colors flex-shrink-0"
                 aria-label="Open Studio navigation"
                 style={{ touchAction: "manipulation" }}
+                className={[
+                  "group relative flex items-center justify-center",
+                  "w-10 h-10 rounded-xl flex-shrink-0",
+                  "bg-card/90 backdrop-blur-sm",
+                  "border border-border/60",
+                  "shadow-[0_1px_3px_rgba(0,0,0,0.07)]",
+                  "hover:border-[rgba(207,129,80,0.35)]",
+                  "hover:shadow-[0_0_0_1px_rgba(207,129,80,0.12),0_4px_14px_rgba(207,129,80,0.08),0_1px_4px_rgba(0,0,0,0.07)]",
+                  "active:scale-[0.91]",
+                  "transition-all duration-200 ease-out",
+                  "text-foreground/70 hover:text-foreground",
+                ].join(" ")}
               >
-                <PanelLeft className="w-5 h-5" />
+                <StudioMenuIcon />
               </button>
               <div className="flex items-center gap-1.5 min-w-0">
                 <span className="font-vollkorn text-base font-semibold text-foreground">
