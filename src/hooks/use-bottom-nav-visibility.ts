@@ -1,100 +1,100 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * useBottomNavVisibility
  *
- * Tracks three independent signals and merges them into a single `visible` boolean:
+ * Returns a single `visible` boolean that collapses four signals:
  *
- *  1. Touch direction — touchstart/touchmove events detect scroll direction for
- *     ANY scrollable element (window, Radix ScrollArea, custom divs).
- *     Touch events bubble normally — no capture-phase tricks required, no
- *     browser-compat surprises with non-bubbling scroll events.
- *     Finger moves UP   (content scrolls down) → hide.
- *     Finger moves DOWN (content scrolls up)   → show.
- *     6 px dead-zone prevents jitter from micro-swipes.
+ *  1. Touch direction (hysteresis) — uses touchstart/touchmove on the document.
+ *     Touch events bubble reliably on iOS and Android; scroll events on inner
+ *     containers (Radix ScrollArea etc.) do NOT reliably bubble, so we own
+ *     the gesture here.
  *
- *  2. Window scroll fallback — catches mouse-wheel, trackpad, and Chrome DevTools
- *     mobile simulation where touchmove isn't fired. Scrolling down → hide;
- *     scrolling up / at the very top → show.
+ *     Hysteresis thresholds prevent micro-bounce flicker:
+ *       HIDE  — user must scroll DOWN  ≥ 30 px continuously in one gesture
+ *       SHOW  — any upward reversal    ≥  8 px (feels instant, like Instagram)
  *
- *  3. Input focus — any <input> or <textarea> gaining focus immediately hides the
- *     bar so it never sits on top of the virtual keyboard. Blur restores it
- *     (150 ms defer so focus-transfers between fields don't cause a flash).
+ *     The "cumulative since last direction change" counter resets whenever the
+ *     finger changes direction, so a single gesture can both hide and show.
  *
- *  4. VisualViewport resize — catches the virtual keyboard on iOS/Android via the
- *     VisualViewport API. Height shrink > 150 px = keyboard open = hide.
+ *  2. Window scroll fallback — for mouse-wheel / Chrome DevTools simulation.
+ *     Conservative 10 px dead-zone; only updates when window itself scrolls
+ *     (inner-element scrolls are handled by touchmove above).
  *
- * Desktop safeguard: the effect bails out early on viewports ≥ 768 px, leaving
- * desktop sidebars and navigation completely unaffected.
+ *  3. Input focus — INPUT / TEXTAREA gaining focus → instant hide.
+ *     150 ms debounced blur → show (avoids flash when tabbing between fields).
  *
- * Animation contract: this hook only returns `visible`. The caller applies
- * Tailwind `translate-y-0` / `translate-y-[150%]` — NO conditional rendering.
+ *  4. VisualViewport resize — keyboard open (shrink > 150 px) → hide.
+ *
+ * Desktop safeguard: bails immediately on viewports ≥ 768 px.
  */
 export function useBottomNavVisibility() {
   const [visible, setVisible] = useState(true);
 
-  // Touch tracking — reset to null on touchend so a new gesture starts fresh
-  const lastTouchY   = useRef<number | null>(null);
-  // Window scroll tracking
-  const lastScrollY  = useRef(0);
-
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (window.innerWidth >= 768) return; // desktop: nav is always visible
 
-    // ── Desktop safeguard ────────────────────────────────────────────────────
-    if (window.innerWidth >= 768) return;
-
+    // Inline show/hide helpers — React bails out automatically if state unchanged
     const show = () => setVisible(true);
     const hide = () => setVisible(false);
 
-    // ── 1. Touch direction — covers ALL scrollable elements ──────────────────
-    //
-    // Why touchmove instead of scroll:
-    //   The DOM `scroll` event does NOT bubble. Listening with `capture:true` on
-    //   `document` is supposed to catch it on the way DOWN the tree, but iOS
-    //   Safari and some Android WebViews are inconsistent, particularly for
-    //   scroll containers inside Radix UI / shadcn ScrollArea components.
-    //   `touchmove` DOES bubble reliably across all mobile browsers and fires
-    //   for any element the finger is touching — no capture tricks needed.
-    //
+    // ── 1. Touch direction with hysteresis ───────────────────────────────────
+    let lastY      = 0;
+    let direction: "up" | "down" | null = null;
+    let accumulated = 0;
+
     const onTouchStart = (e: TouchEvent) => {
-      lastTouchY.current = e.touches[0].clientY;
+      lastY       = e.touches[0].clientY;
+      direction   = null;
+      accumulated = 0;
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      if (lastTouchY.current === null) return;
+      const currentY  = e.touches[0].clientY;
+      const delta     = lastY - currentY; // + = finger up = content scrolling DOWN
+      lastY           = currentY;
 
-      const currentY = e.touches[0].clientY;
-      // Positive delta → finger moved UP → content scrolling DOWN → hide
-      // Negative delta → finger moved DOWN → content scrolling UP  → show
-      const delta = lastTouchY.current - currentY;
+      if (Math.abs(delta) < 0.5) return; // ignore sub-pixel noise
 
-      if (Math.abs(delta) > 6) {
-        delta > 0 ? hide() : show();
-        // Update baseline so continuous scroll keeps triggering correctly
-        lastTouchY.current = currentY;
+      const newDir = delta > 0 ? "down" : "up";
+
+      if (newDir !== direction) {
+        // Direction change — reset accumulator so each reversal is judged fresh
+        direction   = newDir;
+        accumulated = 0;
+      }
+
+      accumulated += Math.abs(delta);
+
+      if (newDir === "down" && accumulated >= 30) {
+        hide();
+        accumulated = 0; // reset so next 30 px triggers again, but no rapid-fire
+      } else if (newDir === "up" && accumulated >= 8) {
+        show();
+        accumulated = 0; // reset so continued upward scroll keeps nav visible
       }
     };
 
     const onTouchEnd = () => {
-      lastTouchY.current = null;
+      direction   = null;
+      accumulated = 0;
     };
 
-    // ── 2. Window scroll — fallback for mouse / DevTools simulation ──────────
-    lastScrollY.current = window.scrollY;
+    // ── 2. Window scroll (mouse / DevTools fallback) ─────────────────────────
+    // Only handles window-level scroll; touch-driven inner-element scrolls
+    // are covered by touchmove above.
+    let lastScrollY = window.scrollY;
     const onScroll = () => {
       const currentY = window.scrollY;
-      const delta    = currentY - lastScrollY.current;
-
-      // 4 px dead-zone prevents micro-bounce jitter
-      if (Math.abs(delta) > 4) {
-        // Always show when snapped to the very top
+      const delta    = currentY - lastScrollY;
+      if (Math.abs(delta) > 10) {
         setVisible(delta < 0 || currentY <= 0);
-        lastScrollY.current = currentY;
+        lastScrollY = currentY;
       }
     };
 
-    // ── 3. Focus: input / textarea → instant hide ───────────────────────────
+    // ── 3. Input focus → instant hide ───────────────────────────────────────
     const onFocusIn = (e: FocusEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (
@@ -107,7 +107,6 @@ export function useBottomNavVisibility() {
     };
 
     const onFocusOut = () => {
-      // 150 ms defer: lets focus settle before checking if another field got it
       setTimeout(() => {
         const active = document.activeElement as HTMLElement | null;
         if (
@@ -120,17 +119,17 @@ export function useBottomNavVisibility() {
       }, 150);
     };
 
-    // ── 4. VisualViewport: virtual keyboard on iOS / Android ─────────────────
+    // ── 4. VisualViewport — virtual keyboard on iOS / Android ────────────────
     const vv = window.visualViewport;
     const onViewportResize = () => {
       if (!vv) return;
       setVisible(!(window.innerHeight - vv.height > 150));
     };
 
-    document.addEventListener("touchstart",  onTouchStart,      { passive: true });
-    document.addEventListener("touchmove",   onTouchMove,       { passive: true });
-    document.addEventListener("touchend",    onTouchEnd,        { passive: true });
-    window.addEventListener(  "scroll",      onScroll,          { passive: true });
+    document.addEventListener("touchstart",  onTouchStart,     { passive: true });
+    document.addEventListener("touchmove",   onTouchMove,      { passive: true });
+    document.addEventListener("touchend",    onTouchEnd,       { passive: true });
+    window.addEventListener(  "scroll",      onScroll,         { passive: true });
     document.addEventListener("focusin",     onFocusIn,  true);
     document.addEventListener("focusout",    onFocusOut, true);
     vv?.addEventListener(     "resize",      onViewportResize);

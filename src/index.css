@@ -12,6 +12,13 @@
   input, textarea, select {
     font-size: 16px !important;
   }
+
+  /* Initialise --nav-bottom-offset to the full nav height on mobile so the
+     page layout is correct from the very first paint — no flash or jump.
+     MobileBottomNav overwrites this via useLayoutEffect when visibility changes. */
+  :root {
+    --nav-bottom-offset: calc(52px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
@@ -68,8 +75,10 @@ All colors MUST be HSL.
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* Mobile bottom nav — offset for <main> padding.
-       MobileBottomNav writes this on mobile; 0px keeps desktop unaffected. */
+    /* Mobile bottom nav — offset for <main> padding and Kira input area.
+       Desktop default is 0px (no bottom nav).
+       The @media block below sets the correct mobile initial value so there
+       is NO layout flash when the page first loads on a phone. */
     --nav-bottom-offset: 0px;
   }
 

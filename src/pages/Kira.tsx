@@ -1578,8 +1578,24 @@ const Kira = () => {
             </div>{/* end messages scroll container */}
           </div>
 
-          {/* Input Area */}
-          <div className={`flex-shrink-0 pt-3 px-4 bg-background md:p-6 ${keyboardOpen ? "pb-3" : "pb-[calc(52px+0.75rem+env(safe-area-inset-bottom,0px))]"}`}>
+          {/* Input Area
+              Bottom padding uses --nav-bottom-offset so it contracts in sync
+              with the bottom nav sliding away. On desktop the variable is 0px
+              (set in :root) so md:p-6 wins via the inline-style guard below. */}
+          <div
+            className="flex-shrink-0 pt-3 px-4 bg-background transition-[padding-bottom] duration-300 ease-in-out md:p-6"
+            style={
+              // Only apply the dynamic padding on mobile — on desktop let md:p-6
+              // handle it so the inline style doesn't override the 24 px desktop value.
+              window.innerWidth < 768
+                ? {
+                    paddingBottom: keyboardOpen
+                      ? "0.75rem"   // 12 px — keyboard is up, no nav gap needed
+                      : "calc(var(--nav-bottom-offset) + 0.75rem)", // nav height + gap
+                  }
+                : undefined
+            }
+          >
             <div className="max-w-2xl mx-auto">
               {/* File attachment preview */}
               {selectedFile && (

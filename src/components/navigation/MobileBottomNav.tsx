@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { signOutWithCleanup } from "@/lib/device-session";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useBottomNavVisibility } from "@/hooks/use-bottom-nav-visibility";
 
@@ -128,10 +128,11 @@ const MobileBottomNav = () => {
   }, []);
 
   // ── Sync <main> bottom padding via CSS variable ──────────────────────────
-  // Writing to a CSS variable is decoupled from AppLayout and lets the main
-  // content area animate its padding in exact sync with the nav slide.
-  // Guard: desktop (≥ 768 px) never has a bottom nav, so variable stays 0.
-  useEffect(() => {
+  // useLayoutEffect fires synchronously BEFORE the browser paints, in the same
+  // frame as the translate-y transform class change. This eliminates the
+  // one-frame delay that useEffect would cause (where the nav starts moving
+  // but the page padding hasn't contracted yet), preventing any visual stutter.
+  useLayoutEffect(() => {
     if (typeof window === "undefined" || window.innerWidth >= 768) return;
     document.documentElement.style.setProperty(
       "--nav-bottom-offset",
