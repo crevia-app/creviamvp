@@ -336,42 +336,7 @@ const Kira = () => {
     window.scrollTo(0, 0);
   }, []);
 
-  const creatorGreetings = [
-    "Hey there! Let's build something great today",
-    "The world needs your story — let's tell it better",
-    "Ready to turn creative vision into action?",
-    "Your next big collaboration starts here",
-    "Let's craft content that truly resonates"
-  ];
-
-  const brandGreetings = [
-    "Hey there! Let's find the perfect storytellers for your brand",
-    "Ready to connect with creators who share your vision?",
-    "Your next winning campaign starts here",
-    "Let's build partnerships that drive real impact",
-    "Time to create something your audience will love"
-  ];
-
-  const greetings = userType === 'brand' ? brandGreetings : creatorGreetings;
-
-  const getGreeting = () => {
-    const lastChange = localStorage.getItem('kira-greeting-date');
-    const storedIndex = localStorage.getItem('kira-greeting-index');
-    const today = new Date().toDateString();
-    
-    if (lastChange !== today) {
-      const currentIndex = storedIndex ? parseInt(storedIndex) : 0;
-      const newIndex = (currentIndex + 1) % greetings.length;
-      localStorage.setItem('kira-greeting-date', today);
-      localStorage.setItem('kira-greeting-index', newIndex.toString());
-      return greetings[newIndex];
-    }
-    
-    const index = storedIndex ? parseInt(storedIndex) : 0;
-    return greetings[index];
-  };
-
-  const [currentGreeting, setCurrentGreeting] = useState(getGreeting());
+  const [userName, setUserName] = useState<string | null>(null);
   const [chatHistories, setChatHistories] = useState<ChatHistory[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeChat, setActiveChat] = useState<string | null>(null);
@@ -426,12 +391,13 @@ const Kira = () => {
         
         const { data: profile } = await supabase
           .from('profiles')
-          .select('user_type')
+          .select('user_type, display_name, handle')
           .eq('id', user.id)
           .single();
-        
+
         if (profile) {
           setUserType(profile.user_type);
+          setUserName(profile.display_name || profile.handle || null);
         }
 
         const { data: conversations, error } = await supabase
@@ -491,13 +457,6 @@ const Kira = () => {
 
     loadMessages();
   }, [activeChat]);
-
-  useEffect(() => {
-    if (userType) {
-      const greeting = getGreeting();
-      setCurrentGreeting(greeting);
-    }
-  }, [userType]);
 
   // TopBar hamburger fires this — opens mobile sheet or toggles desktop collapse
   useEffect(() => {
@@ -1435,17 +1394,28 @@ const Kira = () => {
                    dependency inside overflow:auto on iOS/Android. */
                 <div className="min-h-[55dvh] flex flex-col items-center justify-center px-4 py-12 text-center">
                   <div className="max-w-md w-full">
-                    <h1 className="font-vollkorn text-2xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-bronze to-bronze-dark bg-clip-text text-transparent">
-                      {activeProject ? `Working on ${activeProject.name}` : currentGreeting}
-                    </h1>
-                    <p className="text-muted-foreground text-base mb-12">
-                      {activeProject
-                        ? activeProject.description || "Start chatting with project context"
-                        : userType === 'brand'
-                          ? "I can help with creator discovery, campaign briefs, and strategy"
-                          : "I can help with content ideas, brand pitches, and growth strategies"
-                      }
-                    </p>
+                    {activeProject ? (
+                      <>
+                        <h1 className="font-vollkorn text-2xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-bronze to-bronze-dark bg-clip-text text-transparent">
+                          Working on {activeProject.name}
+                        </h1>
+                        <p className="text-muted-foreground text-base mb-12">
+                          {activeProject.description || "Start chatting with project context"}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-5xl mb-5 select-none">👋</div>
+                        <h1 className="font-vollkorn text-3xl md:text-4xl font-bold mb-3 text-foreground">
+                          Hello{userName ? `, ${userName}` : ""}!
+                        </h1>
+                        <p className="text-muted-foreground text-base mb-12">
+                          {userType === 'brand'
+                            ? "I can help with creator discovery, campaign briefs, and strategy"
+                            : "I can help with content ideas, brand pitches, and growth strategies"}
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -1747,9 +1717,6 @@ const Kira = () => {
                 </Button>
               </div>
 
-              <p className="text-xs text-muted-foreground text-center mt-3">
-                Kira may occasionally make mistakes. Please verify important information.
-              </p>
             </div>
           </div>
         </div>
