@@ -1375,23 +1375,22 @@ const Kira = () => {
               and Android Chrome touch-scroll detection. A plain div with
               touch-pan-y + overscroll-y-contain is the correct cross-platform
               primitive for a chat message list. */}
-          <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+          {/* Messages wrapper — flex col so the banner stays pinned at top
+              and the scroll region fills all remaining height.
+              The inner "relative flex-1 min-h-0" div gives the absolutely-
+              positioned scroll child a definite pixel height, which is the only
+              100%-reliable cross-browser way to get overflow-y: auto to scroll
+              on Android Chrome and iOS Safari inside a deep flex chain. */}
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
             <UsageLimitBanner
               current={kiraActionsToday}
               limit={kiraActionsLimit}
               feature="Kira AI actions"
             />
-            {/*
-              SCROLL CONTAINER — ref + direct scrollTop control.
-              KEY iOS/Android fix: NO min-h-full or height:100% children.
-              On iOS Safari, min-height:100% inside overflow:auto is calculated
-              against scrollHeight (not clientHeight), creating a circular
-              dependency where scrollHeight always === clientHeight → no scroll.
-              Fix: flat structure with dvh-based empty-state centering.
-            */}
+            <div className="relative flex-1 min-h-0">
             <div
               ref={scrollContainerRef}
-              className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y"
+              className="absolute inset-0 overflow-y-auto overscroll-y-contain touch-pan-y"
               onScroll={() => {
                 const el = scrollContainerRef.current;
                 if (!el) return;
@@ -1581,7 +1580,8 @@ const Kira = () => {
                 </div>
               )}
             </div>{/* end scroll container */}
-          </div>
+            </div>{/* end positioned wrapper */}
+          </div>{/* end messages wrapper */}
 
           {/* Input Area
               Bottom padding uses --nav-bottom-offset so it contracts in sync
