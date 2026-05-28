@@ -1,100 +1,119 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
- * useBottomNavVisibility
+ * useBottomNavVisibility — Smart Auto-Hide for the mobile bottom nav.
  *
- * Returns a single `visible` boolean that collapses four signals:
+ * Uses THREE independent scroll signals merged into a single `visible` boolean:
  *
- *  1. Touch direction (hysteresis) — uses touchstart/touchmove on the document.
- *     Touch events bubble reliably on iOS and Android; scroll events on inner
- *     containers (Radix ScrollArea etc.) do NOT reliably bubble, so we own
- *     the gesture here.
+ *  1. touchmove (hysteresis)
+ *     Primary signal for iOS and most Android scenarios.
+ *     HIDE : accumulated downward movement ≥ 30 px in one gesture.
+ *     SHOW : upward reversal ≥ 8 px.
+ *     Counter resets on direction change — one gesture can both hide and show.
  *
- *     Hysteresis thresholds prevent micro-bounce flicker:
- *       HIDE  — user must scroll DOWN  ≥ 30 px continuously in one gesture
- *       SHOW  — any upward reversal    ≥  8 px (feels instant, like Instagram)
+ *  2. scroll capture (document, capture-phase)
+ *     Critical Android Chrome fallback. Chrome routes scroll to the compositor
+ *     thread for elements with overflow:auto, which can throttle touchmove
+ *     delivery to JS. But `scroll` events are ALWAYS dispatched from the
+ *     compositor back to the main thread. capture:true catches ALL scrollable
+ *     elements (inner divs, window, etc.) without needing event bubbling.
  *
- *     The "cumulative since last direction change" counter resets whenever the
- *     finger changes direction, so a single gesture can both hide and show.
- *
- *  2. Window scroll fallback — for mouse-wheel / Chrome DevTools simulation.
- *     Conservative 10 px dead-zone; only updates when window itself scrolls
- *     (inner-element scrolls are handled by touchmove above).
- *
- *  3. Input focus — INPUT / TEXTAREA gaining focus → instant hide.
+ *  3. Input focus
+ *     Any INPUT/TEXTAREA gaining focus → instant hide (keyboard about to open).
  *     150 ms debounced blur → show (avoids flash when tabbing between fields).
  *
- *  4. VisualViewport resize — keyboard open (shrink > 150 px) → hide.
+ *  4. VisualViewport — keyboard ONLY, NEVER address-bar
+ *     CRITICAL Android fix: when the user scrolls, Chrome collapses its address
+ *     bar, firing visualViewport.resize with a height increase of ~56 px.
+ *     The old code called show() on ANY shrink < 150px, which immediately
+ *     cancelled a touchmove-triggered hide — causing the "still appears" bug.
+ *     Fix: only hide() for shrinks > 200 px (real keyboard, never address bar).
+ *          Never call show() here; focusout handles keyboard-close restoration.
  *
  * Desktop safeguard: bails immediately on viewports ≥ 768 px.
+ *
+ * Animation contract: returns `visible` only.
+ * Caller uses translate-y-0 / translate-y-[150%] — NO conditional rendering.
  */
 export function useBottomNavVisibility() {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible]  = useState(true);
+  // Mirror state in a ref so handlers never carry stale closures and we can
+  // skip redundant setVisible calls (React bails out automatically, but the
+  // ref check avoids even enqueuing the update).
+  const visibleRef = useRef(true);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (window.innerWidth >= 768) return; // desktop: nav is always visible
+    if (window.innerWidth >= 768) return;
 
-    // Inline show/hide helpers — React bails out automatically if state unchanged
-    const show = () => setVisible(true);
-    const hide = () => setVisible(false);
+    const show = () => {
+      if (!visibleRef.current) {
+        visibleRef.current = true;
+        setVisible(true);
+      }
+    };
+    const hide = () => {
+      if (visibleRef.current) {
+        visibleRef.current = false;
+        setVisible(false);
+      }
+    };
 
-    // ── 1. Touch direction with hysteresis ───────────────────────────────────
-    let lastY      = 0;
-    let direction: "up" | "down" | null = null;
-    let accumulated = 0;
+    // ── 1. touchmove — hysteresis ────────────────────────────────────────────
+    let lastTouchY  = 0;
+    let touchDir: "up" | "down" | null = null;
+    let touchAcc    = 0;
 
     const onTouchStart = (e: TouchEvent) => {
-      lastY       = e.touches[0].clientY;
-      direction   = null;
-      accumulated = 0;
+      lastTouchY = e.touches[0].clientY;
+      touchDir   = null;
+      touchAcc   = 0;
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      const currentY  = e.touches[0].clientY;
-      const delta     = lastY - currentY; // + = finger up = content scrolling DOWN
-      lastY           = currentY;
+      const y     = e.touches[0].clientY;
+      const delta = lastTouchY - y;   // + = finger up = content scrolls DOWN
+      lastTouchY  = y;
 
-      if (Math.abs(delta) < 0.5) return; // ignore sub-pixel noise
+      if (Math.abs(delta) < 0.5) return;
 
-      const newDir = delta > 0 ? "down" : "up";
+      const d = delta > 0 ? "down" : "up";
+      if (d !== touchDir) { touchDir = d; touchAcc = 0; }
+      touchAcc += Math.abs(delta);
 
-      if (newDir !== direction) {
-        // Direction change — reset accumulator so each reversal is judged fresh
-        direction   = newDir;
-        accumulated = 0;
+      if (d === "down" && touchAcc >= 30) { hide(); touchAcc = 0; }
+      else if (d === "up" && touchAcc >= 8) { show(); touchAcc = 0; }
+    };
+
+    const onTouchEnd = () => { touchDir = null; touchAcc = 0; };
+
+    // ── 2. scroll capture — Android compositor-thread fallback ──────────────
+    // Maps each scrollable element to its last known scroll position.
+    // Initialized on first event so we never compare against a stale baseline.
+    const scrollPrev = new Map<EventTarget, number>();
+
+    const onScrollCapture = (e: Event) => {
+      const el    = e.target as HTMLElement;
+      const isDoc = el === document ||
+                    el === document.documentElement ||
+                    el.tagName === "BODY";
+      const currentY = isDoc ? window.scrollY : el.scrollTop;
+
+      const prev = scrollPrev.get(el);
+      if (prev === undefined) {
+        scrollPrev.set(el, currentY); // first event: initialise, no comparison
+        return;
       }
 
-      accumulated += Math.abs(delta);
-
-      if (newDir === "down" && accumulated >= 30) {
-        hide();
-        accumulated = 0; // reset so next 30 px triggers again, but no rapid-fire
-      } else if (newDir === "up" && accumulated >= 8) {
-        show();
-        accumulated = 0; // reset so continued upward scroll keeps nav visible
+      const delta = currentY - prev;
+      if (Math.abs(delta) > 8) {
+        if (delta > 0)                    hide();
+        else if (delta < 0 || currentY <= 0) show();
+        scrollPrev.set(el, currentY);
       }
     };
 
-    const onTouchEnd = () => {
-      direction   = null;
-      accumulated = 0;
-    };
-
-    // ── 2. Window scroll (mouse / DevTools fallback) ─────────────────────────
-    // Only handles window-level scroll; touch-driven inner-element scrolls
-    // are covered by touchmove above.
-    let lastScrollY = window.scrollY;
-    const onScroll = () => {
-      const currentY = window.scrollY;
-      const delta    = currentY - lastScrollY;
-      if (Math.abs(delta) > 10) {
-        setVisible(delta < 0 || currentY <= 0);
-        lastScrollY = currentY;
-      }
-    };
-
-    // ── 3. Input focus → instant hide ───────────────────────────────────────
+    // ── 3. Input focus ───────────────────────────────────────────────────────
     const onFocusIn = (e: FocusEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (
@@ -119,17 +138,23 @@ export function useBottomNavVisibility() {
       }, 150);
     };
 
-    // ── 4. VisualViewport — virtual keyboard on iOS / Android ────────────────
+    // ── 4. VisualViewport — keyboard only, address-bar changes ignored ───────
     const vv = window.visualViewport;
     const onViewportResize = () => {
       if (!vv) return;
-      setVisible(!(window.innerHeight - vv.height > 150));
+      const shrink = window.innerHeight - vv.height;
+      // Keyboards shrink the viewport by ~250-350 px on any phone.
+      // Address-bar collapse/expand on Android is ~50-80 px max.
+      // Using > 200 px threshold correctly triggers ONLY for keyboard.
+      // We never call show() here — the address-bar expand would trigger
+      // this with shrink ≈ 0-80 px and would undo our scroll-triggered hide.
+      if (shrink > 200) hide();
     };
 
-    document.addEventListener("touchstart",  onTouchStart,     { passive: true });
-    document.addEventListener("touchmove",   onTouchMove,      { passive: true });
-    document.addEventListener("touchend",    onTouchEnd,       { passive: true });
-    window.addEventListener(  "scroll",      onScroll,         { passive: true });
+    document.addEventListener("touchstart",  onTouchStart,    { passive: true });
+    document.addEventListener("touchmove",   onTouchMove,     { passive: true });
+    document.addEventListener("touchend",    onTouchEnd,      { passive: true });
+    document.addEventListener("scroll",      onScrollCapture, { capture: true, passive: true });
     document.addEventListener("focusin",     onFocusIn,  true);
     document.addEventListener("focusout",    onFocusOut, true);
     vv?.addEventListener(     "resize",      onViewportResize);
@@ -138,7 +163,7 @@ export function useBottomNavVisibility() {
       document.removeEventListener("touchstart",  onTouchStart);
       document.removeEventListener("touchmove",   onTouchMove);
       document.removeEventListener("touchend",    onTouchEnd);
-      window.removeEventListener(  "scroll",      onScroll);
+      document.removeEventListener("scroll",      onScrollCapture, { capture: true });
       document.removeEventListener("focusin",     onFocusIn,  true);
       document.removeEventListener("focusout",    onFocusOut, true);
       vv?.removeEventListener(    "resize",       onViewportResize);
