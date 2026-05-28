@@ -92,13 +92,15 @@ const Home = () => {
 
         {/* ── Photo layer (no blur — sharp like the reference) ─────────── */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-          {/* The image */}
+          {/* The image — light blur so photo reads clearly but text stays crisp */}
           <div
             className="absolute inset-0"
             style={{
               backgroundImage:    "url(/workspace-bg.jpg)",
               backgroundSize:     "cover",
               backgroundPosition: "center 40%",
+              filter:             "blur(6px)",
+              transform:          "scale(1.04)",
             }}
           />
           {/* Dark wash — makes text readable regardless of light/dark mode */}
