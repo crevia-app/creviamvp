@@ -80,66 +80,57 @@ const Home = () => {
 
 
       {/* ═══════════════ THE PROBLEM ═══════════════ */}
-      <section className="relative py-24 md:py-36 px-4 md:px-6 overflow-hidden">
+      {/* Full-bleed cinematic photo section — photo is SHARP, clearly visible,
+          text sits over a dark overlay (like the Espa reference).
+          min-h-[65vh] gives it the tall, immersive feel.
+          Two overlay layers:
+            1. rgba(0,0,0,0.48) — dark wash that makes white text crisp
+               and works identically in light + dark mode.
+            2. Radial gradient — centre brighter so the image peaks through,
+               edges darker for depth and to bleed into surrounding sections. */}
+      <section className="relative min-h-[65vh] flex items-center px-4 md:px-6 overflow-hidden">
 
-        {/* ── Blurred photo background ─────────────────────────────────
-            NOTE: bg-background/N Tailwind modifiers do NOT apply opacity
-            because tailwind.config defines background without <alpha-value>.
-            So all overlays use CSS `opacity` or inline `hsl(var(--background))`
-            directly — guaranteed to work in all modes.
-
-            Layer order (bottom → top):
-              1. Blurred image (background-image + CSS filter)
-              2. bg-background at 60% CSS opacity → 40% image shows through
-              3. Inline gradient vignette: solid background at edges → transparent
-                 at centre, so image fades cleanly into surrounding sections
-        ── */}
-        {/*
-          NO -z-10 here. The section is position:relative with no z-index,
-          so it does NOT form a stacking context. A -z-10 child would escape
-          the section and paint behind the entire page background — invisible.
-          Fix: absolute inset-0 (z:auto) for the photo, explicit z-10 on content.
-        */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0"
-        >
-          {/* Layer 1 — blurred photo */}
+        {/* ── Photo layer (no blur — sharp like the reference) ─────────── */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+          {/* The image */}
           <div
             className="absolute inset-0"
             style={{
               backgroundImage:    "url(/workspace-bg.jpg)",
               backgroundSize:     "cover",
-              backgroundPosition: "center",
-              filter:             "blur(28px)",
-              transform:          "scale(1.12)",
+              backgroundPosition: "center 40%",
             }}
           />
-          {/* Layer 2 — background wash at 60% CSS opacity (40% photo shows through) */}
-          <div
-            className="absolute inset-0 bg-background"
-            style={{ opacity: 0.6 }}
-          />
-          {/* Layer 3 — top/bottom vignette */}
+          {/* Dark wash — makes text readable regardless of light/dark mode */}
+          <div className="absolute inset-0 bg-black" style={{ opacity: 0.52 }} />
+          {/* Vignette — edges fade darker, centre stays brighter so photo shines */}
           <div
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 28%, transparent 72%, hsl(var(--background)) 100%)",
+                "radial-gradient(ellipse 90% 80% at 50% 50%, transparent 30%, rgba(0,0,0,0.35) 100%)",
+            }}
+          />
+          {/* Top & bottom bleed into surrounding sections */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(to bottom, hsl(var(--background)) 0%, transparent 12%, transparent 88%, hsl(var(--background)) 100%)",
             }}
           />
         </div>
 
         {/* ── Content ─────────────────────────────────────────────────── */}
-        <div className="container mx-auto max-w-4xl text-center relative z-10">
+        <div className="container mx-auto max-w-4xl text-center relative z-10 py-24 md:py-32">
           <ScrollReveal variant="hero">
-            <h2 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl font-bold mb-6 leading-tight">
+            <h2 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl font-bold mb-6 leading-tight text-white">
               Talent is not the problem.{" "}
               <span className="text-gradient-bronze">Infrastructure is.</span>
             </h2>
           </ScrollReveal>
           <ScrollReveal delay={0.12}>
-            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
+            <p className="text-lg md:text-xl text-white/75 leading-relaxed max-w-3xl mx-auto">
               Talent is everywhere. What most businesses and creatives lack is the
               infrastructure to convert it into structured, scalable revenue.
               Crevia closes that gap.
