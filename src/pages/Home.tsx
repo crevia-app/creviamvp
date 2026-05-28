@@ -99,8 +99,8 @@ const Home = () => {
               backgroundImage:    "url(/workspace-bg.jpg)",
               backgroundSize:     "cover",
               backgroundPosition: "center 40%",
-              filter:             "blur(6px)",
-              transform:          "scale(1.04)",
+              filter:             "blur(2px)",
+              transform:          "scale(1.01)",
             }}
           />
           {/* Dark wash — makes text readable regardless of light/dark mode */}
