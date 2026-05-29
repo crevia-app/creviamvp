@@ -113,23 +113,21 @@ function ChatItem({
   onPin, onDelete, onShare,
   onLongPress, onLongPressStart, onLongPressEnd,
 }: ChatItemProps) {
-  const [hovered, setHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Desktop: visible on hover / active / pinned / menu open. Mobile: always visible.
-  const dotVisible = isMobile || isActive || chat.pinned || hovered || menuOpen;
+  // Forced-visible: mobile (always show), active, pinned, or menu open.
+  // Desktop non-forced: CSS group-hover handles reveal — no JS state needed.
+  const forceVisible = isMobile || isActive || chat.pinned || menuOpen;
 
   return (
     <div
       onClick={() => { if (!isRenaming) onSelect(); }}
-      onMouseEnter={() => { if (!isMobile) setHovered(true); }}
-      onMouseLeave={() => { if (!isMobile) setHovered(false); }}
       onTouchStart={onLongPressStart}
       onTouchEnd={onLongPressEnd}
       onTouchMove={onLongPressEnd}
       onContextMenu={(e) => { e.preventDefault(); onLongPress?.(); }}
       className={cn(
-        "relative flex items-center gap-2 rounded-xl cursor-pointer select-none",
+        "group relative flex items-center gap-2 rounded-xl cursor-pointer select-none",
         "transition-all duration-150 ease-out",
         indent ? "py-1.5 pl-8 pr-2" : "py-2 px-2.5",
         isMobile && "min-h-[44px]",
@@ -185,7 +183,7 @@ function ChatItem({
         </div>
       )}
 
-      {/* 3-dot menu — always in DOM (no layout shift), opacity-controlled */}
+      {/* 3-dot menu — CSS group-hover handles desktop reveal; forceVisible for special states */}
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
           <button
@@ -194,9 +192,9 @@ function ChatItem({
               "text-muted-foreground hover:text-foreground",
               "hover:bg-foreground/10 active:bg-foreground/15",
               "transition-all duration-150",
-              dotVisible
-                ? isMobile && !hovered && !menuOpen ? "opacity-50" : "opacity-100"
-                : "opacity-0 pointer-events-none"
+              forceVisible
+                ? (isMobile && !menuOpen ? "opacity-50" : "opacity-100")
+                : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto"
             )}
           >
             <MoreHorizontal className="w-3.5 h-3.5" />
