@@ -185,7 +185,7 @@ function ChatItem({
                 "transition-all duration-150",
                 (isActive || chat.pinned || menuOpen)
                   ? "opacity-100"
-                  : "opacity-0 hover:opacity-100"
+                  : "opacity-30 hover:opacity-100"
               )}
             >
               <MoreHorizontal className="w-4 h-4" />
