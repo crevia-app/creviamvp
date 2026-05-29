@@ -132,6 +132,22 @@ export default {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" },
         },
+        // Kira empty-state aura — slow diffuse orange glow that breathes organically
+        "aura-breathe": {
+          "0%, 100%": { transform: "scale(1) translate(0%, 0%)",      opacity: "0.22" },
+          "33%":       { transform: "scale(1.18) translate(2%, -3%)", opacity: "0.30" },
+          "66%":       { transform: "scale(0.92) translate(-2%, 2%)", opacity: "0.18" },
+        },
+        "aura-breathe-alt": {
+          "0%, 100%": { transform: "scale(1) translate(0%, 0%)",       opacity: "0.18" },
+          "33%":       { transform: "scale(0.88) translate(-3%, 2%)",  opacity: "0.26" },
+          "66%":       { transform: "scale(1.14) translate(3%, -2%)",  opacity: "0.22" },
+        },
+        // Kira empty-state text — soft fade-rise entrance
+        "kira-greeting": {
+          "0%":   { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.25s cubic-bezier(0.32, 0.72, 0, 1)",
@@ -152,6 +168,10 @@ export default {
         "content-hide": "content-hide 0.2s cubic-bezier(0.32, 0.72, 0, 1)",
         // Slow, luxurious scroll — 48s feels deliberate, not frantic
         "marquee": "marquee 48s linear infinite",
+        // Kira empty-state
+        "aura-breathe":     "aura-breathe 7s ease-in-out infinite",
+        "aura-breathe-alt": "aura-breathe-alt 8s ease-in-out infinite",
+        "kira-greeting":    "kira-greeting 0.7s cubic-bezier(0.32, 0.72, 0, 1) both",
       },
     },
   },

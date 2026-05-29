@@ -69,6 +69,7 @@ import CreateCanvasDialog from "@/components/studio/CreateCanvasDialog";
 import CreateInvoiceDialog from "@/components/studio/CreateInvoiceDialog";
 import { ApproveActionDialog } from "@/components/kira/ApproveActionDialog";
 import { KiraSettingsPanel } from "@/components/kira/KiraSettingsPanel";
+import KiraEmptyState from "@/components/kira/KiraEmptyState";
 import { motion, AnimatePresence } from "framer-motion";
 // useIOSKeyboardFit removed: it set position:fixed on the Kira container,
 // which overlapped and hid the TopBar on iOS Safari (z-index conflict).
@@ -1415,28 +1416,12 @@ const Kira = () => {
               }}
             >
               {messages.length === 0 ? (
-                /* Empty state: use min-h in dvh units — avoids % circular
-                   dependency inside overflow:auto on iOS/Android. */
-                <div className="min-h-[55dvh] flex flex-col items-center justify-center px-4 py-12 text-center">
-                  <div className="max-w-md w-full">
-                    {activeProject ? (
-                      <>
-                        <h1 className="font-vollkorn text-2xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-bronze to-bronze-dark bg-clip-text text-transparent">
-                          Working on {activeProject.name}
-                        </h1>
-                        <p className="text-muted-foreground text-base mb-12">
-                          {activeProject.description || "Start chatting with project context"}
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        <h1 className="font-vollkorn text-3xl md:text-4xl font-bold mb-3 text-foreground">
-                          Hello{userName ? `, ${userName}` : ""}!
-                        </h1>
-                      </>
-                    )}
-                  </div>
-                </div>
+                /* ── Premium animated empty state ────────────────────────── */
+                <KiraEmptyState
+                  userName={userName}
+                  activeProject={activeProject ?? null}
+                  onChipClick={(text) => setInput(text)}
+                />
               ) : (
                 <div className="px-4 py-6">
                   <div className="max-w-2xl mx-auto w-full">
