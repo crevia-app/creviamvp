@@ -13,6 +13,7 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
   const themeId = linkProfile?.theme || "elite_obsidian";
   const bgStyle = linkProfile?.background?.style || "solid";
   const customBgUrl = linkProfile?.background?.custom_bg_url;
+  const customColor = linkProfile?.background?.custom_color as string | undefined;
   const buttonStyle = linkProfile?.background?.button_style || "rounded";
   const buttonSpacing = linkProfile?.background?.button_spacing || 12;
   const fontFamily = linkProfile?.background?.font_family || "plus-jakarta";
@@ -20,12 +21,25 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
   const fadeAnimation = linkProfile?.background?.fade_animation !== false;
   const showVerified = linkProfile?.show_verified_badge;
   const isCustomImage = themeId === "custom_image" && customBgUrl;
+  const hasCustomColor = !!customColor && !isCustomImage;
 
   // Resolve theme from LINK_THEMES; fall back to obsidian
   const themeData = LINK_THEMES.find(t => t.value === themeId);
-  const bgValue    = themeData?.previewBg   || "#080808";
+
+  // Derive text color from a custom hex (luminance) or gradient (always white)
+  const textColorFromCustom = (bg: string): string => {
+    if (!bg || bg.includes("gradient")) return "#FFFFFF";
+    const hex = bg.replace(/^#/, "");
+    if (hex.length !== 6) return "#FFFFFF";
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.55 ? "#0A0A0A" : "#FFFFFF";
+  };
+
+  const bgValue    = hasCustomColor ? customColor! : (themeData?.previewBg || "#080808");
   // For custom image: force white text + bronze accent over the dark overlay
-  const textColor  = isCustomImage ? "#FFFFFF" : (themeData?.previewText || "#FFFFFF");
+  const textColor  = isCustomImage ? "#FFFFFF" : hasCustomColor ? textColorFromCustom(customColor!) : (themeData?.previewText || "#FFFFFF");
   const accentColor = isCustomImage ? "#B07D3A" : (themeData?.accentColor || textColor);
   // Determine if text is light based on luminance heuristic
   const lightText = !(textColor === "#0A0A0A" || textColor === "#1A1A1A" || textColor === "#2B241E" || textColor === "#000000");

@@ -146,7 +146,7 @@ const KiraEmptyState = ({
               {activeProject.name}
             </h1>
             <p
-              className="font-poppins text-sm md:text-base text-white/60 mb-10 leading-relaxed animate-kira-greeting"
+              className="font-poppins text-sm md:text-base text-muted-foreground mb-10 leading-relaxed animate-kira-greeting"
               style={{ animationDelay: "0.1s" }}
             >
               {activeProject.description || "Let's get to work. What do you need from Kira today?"}
@@ -155,14 +155,14 @@ const KiraEmptyState = ({
         ) : (
           <>
             <h1
-              className="font-vollkorn text-3xl md:text-[2.25rem] font-bold mb-3 leading-tight text-white animate-kira-greeting"
+              className="font-vollkorn text-3xl md:text-[2.25rem] font-bold mb-3 leading-tight text-foreground animate-kira-greeting"
             >
               {userName
                 ? `Good to see you, ${userName}.`
                 : "Hello there."}
             </h1>
             <p
-              className="font-poppins text-sm md:text-base text-white/55 mb-10 leading-relaxed animate-kira-greeting"
+              className="font-poppins text-sm md:text-base text-muted-foreground mb-10 leading-relaxed animate-kira-greeting"
               style={{ animationDelay: "0.12s" }}
             >
               I'm Kira — your creative business intelligence.
@@ -184,25 +184,11 @@ const KiraEmptyState = ({
               className="
                 font-poppins text-xs font-medium
                 px-4 py-2.5 rounded-full
-                text-white/75 hover:text-white
+                bg-foreground/5 border border-foreground/10
+                text-foreground/70 hover:text-foreground
+                hover:bg-orange-500/10 hover:border-orange-400/40
                 transition-all duration-300
               "
-              style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.10)",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background =
-                  "rgba(240, 120, 47, 0.12)";
-                (e.currentTarget as HTMLButtonElement).style.borderColor =
-                  "rgba(240, 120, 47, 0.35)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background =
-                  "rgba(255,255,255,0.05)";
-                (e.currentTarget as HTMLButtonElement).style.borderColor =
-                  "rgba(255,255,255,0.10)";
-              }}
             >
               {chip}
             </button>

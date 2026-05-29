@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check, Globe, Shield, Bell, BarChart3, TrendingUp, MousePointer, ExternalLink, Camera, AlertCircle, Users, Star, ArrowUp, ArrowDown, ChevronUp, ChevronDown, Image as ImageIcon, User, MousePointerClick, SlidersHorizontal, BarChart2 } from "lucide-react";
 import ThemeSelector from "@/components/crevia-link/ThemeSelector";
 import { PRO_THEME_IDS } from "@/lib/linkThemes";
+import { AdvancedColorSelector } from "@/components/ui/AdvancedColorSelector";
 import { AddButtonDialog } from "@/components/crevia-link/AddButtonDialog";
 import { EditButtonDialog } from "@/components/crevia-link/EditButtonDialog";
 import { ButtonItem } from "@/components/crevia-link/ButtonItem";
@@ -738,13 +739,40 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         <ThemeSelector
                           value={linkProfile?.theme || "elite_obsidian"}
                           onChange={(themeId, fontKey) =>
-                            setLinkProfile({ ...linkProfile, theme: themeId, background: { ...linkProfile?.background, style: "solid", font_family: fontKey, custom_bg_url: null } })
+                            setLinkProfile({ ...linkProfile, theme: themeId, background: { ...linkProfile?.background, style: "solid", font_family: fontKey, custom_bg_url: null, custom_color: undefined } })
                           }
                           isProUser={isProUser}
                           onUpgrade={() => navigate("/profile/payments-billing")}
                         />
                       </div>
                     </div>
+
+                    {/* Custom Accent Color */}
+                    {!hasCustomBg && (
+                      <div className="pt-4 border-t border-border/40">
+                        <Label className="text-sm font-medium mb-3 block">Custom Color Override</Label>
+                        <p className="text-xs text-muted-foreground mb-4">Override the theme background with a solid color or gradient.</p>
+                        <div className="rounded-2xl bg-[#0A0A0A] border border-white/10 p-4">
+                          <AdvancedColorSelector
+                            variant="link"
+                            value={linkProfile?.background?.custom_color || ""}
+                            onChange={(val) =>
+                              setLinkProfile({ ...linkProfile, background: { ...linkProfile?.background, custom_color: val } })
+                            }
+                          />
+                        </div>
+                        {linkProfile?.background?.custom_color && (
+                          <button
+                            className="mt-2 text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+                            onClick={() =>
+                              setLinkProfile({ ...linkProfile, background: { ...linkProfile?.background, custom_color: undefined } })
+                            }
+                          >
+                            Reset to theme color
+                          </button>
+                        )}
+                      </div>
+                    )}
 
                     {/* Custom Background Image */}
                     <div className={cn("pt-4 border-t border-border/40", !hasCustomBg && linkProfile?.theme && linkProfile.theme !== "custom_image" && "")}>
@@ -1298,13 +1326,40 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                       <ThemeSelector
                         value={linkProfile?.theme || "elite_obsidian"}
                         onChange={(themeId, fontKey) =>
-                          setLinkProfile({ ...linkProfile, theme: themeId, background: { ...linkProfile?.background, style: "solid", font_family: fontKey, custom_bg_url: null } })
+                          setLinkProfile({ ...linkProfile, theme: themeId, background: { ...linkProfile?.background, style: "solid", font_family: fontKey, custom_bg_url: null, custom_color: undefined } })
                         }
                         isProUser={isProUser}
                         onUpgrade={() => navigate("/profile/payments-billing")}
                       />
                     </div>
                   </div>
+
+                  {/* Custom Accent Color */}
+                  {!hasCustomBg && (
+                    <div className="pt-6 border-t border-border/40">
+                      <Label className="text-sm sm:text-base md:text-lg font-medium mb-2 md:mb-4 block">Custom Color Override</Label>
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-4">Override the theme background with a solid color or gradient.</p>
+                      <div className="rounded-2xl bg-[#0A0A0A] border border-white/10 p-4 md:p-5">
+                        <AdvancedColorSelector
+                          variant="link"
+                          value={linkProfile?.background?.custom_color || ""}
+                          onChange={(val) =>
+                            setLinkProfile({ ...linkProfile, background: { ...linkProfile?.background, custom_color: val } })
+                          }
+                        />
+                      </div>
+                      {linkProfile?.background?.custom_color && (
+                        <button
+                          className="mt-3 text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+                          onClick={() =>
+                            setLinkProfile({ ...linkProfile, background: { ...linkProfile?.background, custom_color: undefined } })
+                          }
+                        >
+                          Reset to theme color
+                        </button>
+                      )}
+                    </div>
+                  )}
 
                   {/* Custom Background Image */}
                   <div className="pt-4 border-t border-border/40">
