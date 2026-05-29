@@ -140,7 +140,7 @@ const MobileBottomNav = () => {
     document.documentElement.style.setProperty(
       "--nav-bottom-offset",
       visible
-        ? "calc(52px + env(safe-area-inset-bottom, 0px))"
+        ? "calc(44px + env(safe-area-inset-bottom, 0px))"
         : "0px"
     );
   }, [visible]);
@@ -187,7 +187,7 @@ const MobileBottomNav = () => {
         visible ? "translate-y-0" : "translate-y-[150%]"
       )}
     >
-      <div className="grid grid-cols-3 h-[52px]">
+      <div className="grid grid-cols-3 h-[44px]">
 
         {/* ── Primary nav items (Kira, Studio) ──────────────────────────── */}
         {navItems.map((item) => {
