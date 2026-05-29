@@ -106,14 +106,29 @@ function DesktopChatItem({
   chat, isActive, isRenaming, renameValue, indent = false,
   onSelect, onRenameChange, onRenameSubmit, onRenameCancel, onStartRename, onPin, onDelete, onShare,
 }: DesktopChatItemProps) {
+  const [hovered, setHovered] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  // Keep button visible while the dropdown is open so it doesn't vanish mid-interaction
+  const btnVisible = isActive || hovered || menuOpen;
+
   return (
     <div
       onClick={() => { if (!isRenaming) onSelect(); }}
-      className={`group flex items-center gap-1.5 ${indent ? 'py-1.5 pl-7 pr-1' : 'py-2 pl-2.5 pr-1'} rounded-lg cursor-pointer transition-all ${
-        isActive ? 'bg-bronze/10 text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-      }`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className={cn(
+        "flex items-center gap-1.5 rounded-lg cursor-pointer transition-colors",
+        indent ? "py-1.5 pl-7 pr-1" : "py-2 pl-2.5 pr-1",
+        isActive
+          ? "bg-bronze/10 text-foreground"
+          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+      )}
     >
-      <MessageSquare className={`${indent ? 'w-3.5 h-3.5' : 'w-4 h-4'} flex-shrink-0 ${isActive ? 'text-bronze' : ''}`} />
+      <MessageSquare className={cn(
+        "flex-shrink-0",
+        indent ? "w-3.5 h-3.5" : "w-4 h-4",
+        isActive && "text-bronze"
+      )} />
 
       {isRenaming ? (
         <input
@@ -132,13 +147,15 @@ function DesktopChatItem({
         <span className="flex-1 min-w-0 text-sm truncate">{chat.title}</span>
       )}
 
-      <DropdownMenu>
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
           <button
-            className={`flex-shrink-0 w-6 h-6 flex items-center justify-center rounded transition-all duration-150
-              hover:bg-muted/80 hover:text-foreground
-              ${isActive ? 'opacity-100 text-muted-foreground' : 'opacity-0 group-hover:opacity-100 text-muted-foreground'}
-            `}
+            className={cn(
+              "flex-shrink-0 w-6 h-6 flex items-center justify-center rounded",
+              "text-muted-foreground hover:bg-muted hover:text-foreground",
+              "transition-opacity duration-100",
+              btnVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+            )}
           >
             <MoreVertical className="w-3.5 h-3.5" />
           </button>
