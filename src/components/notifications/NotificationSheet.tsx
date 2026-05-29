@@ -39,14 +39,38 @@ function timeAgo(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString();
 }
 
-const TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string; nav: string }> = {
-  message:  { icon: MessageSquare,  color: "text-blue-500",   nav: "/crevia-studio?tab=chat" },
-  contract: { icon: FileSignature,  color: "text-bronze",     nav: "/crevia-studio?tab=contracts" },
-  invoice:  { icon: Receipt,        color: "text-green-500",  nav: "/crevia-studio?tab=invoices" },
-  campaign: { icon: Sparkles,       color: "text-purple-500", nav: "/crevia-studio" },
-  billing:  { icon: CreditCard,     color: "text-orange-500", nav: "/profile/payments-billing" },
-  system:   { icon: Bell,           color: "text-muted-foreground", nav: "" },
+const TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string }> = {
+  message:  { icon: MessageSquare,  color: "text-blue-500"            },
+  contract: { icon: FileSignature,  color: "text-bronze"              },
+  invoice:  { icon: Receipt,        color: "text-green-500"           },
+  campaign: { icon: Sparkles,       color: "text-purple-500"          },
+  billing:  { icon: CreditCard,     color: "text-orange-500"          },
+  system:   { icon: Bell,           color: "text-muted-foreground"    },
 };
+
+/** Build the deep-link URL for a notification */
+function buildNavUrl(n: AppNotification): string {
+  switch (n.type) {
+    case "message":
+      return n.data?.room_id
+        ? `/crevia-studio?tab=chat&roomId=${n.data.room_id}`
+        : "/crevia-studio?tab=chat";
+    case "contract":
+      return n.data?.contract_id
+        ? `/crevia-studio?tab=canvas&contractId=${n.data.contract_id}`
+        : "/crevia-studio?tab=canvas";
+    case "invoice":
+      return n.data?.invoice_id
+        ? `/crevia-studio?tab=invoices&invoiceId=${n.data.invoice_id}`
+        : "/crevia-studio?tab=invoices";
+    case "campaign":
+      return "/crevia-studio";
+    case "billing":
+      return "/profile/payments-billing";
+    default:
+      return "";
+  }
+}
 
 export default function NotificationSheet({
   open,
@@ -77,11 +101,7 @@ export default function NotificationSheet({
 
   const handleClick = (n: AppNotification) => {
     if (!n.read) onMarkRead(n.id);
-    const cfg = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.system;
-    let nav = cfg.nav;
-    if (n.type === "message" && n.data?.room_id) {
-      nav = `/crevia-studio?tab=chat&roomId=${n.data.room_id}`;
-    }
+    const nav = buildNavUrl(n);
     if (nav) {
       navigate(nav);
       onOpenChange(false);
@@ -124,14 +144,16 @@ export default function NotificationSheet({
           ) : (
             <div className="divide-y divide-border/50">
               {notifications.map((n) => {
-                const cfg = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.system;
+                const cfg  = TYPE_CONFIG[n.type] ?? TYPE_CONFIG.system;
                 const Icon = cfg.icon;
+                const nav  = buildNavUrl(n);
                 return (
                   <button
                     key={n.id}
                     onClick={() => handleClick(n)}
                     className={cn(
-                      "w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/50",
+                      "w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors",
+                      nav ? "cursor-pointer hover:bg-muted/50" : "cursor-default",
                       !n.read && "bg-bronze/5"
                     )}
                   >

@@ -71,10 +71,12 @@ const CreviaStudio = () => {
   const { t }                           = useLanguage();
   const [sidebarOpen, setSidebarOpen]   = useState(false);
 
-  const activeTab          = searchParams.get("tab")       || "link";
+  const activeTab          = searchParams.get("tab")        || "link";
   const activeLinkSection  = searchParams.get("section")   || "profile";
   const activeWorkspace    = searchParams.get("workspace") || undefined;
   const activeRoomId       = searchParams.get("roomId")    || undefined;
+  const activeInvoiceId    = searchParams.get("invoiceId") || undefined;
+  const activeContractId   = searchParams.get("contractId") || undefined;
   const isChatTab          = activeTab === "chat";
 
   const activeTabDef = STUDIO_TABS.find(t => t.id === activeTab) ?? STUDIO_TABS[0];
@@ -197,8 +199,8 @@ const CreviaStudio = () => {
               transition={{ duration: 0.12 }}
             >
               {activeTab === "link"     && <CreviaLink isEmbedded />}
-              {activeTab === "invoices" && <SmartInvoicesTab workspaceId={activeWorkspace} />}
-              {activeTab === "canvas"   && <ContractsTab workspaceId={activeWorkspace} />}
+              {activeTab === "invoices" && <SmartInvoicesTab workspaceId={activeWorkspace} initialInvoiceId={activeInvoiceId} />}
+              {activeTab === "canvas"   && <ContractsTab workspaceId={activeWorkspace} initialContractId={activeContractId} />}
             </motion.div>
           </AnimatePresence>
         </div>

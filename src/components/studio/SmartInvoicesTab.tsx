@@ -63,7 +63,7 @@ interface Invoice {
   accent_color: string | null;
 }
 
-const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
+const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: string; initialInvoiceId?: string } = {}) => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -137,6 +137,13 @@ const SmartInvoicesTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     fetchInvoices();
     fetchBusinessSettings();
   }, [workspaceId]);
+
+  // Auto-open a specific invoice when navigating from a notification
+  useEffect(() => {
+    if (!initialInvoiceId || invoices.length === 0) return;
+    const target = invoices.find((inv) => inv.id === initialInvoiceId);
+    if (target) setPreviewInvoice(target);
+  }, [initialInvoiceId, invoices]);
 
   const fetchBusinessSettings = async () => {
     const { data: { session } } = await supabase.auth.getSession();

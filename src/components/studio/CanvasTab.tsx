@@ -112,7 +112,7 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
   cancelled: { label: "Cancelled", color: "text-destructive", bg: "bg-destructive/10", icon: <XCircle className="h-3 w-3" /> },
 };
 
-const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
+const ContractsTab = ({ workspaceId, initialContractId }: { workspaceId?: string; initialContractId?: string } = {}) => {
   const [canvases, setCanvases] = useState<Canvas[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -271,6 +271,13 @@ const ContractsTab = ({ workspaceId }: { workspaceId?: string } = {}) => {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspaceId, currentFolderId]);
+
+  // Auto-open a specific canvas when navigating from a notification
+  useEffect(() => {
+    if (!initialContractId || canvases.length === 0) return;
+    const target = canvases.find((c) => c.id === initialContractId);
+    if (target) setPreviewCanvas(target);
+  }, [initialContractId, canvases]);
 
   const handleRename = async (id: string) => {
     const trimmed = renameValue.trim();
