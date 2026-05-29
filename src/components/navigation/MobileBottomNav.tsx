@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Crown } from "lucide-react";
+import { Crown, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Sheet,
@@ -17,6 +17,8 @@ import { signOutWithCleanup } from "@/lib/device-session";
 import { useState, useEffect, useLayoutEffect } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useBottomNavVisibility } from "@/hooks/use-bottom-nav-visibility";
+import { usePWAInstall } from "@/hooks/use-pwa-install";
+import { IOSInstallGuide } from "@/components/pwa/IOSInstallGuide";
 
 // ── Custom Icons ──────────────────────────────────────────────────────────────
 
@@ -111,6 +113,7 @@ const MobileBottomNav = () => {
   const [profile, setProfile]     = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const { visible }               = useBottomNavVisibility();
+  const { canInstall, isIOS, install, showIOSGuide, setShowIOSGuide } = usePWAInstall();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -174,7 +177,8 @@ const MobileBottomNav = () => {
   ];
 
   return (
-    /* ── Transform-only hide/show — NO conditional rendering ──────────────── */
+    <>
+    {/* ── Transform-only hide/show — NO conditional rendering ──────────────── */}
     <nav
       className={cn(
         "md:hidden fixed bottom-0 left-0 right-0 z-50",
@@ -275,6 +279,30 @@ const MobileBottomNav = () => {
                   <span className="font-poppins text-sm font-semibold">Upgrade to Pro</span>
                 </Link>
 
+                {/* Install Crevia — hidden once app is installed or prompt unavailable */}
+                {canInstall && (
+                  <button
+                    onClick={() => {
+                      if (isIOS) {
+                        // Close the More sheet first, then show iOS guide
+                        setSheetOpen(false);
+                        setTimeout(() => install(), 320);
+                      } else {
+                        install(); // Android / desktop: native browser install prompt
+                      }
+                    }}
+                    className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-muted/60 border border-border text-foreground hover:bg-muted transition-all w-full"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-bronze/15 flex items-center justify-center flex-shrink-0">
+                      <Download className="h-4 w-4 text-bronze" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-poppins text-sm font-semibold">Install Crevia</p>
+                      <p className="text-xs text-muted-foreground leading-snug">Add to your home screen</p>
+                    </div>
+                  </button>
+                )}
+
                 <Separator className="bg-border" />
 
                 {/* Account */}
@@ -369,6 +397,11 @@ const MobileBottomNav = () => {
         </Sheet>
       </div>
     </nav>
+
+    {/* iOS step-by-step install guide — rendered outside the nav so it can
+        stack above everything without z-index conflicts */}
+    <IOSInstallGuide open={showIOSGuide} onClose={() => setShowIOSGuide(false)} />
+    </>
   );
 };
 

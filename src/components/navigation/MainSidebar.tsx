@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { 
-  Home, 
-  Sparkles, 
+import {
+  Home,
+  Sparkles,
   MoreHorizontal,
   MessageSquare,
-  Briefcase
+  Briefcase,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,9 +15,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { usePWAInstall } from "@/hooks/use-pwa-install";
+import { IOSInstallGuide } from "@/components/pwa/IOSInstallGuide";
 
 interface MainSidebarProps {
   profile: any;
@@ -26,6 +30,7 @@ interface MainSidebarProps {
 const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
   const location = useLocation();
   const { t } = useLanguage();
+  const { canInstall, isIOS, install, showIOSGuide, setShowIOSGuide } = usePWAInstall();
 
   const navItems = [
     { id: "kira",   label: t("sidebar.kira"),   icon: Sparkles, path: "/kira",          prefetch: () => import("@/pages/Kira") },
@@ -37,6 +42,7 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
   };
 
   return (
+    <>
     <aside className="hidden md:flex flex-col bg-background/80 backdrop-blur-md border-r border-border/50 fixed left-0 top-14 bottom-0 z-30 w-[100px]">
       <nav className="flex-1 py-4 space-y-2">
         {navItems.map((item) => {
@@ -85,7 +91,19 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
               </span>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-background/95 backdrop-blur-md border-border/50">
+          <DropdownMenuContent align="end" className="w-52 bg-background/95 backdrop-blur-md border-border/50">
+            {canInstall && (
+              <>
+                <DropdownMenuItem
+                  onClick={() => install()}
+                  className="gap-2 cursor-pointer text-foreground/80 hover:text-bronze focus:text-bronze"
+                >
+                  <Download className="h-4 w-4 text-bronze" />
+                  Install Crevia
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
             <DropdownMenuItem asChild className="hover:bg-transparent focus:bg-transparent">
               <Link to="/app/about" className="text-foreground/80 hover:text-bronze focus:text-bronze">
                 {t("nav.about")}
@@ -133,6 +151,10 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
         </button>
       </div>
     </aside>
+
+    {/* iOS guide rendered at root so it can layer above the sidebar */}
+    <IOSInstallGuide open={showIOSGuide} onClose={() => setShowIOSGuide(false)} />
+    </>
   );
 };
 
