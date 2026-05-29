@@ -114,20 +114,23 @@ function ChatItem({
   onLongPress, onLongPressStart, onLongPressEnd,
 }: ChatItemProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
-  // Forced-visible: mobile (always show), active, pinned, or menu open.
-  // Desktop non-forced: CSS group-hover handles reveal — no JS state needed.
-  const forceVisible = isMobile || isActive || chat.pinned || menuOpen;
+  const dotOpacity = isMobile
+    ? (menuOpen ? 1 : 0.5)
+    : (isActive || chat.pinned || hovered || menuOpen ? 1 : 0);
 
   return (
     <div
       onClick={() => { if (!isRenaming) onSelect(); }}
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => setHovered(false)}
       onTouchStart={onLongPressStart}
       onTouchEnd={onLongPressEnd}
       onTouchMove={onLongPressEnd}
       onContextMenu={(e) => { e.preventDefault(); onLongPress?.(); }}
       className={cn(
-        "group relative flex items-center gap-2 rounded-xl cursor-pointer select-none",
+        "relative flex items-center gap-2 rounded-xl cursor-pointer select-none",
         "transition-all duration-150 ease-out",
         indent ? "py-1.5 pl-8 pr-2" : "py-2 px-2.5",
         isMobile && "min-h-[44px]",
@@ -183,19 +186,12 @@ function ChatItem({
         </div>
       )}
 
-      {/* 3-dot menu — CSS group-hover handles desktop reveal; forceVisible for special states */}
+      {/* 3-dot menu — inline opacity so Tailwind JIT cannot suppress it */}
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
           <button
-            className={cn(
-              "flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-lg",
-              "text-muted-foreground hover:text-foreground",
-              "hover:bg-foreground/10 active:bg-foreground/15",
-              "transition-all duration-150",
-              forceVisible
-                ? (isMobile && !menuOpen ? "opacity-50" : "opacity-100")
-                : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto"
-            )}
+            style={{ opacity: dotOpacity, pointerEvents: dotOpacity === 0 ? 'none' : 'auto' }}
+            className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/10 active:bg-foreground/15 transition-opacity duration-150"
           >
             <MoreHorizontal className="w-3.5 h-3.5" />
           </button>
