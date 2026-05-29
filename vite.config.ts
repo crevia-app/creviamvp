@@ -70,6 +70,17 @@ export default defineConfig({
               expiration: { maxEntries: 80, maxAgeSeconds: 60 * 60 * 24 },
             },
           },
+          {
+            // JS/CSS chunks — cache-first: content-hashed filenames mean a new
+            // deploy always produces new URLs, so serving stale chunks is safe.
+            // Returning users load the app from disk with zero network round-trips.
+            urlPattern: /\.(?:js|css)$/i,
+            handler: 'CacheFirst' as const,
+            options: {
+              cacheName: 'static-assets-cache',
+              expiration: { maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
         ],
       }
     })
@@ -80,6 +91,7 @@ export default defineConfig({
     },
   },
   build: {
+    target: 'esnext',
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -90,6 +102,7 @@ export default defineConfig({
           if (id.includes('@supabase'))                                return 'vendor-supabase';
           if (id.includes('@tanstack'))                                return 'vendor-query';
           if (id.includes('@radix-ui'))                                return 'vendor-ui';
+          if (id.includes('lucide-react'))                             return 'vendor-icons';
           if (id.includes('react-dom') || id.includes('react-router') || id.includes('/react/')) return 'vendor-react';
         },
       },
