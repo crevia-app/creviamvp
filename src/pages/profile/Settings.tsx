@@ -417,16 +417,48 @@ const Settings = () => {
         <TabsContent value="privacy">
           <Card className="p-4 md:p-8">
             <h2 className="font-vollkorn text-xl md:text-2xl font-bold mb-4 md:mb-6">{t("settings.privacySettings")}</h2>
+
+            {/* ── Persistent status banner ─────────────────────────────────── */}
+            <div
+              className="flex items-start gap-3 p-3.5 rounded-xl mb-5 border transition-all duration-300"
+              style={
+                profilePublic
+                  ? { background: "rgba(34,197,94,0.07)", borderColor: "rgba(34,197,94,0.20)" }
+                  : { background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.08)" }
+              }
+            >
+              <span
+                className="w-2 h-2 rounded-full mt-[5px] flex-shrink-0 transition-colors duration-300"
+                style={{ background: profilePublic ? "#4ade80" : "hsl(var(--muted-foreground))" }}
+              />
+              <div>
+                <p className="text-sm font-semibold font-poppins text-foreground">
+                  {profilePublic ? "Profile is public" : "Profile is private"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
+                  {profilePublic
+                    ? "Anyone can view your public profile."
+                    : "Your profile is hidden from public view."}
+                </p>
+              </div>
+            </div>
+
             <div className="space-y-4 md:space-y-6">
+              {/*
+               * Toggle semantics:
+               *   OFF (default) → profile_public = true  → profile is PUBLIC
+               *   ON            → profile_public = false → profile is PRIVATE
+               * The label "Make your profile private" describes what toggling ON does.
+               */}
               <div className="flex items-start md:items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <Label className="text-sm md:text-base">{t("settings.profileVisibility")}</Label>
                   <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{t("settings.profileVisibilityDesc")}</p>
                 </div>
                 <Switch
-                  checked={profilePublic}
+                  checked={!profilePublic}
                   disabled={savingPrivacy}
-                  onCheckedChange={(v) => handlePrivacyToggle("profile_public", v)}
+                  onCheckedChange={(v) => handlePrivacyToggle("profile_public", !v)}
                   className="flex-shrink-0"
                 />
               </div>
