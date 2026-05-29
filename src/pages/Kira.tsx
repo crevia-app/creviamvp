@@ -47,7 +47,7 @@ import {
   Pencil,
   RotateCcw,
   Settings,
-  MoreVertical,
+  MoreHorizontal,
   Pin,
   PinOff,
   Share2,
@@ -86,13 +86,14 @@ interface ChatHistory {
   pinned?: boolean;
 }
 
-// ── Desktop chat item with 3-dot context menu ──
-interface DesktopChatItemProps {
+// ── Unified chat item — desktop (hover-reveal dot) + mobile (always-visible dot) ──
+interface ChatItemProps {
   chat: ChatHistory;
   isActive: boolean;
   isRenaming: boolean;
   renameValue: string;
   indent?: boolean;
+  isMobile?: boolean;
   onSelect: () => void;
   onRenameChange: (v: string) => void;
   onRenameSubmit: () => void;
@@ -101,36 +102,55 @@ interface DesktopChatItemProps {
   onPin: () => void;
   onDelete: () => void;
   onShare: () => void;
+  onLongPress?: () => void;
+  onLongPressStart?: () => void;
+  onLongPressEnd?: () => void;
 }
 
-function DesktopChatItem({
-  chat, isActive, isRenaming, renameValue, indent = false,
-  onSelect, onRenameChange, onRenameSubmit, onRenameCancel, onStartRename, onPin, onDelete, onShare,
-}: DesktopChatItemProps) {
+function ChatItem({
+  chat, isActive, isRenaming, renameValue, indent = false, isMobile = false,
+  onSelect, onRenameChange, onRenameSubmit, onRenameCancel, onStartRename,
+  onPin, onDelete, onShare,
+  onLongPress, onLongPressStart, onLongPressEnd,
+}: ChatItemProps) {
   const [hovered, setHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  // Keep button visible while the dropdown is open so it doesn't vanish mid-interaction
-  const btnVisible = isActive || hovered || menuOpen;
+
+  // Desktop: visible on hover / active / pinned / menu open. Mobile: always visible.
+  const dotVisible = isMobile || isActive || chat.pinned || hovered || menuOpen;
 
   return (
     <div
       onClick={() => { if (!isRenaming) onSelect(); }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseEnter={() => { if (!isMobile) setHovered(true); }}
+      onMouseLeave={() => { if (!isMobile) setHovered(false); }}
+      onTouchStart={onLongPressStart}
+      onTouchEnd={onLongPressEnd}
+      onTouchMove={onLongPressEnd}
+      onContextMenu={(e) => { e.preventDefault(); onLongPress?.(); }}
       className={cn(
-        "flex items-center gap-1.5 rounded-lg cursor-pointer transition-colors",
-        indent ? "py-1.5 pl-7 pr-1" : "py-2 pl-2.5 pr-1",
+        "relative flex items-center gap-2 rounded-xl cursor-pointer select-none",
+        "transition-all duration-150 ease-out",
+        indent ? "py-1.5 pl-8 pr-2" : "py-2 px-2.5",
+        isMobile && "min-h-[44px]",
         isActive
-          ? "bg-bronze/10 text-foreground"
-          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+          ? "bg-foreground/[0.07] text-foreground"
+          : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
       )}
     >
+      {/* Left accent bar — active state */}
+      {isActive && (
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-bronze" />
+      )}
+
+      {/* Icon */}
       <MessageSquare className={cn(
-        "flex-shrink-0",
+        "flex-shrink-0 transition-colors duration-150",
         indent ? "w-3.5 h-3.5" : "w-4 h-4",
-        isActive && "text-bronze"
+        isActive ? "text-bronze" : "opacity-50"
       )} />
 
+      {/* Title area */}
       {isRenaming ? (
         <input
           autoFocus
@@ -142,117 +162,93 @@ function DesktopChatItem({
           }}
           onBlur={onRenameSubmit}
           onClick={(e) => e.stopPropagation()}
-          className="flex-1 bg-transparent text-sm outline-none border-b border-bronze/50 focus:border-bronze text-foreground min-w-0"
+          className="flex-1 bg-transparent text-sm font-medium outline-none border-b border-bronze/50 focus:border-bronze text-foreground min-w-0 py-0"
         />
       ) : (
-        <span className="flex-1 min-w-0 text-sm truncate">{chat.title}</span>
+        <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden">
+          {/* Gradient-fade title — ChatGPT style, no hard clip */}
+          <div
+            className="flex-1 min-w-0 overflow-hidden"
+            style={{
+              maskImage: "linear-gradient(to right, black 75%, transparent 100%)",
+              WebkitMaskImage: "linear-gradient(to right, black 75%, transparent 100%)",
+            }}
+          >
+            <span className="block text-sm font-medium whitespace-nowrap">
+              {chat.title}
+            </span>
+          </div>
+          {/* Pinned indicator — always visible so user knows the chat is pinned */}
+          {chat.pinned && (
+            <Pin className="w-2.5 h-2.5 flex-shrink-0 text-bronze/50" />
+          )}
+        </div>
       )}
 
+      {/* 3-dot menu — always in DOM (no layout shift), opacity-controlled */}
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
           <button
             className={cn(
-              "flex-shrink-0 w-6 h-6 flex items-center justify-center rounded",
-              "text-muted-foreground hover:bg-muted hover:text-foreground",
-              "transition-opacity duration-100",
-              btnVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+              "flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-lg",
+              "text-muted-foreground hover:text-foreground",
+              "hover:bg-foreground/10 active:bg-foreground/15",
+              "transition-all duration-150",
+              dotVisible
+                ? isMobile && !hovered && !menuOpen ? "opacity-50" : "opacity-100"
+                : "opacity-0 pointer-events-none"
             )}
           >
-            <MoreVertical className="w-3.5 h-3.5" />
+            <MoreHorizontal className="w-3.5 h-3.5" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuContent
+          align="end"
+          sideOffset={4}
+          className={cn(
+            "w-48 rounded-xl p-1.5",
+            "border border-border/40",
+            "bg-card/95 backdrop-blur-xl",
+            "shadow-xl shadow-black/15"
+          )}
+        >
+          {/* 1. Share */}
           <DropdownMenuItem
             onClick={(e) => { e.stopPropagation(); onShare(); }}
-            className="gap-2 cursor-pointer"
+            className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm"
           >
-            <Share2 className="w-3.5 h-3.5" />
-            Share
+            <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
+            Share conversation
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={(e) => { e.stopPropagation(); onPin(); }}
-            className="gap-2 cursor-pointer"
-          >
-            {chat.pinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
-            {chat.pinned ? 'Unpin' : 'Pin'}
-          </DropdownMenuItem>
+          {/* 2. Rename */}
           <DropdownMenuItem
             onClick={(e) => { e.stopPropagation(); onStartRename(); }}
-            className="gap-2 cursor-pointer"
+            className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm"
           >
-            <Pencil className="w-3.5 h-3.5" />
+            <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
             Rename
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
+          {/* 3. Pin / Unpin */}
+          <DropdownMenuItem
+            onClick={(e) => { e.stopPropagation(); onPin(); }}
+            className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm"
+          >
+            {chat.pinned
+              ? <PinOff className="w-3.5 h-3.5 text-muted-foreground" />
+              : <Pin className="w-3.5 h-3.5 text-muted-foreground" />}
+            {chat.pinned ? "Unpin" : "Pin"}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator className="my-1 opacity-50" />
+          {/* 4. Delete — destructive */}
           <DropdownMenuItem
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="gap-2 cursor-pointer text-destructive focus:text-destructive"
+            className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm text-destructive focus:text-destructive focus:bg-destructive/10"
           >
             <Trash2 className="w-3.5 h-3.5" />
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-    </div>
-  );
-}
-
-// ── Mobile chat item with long-press ──
-interface MobileChatItemProps {
-  chat: ChatHistory;
-  isActive: boolean;
-  isRenaming: boolean;
-  renameValue: string;
-  onSelect: () => void;
-  onRenameChange: (v: string) => void;
-  onRenameSubmit: () => void;
-  onRenameCancel: () => void;
-  onLongPress: () => void;
-  onLongPressStart: () => void;
-  onLongPressEnd: () => void;
-}
-
-function MobileChatItem({
-  chat, isActive, isRenaming, renameValue,
-  onSelect, onRenameChange, onRenameSubmit, onRenameCancel,
-  onLongPress, onLongPressStart, onLongPressEnd,
-}: MobileChatItemProps) {
-  return (
-    <div
-      onClick={() => { if (!isRenaming) onSelect(); }}
-      onTouchStart={onLongPressStart}
-      onTouchEnd={onLongPressEnd}
-      onTouchMove={onLongPressEnd}
-      onContextMenu={(e) => { e.preventDefault(); onLongPress(); }}
-      className={`flex items-center gap-2 py-2 px-2.5 min-h-[44px] rounded-lg cursor-pointer transition-all select-none ${
-        isActive ? 'bg-bronze/10' : 'hover:bg-muted/50'
-      }`}
-    >
-      <MessageSquare className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-bronze' : 'text-muted-foreground'}`} />
-
-      {isRenaming ? (
-        <input
-          autoFocus
-          value={renameValue}
-          onChange={(e) => onRenameChange(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') onRenameSubmit();
-            if (e.key === 'Escape') onRenameCancel();
-          }}
-          onBlur={onRenameSubmit}
-          onClick={(e) => e.stopPropagation()}
-          className="flex-1 bg-transparent text-base outline-none border-b border-bronze/50 focus:border-bronze text-foreground min-w-0"
-        />
-      ) : (
-        <span className="flex-1 min-w-0 text-sm truncate">{chat.title}</span>
-      )}
-
-      <button
-        onClick={(e) => { e.stopPropagation(); onLongPress(); }}
-        className="flex items-center justify-center rounded-lg flex-shrink-0 text-muted-foreground hover:text-foreground hover:bg-muted/80 active:bg-muted transition-all min-w-[44px] min-h-[44px]"
-      >
-        <MoreVertical className="w-4 h-4" />
-      </button>
     </div>
   );
 }
@@ -319,6 +315,10 @@ function detectKiraIntent(text: string): string | null {
   if (/\binvoice\b/.test(t) && /\b(create|draft|send|open|let'?s|ready|shall i|want me|here'?s|go ahead|click)\b/.test(t)) return 'open_invoice';
   return null;
 }
+
+// True when the device's primary pointer is touch (iPad, Android tablet, phones).
+// Used to keep the 3-dot visible in the desktop sidebar on touch-primary devices.
+const isTouchPrimary = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
 
 const Kira = () => {
   const { toast } = useToast();
@@ -1126,12 +1126,13 @@ const Kira = () => {
                           <Pin className="w-3 h-3" /> Pinned
                         </p>
                         {pinnedGeneralChats.map((chat) => (
-                          <DesktopChatItem
+                          <ChatItem
                             key={chat.id}
                             chat={chat}
                             isActive={activeChat === chat.id}
                             isRenaming={renamingChatId === chat.id}
                             renameValue={renameValue}
+                            isMobile={isTouchPrimary}
                             onSelect={() => { setActiveChat(chat.id); setActiveProjectId(null); setViewMode("chat"); }}
                             onRenameChange={setRenameValue}
                             onRenameSubmit={() => handleRenameChat(chat.id)}
@@ -1147,12 +1148,13 @@ const Kira = () => {
 
                     {/* Recent chats */}
                     {unpinnedGeneralChats.map((chat) => (
-                      <DesktopChatItem
+                      <ChatItem
                         key={chat.id}
                         chat={chat}
                         isActive={activeChat === chat.id}
                         isRenaming={renamingChatId === chat.id}
                         renameValue={renameValue}
+                        isMobile={isTouchPrimary}
                         onSelect={() => { setActiveChat(chat.id); setActiveProjectId(null); setViewMode("chat"); }}
                         onRenameChange={setRenameValue}
                         onRenameSubmit={() => handleRenameChat(chat.id)}
@@ -1179,13 +1181,14 @@ const Kira = () => {
                           </button>
                           <div className="space-y-1 mt-1">
                             {projectConversations.slice(0, 3).map((chat) => (
-                              <DesktopChatItem
+                              <ChatItem
                                 key={chat.id}
                                 chat={chat}
                                 isActive={activeChat === chat.id}
                                 isRenaming={renamingChatId === chat.id}
                                 renameValue={renameValue}
                                 indent
+                                isMobile={isTouchPrimary}
                                 onSelect={() => { setActiveChat(chat.id); setActiveProjectId(project.id); setViewMode("chat"); }}
                                 onRenameChange={setRenameValue}
                                 onRenameSubmit={() => handleRenameChat(chat.id)}
@@ -1287,16 +1290,21 @@ const Kira = () => {
                   </p>
                 )}
                 {pinnedGeneralChats.map((chat) => (
-                  <MobileChatItem
+                  <ChatItem
                     key={chat.id}
                     chat={chat}
                     isActive={activeChat === chat.id}
                     isRenaming={renamingChatId === chat.id}
                     renameValue={renameValue}
+                    isMobile
                     onSelect={() => { setActiveChat(chat.id); setActiveProjectId(null); setMobileSidebarOpen(false); setViewMode("chat"); }}
                     onRenameChange={setRenameValue}
                     onRenameSubmit={() => handleRenameChat(chat.id)}
                     onRenameCancel={() => { setRenamingChatId(null); setRenameValue(""); }}
+                    onStartRename={() => { setRenamingChatId(chat.id); setRenameValue(chat.title); }}
+                    onPin={() => handlePinChat(chat.id, !!chat.pinned)}
+                    onDelete={() => setChatToDelete(chat.id)}
+                    onShare={() => handleShareChat(chat.id, chat.title)}
                     onLongPress={() => setMobileLongPressChat(chat)}
                     onLongPressStart={() => handleLongPressStart(chat)}
                     onLongPressEnd={handleLongPressEnd}
@@ -1305,16 +1313,21 @@ const Kira = () => {
 
                 {/* Unpinned general chats */}
                 {unpinnedGeneralChats.map((chat) => (
-                  <MobileChatItem
+                  <ChatItem
                     key={chat.id}
                     chat={chat}
                     isActive={activeChat === chat.id}
                     isRenaming={renamingChatId === chat.id}
                     renameValue={renameValue}
+                    isMobile
                     onSelect={() => { setActiveChat(chat.id); setActiveProjectId(null); setMobileSidebarOpen(false); setViewMode("chat"); }}
                     onRenameChange={setRenameValue}
                     onRenameSubmit={() => handleRenameChat(chat.id)}
                     onRenameCancel={() => { setRenamingChatId(null); setRenameValue(""); }}
+                    onStartRename={() => { setRenamingChatId(chat.id); setRenameValue(chat.title); }}
+                    onPin={() => handlePinChat(chat.id, !!chat.pinned)}
+                    onDelete={() => setChatToDelete(chat.id)}
+                    onShare={() => handleShareChat(chat.id, chat.title)}
                     onLongPress={() => setMobileLongPressChat(chat)}
                     onLongPressStart={() => handleLongPressStart(chat)}
                     onLongPressEnd={handleLongPressEnd}
@@ -1337,16 +1350,22 @@ const Kira = () => {
                       </button>
                       <div className="space-y-1 mt-1">
                         {projectConversations.slice(0, 3).map((chat) => (
-                          <MobileChatItem
+                          <ChatItem
                             key={chat.id}
                             chat={chat}
                             isActive={activeChat === chat.id}
                             isRenaming={renamingChatId === chat.id}
                             renameValue={renameValue}
+                            isMobile
+                            indent
                             onSelect={() => { setActiveChat(chat.id); setActiveProjectId(project.id); setMobileSidebarOpen(false); setViewMode("chat"); }}
                             onRenameChange={setRenameValue}
                             onRenameSubmit={() => handleRenameChat(chat.id)}
                             onRenameCancel={() => { setRenamingChatId(null); setRenameValue(""); }}
+                            onStartRename={() => { setRenamingChatId(chat.id); setRenameValue(chat.title); }}
+                            onPin={() => handlePinChat(chat.id, !!chat.pinned)}
+                            onDelete={() => setChatToDelete(chat.id)}
+                            onShare={() => handleShareChat(chat.id, chat.title)}
                             onLongPress={() => setMobileLongPressChat(chat)}
                             onLongPressStart={() => handleLongPressStart(chat)}
                             onLongPressEnd={handleLongPressEnd}
