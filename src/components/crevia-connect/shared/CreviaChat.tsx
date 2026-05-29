@@ -68,7 +68,10 @@ import { format, isToday, isYesterday } from "date-fns";
 import ChatMediaPanel from "./ChatMediaPanel";
 import { useE2EEncryption } from "@/hooks/use-e2e-encryption";
 import { iconOptions } from "@/components/crevia-link/iconOptions";
-import { useIOSKeyboardFit } from "@/hooks/use-keyboard-fit";
+// useIOSKeyboardFit removed: same reason as Kira — it applied position:fixed; top:vv.offsetTop
+// which pushes the container DOWN on modern iOS (where position:fixed is already relative to
+// the visual viewport), leaving a black gap above the header.
+// AppLayout h-dvh + flex chain + the keyboardOpen padding on the input handle it correctly.
 import { useVisualViewport } from "@/hooks/use-visual-viewport";
 
 interface ChatRoom {
@@ -244,8 +247,14 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const typingTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const presenceChannelRef = useRef<any>(null);
   const selectedExternalRef = useRef<string>("");
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-  useIOSKeyboardFit(chatContainerRef, () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }));
+
+  // Scroll to the latest message when the iOS keyboard opens so the input
+  // is never obscured by unread content. Replaces the removed useIOSKeyboardFit callback.
+  useEffect(() => {
+    if (!keyboardOpen || typeof window === "undefined" || window.innerWidth >= 768) return;
+    const t = setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 80);
+    return () => clearTimeout(t);
+  }, [keyboardOpen]);
 
   const { initEncryption, setupRoomEncryption, redistributeRoomKey, encrypt, decrypt, decryptMessages, getRoomKey, getPublicKey } =
     useE2EEncryption(currentUserId);
@@ -1539,7 +1548,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     type?.startsWith("image/") || false;
 
   return (
-    <div ref={chatContainerRef} className={hideRoomList ? "flex h-full w-full flex-col overflow-hidden bg-background" : "mx-auto flex h-[calc(100dvh-264px)] w-full min-w-0 max-w-7xl flex-col overflow-hidden bg-background md:h-[calc(100dvh-180px)]"}>
+    <div className={hideRoomList ? "flex h-full w-full flex-col overflow-hidden bg-background" : "mx-auto flex h-[calc(100dvh-264px)] w-full min-w-0 max-w-7xl flex-col overflow-hidden bg-background md:h-[calc(100dvh-180px)]"}>
       {/* Header — hidden when embedded in the hub (hideRoomList=true) */}
       {!hideRoomList && (
         <div className="flex items-center justify-between p-3 md:p-4 border-b bg-background flex-shrink-0">
