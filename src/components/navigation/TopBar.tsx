@@ -135,9 +135,12 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
                 <StudioMenuIcon />
               </button>
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="font-vollkorn text-base font-semibold text-foreground">
+                <Link
+                  to="/crevia-studio"
+                  className="font-vollkorn text-base font-semibold text-foreground hover:text-bronze transition-colors duration-200"
+                >
                   Crevia Studio
-                </span>
+                </Link>
                 <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />
                 <span
                   className="text-sm font-semibold font-poppins"
