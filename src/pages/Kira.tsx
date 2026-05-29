@@ -70,7 +70,10 @@ import CreateInvoiceDialog from "@/components/studio/CreateInvoiceDialog";
 import { ApproveActionDialog } from "@/components/kira/ApproveActionDialog";
 import { KiraSettingsPanel } from "@/components/kira/KiraSettingsPanel";
 import { motion, AnimatePresence } from "framer-motion";
-import { useIOSKeyboardFit } from "@/hooks/use-keyboard-fit";
+// useIOSKeyboardFit removed: it set position:fixed on the Kira container,
+// which overlapped and hid the TopBar on iOS Safari (z-index conflict).
+// The absolute/inset-0 scroll container + 100dvh AppLayout + useVisualViewport
+// input padding handle the iOS keyboard layout correctly without that hook.
 
 
 interface ChatHistory {
@@ -380,7 +383,6 @@ const Kira = () => {
   // Smart auto-scroll: only pull to bottom if the user is already near it.
   // When the user scrolls up to read history, streaming chars don't fight them.
   const isNearBottomRef = useRef(true);
-  useIOSKeyboardFit(chatContainerRef, () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }));
 
   // ── NEW: message interaction state ──
   const [editingMessageIdx, setEditingMessageIdx] = useState<number | null>(null);
