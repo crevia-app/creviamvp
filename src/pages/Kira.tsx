@@ -71,6 +71,7 @@ import { ApproveActionDialog } from "@/components/kira/ApproveActionDialog";
 import { KiraSettingsPanel } from "@/components/kira/KiraSettingsPanel";
 import KiraEmptyState from "@/components/kira/KiraEmptyState";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 // useIOSKeyboardFit removed: it set position:fixed on the Kira container,
 // which overlapped and hid the TopBar on iOS Safari (z-index conflict).
 // The absolute/inset-0 scroll container + 100dvh AppLayout + useVisualViewport
