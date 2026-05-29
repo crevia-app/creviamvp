@@ -106,20 +106,14 @@ function DesktopChatItem({
   chat, isActive, isRenaming, renameValue, indent = false,
   onSelect, onRenameChange, onRenameSubmit, onRenameCancel, onStartRename, onPin, onDelete, onShare,
 }: DesktopChatItemProps) {
-  const [hovered, setHovered] = useState(false);
-  const showMenu = isActive || hovered;
-
   return (
     <div
       onClick={() => { if (!isRenaming) onSelect(); }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{ position: 'relative' }}
-      className={`flex items-center gap-2 ${indent ? 'py-1.5 pl-7 pr-8' : 'py-2 pl-2.5 pr-8'} rounded-lg cursor-pointer transition-all ${
+      className={`group flex items-center gap-1.5 ${indent ? 'py-1.5 pl-7 pr-1' : 'py-2 pl-2.5 pr-1'} rounded-lg cursor-pointer transition-all ${
         isActive ? 'bg-bronze/10 text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
       }`}
     >
-      <MessageSquare className={`w-${indent ? '3.5' : '4'} h-${indent ? '3.5' : '4'} flex-shrink-0 ${isActive ? 'text-bronze' : ''}`} />
+      <MessageSquare className={`${indent ? 'w-3.5 h-3.5' : 'w-4 h-4'} flex-shrink-0 ${isActive ? 'text-bronze' : ''}`} />
 
       {isRenaming ? (
         <input
@@ -132,7 +126,7 @@ function DesktopChatItem({
           }}
           onBlur={onRenameSubmit}
           onClick={(e) => e.stopPropagation()}
-          className="flex-1 bg-transparent text-base md:text-sm outline-none border-b border-bronze/50 focus:border-bronze text-foreground min-w-0"
+          className="flex-1 bg-transparent text-sm outline-none border-b border-bronze/50 focus:border-bronze text-foreground min-w-0"
         />
       ) : (
         <span className="flex-1 min-w-0 text-sm truncate">{chat.title}</span>
@@ -141,23 +135,12 @@ function DesktopChatItem({
       <DropdownMenu>
         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
           <button
-            style={{
-              position: 'absolute',
-              right: '4px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              opacity: 1,
-              pointerEvents: 'auto',
-              width: '24px',
-              height: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: '4px',
-              color: 'inherit',
-            }}
+            className={`flex-shrink-0 w-6 h-6 flex items-center justify-center rounded transition-all duration-150
+              hover:bg-muted/80 hover:text-foreground
+              ${isActive ? 'opacity-100 text-muted-foreground' : 'opacity-0 group-hover:opacity-100 text-muted-foreground'}
+            `}
           >
-            <MoreVertical style={{ width: '14px', height: '14px' }} />
+            <MoreVertical className="w-3.5 h-3.5" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
@@ -248,9 +231,9 @@ function MobileChatItem({
 
       <button
         onClick={(e) => { e.stopPropagation(); onLongPress(); }}
-        className="flex items-center justify-center rounded-lg flex-shrink-0 text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/80 transition-all min-w-[44px] min-h-[44px]"
+        className="flex items-center justify-center rounded-lg flex-shrink-0 text-muted-foreground hover:text-foreground hover:bg-muted/80 active:bg-muted transition-all min-w-[44px] min-h-[44px]"
       >
-        <MoreVertical className="w-3.5 h-3.5" />
+        <MoreVertical className="w-4 h-4" />
       </button>
     </div>
   );
@@ -377,6 +360,11 @@ const Kira = () => {
   const streamBufferRef = useRef('');
   const animFrameRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const networkDoneRef = useRef(false);
+  // When handleSend creates a new conversation it calls setActiveChat, which
+  // triggers the loadMessages effect. That effect would overwrite the optimistic
+  // user message with an empty DB result (nothing saved yet). This ref tells the
+  // effect to skip the DB load for that one firing.
+  const skipNextLoadRef = useRef(false);
   // Index of the single message that should animate in. -1 = none (history load).
   // Only the message the user just sent or the new assistant reply gets a fade-in.
   const newMessageIndexRef = useRef<number>(-1);
@@ -446,6 +434,14 @@ const Kira = () => {
     const loadMessages = async () => {
       if (!activeChat) {
         setMessages([]);
+        return;
+      }
+
+      // handleSend sets this flag when it creates a new conversation and has
+      // already placed the optimistic user message. Skip the DB fetch so we
+      // don't race-overwrite those messages with an empty result.
+      if (skipNextLoadRef.current) {
+        skipNextLoadRef.current = false;
         return;
       }
 
@@ -716,6 +712,8 @@ const Kira = () => {
       }
       
       conversationId = newConvo.id;
+      // Tell the activeChat effect to skip the DB load — messages are set below.
+      skipNextLoadRef.current = true;
       setActiveChat(conversationId);
       setChatHistories(prev => [{
         id: newConvo.id,
