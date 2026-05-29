@@ -18,9 +18,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Camera, Trash2, ImageIcon, Loader2, SlidersHorizontal, CheckCircle2 } from "lucide-react";
+import { Camera, Trash2, ImageIcon, Loader2, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { AdvancedColorSelector } from "@/components/ui/AdvancedColorSelector";
 
 // Accent colours derived from Crevia Link themes — all free
 export const INVOICE_ACCENT_COLORS = [
@@ -256,41 +257,18 @@ const InvoiceSettingsDialog = ({ open, onOpenChange, onSaved }: Props) => {
           {tab === "theme" && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Pick an accent colour — applied to headers, borders, and totals on your invoices. All colours are free.
+                Pick an accent colour — applied to headers, borders, and totals on your invoices.
               </p>
-              <div className="grid grid-cols-6 gap-3">
-                {INVOICE_ACCENT_COLORS.map(({ name, hex }) => {
-                  const active = accentColor === hex;
-                  return (
-                    <button
-                      key={hex}
-                      title={name}
-                      onClick={() => handleColorSelect(hex)}
-                      disabled={savingColor}
-                      className={cn(
-                        "relative w-full aspect-square rounded-xl transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-bronze",
-                        active
-                          ? "ring-2 ring-offset-2 ring-foreground scale-110"
-                          : "hover:scale-105 active:scale-95"
-                      )}
-                      style={{ background: hex }}
-                    >
-                      {active && (
-                        <span className="absolute inset-0 flex items-center justify-center">
-                          <CheckCircle2 className="w-4 h-4 text-white drop-shadow" />
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
+              <div className="rounded-2xl bg-[#0A0A0A] border border-white/10 p-4">
+                <AdvancedColorSelector
+                  variant="invoice"
+                  value={accentColor}
+                  onChange={(hex) => !savingColor && handleColorSelect(hex)}
+                />
               </div>
-              <p className="text-xs text-muted-foreground">
-                Selected:{" "}
-                <span className="font-medium text-foreground">
-                  {INVOICE_ACCENT_COLORS.find(c => c.hex === accentColor)?.name ?? "Custom"}
-                </span>
-                {savingColor && <span className="ml-2 text-bronze animate-pulse">Saving…</span>}
-              </p>
+              {savingColor && (
+                <p className="text-xs text-bronze animate-pulse">Saving…</p>
+              )}
             </div>
           )}
 
