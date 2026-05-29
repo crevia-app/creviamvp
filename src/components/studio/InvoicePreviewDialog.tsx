@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   Printer, Send, CheckCircle2, Clock, AlertCircle,
-  Maximize2, Minimize2, Download, X, ArrowLeft, Eye,
+  Maximize2, Minimize2, Download, X, ArrowLeft, Eye, Trash2,
 } from "lucide-react";
 import { useDownloadPDF } from "@/hooks/use-download-pdf";
 import { useSubscription } from "@/hooks/use-subscription";
@@ -52,6 +52,8 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
   const [accentColor, setAccentColor]           = useState(DEFAULT_COLOR);
   // "main" = new single-flow preview  |  "print" = paged print-layout
   const [viewMode, setViewMode]                 = useState<"main" | "print">("main");
+  const [logoSize, setLogoSize]                 = useState<"sm" | "md" | "lg">("md");
+  const [hideLogo, setHideLogo]                 = useState(false);
 
   const { isPro, isBrandWorkspace, isBusiness } = useSubscription();
   const isProUser = isPro || isBrandWorkspace || isBusiness;
@@ -141,6 +143,17 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
     }
   };
 
+  const handleDeleteLogo = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    await supabase.from("business_settings").update({ logo_url: null }).eq("user_id", session.user.id);
+    setBusinessSettings((prev: any) => ({ ...prev, logo_url: null }));
+    setHideLogo(false);
+    toast.success("Logo removed");
+  };
+
+  const logoSizeClass = { sm: "w-10 h-10", md: "w-16 h-16", lg: "w-24 h-24" }[logoSize];
+
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("en-KE", { style: "currency", currency: invoice?.currency || "KES" }).format(amount);
 
@@ -169,12 +182,43 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
   /** Top accent bar */
   const AccentBar = () => <div className="h-1.5" style={{ background: accentColor }} />;
 
-  /** Header: INVOICE label + optional logo */
+  /** Header: INVOICE label + optional logo with size/delete controls */
   const InvoiceHeader = () => (
     <div className="flex justify-between items-start gap-3 mb-2">
       <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">INVOICE</h1>
-      {businessSettings?.logo_url && (
-        <img src={businessSettings.logo_url} alt="Business Logo" className="w-12 h-12 object-contain rounded-lg flex-shrink-0" />
+      {businessSettings?.logo_url && !hideLogo && (
+        <div className={`relative flex-shrink-0 ${viewMode === "main" ? "group" : ""}`}>
+          <img
+            src={businessSettings.logo_url}
+            alt="Business Logo"
+            className={`${logoSizeClass} object-contain rounded-lg transition-all duration-200`}
+          />
+          {/* Controls — only visible in main preview, invisible to PDF capture */}
+          {viewMode === "main" && (
+            <div className="absolute inset-0 flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-black/50 rounded-lg">
+              {(["sm", "md", "lg"] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={(e) => { e.stopPropagation(); setLogoSize(s); }}
+                  className={`w-6 h-6 rounded text-[10px] font-bold transition-all ${
+                    logoSize === s
+                      ? "bg-white text-black"
+                      : "bg-white/20 text-white hover:bg-white/40"
+                  }`}
+                >
+                  {s.toUpperCase()}
+                </button>
+              ))}
+              <button
+                onClick={(e) => { e.stopPropagation(); handleDeleteLogo(); }}
+                className="w-6 h-6 rounded bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center transition-all"
+                title="Remove logo"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
@@ -366,19 +410,11 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
     );
   };
 
-  /** Footer + optional watermark */
+  /** Footer */
   const Footer = () => (
-    <>
-      <div className="mt-8 pt-3 text-center" style={{ borderTop: `1px solid ${hexToRgba(accentColor, 0.2)}` }}>
-        <p className="text-xs font-medium" style={{ color: accentColor }}>Thank you for your business!</p>
-        <p className="text-gray-300 text-[10px] mt-0.5">Generated with Crevia Studio · {format(new Date(), "yyyy")}</p>
-      </div>
-      {!isProUser && (
-        <div className="mt-4 -mx-4 -mb-4 sm:-mx-8 sm:-mb-8 px-6 py-2 border-t border-gray-100 text-center">
-          <p className="text-[10px] text-gray-300 font-medium tracking-wide">Powered by Crevia</p>
-        </div>
-      )}
-    </>
+    <div className="mt-8 pt-3 text-center" style={{ borderTop: `1px solid ${hexToRgba(accentColor, 0.2)}` }}>
+      <p className="text-xs font-medium" style={{ color: accentColor }}>Thank you for your business!</p>
+    </div>
   );
 
   // ── MAIN PREVIEW — single flowing document, no page breaks ─────────────────
@@ -391,7 +427,6 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
         <BillToSection />
         <ItemsSection />
         <TotalsSection />
-        <StatusStamp />
         {/* Notes, terms, payment details all flow inline — no page break */}
         {hasPage2 && (
           <div className="mt-2">
@@ -416,7 +451,6 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
           <BillToSection />
           <ItemsSection />
           <TotalsSection />
-          <StatusStamp />
           {!hasPage2 && <Footer />}
         </div>
       </div>
