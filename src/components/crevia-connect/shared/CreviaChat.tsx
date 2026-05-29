@@ -241,7 +241,13 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const onlineChannelRef = useRef<any>(null);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Three separate file inputs so we never mutate `accept` at click time —
+  // iOS Safari blocks the file picker when accept is changed right before .click().
+  const fileAnyRef   = useRef<HTMLInputElement>(null);
+  const fileImageRef = useRef<HTMLInputElement>(null);
+  const fileVideoRef = useRef<HTMLInputElement>(null);
+  // Keep the old name as an alias so any remaining references still compile.
+  const fileInputRef = fileAnyRef;
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typingTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -2386,7 +2392,15 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                     />
                   ) : (
                     <>
-                      <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} />
+                      {/*
+                        Three separate hidden inputs — one per accept type.
+                        iOS Safari blocks the file picker when `accept` is
+                        mutated on the same element right before .click().
+                        Pre-wired refs require zero runtime mutation.
+                      */}
+                      <input ref={fileAnyRef}   type="file" accept="*/*"      className="sr-only" onChange={handleFileSelect} />
+                      <input ref={fileImageRef} type="file" accept="image/*"   className="sr-only" onChange={handleFileSelect} />
+                      <input ref={fileVideoRef} type="file" accept="video/*"   className="sr-only" onChange={handleFileSelect} />
 
                       {/* Kira-style pill input bar */}
                       <div className="flex items-center gap-1 bg-muted/40 rounded-full border border-border/60 px-2 py-1 shadow-sm transition-all duration-200 focus-within:border-bronze/50 focus-within:bg-card focus-within:shadow-md">
@@ -2399,13 +2413,13 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="start" className="w-52">
-                            <DropdownMenuItem onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = "*/*"; fileInputRef.current.click(); } }}>
+                            <DropdownMenuItem onClick={() => fileAnyRef.current?.click()}>
                               <Paperclip className="h-4 w-4 mr-2" />Attach File
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = "image/*"; fileInputRef.current.click(); } }}>
+                            <DropdownMenuItem onClick={() => fileImageRef.current?.click()}>
                               <ImageIcon className="h-4 w-4 mr-2" />Send Image
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = "video/*"; fileInputRef.current.click(); } }}>
+                            <DropdownMenuItem onClick={() => fileVideoRef.current?.click()}>
                               <Video className="h-4 w-4 mr-2" />Send Video
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
