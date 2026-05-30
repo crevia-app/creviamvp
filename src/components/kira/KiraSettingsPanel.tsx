@@ -55,8 +55,8 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [memory, setMemory] = useState<KiraMemory>({
-    reference_chat_history: true,
-    reference_saved_memories: true,
+    reference_chat_history: false,
+    reference_saved_memories: false,
     nickname: "",
     occupation: "",
     more_about_you: "",
@@ -81,8 +81,8 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
       if (profile?.display_name) setDisplayName(profile.display_name);
       const raw = (profile?.kira_memory as Record<string, unknown>) || {};
       setMemory({
-        reference_chat_history: raw.reference_chat_history !== false,
-        reference_saved_memories: raw.reference_saved_memories !== false,
+        reference_chat_history: raw.reference_chat_history === true,
+        reference_saved_memories: raw.reference_saved_memories === true,
         nickname: (raw.nickname as string) || "",
         occupation: (raw.occupation as string) || "",
         more_about_you: (raw.more_about_you as string) || "",

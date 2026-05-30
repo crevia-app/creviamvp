@@ -600,7 +600,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     return (
       <div className="bg-background">
         {/* Embedded Tab Navigation */}
-        <div className="hidden md:block sticky top-0 z-30 border-b border-border/60 bg-background">
+        <div className="sticky top-0 z-30 border-b border-border/60 bg-background">
           <ScrollArea className="w-full">
             <div className="flex items-center justify-around px-6 md:px-10 py-2 w-full">
               {[

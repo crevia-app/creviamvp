@@ -223,11 +223,11 @@ export function AdvancedColorSelector({
               Custom Gradient
             </p>
 
-            {/* Controls row */}
-            <div className="flex items-end gap-4">
+            {/* Controls — stacked on mobile, row on sm+ */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
 
               {/* From */}
-              <div className="space-y-2 flex-1">
+              <div className="space-y-2 sm:flex-1">
                 <label className="text-[10px] uppercase tracking-wide text-white/25">From</label>
                 <div className="flex items-center gap-2">
                   <div className="relative w-8 h-8 flex-shrink-0">
@@ -252,7 +252,7 @@ export function AdvancedColorSelector({
               </div>
 
               {/* Angle */}
-              <div className="space-y-2 flex-shrink-0">
+              <div className="space-y-2 sm:flex-shrink-0">
                 <label className="text-[10px] uppercase tracking-wide text-white/25">Angle</label>
                 <div className="flex items-center gap-2">
                   <input
@@ -261,7 +261,7 @@ export function AdvancedColorSelector({
                     max={360}
                     value={gradAngle}
                     onChange={(e) => setGradAngle(Number(e.target.value))}
-                    className="w-24 h-1 accent-white cursor-pointer"
+                    className="flex-1 sm:w-24 h-1 accent-white cursor-pointer"
                   />
                   <span className="text-[11px] font-mono text-white/40 tabular-nums w-8">
                     {gradAngle}°
@@ -270,7 +270,7 @@ export function AdvancedColorSelector({
               </div>
 
               {/* To */}
-              <div className="space-y-2 flex-1">
+              <div className="space-y-2 sm:flex-1">
                 <label className="text-[10px] uppercase tracking-wide text-white/25">To</label>
                 <div className="flex items-center gap-2">
                   <div className="relative w-8 h-8 flex-shrink-0">

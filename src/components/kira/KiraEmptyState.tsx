@@ -27,12 +27,7 @@ interface KiraEmptyStateProps {
 }
 
 // ── Prompt chips shown when no project is active ──────────────────────────────
-const DEFAULT_CHIPS = [
-  "Draft a contract for a new client",
-  "Help me write a professional invoice",
-  "Review this clause for me",
-  "Suggest a pricing strategy",
-];
+const DEFAULT_CHIPS: string[] = [];
 
 const PROJECT_CHIPS = [
   "Summarise this project",

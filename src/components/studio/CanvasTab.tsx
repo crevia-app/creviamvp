@@ -290,13 +290,14 @@ const ContractsTab = ({ workspaceId, initialContractId }: { workspaceId?: string
   };
 
   const handleDelete = async (id: string) => {
+    setCanvases((prev) => prev.filter((c) => c.id !== id));
     const { error } = await supabase.from("canvases").delete().eq("id", id);
     if (error) {
       toast.error("Failed to delete Canvas");
+      fetchCanvases(currentFolderId);
       return;
     }
     toast.success("Canvas deleted");
-    fetchCanvases(currentFolderId);
   };
 
   const handleDuplicate = async (canvas: Canvas) => {
