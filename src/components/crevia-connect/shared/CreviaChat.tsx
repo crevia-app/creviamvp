@@ -1890,8 +1890,12 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                 )}
               </div>
 
-              {/* Messages */}
-              <ScrollArea className="flex-1 p-3 md:p-4">
+              {/* Messages — native scroll for iOS Safari reliability.
+                  Radix ScrollArea wraps in a display:table subtree that breaks
+                  iOS touch-momentum scrolling and misfires scroll detection.
+                  Plain overflow-y-auto + overscroll-contain + touch-pan-y is
+                  the correct cross-platform primitive for a chat list. */}
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y p-3 md:p-4">
                 <div className="space-y-4 max-w-3xl mx-auto pb-4">
 
                   {messageGroups.map((group) => (
@@ -2327,7 +2331,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
 
                   <div ref={messagesEndRef} />
                 </div>
-              </ScrollArea>
+              </div>
 
               {/* Input Area — dynamic bottom padding like Kira: shrinks when keyboard is up */}
               <div
