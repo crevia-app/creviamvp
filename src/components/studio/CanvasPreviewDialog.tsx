@@ -539,33 +539,6 @@ const CanvasPreviewDialog = ({
                       )}
                     </div>
 
-                    {/* ── SAVED SIGNATURE: fallback to bottom when no position stored ── */}
-                    {!placementMode && localCanvas.creator_signature && !(localCanvas.signature_position as SigPos | null)?.xPct && (
-                      <div className="pt-2 border-t border-border/40">
-                        <div className="flex-1 min-w-0">
-                          <div className="h-14 flex items-end pb-1">
-                            {localCanvas.creator_signature.startsWith("data:image") ? (
-                              <img
-                                src={localCanvas.creator_signature}
-                                alt="Signature"
-                                className="max-h-12 max-w-[180px] object-contain dark:invert"
-                                draggable={false}
-                              />
-                            ) : (
-                              <span className="font-vollkorn italic text-2xl text-foreground/85 truncate">
-                                {localCanvas.creator_signature}
-                              </span>
-                            )}
-                          </div>
-                          <div className="h-px bg-border/60 mb-1.5" />
-                          <p className="text-[11px] text-muted-foreground">
-                            {localCanvas.creator_signed_at
-                              ? `Signed ${format(new Date(localCanvas.creator_signed_at), "MMM d, yyyy 'at' h:mm a")}`
-                              : "Creator Signature"}
-                          </p>
-                        </div>
-                      </div>
-                    )}
                   </div>
                   {/* End regular content ------------------------------------ */}
 
