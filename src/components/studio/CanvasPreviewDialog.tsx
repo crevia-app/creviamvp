@@ -539,37 +539,73 @@ const CanvasPreviewDialog = ({
                       )}
                     </div>
 
-                    {/* ── SAVED SIGNATURE — always below content in document flow ── */}
-                    {!placementMode && localCanvas.creator_signature && (
+                    {/* ── SAVED SIGNATURE: fallback to bottom when no position stored ── */}
+                    {!placementMode && localCanvas.creator_signature && !(localCanvas.signature_position as SigPos | null)?.xPct && (
                       <div className="pt-2 border-t border-border/40">
-                        <div className="flex items-end gap-6">
-                          <div className="flex-1 min-w-0">
-                            <div className="h-14 flex items-end pb-1">
-                              {localCanvas.creator_signature.startsWith("data:image") ? (
-                                <img
-                                  src={localCanvas.creator_signature}
-                                  alt="Signature"
-                                  className="max-h-12 max-w-[180px] object-contain dark:invert"
-                                  draggable={false}
-                                />
-                              ) : (
-                                <span className="font-vollkorn italic text-2xl text-foreground/85 truncate">
-                                  {localCanvas.creator_signature}
-                                </span>
-                              )}
-                            </div>
-                            <div className="h-px bg-border/60 mb-1.5" />
-                            <p className="text-[11px] text-muted-foreground">
-                              {localCanvas.creator_signed_at
-                                ? `Signed ${format(new Date(localCanvas.creator_signed_at), "MMM d, yyyy 'at' h:mm a")}`
-                                : "Creator Signature"}
-                            </p>
+                        <div className="flex-1 min-w-0">
+                          <div className="h-14 flex items-end pb-1">
+                            {localCanvas.creator_signature.startsWith("data:image") ? (
+                              <img
+                                src={localCanvas.creator_signature}
+                                alt="Signature"
+                                className="max-h-12 max-w-[180px] object-contain dark:invert"
+                                draggable={false}
+                              />
+                            ) : (
+                              <span className="font-vollkorn italic text-2xl text-foreground/85 truncate">
+                                {localCanvas.creator_signature}
+                              </span>
+                            )}
                           </div>
+                          <div className="h-px bg-border/60 mb-1.5" />
+                          <p className="text-[11px] text-muted-foreground">
+                            {localCanvas.creator_signed_at
+                              ? `Signed ${format(new Date(localCanvas.creator_signed_at), "MMM d, yyyy 'at' h:mm a")}`
+                              : "Creator Signature"}
+                          </p>
                         </div>
                       </div>
                     )}
                   </div>
                   {/* End regular content ------------------------------------ */}
+
+                  {/* ── SAVED SIGNATURE: absolutely positioned at stored coordinates ── */}
+                  {!placementMode && localCanvas.creator_signature && (() => {
+                    const sp = localCanvas.signature_position as SigPos | null;
+                    if (!sp?.xPct) return null;
+                    return (
+                      <div
+                        className="absolute pointer-events-none"
+                        style={{
+                          left:   `${sp.xPct * 100}%`,
+                          top:    `${sp.yPct! * 100}%`,
+                          width:  sp.wPct ? `${sp.wPct * 100}%` : `${INIT_W}px`,
+                          height: sp.hPct ? `${sp.hPct * 100}%` : `${INIT_H}px`,
+                        }}
+                      >
+                        <div className="flex flex-col h-full justify-end gap-1">
+                          {localCanvas.creator_signature.startsWith("data:image") ? (
+                            <img
+                              src={localCanvas.creator_signature}
+                              alt="Signature"
+                              className="max-h-12 object-contain object-left dark:invert"
+                              draggable={false}
+                            />
+                          ) : (
+                            <span className="font-vollkorn italic text-2xl text-foreground/85 truncate">
+                              {localCanvas.creator_signature}
+                            </span>
+                          )}
+                          <div className="h-px bg-border/60" />
+                          <p className="text-[11px] text-muted-foreground whitespace-nowrap">
+                            {localCanvas.creator_signed_at
+                              ? `Signed ${format(new Date(localCanvas.creator_signed_at), "MMM d, yyyy 'at' h:mm a")}`
+                              : "Creator Signature"}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* ── ACTIVE SIGNATURE WIDGET (placement mode only) ── */}
                   {placementMode?.pos && (
