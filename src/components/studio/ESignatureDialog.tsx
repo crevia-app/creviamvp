@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,8 +23,8 @@ interface ESignatureDialogProps {
 
 interface SavedSignature {
   type: "draw" | "type";
-  data: string; // base64 for draw, text for type
-  font?: string; // font id for typed signatures
+  data: string;
+  font?: string;
   savedAt: string;
 }
 
@@ -47,6 +47,8 @@ const deleteSavedSignature = () => {
   localStorage.removeItem(SAVED_SIGNATURE_KEY);
 };
 
+const isDarkMode = () => document.documentElement.classList.contains("dark");
+
 const ESignatureDialog = ({
   open,
   onOpenChange,
@@ -54,7 +56,7 @@ const ESignatureDialog = ({
   onSign,
 }: ESignatureDialogProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
+  const isDrawingRef = useRef(false); // ref instead of state — avoids stale closure in native listeners
   const [hasSignature, setHasSignature] = useState(false);
   const [typedSignature, setTypedSignature] = useState(signerName || "");
   const [activeTab, setActiveTab] = useState<"draw" | "type" | "saved">("draw");
@@ -69,102 +71,207 @@ const ESignatureDialog = ({
     { id: "elegant", label: "Elegant", className: "font-vollkorn italic" },
   ];
 
-  useEffect(() => {
-    if (open) {
-      const saved = getSavedSignature();
-      setSavedSignature(saved);
-      // Auto-select saved tab if a signature exists
-      if (saved) {
-        setActiveTab("saved");
-      } else {
-        setActiveTab("draw");
-      }
-      setTypedSignature(signerName || "");
-    }
-  }, [open, signerName]);
+  // ── Canvas helpers ────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    if (open && activeTab === "draw") {
-      setTimeout(initCanvas, 100);
-    }
-  }, [open, activeTab]);
+  /** Returns exact CSS-pixel coords relative to the canvas, accounting for
+   *  scroll and any CSS transforms on ancestor elements. */
+  const getCanvasCoords = useCallback((clientX: number, clientY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top,
+    };
+  }, []);
 
-  const isDarkMode = () => document.documentElement.classList.contains("dark");
+  /** Apply ink style to context — called after every scale() so settings survive resets. */
+  const applyInkStyle = useCallback((ctx: CanvasRenderingContext2D) => {
+    ctx.strokeStyle = isDarkMode() ? "#e8e8e8" : "#1a1a1a";
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+  }, []);
 
-  const initCanvas = () => {
+  /**
+   * (Re)initialise the canvas bitmap at the correct physical resolution.
+   *
+   * Pixel-perfect approach:
+   *   canvas.width/height  = CSS size × devicePixelRatio  (physical pixels)
+   *   ctx.scale(dpr, dpr)                                 (logical → physical)
+   *   Drawing coords stay in CSS-pixel space — no manual scaling needed.
+   *
+   * If preserveSignature=true we snapshot the current bitmap, resize, then
+   * redraw it so the user's work survives orientation changes / resizes.
+   */
+  const initCanvas = useCallback((preserveSignature = false) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * 2;
-    canvas.height = rect.height * 2;
-    ctx.scale(2, 2);
-    // In dark mode draw with light ink so the canvas is comfortable to use;
-    // exportSignature() inverts back to dark pixels before storing so the PNG
-    // always has dark ink on transparent — works with blend modes in both modes.
-    ctx.strokeStyle = isDarkMode() ? "#e8e8e8" : "#1a1a1a";
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    // No fillRect — canvas stays transparent so exported PNG has no white background
-    setHasSignature(false);
+
+    // Snapshot before clearing (resize-preservation path)
+    let snapshot: string | null = null;
+    if (preserveSignature) {
+      // Only worth capturing if there is actual ink
+      snapshot = canvas.toDataURL("image/png");
+    }
+
+    // Set bitmap dimensions to match physical screen pixels
+    canvas.width  = Math.round(rect.width  * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+
+    // Scale the context so every draw call uses CSS-pixel coordinates
+    ctx.scale(dpr, dpr);
+    applyInkStyle(ctx);
+
+    if (snapshot) {
+      const img = new Image();
+      img.onload = () => {
+        // Draw the old snapshot scaled to fill the (potentially new) CSS size
+        ctx.drawImage(img, 0, 0, rect.width, rect.height);
+      };
+      img.src = snapshot;
+    } else {
+      setHasSignature(false);
+    }
+  }, [applyInkStyle]);
+
+  // ── Initialise / reset when dialog opens or tab switches to draw ──────────
+  useEffect(() => {
+    if (open) {
+      const saved = getSavedSignature();
+      setSavedSignature(saved);
+      setActiveTab(saved ? "saved" : "draw");
+      setTypedSignature(signerName || "");
+    }
+  }, [open, signerName]);
+
+  useEffect(() => {
+    if (!open || activeTab !== "draw") return;
+
+    // Use requestAnimationFrame so the canvas has its final layout size
+    // before we read getBoundingClientRect (avoids the old setTimeout hack).
+    const raf = requestAnimationFrame(() => initCanvas(false));
+    return () => cancelAnimationFrame(raf);
+  }, [open, activeTab, initCanvas]);
+
+  // ── Responsive resize — preserve signature across orientation changes ──────
+  useEffect(() => {
+    if (!open || activeTab !== "draw") return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ro = new ResizeObserver(() => {
+      // Only reinitialise if there's actual ink to preserve
+      initCanvas(true);
+    });
+    ro.observe(canvas);
+    return () => ro.disconnect();
+  }, [open, activeTab, initCanvas]);
+
+  // ── Native touch listeners (passive:false) ────────────────────────────────
+  // React's synthetic touch handlers are passive in modern React — they cannot
+  // call e.preventDefault() to stop page scroll while drawing. We attach native
+  // listeners directly so we can mark them { passive: false }.
+  useEffect(() => {
+    if (!open || activeTab !== "draw") return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const onTouchStart = (e: TouchEvent) => {
+      e.preventDefault(); // stop browser scroll / zoom
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      isDrawingRef.current = true;
+      const { x, y } = getCanvasCoords(e.touches[0].clientX, e.touches[0].clientY);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      if (!isDrawingRef.current) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      const { x, y } = getCanvasCoords(e.touches[0].clientX, e.touches[0].clientY);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+      setHasSignature(true);
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      e.preventDefault();
+      isDrawingRef.current = false;
+    };
+
+    canvas.addEventListener("touchstart", onTouchStart, { passive: false });
+    canvas.addEventListener("touchmove",  onTouchMove,  { passive: false });
+    canvas.addEventListener("touchend",   onTouchEnd,   { passive: false });
+
+    return () => {
+      canvas.removeEventListener("touchstart", onTouchStart);
+      canvas.removeEventListener("touchmove",  onTouchMove);
+      canvas.removeEventListener("touchend",   onTouchEnd);
+    };
+  }, [open, activeTab, getCanvasCoords]);
+
+  // ── Mouse handlers (React synthetic — fine, no passive issue) ────────────
+  const onMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx) return;
+    isDrawingRef.current = true;
+    const { x, y } = getCanvasCoords(e.clientX, e.clientY);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
   };
 
-  // Normalise to dark-ink PNG regardless of drawing mode so stored data is
-  // always dark pixels on transparent — safe to invert in CSS for dark mode display.
+  const onMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDrawingRef.current) return;
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx) return;
+    const { x, y } = getCanvasCoords(e.clientX, e.clientY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    setHasSignature(true);
+  };
+
+  const onMouseUp   = () => { isDrawingRef.current = false; };
+  const onMouseLeave = () => { isDrawingRef.current = false; };
+
+  // ── Export ────────────────────────────────────────────────────────────────
+  // Always exports dark ink on transparent background regardless of colour
+  // scheme, so the PNG integrates cleanly with any document theme.
   const exportSignature = (): string => {
     const canvas = canvasRef.current;
     if (!canvas) return "";
     if (!isDarkMode()) return canvas.toDataURL("image/png");
-    // Invert light ink → dark ink for storage
+
+    // Dark mode: light ink on canvas → invert to dark ink for storage
     const tmp = document.createElement("canvas");
-    tmp.width = canvas.width;
+    tmp.width  = canvas.width;
     tmp.height = canvas.height;
     const ctx2 = tmp.getContext("2d")!;
     ctx2.drawImage(canvas, 0, 0);
     const imgData = ctx2.getImageData(0, 0, tmp.width, tmp.height);
     const d = imgData.data;
     for (let i = 0; i < d.length; i += 4) {
-      if (d[i + 3] > 0) { d[i] = 255 - d[i]; d[i + 1] = 255 - d[i + 1]; d[i + 2] = 255 - d[i + 2]; }
+      if (d[i + 3] > 0) {
+        d[i]     = 255 - d[i];
+        d[i + 1] = 255 - d[i + 1];
+        d[i + 2] = 255 - d[i + 2];
+      }
     }
     ctx2.putImageData(imgData, 0, 0);
     return tmp.toDataURL("image/png");
   };
 
-  const getCoordinates = (e: React.MouseEvent | React.TouchEvent) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
-    if ("touches" in e) {
-      return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
-    }
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-  };
+  const clearCanvas = () => initCanvas(false);
 
-  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
-    const ctx = canvasRef.current?.getContext("2d");
-    if (!ctx) return;
-    setIsDrawing(true);
-    const { x, y } = getCoordinates(e);
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-  };
-
-  const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isDrawing) return;
-    const ctx = canvasRef.current?.getContext("2d");
-    if (!ctx) return;
-    const { x, y } = getCoordinates(e);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-    setHasSignature(true);
-  };
-
-  const stopDrawing = () => setIsDrawing(false);
-  const clearCanvas = () => initCanvas();
-
+  // ── Sign ──────────────────────────────────────────────────────────────────
   const handleSign = () => {
     let signatureData: string;
 
@@ -177,7 +284,6 @@ const ESignatureDialog = ({
       signatureData = typedSignature;
     }
 
-    // Save signature for future use if checkbox is checked
     if (saveForLater && activeTab !== "saved") {
       const sigToSave: SavedSignature = {
         type: activeTab === "draw" ? "draw" : "type",
@@ -207,6 +313,7 @@ const ESignatureDialog = ({
       ? hasSignature
       : typedSignature.trim().length > 0;
 
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg rounded-2xl p-0 gap-0 overflow-hidden">
@@ -295,14 +402,12 @@ const ESignatureDialog = ({
               <div className="relative">
                 <canvas
                   ref={canvasRef}
-                  className="w-full h-44 border-2 border-dashed border-border rounded-xl cursor-crosshair bg-white dark:bg-zinc-900 touch-none"
-                  onMouseDown={startDrawing}
-                  onMouseMove={draw}
-                  onMouseUp={stopDrawing}
-                  onMouseLeave={stopDrawing}
-                  onTouchStart={startDrawing}
-                  onTouchMove={draw}
-                  onTouchEnd={stopDrawing}
+                  className="w-full h-44 border-2 border-dashed border-border rounded-xl cursor-crosshair bg-white dark:bg-zinc-900 touch-none select-none"
+                  // Touch events handled via native listeners (passive:false) — see useEffect above
+                  onMouseDown={onMouseDown}
+                  onMouseMove={onMouseMove}
+                  onMouseUp={onMouseUp}
+                  onMouseLeave={onMouseLeave}
                 />
                 {!hasSignature && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -364,7 +469,6 @@ const ESignatureDialog = ({
                 </div>
               </div>
 
-              {/* Preview */}
               <div className="p-5 bg-white dark:bg-zinc-900 border border-border/30 rounded-xl">
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-3">Preview</p>
                 <div className="h-16 flex items-center justify-center border-b-2 border-border/40">
