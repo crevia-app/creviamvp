@@ -44,7 +44,7 @@ const AuthCallback = () => {
       (_event, session) => {
         if (session) {
           setStatus("success");
-          setTimeout(() => navigate("/kira", { replace: true }), 1200);
+          navigate("/kira", { replace: true });
         }
       }
     );
@@ -84,34 +84,8 @@ const AuthCallback = () => {
           <span className="font-vollkorn text-2xl font-bold text-white">Crevia</span>
         </div>
 
-        {/* Verifying state */}
-        {status === "verifying" && (
-          <div className="space-y-5">
-            <div className="w-16 h-16 rounded-2xl bg-bronze/15 border border-bronze/20 flex items-center justify-center mx-auto">
-              <Loader2 className="w-7 h-7 text-bronze animate-spin" />
-            </div>
-            <div>
-              <h1 className="font-vollkorn text-2xl font-bold text-white mb-2">
-                Verifying your account
-              </h1>
-              <p className="text-sm text-white/50 font-poppins">
-                Hang tight — this takes just a second.
-              </p>
-            </div>
-            <div className="flex justify-center gap-1.5 pt-2">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="w-1.5 h-1.5 rounded-full bg-bronze animate-pulse"
-                  style={{ animationDelay: `${i * 200}ms` }}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Success state — brief spinner while navigation fires */}
-        {status === "success" && (
+        {/* Verifying / success — silent spinner, no text */}
+        {(status === "verifying" || status === "success") && (
           <div className="flex items-center justify-center">
             <Loader2 className="w-8 h-8 text-bronze animate-spin" />
           </div>

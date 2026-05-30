@@ -349,9 +349,8 @@ const Auth = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
         <PageBg />
-        <div className="relative z-10 flex flex-col items-center gap-4 text-center">
+        <div className="relative z-10 flex items-center justify-center">
           <Loader2 className="w-10 h-10 animate-spin text-bronze" />
-          <p className="font-poppins text-muted-foreground text-sm">Signing you in…</p>
         </div>
       </div>
     );
