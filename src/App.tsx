@@ -140,7 +140,7 @@ function AppContent() {
     supabase.from("app_settings" as any)
       .select("value")
       .eq("key", "maintenance_mode")
-      .single()
+      .maybeSingle()
       .then(({ data }) => {
         if ((data as any)?.value === "true") setMaintenance(true);
       });
