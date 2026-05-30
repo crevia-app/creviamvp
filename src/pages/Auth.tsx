@@ -234,7 +234,26 @@ const Auth = () => {
         if (error) {
           const msg = error.message.toLowerCase();
           if (msg.includes("invalid login") || msg.includes("invalid credentials") || msg.includes("wrong password")) {
-            toast({ title: "Incorrect email or password", description: "Please check your details and try again. If you signed up with Google, use the Google button above.", variant: "destructive" });
+            // Distinguish "no account" from "wrong password" via a silent profile lookup.
+            // Profiles are publicly readable (Crevia Link), so this works pre-auth.
+            const { data: profileCheck } = await supabase
+              .from("profiles")
+              .select("id")
+              .eq("email", email.trim())
+              .maybeSingle();
+            if (!profileCheck) {
+              toast({
+                title: "No account found",
+                description: "We couldn't find an account with this email. Please create a new account to get started.",
+                variant: "destructive",
+              });
+            } else {
+              toast({
+                title: "Incorrect password",
+                description: "That password doesn't match. Please try again or reset your password below.",
+                variant: "destructive",
+              });
+            }
           } else if (msg.includes("email not confirmed")) {
             toast({ title: "Email not confirmed", description: "Please check your inbox and click the confirmation link we sent you.", variant: "destructive" });
           } else {

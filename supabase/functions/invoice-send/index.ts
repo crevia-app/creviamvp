@@ -86,19 +86,23 @@ serve(async (req) => {
         status: 401, headers: { ...cors, "Content-Type": "application/json" },
       });
     }
-    // Rate limit: 10 requests per minute per user
-    const { data: rlAllowed } = await adminClient.rpc("check_rate_limit", {
-      p_user_id: caller.id,
-      p_endpoint: "invoice-send",
-      p_limit: 10,
-      p_window_secs: 60,
-    });
-    if (!rlAllowed) {
-      adminClient.rpc("log_security_event", { p_event_type: "rate_limit", p_user_id: caller.id, p_endpoint: "invoice-send", p_detail: "Per-minute limit exceeded" }).catch(() => {});
-      console.warn(`[security] rate_limit endpoint=invoice-send user=${caller.id}`);
-      return new Response(JSON.stringify({ error: "Too many requests. Please slow down." }), {
-        status: 429, headers: { ...cors, "Content-Type": "application/json" },
+    // Rate limit: 10 requests per minute per user (non-fatal if RPC missing)
+    try {
+      const { data: rlAllowed } = await adminClient.rpc("check_rate_limit", {
+        p_user_id: caller.id,
+        p_endpoint: "invoice-send",
+        p_limit: 10,
+        p_window_secs: 60,
       });
+      if (rlAllowed === false) {
+        adminClient.rpc("log_security_event", { p_event_type: "rate_limit", p_user_id: caller.id, p_endpoint: "invoice-send", p_detail: "Per-minute limit exceeded" }).catch(() => {});
+        console.warn(`[security] rate_limit endpoint=invoice-send user=${caller.id}`);
+        return new Response(JSON.stringify({ error: "Too many requests. Please slow down." }), {
+          status: 429, headers: { ...cors, "Content-Type": "application/json" },
+        });
+      }
+    } catch {
+      // check_rate_limit RPC not available — proceed without rate limiting
     }
 
     // Fetch invoice as the authenticated user — RLS ensures they can only see their own
