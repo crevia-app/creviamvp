@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import ReactMarkdown from "react-markdown";
 import { useVisualViewport } from "@/hooks/use-visual-viewport";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -1503,12 +1504,18 @@ const Dira = () => {
                                         : 'bg-muted rounded-tl-md'
                                     }`}
                                   >
-                                    <p className="text-base whitespace-pre-wrap text-left">
-                                      {msg.content}
-                                      {isStreaming && idx === messages.length - 1 && msg.role === 'assistant' && (
-                                        <StreamingCursor />
-                                      )}
-                                    </p>
+                                    {msg.role === 'assistant' ? (
+                                      <div className="prose prose-sm prose-invert max-w-none text-left [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                        {isStreaming && idx === messages.length - 1 && (
+                                          <StreamingCursor />
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <p className="text-base whitespace-pre-wrap text-left">
+                                        {msg.content}
+                                      </p>
+                                    )}
                                     {msg.file && (
                                       <div className="mt-2 flex items-center gap-2 text-xs opacity-70">
                                         <Paperclip className="w-3 h-3" />

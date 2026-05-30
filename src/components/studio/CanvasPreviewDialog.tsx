@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -528,8 +529,8 @@ const CanvasPreviewDialog = ({
                     {/* Agreement body */}
                     <div>
                       {localCanvas.content ? (
-                        <div ref={textDivRef} className="whitespace-pre-wrap break-words text-sm text-foreground/80 leading-relaxed font-mono p-4 rounded-xl bg-muted/20 border border-border/20 overflow-hidden">
-                          {localCanvas.content}
+                        <div ref={textDivRef} className="text-sm text-foreground/80 leading-relaxed p-4 rounded-xl bg-muted/20 border border-border/20 overflow-hidden prose prose-sm prose-invert max-w-none">
+                          <ReactMarkdown>{localCanvas.content}</ReactMarkdown>
                         </div>
                       ) : (
                         <div className="text-sm text-muted-foreground/40 italic p-8 rounded-xl bg-muted/20 border border-dashed border-border/30 text-center">
