@@ -269,17 +269,18 @@ const CanvasPreviewDialog = ({
     }
   };
 
-  // Confirm → save to DB using percentage-based position for device independence
+  // Confirm → save pixel position + container dims so rendering is exact
   const handleConfirm = async () => {
     if (!placementMode?.pos || !localCanvas || !contentAreaRef.current) return;
     setSavingSignature(true);
     const { signature, signedAt, pos } = placementMode;
-    const rect = contentAreaRef.current.getBoundingClientRect();
+    const el = contentAreaRef.current;
     const normalizedPos: SigPos = {
-      xPct: pos.x! / rect.width,
-      yPct: pos.y! / rect.height,
-      wPct: pos.w! / rect.width,
-      hPct: pos.h! / rect.height,
+      x: pos.x, y: pos.y, w: pos.w, h: pos.h,
+      xPct: pos.x / el.offsetWidth,
+      yPct: pos.y / el.offsetHeight,
+      wPct: pos.w / el.offsetWidth,
+      hPct: pos.h / el.offsetHeight,
     };
     const { error } = await supabase
       .from("canvases")
@@ -542,19 +543,21 @@ const CanvasPreviewDialog = ({
                   </div>
                   {/* End regular content ------------------------------------ */}
 
-                  {/* ── SAVED SIGNATURE: absolutely positioned at stored coordinates ── */}
+                  {/* ── SAVED SIGNATURE: absolutely positioned at stored pixel coords ── */}
                   {!placementMode && localCanvas.creator_signature && (() => {
                     const sp = localCanvas.signature_position as SigPos | null;
-                    if (!sp?.xPct) return null;
+                    if (!sp) return null;
+                    // Prefer raw pixels (stored since this fix). Fall back to
+                    // percentage × offsetWidth/Height for older records.
+                    const el = contentAreaRef.current;
+                    const left = sp.x   != null ? sp.x   : (sp.xPct ?? 0) * (el?.offsetWidth  ?? 0);
+                    const top  = sp.y   != null ? sp.y   : (sp.yPct ?? 0) * (el?.offsetHeight ?? 0);
+                    const w    = sp.w   != null ? sp.w   : (sp.wPct ?? 0) * (el?.offsetWidth  ?? 0) || INIT_W;
+                    const h    = sp.h   != null ? sp.h   : (sp.hPct ?? 0) * (el?.offsetHeight ?? 0) || INIT_H;
                     return (
                       <div
                         className="absolute pointer-events-none"
-                        style={{
-                          left:   `${sp.xPct * 100}%`,
-                          top:    `${sp.yPct! * 100}%`,
-                          width:  sp.wPct ? `${sp.wPct * 100}%` : `${INIT_W}px`,
-                          height: sp.hPct ? `${sp.hPct * 100}%` : `${INIT_H}px`,
-                        }}
+                        style={{ left, top, width: w, height: h }}
                       >
                         <div className="flex flex-col h-full justify-end gap-1">
                           {localCanvas.creator_signature.startsWith("data:image") ? (
