@@ -156,14 +156,6 @@ const DiraEmptyState = ({
                 ? `Good to see you, ${userName}.`
                 : "Hello there."}
             </h1>
-            <p
-              className="font-poppins text-sm md:text-base text-muted-foreground mb-10 leading-relaxed animate-dira-greeting"
-              style={{ animationDelay: "0.12s" }}
-            >
-              I'm Dira — your creative business intelligence.
-              <br className="hidden sm:block" />
-              What shall we work on?
-            </p>
           </>
         )}
 

@@ -599,48 +599,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     
     return (
       <div className="bg-background">
-        {/* Embedded Tab Navigation */}
-        <div className="sticky top-0 z-30 border-b border-border/60 bg-background">
-          <ScrollArea className="w-full">
-            <div className="flex items-center justify-around px-6 md:px-10 py-2 w-full">
-              {[
-                { id: "profile",    label: "Profile",    icon: User },
-                { id: "buttons",    label: "Buttons",    icon: MousePointerClick },
-                { id: "appearance", label: "Appearance", icon: Palette },
-                { id: "analytics",  label: "Analytics",  icon: BarChart2 },
-              ].map((tab) => {
-                const Icon = tab.icon;
-                const isActive = embeddedTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => navigate(`/crevia-studio?tab=link&section=${tab.id}`)}
-                    className={cn(
-                      "relative flex flex-col items-center gap-1 px-5 py-2.5 rounded-xl min-w-[72px] transition-all duration-200 select-none",
-                      isActive
-                        ? "text-bronze"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                    )}
-                  >
-                    {isActive && (
-                      <span className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-bronze" />
-                    )}
-                    <div className={cn(
-                      "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200",
-                      isActive ? "bg-bronze/15" : ""
-                    )}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <span className="text-[11px] font-semibold tracking-wide whitespace-nowrap">{tab.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <ScrollBar orientation="horizontal" className="h-1.5" />
-          </ScrollArea>
-        </div>
-
         {/* Embedded Content with Preview */}
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 md:px-6 md:py-8 xl:flex-row xl:items-start">
           {/* Main Content */}
