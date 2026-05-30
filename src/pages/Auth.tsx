@@ -602,7 +602,7 @@ const Auth = () => {
                   id="terms"
                   checked={termsAccepted}
                   onCheckedChange={(checked) => setTermsAccepted(checked === true)}
-                  className="mt-0.5 shrink-0 border-border data-[state=checked]:bg-bronze data-[state=checked]:border-bronze"
+                  className="mt-0.5 shrink-0 h-5 w-5 rounded-md border-2 border-white/60 bg-white/10 data-[state=checked]:bg-bronze data-[state=checked]:border-bronze"
                 />
                 <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none font-poppins">
                   By signing up, you agree to the{" "}
