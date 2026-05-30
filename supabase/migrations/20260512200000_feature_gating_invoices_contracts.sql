@@ -1,6 +1,6 @@
 -- ============================================================
 -- Feature gating: 2 invoices + 2 contracts per month for free users
--- Pattern mirrors consume_kira_action (atomic FOR UPDATE + monthly reset)
+-- Pattern mirrors consume_dira_action (atomic FOR UPDATE + monthly reset)
 -- ============================================================
 
 -- ── 1. Usage counters on profiles ────────────────────────────

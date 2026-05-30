@@ -34,7 +34,7 @@ const AuthCallback = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setStatus("success");
-        navigate("/kira", { replace: true });
+        navigate("/dira", { replace: true });
       }
     });
 
@@ -44,7 +44,7 @@ const AuthCallback = () => {
       (_event, session) => {
         if (session) {
           setStatus("success");
-          navigate("/kira", { replace: true });
+          navigate("/dira", { replace: true });
         }
       }
     );

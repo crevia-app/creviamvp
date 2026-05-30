@@ -246,7 +246,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                   Give creatives and businesses the infrastructure to operate, close deals, and scale — without the chaos.
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Kira handles the intelligence. Crevia Studio handles the operations.
+                  Dira handles the intelligence. Crevia Studio handles the operations.
                   Together, they replace the scattered tools, missed payments, and lost
                   deals that define the industry today.
                 </p>

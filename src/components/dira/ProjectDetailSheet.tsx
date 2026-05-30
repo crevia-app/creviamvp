@@ -93,7 +93,7 @@ export const ProjectDetailSheet = ({
     setIsLoadingConversations(true);
     try {
       const { data, error } = await supabase
-        .from("kira_conversations")
+        .from("dira_conversations")
         .select("id, title, updated_at")
         .eq("project_id", project.id)
         .order("updated_at", { ascending: false });
@@ -149,7 +149,7 @@ export const ProjectDetailSheet = ({
     try {
       // First, unassign all conversations from this project
       await supabase
-        .from("kira_conversations")
+        .from("dira_conversations")
         .update({ project_id: null })
         .eq("project_id", project.id);
 
@@ -301,7 +301,7 @@ export const ProjectDetailSheet = ({
                       <Textarea
                         value={editInstructions}
                         onChange={(e) => setEditInstructions(e.target.value)}
-                        placeholder="How should Kira respond in this project? (e.g., tone, format, expertise)"
+                        placeholder="How should Dira respond in this project? (e.g., tone, format, expertise)"
                         className="min-h-[120px] resize-none"
                       />
                       <p className="text-xs text-muted-foreground">

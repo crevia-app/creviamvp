@@ -14,7 +14,7 @@ const ar = {
   "nav.dashboard": "لوحة التحكم",
   "nav.connect": "Crevia Connect",
   "nav.studio": "Crevia Studio",
-  "nav.kira": "Kira AI",
+  "nav.dira": "Dira AI",
   "nav.pricing": "الأسعار",
   "nav.about": "حول",
 
@@ -111,14 +111,14 @@ const ar = {
 
   "sidebar.studio": "Crevia Studio",
   "sidebar.connect": "Crevia Connect",
-  "sidebar.kira": "Kira AI",
+  "sidebar.dira": "Dira AI",
   "sidebar.wallet": "المحفظة",
 
   "settings.dangerZone": "المنطقة الخطرة",
   "settings.dangerZoneDesc": "احذف حسابك وجميع البيانات المرتبطة به نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
   "settings.deleteAccount": "حذف الحساب",
   "settings.deleteAccountConfirmTitle": "هل تريد حذف حسابك نهائيًا؟",
-  "settings.deleteAccountConfirmDesc": "سيؤدي هذا إلى حذف ملفك الشخصي ومشاريعك والفواتير ومحادثات Kira وCrevia Link وبيانات مساحة العمل بشكل دائم. هذا الإجراء لا رجعة فيه.",
+  "settings.deleteAccountConfirmDesc": "سيؤدي هذا إلى حذف ملفك الشخصي ومشاريعك والفواتير ومحادثات Dira وCrevia Link وبيانات مساحة العمل بشكل دائم. هذا الإجراء لا رجعة فيه.",
   "settings.deleteAccountConfirmLabel": "اكتب DELETE للتأكيد",
   "settings.deleteAccountConfirmPlaceholder": "DELETE",
   "settings.deleteAccountConfirm": "نعم، احذف حسابي",

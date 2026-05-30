@@ -5,7 +5,7 @@ import ConnectTabsMobile from "./ConnectTabsMobile";
 import MyCampaignsTab from "./creator/MyCampaignsTab";
 import MyProjectsTab from "./creator/MyProjectsTab";
 import AnalyticsTab from "./creator/AnalyticsTab";
-import KiraSuggestionsTab from "./creator/KiraSuggestionsTab";
+import DiraSuggestionsTab from "./creator/DiraSuggestionsTab";
 import CreviaChat from "./shared/CreviaChat";
 import { cn } from "@/lib/utils";
 
@@ -22,8 +22,8 @@ const CreatorConnect = () => {
         return <MyProjectsTab />;
       case "analytics":
         return <AnalyticsTab />;
-      case "kira":
-        return <KiraSuggestionsTab />;
+      case "dira":
+        return <DiraSuggestionsTab />;
       case "chat":
         return <CreviaChat />;
       default:

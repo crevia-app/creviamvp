@@ -92,11 +92,11 @@ const CreatorDashboard = () => {
         </Card>
       </div>
 
-      {/* Kira Insights */}
+      {/* Dira Insights */}
       <Card className="p-8 mb-8 bg-gradient-to-br from-bronze/5 to-bronze/10 animate-fade-in stagger-7 animate-stagger hover:shadow-lg transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)]">
         <div className="flex items-center gap-3 mb-6">
           <Sparkles className="w-6 h-6 text-bronze animate-float" />
-          <h2 className="font-vollkorn text-2xl font-bold">Kira Insights</h2>
+          <h2 className="font-vollkorn text-2xl font-bold">Dira Insights</h2>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-4 bg-background rounded-lg">

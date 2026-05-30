@@ -62,17 +62,17 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
-import { CreateProjectDialog } from "@/components/kira/CreateProjectDialog";
-import { ProjectDetailSheet } from "@/components/kira/ProjectDetailSheet";
-import { ProjectsView } from "@/components/kira/ProjectsView";
+import { CreateProjectDialog } from "@/components/dira/CreateProjectDialog";
+import { ProjectDetailSheet } from "@/components/dira/ProjectDetailSheet";
+import { ProjectsView } from "@/components/dira/ProjectsView";
 import CreateCanvasDialog from "@/components/studio/CreateCanvasDialog";
 import CreateInvoiceDialog from "@/components/studio/CreateInvoiceDialog";
-import { ApproveActionDialog } from "@/components/kira/ApproveActionDialog";
-import { KiraSettingsPanel } from "@/components/kira/KiraSettingsPanel";
-import KiraEmptyState from "@/components/kira/KiraEmptyState";
+import { ApproveActionDialog } from "@/components/dira/ApproveActionDialog";
+import { DiraSettingsPanel } from "@/components/dira/DiraSettingsPanel";
+import DiraEmptyState from "@/components/dira/DiraEmptyState";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-// useIOSKeyboardFit removed: it set position:fixed on the Kira container,
+// useIOSKeyboardFit removed: it set position:fixed on the Dira container,
 // which overlapped and hid the TopBar on iOS Safari (z-index conflict).
 // The absolute/inset-0 scroll container + 100dvh AppLayout + useVisualViewport
 // input padding handle the iOS keyboard layout correctly without that hook.
@@ -290,7 +290,7 @@ interface Project {
 
 type ViewMode = "chat" | "projects";
 
-function detectKiraIntent(text: string): string | null {
+function detectDiraIntent(text: string): string | null {
   const t = text.toLowerCase();
   if (/\b(canvas|contract|agreement)\b/.test(t) && /\b(create|draft|open|let'?s|ready|shall i|want me|here'?s|go ahead|click)\b/.test(t)) return 'open_contract';
   if (/\binvoice\b/.test(t) && /\b(create|draft|send|open|let'?s|ready|shall i|want me|here'?s|go ahead|click)\b/.test(t)) return 'open_invoice';
@@ -301,11 +301,11 @@ function detectKiraIntent(text: string): string | null {
 // Used to keep the 3-dot visible in the desktop sidebar on touch-primary devices.
 const isTouchPrimary = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
 
-const Kira = () => {
+const Dira = () => {
   const { toast } = useToast();
-  const { kiraActionsToday, kiraActionsLimit } = useSubscription();
+  const { diraActionsToday, diraActionsLimit } = useSubscription();
   const { keyboardOpen } = useVisualViewport();
-  const isAtKiraLimit = kiraActionsToday >= kiraActionsLimit;
+  const isAtDiraLimit = diraActionsToday >= diraActionsLimit;
   const [userType, setUserType] = useState<'creator' | 'brand' | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -347,8 +347,8 @@ const Kira = () => {
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
-  const [kiraContractContext, setKiraContractContext] = useState<Record<string, unknown> | null>(null);
-  const [kiraInvoiceContext, setKiraInvoiceContext] = useState<Record<string, unknown> | null>(null);
+  const [diraContractContext, setDiraContractContext] = useState<Record<string, unknown> | null>(null);
+  const [diraInvoiceContext, setDiraInvoiceContext] = useState<Record<string, unknown> | null>(null);
 
   const [chatToDelete, setChatToDelete] = useState<string | null>(null);
   const [memoryPanelOpen, setMemoryPanelOpen] = useState(false);
@@ -396,7 +396,7 @@ const Kira = () => {
         }
 
         const { data: conversations, error } = await supabase
-          .from('kira_conversations')
+          .from('dira_conversations')
           .select('*')
           .order('updated_at', { ascending: false });
 
@@ -412,7 +412,7 @@ const Kira = () => {
         }
 
         const { data: projectsData, error: projectsError } = await supabase
-          .from('kira_projects')
+          .from('dira_projects')
           .select('*')
           .order('updated_at', { ascending: false });
 
@@ -445,7 +445,7 @@ const Kira = () => {
       }
 
       const { data: msgs, error } = await supabase
-        .from('kira_messages')
+        .from('dira_messages')
         .select('*')
         .eq('conversation_id', activeChat)
         .order('created_at', { ascending: true });
@@ -474,8 +474,8 @@ const Kira = () => {
         setSidebarCollapsed(prev => !prev);
       }
     };
-    window.addEventListener("kira:toggle-sidebar", handler);
-    return () => window.removeEventListener("kira:toggle-sidebar", handler);
+    window.addEventListener("dira:toggle-sidebar", handler);
+    return () => window.removeEventListener("dira:toggle-sidebar", handler);
   }, []);
 
   // Smart auto-scroll: pull to bottom only when the user is already near the
@@ -497,7 +497,7 @@ const Kira = () => {
       console.log("saveMessage skipped- content is empty");
       return;
     }
-    const { error } = await supabase.from('kira_messages').insert({
+    const { error } = await supabase.from('dira_messages').insert({
       conversation_id: conversationId,
       role,
       content,
@@ -513,7 +513,7 @@ const Kira = () => {
   const updateConversationTitle = async (conversationId: string, firstMessage: string) => {
     const title = firstMessage.slice(0, 50) + (firstMessage.length > 50 ? '...' : '');
     await supabase
-      .from('kira_conversations')
+      .from('dira_conversations')
       .update({ title, updated_at: new Date().toISOString() })
       .eq('id', conversationId);
     
@@ -563,7 +563,7 @@ const Kira = () => {
     };
   }, [isStreaming]);
 
-  const streamKiraResponse = useCallback(async (
+  const streamDiraResponse = useCallback(async (
     userMessages: Message[],
     conversationId: string,
     attachContent?: string | null,
@@ -587,7 +587,7 @@ const Kira = () => {
     }
 
     const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kira-gpt`,
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/dira-gpt`,
       {
         method: 'POST',
         headers: {
@@ -600,7 +600,7 @@ const Kira = () => {
     );
 
     if (!response.ok) {
-      let msg = "Couldn't reach Kira right now. Please try again!";
+      let msg = "Couldn't reach Dira right now. Please try again!";
       try {
         const body = await response.json();
         if (body?.error) msg = body.error;
@@ -647,7 +647,7 @@ const Kira = () => {
     // Fallback: JSON (prompt-abuse reply or unexpected content-type)
     const data = await response.json();
     const assistantContent = data.reply;
-    if (!assistantContent) throw new Error("Kira didn't respond. Please try again!");
+    if (!assistantContent) throw new Error("Dira didn't respond. Please try again!");
     setMessages(prev => [...prev, { role: 'assistant', content: assistantContent, timestamp: new Date() }]);
     await saveMessage(conversationId, 'assistant', assistantContent);
     return assistantContent;
@@ -667,15 +667,15 @@ const Kira = () => {
     if (!userId) {
       toast({
         title: "Please sign in",
-        description: "You need to be logged in to chat with Kira",
+        description: "You need to be logged in to chat with Dira",
         variant: "destructive",
       });
       return;
     }
-    if (isAtKiraLimit) {
+    if (isAtDiraLimit) {
       toast({
         title: "Daily limit reached",
-        description: `You've used all ${kiraActionsLimit} Kira messages for today. Upgrade for more.`,
+        description: `You've used all ${diraActionsLimit} Dira messages for today. Upgrade for more.`,
         variant: "destructive",
       });
       return;
@@ -692,7 +692,7 @@ const Kira = () => {
     
     if (!conversationId) {
       const { data: newConvo, error } = await supabase
-        .from('kira_conversations')
+        .from('dira_conversations')
         .insert({ 
           user_id: userId, 
           title: 'New conversation',
@@ -735,8 +735,8 @@ const Kira = () => {
     setSelectedFileContent(null);
     setSelectedFileType(null);
     setPendingAction(null);
-    setKiraContractContext(null);
-    setKiraInvoiceContext(null);
+    setDiraContractContext(null);
+    setDiraInvoiceContext(null);
     setIsLoading(true);
 
     await saveMessage(conversationId, "user", newMessage.content, newMessage.file);
@@ -751,23 +751,23 @@ const Kira = () => {
         ? { name: activeProject.name, description: activeProject.description, custom_instructions: activeProject.custom_instructions }
         : null;
 
-      const responseContent = await streamKiraResponse(updatedMessages, conversationId, attachContent, attachType, projectCtx);
+      const responseContent = await streamDiraResponse(updatedMessages, conversationId, attachContent, attachType, projectCtx);
 
       if (responseContent) {
-        const intent = detectKiraIntent(responseContent);
+        const intent = detectDiraIntent(responseContent);
         if (intent) setPendingAction(intent);
       }
 
       const nowIso = new Date().toISOString();
       await supabase
-        .from('kira_conversations')
+        .from('dira_conversations')
         .update({ updated_at: nowIso })
         .eq('id', conversationId);
 
       // Keep project activity timestamp in sync so "Sort by Activity" is accurate
       if (activeProjectId) {
         await supabase
-          .from('kira_projects')
+          .from('dira_projects')
           .update({ updated_at: nowIso })
           .eq('id', activeProjectId);
         setProjects(prev =>
@@ -778,7 +778,7 @@ const Kira = () => {
     } catch (error) {
       toast({
         title: "Oops!",
-        description: error instanceof Error ? error.message : "Couldn't reach Kira right now. Please try again!",
+        description: error instanceof Error ? error.message : "Couldn't reach Dira right now. Please try again!",
         variant: "destructive",
       });
       setMessages(prev => [...prev, {
@@ -822,7 +822,7 @@ const Kira = () => {
 
   const handleDeleteChat = async (chatId: string) => {
     const { error } = await supabase
-      .from('kira_conversations')
+      .from('dira_conversations')
       .delete()
       .eq('id', chatId);
 
@@ -838,7 +838,7 @@ const Kira = () => {
 
   const handlePinChat = async (chatId: string, currentlyPinned: boolean) => {
     const { error } = await supabase
-      .from('kira_conversations')
+      .from('dira_conversations')
       .update({ pinned: !currentlyPinned })
       .eq('id', chatId);
     if (!error) {
@@ -854,7 +854,7 @@ const Kira = () => {
     setRenameValue("");
     if (!trimmed) return;
     const { error } = await supabase
-      .from('kira_conversations')
+      .from('dira_conversations')
       .update({ title: trimmed })
       .eq('id', chatId);
     if (!error) {
@@ -865,10 +865,10 @@ const Kira = () => {
   };
 
   const handleShareChat = async (chatId: string, chatTitle: string) => {
-    const url = `${window.location.origin}/kira`;
+    const url = `${window.location.origin}/dira`;
     const shareData = {
       title: chatTitle,
-      text: `Kira AI conversation: "${chatTitle}"`,
+      text: `Dira AI conversation: "${chatTitle}"`,
       url,
     };
     if (typeof navigator.share === 'function') {
@@ -951,7 +951,7 @@ const Kira = () => {
     setActiveProjectId(projectId);
     if (activeChat) {
       await supabase
-        .from('kira_conversations')
+        .from('dira_conversations')
         .update({ project_id: projectId })
         .eq('id', activeChat);
       setChatHistories(prev => prev.map(c =>
@@ -1227,7 +1227,7 @@ const Kira = () => {
         <SheetContent side="left" className="w-80 p-0 bg-card">
           <SheetHeader className="h-14 flex items-center px-4 border-b border-border/50">
             <SheetTitle className="font-vollkorn text-2xl font-bold text-foreground tracking-tight">
-              Kira
+              Dira
             </SheetTitle>
           </SheetHeader>
           
@@ -1416,9 +1416,9 @@ const Kira = () => {
               on Android Chrome and iOS Safari inside a deep flex chain. */}
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
             <UsageLimitBanner
-              current={kiraActionsToday}
-              limit={kiraActionsLimit}
-              feature="Kira AI actions"
+              current={diraActionsToday}
+              limit={diraActionsLimit}
+              feature="Dira AI actions"
             />
             <div className="relative flex-1 min-h-0">
             <div
@@ -1433,7 +1433,7 @@ const Kira = () => {
             >
               {messages.length === 0 ? (
                 /* ── Premium animated empty state ────────────────────────── */
-                <KiraEmptyState
+                <DiraEmptyState
                   userName={userName}
                   activeProject={activeProject ?? null}
                   onChipClick={(text) => setInput(text)}
@@ -1706,18 +1706,18 @@ const Kira = () => {
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && !isLoading && !isAtKiraLimit && handleSend()}
+                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && !isLoading && !isAtDiraLimit && handleSend()}
                   placeholder={
-                    isAtKiraLimit
+                    isAtDiraLimit
                       ? 'Daily limit reached · Upgrade to continue'
                       : isLoading
-                        ? 'Kira is responding...'
+                        ? 'Dira is responding...'
                         : activeProject
-                          ? `Ask Kira about ${activeProject.name}...`
-                          : 'Ask Kira anything...'
+                          ? `Ask Dira about ${activeProject.name}...`
+                          : 'Ask Dira anything...'
                   }
                   className="border-0 bg-transparent h-9 text-base focus-visible:ring-0 px-2 flex-1 min-w-0 placeholder:text-muted-foreground/60"
-                  disabled={isAtKiraLimit}
+                  disabled={isAtDiraLimit}
                   autoComplete="off"
                   autoCorrect="off"
                   autoCapitalize="sentences"
@@ -1726,16 +1726,16 @@ const Kira = () => {
                 />
 
                 {/* Usage counter */}
-                {kiraActionsLimit < 1000 && (
-                  <span className={`text-[10px] font-semibold tabular-nums flex-shrink-0 pr-1 ${isAtKiraLimit ? "text-destructive" : "text-muted-foreground/40"}`}>
-                    {kiraActionsToday}/{kiraActionsLimit}
+                {diraActionsLimit < 1000 && (
+                  <span className={`text-[10px] font-semibold tabular-nums flex-shrink-0 pr-1 ${isAtDiraLimit ? "text-destructive" : "text-muted-foreground/40"}`}>
+                    {diraActionsToday}/{diraActionsLimit}
                   </span>
                 )}
 
                 {/* Send button — always visible; disabled when nothing to send */}
                 <Button
                   onClick={() => handleSend()}
-                  disabled={isLoading || isAtKiraLimit || (!input.trim() && !selectedFile)}
+                  disabled={isLoading || isAtDiraLimit || (!input.trim() && !selectedFile)}
                   size="icon"
                   className="h-11 w-11 rounded-full bg-bronze hover:bg-bronze/90 text-background flex-shrink-0 disabled:opacity-30 transition-opacity"
                 >
@@ -1773,14 +1773,14 @@ const Kira = () => {
         open={contractDialogOpen}
         onOpenChange={setContractDialogOpen}
         onSuccess={() => setContractDialogOpen(false)}
-        kiraContext={kiraContractContext}
+        diraContext={diraContractContext}
       />
 
       <CreateInvoiceDialog
         open={invoiceDialogOpen}
         onOpenChange={setInvoiceDialogOpen}
         onSuccess={() => setInvoiceDialogOpen(false)}
-        kiraContext={kiraInvoiceContext}
+        diraContext={diraInvoiceContext}
       />
 
       <ApproveActionDialog
@@ -1789,7 +1789,7 @@ const Kira = () => {
       />
 
       {userId && (
-        <KiraSettingsPanel
+        <DiraSettingsPanel
           open={memoryPanelOpen}
           onOpenChange={setMemoryPanelOpen}
           userId={userId}
@@ -1878,4 +1878,4 @@ const Kira = () => {
   );
 };
 
-export default Kira;
+export default Dira;

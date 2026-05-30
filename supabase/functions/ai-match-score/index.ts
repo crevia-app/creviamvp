@@ -80,7 +80,7 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY not configured');
     }
 
-    const systemPrompt = `You are Kira AI, an expert at matching creators with brand campaigns.
+    const systemPrompt = `You are Dira AI, an expert at matching creators with brand campaigns.
 Analyze the campaign requirements and creator profile to calculate a match score from 0-100.
 Consider: niche alignment, audience size, platform match, engagement rate, and goals alignment.
 Return ONLY a JSON object with: { "score": number, "reasoning": "brief explanation" }`;

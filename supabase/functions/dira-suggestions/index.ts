@@ -43,8 +43,8 @@ serve(async (req) => {
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
-      supabase.rpc("log_security_event", { p_event_type: "auth_failure", p_endpoint: "kira-suggestions", p_detail: "Token validation failed" }).catch(() => {});
-      console.warn("[security] auth_failure endpoint=kira-suggestions");
+      supabase.rpc("log_security_event", { p_event_type: "auth_failure", p_endpoint: "dira-suggestions", p_detail: "Token validation failed" }).catch(() => {});
+      console.warn("[security] auth_failure endpoint=dira-suggestions");
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...cors, 'Content-Type': 'application/json' },
@@ -54,13 +54,13 @@ serve(async (req) => {
     // Rate limit: 20 requests per hour per user
     const { data: rlAllowed } = await supabase.rpc('check_rate_limit', {
       p_user_id: user.id,
-      p_endpoint: 'kira-suggestions',
+      p_endpoint: 'dira-suggestions',
       p_limit: 20,
       p_window_secs: 3600,
     });
     if (!rlAllowed) {
-      supabase.rpc("log_security_event", { p_event_type: "rate_limit", p_user_id: user.id, p_endpoint: "kira-suggestions", p_detail: "Hourly limit exceeded" }).catch(() => {});
-      console.warn(`[security] rate_limit endpoint=kira-suggestions user=${user.id}`);
+      supabase.rpc("log_security_event", { p_event_type: "rate_limit", p_user_id: user.id, p_endpoint: "dira-suggestions", p_detail: "Hourly limit exceeded" }).catch(() => {});
+      console.warn(`[security] rate_limit endpoint=dira-suggestions user=${user.id}`);
       return new Response(JSON.stringify({ error: 'Too many requests. Please slow down.' }), {
         status: 429,
         headers: { ...cors, 'Content-Type': 'application/json' },
@@ -73,12 +73,12 @@ serve(async (req) => {
     let userPrompt = '';
 
     if (type === 'creator') {
-      systemPrompt = `You are Kira AI, a personal agent for African creators. Provide personalized, actionable suggestions.
+      systemPrompt = `You are Dira AI, a personal agent for African creators. Provide personalized, actionable suggestions.
 Suggest: best campaigns to apply to, profile improvements, pricing recommendations, collaboration opportunities.
 Return ONLY a valid JSON array — no markdown, no explanation. Format: [{ "type": string, "title": string, "description": string, "action": string }]`;
       userPrompt = `Creator Profile: ${JSON.stringify(profile)}\nAvailable Campaigns: ${JSON.stringify(campaigns)}`;
     } else {
-      systemPrompt = `You are Kira AI, a marketing strategist for brands working with African creators. Provide actionable suggestions.
+      systemPrompt = `You are Dira AI, a marketing strategist for brands working with African creators. Provide actionable suggestions.
 Suggest: creator recommendations, budget optimization, brief improvements, audience targeting.
 Return ONLY a valid JSON array — no markdown, no explanation. Format: [{ "type": string, "title": string, "description": string, "action": string }]`;
       userPrompt = `Brand Profile: ${JSON.stringify(profile)}\nCurrent Campaigns: ${JSON.stringify(campaigns)}`;
@@ -120,7 +120,7 @@ Return ONLY a valid JSON array — no markdown, no explanation. Format: [{ "type
     });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.error('kira-suggestions error:', msg);
+    console.error('dira-suggestions error:', msg);
     return new Response(JSON.stringify({ suggestions: [] }), {
       status: 200,
       headers: { ...cors, 'Content-Type': 'application/json' },

@@ -20,7 +20,7 @@ const navItems = [
   { id: "campaigns", label: "My Campaigns", icon: FolderKanban },
   { id: "projects", label: "My Projects", icon: Briefcase },
   { id: "analytics", label: "Analytics", icon: BarChart3 },
-  { id: "kira", label: "Kira Suggestions", icon: Sparkles },
+  { id: "dira", label: "Dira Suggestions", icon: Sparkles },
   { id: "chat", label: "Crevia Chat", icon: MessageSquare },
 ];
 

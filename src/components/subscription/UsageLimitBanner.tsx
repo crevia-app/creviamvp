@@ -38,7 +38,7 @@ const UsageLimitBanner = ({ current, limit, feature }: UsageLimitBannerProps) =>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-foreground leading-tight sm:text-sm">Daily limit reached</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5 sm:text-xs">
-                  {current}/{limit} Kira actions used · Upgrade for unlimited
+                  {current}/{limit} Dira actions used · Upgrade for unlimited
                 </p>
               </div>
               <button
@@ -72,7 +72,7 @@ const UsageLimitBanner = ({ current, limit, feature }: UsageLimitBannerProps) =>
         >
           <div className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
           <span className="flex-1 text-xs text-muted-foreground">
-            <span className="font-semibold text-foreground">{current}/{limit}</span> Kira actions used today
+            <span className="font-semibold text-foreground">{current}/{limit}</span> Dira actions used today
           </span>
           <button
             onClick={() => navigate("/profile/payments-billing")}

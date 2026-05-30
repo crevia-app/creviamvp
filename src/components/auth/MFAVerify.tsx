@@ -68,7 +68,7 @@ const MFAVerify = () => {
       sessionStorage.setItem("biometric_unlocked", "1");
       supabase.functions.invoke("login-alert").catch(() => {});
       toast({ title: "Verified!", description: "Welcome back to Crevia." });
-      navigate("/kira", { replace: true });
+      navigate("/dira", { replace: true });
     } catch (err: any) {
       toast({
         title: "Invalid code",

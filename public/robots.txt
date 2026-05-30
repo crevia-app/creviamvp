@@ -9,7 +9,7 @@ Disallow: /crevia-studio
 Disallow: /crevia-invoice
 Disallow: /crevia-contracts
 Disallow: /crevia-workspace
-Disallow: /kira
+Disallow: /dira
 Disallow: /profile/
 Disallow: /received
 Disallow: /crevia-ai

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import KiraMessage from "@/components/onboarding/KiraMessage";
+import DiraMessage from "@/components/onboarding/DiraMessage";
 import UserResponse from "@/components/onboarding/UserResponse";
 import OptionButtons from "@/components/onboarding/OptionButtons";
 import TypingIndicator from "@/components/onboarding/TypingIndicator";
@@ -15,7 +15,7 @@ import TextInput from "@/components/onboarding/TextInput";
 const creatorSteps = [
   {
     id: "welcome",
-    kiraMessage: (name: string, _?: string) => `Hi 👋 ${name || "there"}! I'm Kira, your creative companion at Crevia. I'm so excited to meet you! Let's go through a few quick steps so I can personalize your experience. Ready?`,
+    kiraMessage: (name: string, _?: string) => `Hi 👋 ${name || "there"}! I'm Dira, your creative companion at Crevia. I'm so excited to meet you! Let's go through a few quick steps so I can personalize your experience. Ready?`,
     options: [
       { label: "Let's do this! 🚀", value: "ready" },
       { label: "Sure thing! ✨", value: "ready" }
@@ -78,7 +78,7 @@ const creatorSteps = [
 const brandSteps = [
   {
     id: "welcome",
-    kiraMessage: (name: string, _?: string) => `Hey there 👋 ${name || ""}! I'm Kira, and I'll be helping you discover amazing creators for your brand. Let's set up your profile real quick!`,
+    kiraMessage: (name: string, _?: string) => `Hey there 👋 ${name || ""}! I'm Dira, and I'll be helping you discover amazing creators for your brand. Let's set up your profile real quick!`,
     options: [
       { label: "Let's get started! 🚀", value: "ready" },
       { label: "Sounds good! ✨", value: "ready" }
@@ -142,12 +142,12 @@ const brandSteps = [
 
 interface Message {
   id: string;
-  type: "kira" | "user";
+  type: "dira" | "user";
   content: string;
   timestamp: Date;
 }
 
-const KiraOnboarding = () => {
+const DiraOnboarding = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -235,11 +235,11 @@ const KiraOnboarding = () => {
   // Start conversation when userType is set
   useEffect(() => {
     if (userType && !isLoading && messages.length === 0) {
-      showKiraMessage(0);
+      showDiraMessage(0);
     }
   }, [userType, isLoading]);
 
-  const showKiraMessage = async (stepIndex: number) => {
+  const showDiraMessage = async (stepIndex: number) => {
     const step = steps[stepIndex];
     if (!step) return;
 
@@ -262,8 +262,8 @@ const KiraOnboarding = () => {
     }
 
     setMessages(prev => [...prev, {
-      id: `kira-${stepIndex}-${Date.now()}`,
-      type: "kira",
+      id: `dira-${stepIndex}-${Date.now()}`,
+      type: "dira",
       content: messageContent,
       timestamp: new Date()
     }]);
@@ -359,7 +359,7 @@ const KiraOnboarding = () => {
     
     if (nextStep < steps.length) {
       setCurrentStep(nextStep);
-      setTimeout(() => showKiraMessage(nextStep), 500);
+      setTimeout(() => showDiraMessage(nextStep), 500);
     }
   };
 
@@ -474,7 +474,7 @@ const KiraOnboarding = () => {
               Hey {userName || "there"}! 
             </h1>
             <p className="text-muted-foreground text-lg">
-              I'm Kira. Before we begin, are you joining as a...
+              I'm Dira. Before we begin, are you joining as a...
             </p>
           </div>
 
@@ -548,8 +548,8 @@ const KiraOnboarding = () => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
               >
-                {message.type === "kira" ? (
-                  <KiraMessage content={message.content} />
+                {message.type === "dira" ? (
+                  <DiraMessage content={message.content} />
                 ) : (
                   <UserResponse content={message.content} />
                 )}
@@ -657,4 +657,4 @@ const KiraOnboarding = () => {
   );
 };
 
-export default KiraOnboarding;
+export default DiraOnboarding;

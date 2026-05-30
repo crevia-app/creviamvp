@@ -123,12 +123,12 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Kira Insights */}
+          {/* Dira Insights */}
           <Card className="bg-gradient-to-br from-bronze/10 to-bronze/5 border-bronze/20">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-bronze" />
-                <CardTitle className="font-vollkorn text-xl">Kira Says 💬</CardTitle>
+                <CardTitle className="font-vollkorn text-xl">Dira Says 💬</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -145,7 +145,7 @@ const Dashboard = () => {
               </div>
               <Link to="/crevia-ai">
                 <Button variant="outline" className="w-full gap-2 border-bronze/30 hover:bg-bronze/10">
-                  Talk to Kira <ArrowRight className="h-4 w-4" />
+                  Talk to Dira <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
             </CardContent>
@@ -166,7 +166,7 @@ const Dashboard = () => {
               </Link>
               <Link to="/crevia-ai">
                 <Button variant="outline" className="w-full gap-2 justify-start">
-                  <Sparkles className="h-4 w-4" /> Open Kira
+                  <Sparkles className="h-4 w-4" /> Open Dira
                 </Button>
               </Link>
               <Link to="/crevia-link">

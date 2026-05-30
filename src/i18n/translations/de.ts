@@ -14,7 +14,7 @@ const de = {
   "nav.dashboard": "Dashboard",
   "nav.connect": "Crevia Connect",
   "nav.studio": "Crevia Studio",
-  "nav.kira": "Kira AI",
+  "nav.dira": "Dira AI",
   "nav.pricing": "Preise",
   "nav.about": "Über uns",
 
@@ -104,7 +104,7 @@ const de = {
 
   "sidebar.studio": "Crevia Studio",
   "sidebar.connect": "Crevia Connect",
-  "sidebar.kira": "Kira AI",
+  "sidebar.dira": "Dira AI",
   "sidebar.wallet": "Geldbörse",
 };
 

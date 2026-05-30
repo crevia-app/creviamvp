@@ -45,7 +45,7 @@ function getInitials(name: string): string {
     .join("");
 }
 
-export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
+export function DiraSettingsPanel({ open, onOpenChange, userId }: Props) {
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -75,11 +75,11 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
       setIsLoading(true);
       const [{ data: { user } }, { data: profile }] = await Promise.all([
         supabase.auth.getUser(),
-        supabase.from("profiles").select("display_name, kira_memory").eq("id", userId).single(),
+        supabase.from("profiles").select("display_name, dira_memory").eq("id", userId).single(),
       ]);
       if (user?.email) setEmail(user.email);
       if (profile?.display_name) setDisplayName(profile.display_name);
-      const raw = (profile?.kira_memory as Record<string, unknown>) || {};
+      const raw = (profile?.dira_memory as Record<string, unknown>) || {};
       setMemory({
         reference_chat_history: raw.reference_chat_history === true,
         reference_saved_memories: raw.reference_saved_memories === true,
@@ -94,9 +94,9 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
   }, [open, userId]);
 
   const persistMemory = useCallback(async (updated: KiraMemory): Promise<boolean> => {
-    const { data: current } = await supabase.from("profiles").select("kira_memory").eq("id", userId).single();
+    const { data: current } = await supabase.from("profiles").select("dira_memory").eq("id", userId).single();
     const merged = {
-      ...(current?.kira_memory as object || {}),
+      ...(current?.dira_memory as object || {}),
       reference_chat_history: updated.reference_chat_history,
       reference_saved_memories: updated.reference_saved_memories,
       nickname: updated.nickname,
@@ -104,7 +104,7 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
       more_about_you: updated.more_about_you,
       custom_instructions: updated.custom_instructions,
     };
-    const { error } = await supabase.from("profiles").update({ kira_memory: merged }).eq("id", userId);
+    const { error } = await supabase.from("profiles").update({ dira_memory: merged }).eq("id", userId);
     return !error;
   }, [userId]);
 
@@ -115,7 +115,7 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
     const updated = { ...memory, [field]: val };
     setMemory(updated);
     await persistMemory(updated);
-    toast({ title: val ? "Enabled" : "Disabled", description: "Kira updated." });
+    toast({ title: val ? "Enabled" : "Disabled", description: "Dira updated." });
   };
 
   const saveTextFields = async () => {
@@ -130,7 +130,7 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
       await supabase.from("profiles").update({ display_name: memory.nickname }).eq("id", userId);
       setDisplayName(memory.nickname);
     }
-    toast({ title: "Saved", description: "Kira will use this going forward." });
+    toast({ title: "Saved", description: "Dira will use this going forward." });
     setIsSaving(false);
   };
 
@@ -172,7 +172,7 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
         hideClose
         className="p-0 gap-0 max-w-sm w-full rounded-2xl overflow-hidden border border-border/50 bg-card shadow-2xl flex flex-col max-h-[85vh]"
       >
-        <DialogTitle className="sr-only">Kira Settings</DialogTitle>
+        <DialogTitle className="sr-only">Dira Settings</DialogTitle>
 
         {isLoading ? (
           <div className="flex items-center justify-center h-60">
@@ -211,10 +211,10 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
                       <span className="font-poppins font-semibold text-base">{displayName || "Your name"}</span>
                     </div>
 
-                    {/* Customize Kira */}
+                    {/* Customize Dira */}
                     <div className="space-y-2">
                       <p className="text-xs font-poppins font-medium text-muted-foreground uppercase tracking-wider px-1">
-                        Customize Kira
+                        Customize Dira
                       </p>
                       <div className="rounded-xl border border-border/50 bg-background divide-y divide-border/50 overflow-hidden">
                         <SettingsRow
@@ -278,7 +278,7 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
                         <div className="flex-1">
                           <p className="text-sm font-medium">Reference chat history</p>
                           <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                            Lets Kira reference recent conversations when responding.
+                            Lets Dira reference recent conversations when responding.
                           </p>
                         </div>
                         <Switch
@@ -291,7 +291,7 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
                         <div className="flex-1">
                           <p className="text-sm font-medium">Reference saved memories</p>
                           <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                            Lets Kira save and use memories when responding.
+                            Lets Dira save and use memories when responding.
                           </p>
                         </div>
                         <Switch
@@ -382,7 +382,7 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
                     {/* Manual memories */}
                     {savedItems.length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-xs font-poppins font-medium text-muted-foreground uppercase tracking-wider px-1">You told Kira</p>
+                        <p className="text-xs font-poppins font-medium text-muted-foreground uppercase tracking-wider px-1">You told Dira</p>
                         {savedItems.map((item) => (
                           <div
                             key={item.key}
@@ -405,14 +405,14 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
 
                     {/* Learned memories */}
                     <div className="space-y-2">
-                      <p className="text-xs font-poppins font-medium text-muted-foreground uppercase tracking-wider px-1">Kira has learned</p>
+                      <p className="text-xs font-poppins font-medium text-muted-foreground uppercase tracking-wider px-1">Dira has learned</p>
                       {isLoadingLearned ? (
                         <div className="flex justify-center py-6">
                           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                         </div>
                       ) : learnedMemories.length === 0 ? (
                         <p className="text-xs text-muted-foreground px-1 py-2">
-                          Kira will learn facts about you as you chat.
+                          Dira will learn facts about you as you chat.
                         </p>
                       ) : (
                         learnedMemories.map((m) => (
@@ -444,7 +444,7 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
                         </div>
                         <p className="text-sm font-semibold">No memories yet</p>
                         <p className="text-xs text-muted-foreground max-w-[200px]">
-                          Fill in your details in Memory and chat with Kira to build up context.
+                          Fill in your details in Memory and chat with Dira to build up context.
                         </p>
                       </div>
                     )}
@@ -469,9 +469,9 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
                   <div className="p-4 space-y-4">
                     <div className="rounded-xl border border-border/50 bg-background p-4 space-y-3">
                       <div>
-                        <p className="text-sm font-semibold">Custom instructions for Kira</p>
+                        <p className="text-sm font-semibold">Custom instructions for Dira</p>
                         <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                          Kira will follow these in every conversation on Crevia.
+                          Dira will follow these in every conversation on Crevia.
                         </p>
                       </div>
                       <Textarea
@@ -483,7 +483,7 @@ export function KiraSettingsPanel({ open, onOpenChange, userId }: Props) {
                       />
                     </div>
                     <p className="text-xs text-muted-foreground px-1 leading-relaxed">
-                      Be specific — the more context you give, the sharper Kira's responses.
+                      Be specific — the more context you give, the sharper Dira's responses.
                     </p>
                   </div>
                 </ScrollArea>

@@ -1104,7 +1104,7 @@ const BillingSection = () => {
               border: "border-amber-500/20",
               bg: "bg-amber-500/5",
               accent: "bg-amber-500/10",
-              features: ["Everything in Pro", "3 seats included", "RBAC permissions", "Clause library", "200 Kira msgs/day"],
+              features: ["Everything in Pro", "3 seats included", "RBAC permissions", "Clause library", "200 Dira msgs/day"],
             },
             {
               key: "enterprise" as const,
@@ -1742,7 +1742,7 @@ const FONTS: Record<string, string> = {
 
 const PLAN_FEATURES = [
   { label: "Seats",                  free: "1",    pro: "1",         biz: "3+",        ent: "Custom"    },
-  { label: "Kira AI actions / day",  free: "10",   pro: "40",        biz: "200",       ent: "Unlimited" },
+  { label: "Dira AI actions / day",  free: "10",   pro: "40",        biz: "200",       ent: "Unlimited" },
   { label: "Invoices / month",       free: "2",    pro: "Unlimited", biz: "Unlimited", ent: "Unlimited" },
   { label: "Canvas / month",         free: "2",    pro: "Unlimited", biz: "Unlimited", ent: "Unlimited" },
   { label: "Workspaces",             free: "1",    pro: "Unlimited", biz: "Unlimited", ent: "Custom"    },
@@ -2401,7 +2401,7 @@ const SecuritySection = () => {
           {[
             { label: "RLS enabled on all tables",              done: true  },
             { label: "Privilege escalation blocked (profiles)", done: true  },
-            { label: "Kira memory RPC secured",                done: true  },
+            { label: "Dira memory RPC secured",                done: true  },
             { label: "Prompt injection sanitization",          done: true  },
             { label: "Storage bucket ownership enforced",      done: true  },
             { label: "Secret leak CI check",                   done: true  },

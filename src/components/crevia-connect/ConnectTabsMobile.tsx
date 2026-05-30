@@ -6,7 +6,7 @@ const tabs = [
   { id: "campaigns", label: "My Campaigns" },
   { id: "projects", label: "My Projects" },
   { id: "analytics", label: "Analytics" },
-  { id: "kira", label: "Kira" },
+  { id: "dira", label: "Dira" },
   { id: "chat", label: "Chat" },
 ];
 

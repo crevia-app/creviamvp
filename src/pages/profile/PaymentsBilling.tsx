@@ -174,7 +174,7 @@ const PaymentsBilling = () => {
 
   const starterFeatures = [
     "1 seat",
-    "10 Kira AI actions per day",
+    "10 Dira AI actions per day",
     "Crevia Link — basic templates",
     "1 active workspace",
     "5 Canvas per month (basic editing)",
@@ -183,7 +183,7 @@ const PaymentsBilling = () => {
 
   const proFeatures = [
     "1 seat",
-    "40 Kira AI actions per day",
+    "40 Dira AI actions per day",
     "Crevia Link — all premium themes & analytics",
     "Unlimited workspaces",
     "Unlimited Canvas with full E-Signatures",
@@ -194,8 +194,8 @@ const PaymentsBilling = () => {
 
   const businessFeatures = [
     "3 seats included (+$14.99/extra seat)",
-    "200 Kira AI actions/day",
-    "Multi-workspace Kira context",
+    "200 Dira AI actions/day",
+    "Multi-workspace Dira context",
     "Team roles & permissions (RBAC)",
     "Unlimited Canvas + clause library",
     "Unlimited invoices — no watermark",

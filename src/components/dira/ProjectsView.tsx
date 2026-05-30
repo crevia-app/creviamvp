@@ -65,7 +65,7 @@ export const ProjectsView = ({
     setIsDeleting(true);
     try {
       await supabase
-        .from("kira_conversations")
+        .from("dira_conversations")
         .update({ project_id: null })
         .eq("project_id", projectToDelete.id);
 

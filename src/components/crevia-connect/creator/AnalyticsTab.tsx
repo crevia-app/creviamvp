@@ -132,7 +132,7 @@ const AnalyticsTab = () => {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            AI insights coming soon - Kira will analyze your profile and provide personalized insights on what makes you stand out to brands.
+            AI insights coming soon - Dira will analyze your profile and provide personalized insights on what makes you stand out to brands.
           </p>
         </CardContent>
       </Card>

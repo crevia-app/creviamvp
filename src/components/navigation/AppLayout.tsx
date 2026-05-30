@@ -65,7 +65,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
   const isCrevidAI  = location.pathname === "/crevia-ai";
   const isStudio    = location.pathname === "/crevia-studio";
-  const isChatRoute = location.pathname === "/kira" || location.pathname.startsWith("/crevia-workspace/");
+  const isChatRoute = location.pathname === "/dira" || location.pathname.startsWith("/crevia-workspace/");
   const isSubPage   = ["/profile/", "/privacy-policy", "/terms-of-service", "/app/about", "/crv-9x4m2k"].some(
     (p) => location.pathname.startsWith(p)
   );
@@ -100,7 +100,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         >
           {isSubPage && (
             <div className="px-4 md:px-6 pt-3 pb-1">
-              <BackButton fallback="/kira" />
+              <BackButton fallback="/dira" />
             </div>
           )}
           {children}

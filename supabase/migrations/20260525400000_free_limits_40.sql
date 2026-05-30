@@ -1,14 +1,14 @@
 -- Raise all free-plan limits to 40 (testing phase)
--- Affects: Kira actions, invoices per month, canvases per month
+-- Affects: Dira actions, invoices per month, canvases per month
 
--- ── Kira ─────────────────────────────────────────────────────────────────────
+-- ── Dira ─────────────────────────────────────────────────────────────────────
 
 ALTER TABLE public.profiles
-  ALTER COLUMN kira_actions_limit SET DEFAULT 40;
+  ALTER COLUMN dira_actions_limit SET DEFAULT 40;
 
 UPDATE public.profiles
-   SET kira_actions_limit = 40
- WHERE kira_actions_limit < 40;
+   SET dira_actions_limit = 40
+ WHERE dira_actions_limit < 40;
 
 -- ── Invoices ──────────────────────────────────────────────────────────────────
 

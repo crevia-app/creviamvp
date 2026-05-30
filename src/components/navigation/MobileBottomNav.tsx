@@ -23,11 +23,11 @@ import { IOSInstallGuide } from "@/components/pwa/IOSInstallGuide";
 // ── Custom Icons ──────────────────────────────────────────────────────────────
 
 /**
- * 4-pointed diamond star — Kira
+ * 4-pointed diamond star — Dira
  * Mirrors the Apple Intelligence / SF Symbols "sparkle" shape:
  * outer points at cardinal directions (r=10), concave waist at 45° (r≈4√2).
  */
-const KiraIcon = ({ active }: { active: boolean }) => (
+const DiraIcon = ({ active }: { active: boolean }) => (
   <svg
     viewBox="0 0 24 24"
     width="22"
@@ -161,11 +161,11 @@ const MobileBottomNav = () => {
 
   const navItems = [
     {
-      id: "kira",
-      label: "Kira",
-      path: "/kira",
-      prefetch: () => import("@/pages/Kira"),
-      Icon: KiraIcon,
+      id: "dira",
+      label: "Dira",
+      path: "/dira",
+      prefetch: () => import("@/pages/Dira"),
+      Icon: DiraIcon,
     },
     {
       id: "studio",
@@ -189,7 +189,7 @@ const MobileBottomNav = () => {
     >
       <div className="grid grid-cols-3 h-[44px]">
 
-        {/* ── Primary nav items (Kira, Studio) ──────────────────────────── */}
+        {/* ── Primary nav items (Dira, Studio) ──────────────────────────── */}
         {navItems.map((item) => {
           const active = isActive(item.path);
           return (

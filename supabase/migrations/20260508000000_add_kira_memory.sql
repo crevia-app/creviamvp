@@ -1,2 +1,2 @@
 ALTER TABLE public.profiles
-  ADD COLUMN IF NOT EXISTS kira_memory JSONB DEFAULT '{}';
+  ADD COLUMN IF NOT EXISTS dira_memory JSONB DEFAULT '{}';

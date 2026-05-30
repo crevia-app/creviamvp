@@ -60,7 +60,7 @@ function isPromptAbuse(prompt: string): boolean {
 // ── System prompt ─────────────────────────────────────────────────────────────
 
 const KIRA_SYSTEM_PROMPT = `IDENTITY
-You are Kira, the highly intelligent AI embedded within Crevia (a premium infrastructure to scale business operations). You are a trusted, high-agency partner to the user.
+You are Dira, the highly intelligent AI embedded within Crevia (a premium infrastructure to scale business operations). You are a trusted, high-agency partner to the user.
 
 PERSONALITY & APPROACH
 Communicate with the sharp, dynamic energy of a world-class startup consultant. Speak naturally, balance professional candor with genuine helpfulness, and mirror the user's energy without ever sounding robotic or stiff.
@@ -170,13 +170,13 @@ async function fetchSimilarMemories(prompt: string, userId: string, supabase: an
   try {
     const queryVector = await embedText(prompt);
     const [{ data: similar }, { data: recent }] = await Promise.all([
-      supabase.rpc('match_kira_memories', {
+      supabase.rpc('match_dira_memories', {
         query_embedding: queryVector,
         match_count: 4,
         filter: { user_id: userId },
       }),
       supabase
-        .from('kira_memories')
+        .from('dira_memories')
         .select('content')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
@@ -196,7 +196,7 @@ async function fetchSimilarMemories(prompt: string, userId: string, supabase: an
 
     return all.length > 0 ? `WHAT I REMEMBER ABOUT YOU:\n${all.map(c => `- ${c}`).join('\n')}` : '';
   } catch (e) {
-    console.warn('[Kira] Memory fetch error:', e);
+    console.warn('[Dira] Memory fetch error:', e);
     return '';
   }
 }
@@ -218,13 +218,13 @@ async function fetchConversationSummary(conversationId: string, supabase: any): 
 // deno-lint-ignore no-explicit-any
 async function storeSingleMemory(fact: string, userId: string, supabase: any, source = 'conversation'): Promise<void> {
   const vector = await embedText(fact);
-  const { data: existing } = await supabase.rpc('match_kira_memories', {
+  const { data: existing } = await supabase.rpc('match_dira_memories', {
     query_embedding: vector,
     match_count: 1,
     filter: { user_id: userId },
   });
   if ((existing as Array<{ similarity: number }>)?.[0]?.similarity > 0.92) return;
-  await supabase.from('kira_memories').insert({
+  await supabase.from('dira_memories').insert({
     user_id: userId,
     content: fact,
     embedding: vector,
@@ -275,7 +275,7 @@ async function updateConversationSummary(
   supabase: any,
 ): Promise<void> {
   const transcript = messages
-    .map(m => `${m.role === 'user' ? 'User' : 'Kira'}: ${m.content.slice(0, 400)}`)
+    .map(m => `${m.role === 'user' ? 'User' : 'Dira'}: ${m.content.slice(0, 400)}`)
     .join('\n');
 
   const summary = await chatComplete([
@@ -404,7 +404,7 @@ const KIRA_TOOLS = [
     type: "function",
     function: {
       name: "get_profile",
-      description: "Get the user's Crevia profile and Kira memory: display name, nickname, bio, occupation, user type, goals, niche, and saved personalization fields.",
+      description: "Get the user's Crevia profile and Dira memory: display name, nickname, bio, occupation, user type, goals, niche, and saved personalization fields.",
       parameters: { type: "object", properties: {}, required: [] },
     },
   },
@@ -429,7 +429,7 @@ const KIRA_TOOLS = [
     type: "function",
     function: {
       name: "save_memory",
-      description: "Permanently save a specific fact about the user for future conversations. Use when the user explicitly asks Kira to remember something, or when a key fact (rate, preference, client detail) surfaces that is worth keeping.",
+      description: "Permanently save a specific fact about the user for future conversations. Use when the user explicitly asks Dira to remember something, or when a key fact (rate, preference, client detail) surfaces that is worth keeping.",
       parameters: {
         type: "object",
         properties: {
@@ -585,18 +585,18 @@ async function toolGetSavedClients(_args: unknown, userId: string, supabase: any
 async function toolGetProfile(_args: unknown, userId: string, supabase: any): Promise<unknown> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('display_name, handle, bio, user_type, is_verified, avatar_url, kira_memory')
+    .select('display_name, handle, bio, user_type, is_verified, avatar_url, dira_memory')
     .eq('id', userId)
     .single();
   if (error) {
-    console.error(`[Kira tool:get_profile] fetch error uid=${userId} code=${error.code} msg=${error.message}`);
+    console.error(`[Dira tool:get_profile] fetch error uid=${userId} code=${error.code} msg=${error.message}`);
     return { error: 'Profile not found' };
   }
   if (!data) {
-    console.warn(`[Kira tool:get_profile] fetch returned null uid=${userId}`);
+    console.warn(`[Dira tool:get_profile] fetch returned null uid=${userId}`);
     return { error: 'Profile not found' };
   }
-  const memory = (data as any)?.kira_memory as Record<string, unknown> | null ?? {};
+  const memory = (data as any)?.dira_memory as Record<string, unknown> | null ?? {};
   return {
     display_name: data.display_name,
     handle: data.handle,
@@ -661,7 +661,7 @@ async function toolGetNotifications(args: any, userId: string, supabase: any): P
 
 // Strips prompt-injection patterns from tool results before they enter the
 // OpenAI context. Prevents users from embedding instructions in their own
-// stored data (invoice client names, canvas titles, etc.) to hijack Kira.
+// stored data (invoice client names, canvas titles, etc.) to hijack Dira.
 function sanitizeToolResult(result: unknown): unknown {
   try {
     const str = JSON.stringify(result);
@@ -730,7 +730,7 @@ async function runAgentLoop(
     try {
       response = await callOpenAIWithTools(messages, KIRA_TOOLS, toolChoice);
     } catch (e) {
-      console.warn('[Kira] Agent loop call failed:', e);
+      console.warn('[Dira] Agent loop call failed:', e);
       break;
     }
 
@@ -752,7 +752,7 @@ async function runAgentLoop(
         let args: Record<string, unknown> = {};
         try { args = JSON.parse(tc.function.arguments); } catch { /* use empty args */ }
         const result = await executeTool(tc.function.name, args, userId, supabase);
-        console.log(`[Kira tool] ${tc.function.name} → ${JSON.stringify(result).slice(0, 120)}`);
+        console.log(`[Dira tool] ${tc.function.name} → ${JSON.stringify(result).slice(0, 120)}`);
         return { tool_call_id: tc.id, result };
       }),
     );
@@ -794,7 +794,7 @@ serve(async (req) => {
 
     // User-scoped client — anon key + user JWT so PostgREST runs as the
     // authenticated user. This is the reliable way to query user-owned rows
-    // (profiles, kira_memories, etc.) because auth.uid() resolves correctly
+    // (profiles, dira_memories, etc.) because auth.uid() resolves correctly
     // and the service role client can sometimes skip the auth context setup.
     const userSupabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -805,8 +805,8 @@ serve(async (req) => {
       },
     );
     if (authError || !user) {
-      supabase.rpc("log_security_event", { p_event_type: "auth_failure", p_endpoint: "kira-gpt", p_detail: "Token validation failed" }).catch(() => {});
-      console.warn("[security] auth_failure endpoint=kira-gpt");
+      supabase.rpc("log_security_event", { p_event_type: "auth_failure", p_endpoint: "dira-gpt", p_detail: "Token validation failed" }).catch(() => {});
+      console.warn("[security] auth_failure endpoint=dira-gpt");
       return new Response(JSON.stringify({ error: 'Invalid Session' }), { status: 401, headers: cors });
     }
 
@@ -848,7 +848,7 @@ serve(async (req) => {
 
     if (isPromptAbuse(prompt)) {
       return new Response(JSON.stringify({
-        reply: "I am Kira, built specifically for the creative economy. I cannot help with that, but I am here to help you grow your creative business. What do you need?"
+        reply: "I am Dira, built specifically for the creative economy. I cannot help with that, but I am here to help you grow your creative business. What do you need?"
       }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
@@ -871,13 +871,13 @@ serve(async (req) => {
       prefetchedMemory,
       prefetchedSummary,
     ] = await Promise.all([
-      supabase.rpc('consume_kira_action', { p_user_id: user.id }),
+      supabase.rpc('consume_dira_action', { p_user_id: user.id }),
       // Use the user-scoped client so PostgREST runs as the authenticated user.
       // The admin/service-role client was returning null for this query despite
       // matching UUIDs — the user-scoped client resolves auth.uid() correctly.
       userSupabase
         .from('profiles')
-        .select('display_name, handle, user_type, bio, kira_memory')
+        .select('display_name, handle, user_type, bio, dira_memory')
         .eq('id', user.id)
         .single(),
       // Fetch memories optimistically — most users have referenceMemories=true.
@@ -895,23 +895,23 @@ serve(async (req) => {
       });
     }
     if (!allowed) {
-      supabase.rpc("log_security_event", { p_event_type: "rate_limit", p_user_id: user.id, p_endpoint: "kira-gpt", p_detail: "Daily action limit reached" }).catch(() => {});
-      console.warn(`[security] rate_limit endpoint=kira-gpt user=${user.id}`);
+      supabase.rpc("log_security_event", { p_event_type: "rate_limit", p_user_id: user.id, p_endpoint: "dira-gpt", p_detail: "Daily action limit reached" }).catch(() => {});
+      console.warn(`[security] rate_limit endpoint=dira-gpt user=${user.id}`);
       return new Response(JSON.stringify({
-        error: 'Daily Kira limit reached. Upgrade to Pro for 40 actions per day.'
+        error: 'Daily Dira limit reached. Upgrade to Pro for 40 actions per day.'
       }), { status: 429, headers: { ...cors, 'Content-Type': 'application/json' } });
     }
 
     // Log profile fetch result so we can see exactly what's happening
     if (profileError) {
-      console.error(`[Kira] Profile fetch error uid=${user.id} code=${profileError.code} msg=${profileError.message}`);
+      console.error(`[Dira] Profile fetch error uid=${user.id} code=${profileError.code} msg=${profileError.message}`);
     } else if (!profile) {
-      console.warn(`[Kira] Profile fetch returned null uid=${user.id}`);
+      console.warn(`[Dira] Profile fetch returned null uid=${user.id}`);
     } else {
-      console.log(`[Kira] Profile OK uid=${user.id} display_name=${profile.display_name} nickname=${(profile.kira_memory as any)?.nickname} kira_memory_keys=${Object.keys((profile.kira_memory as any) ?? {}).join(',')}`);
+      console.log(`[Dira] Profile OK uid=${user.id} display_name=${profile.display_name} nickname=${(profile.dira_memory as any)?.nickname} dira_memory_keys=${Object.keys((profile.dira_memory as any) ?? {}).join(',')}`);
     }
 
-    const memory = (profile?.kira_memory as Record<string, unknown>) ?? {};
+    const memory = (profile?.dira_memory as Record<string, unknown>) ?? {};
     const isCreator = profile?.user_type === 'creator';
 
     const referenceMemories = memory.reference_saved_memories !== false;
@@ -923,7 +923,7 @@ serve(async (req) => {
     const summaryContext = (referenceChatHistory && conversationId) ? prefetchedSummary : '';
 
     // Build system prompt with user context.
-    // All personalisation comes from kira_memory (set via Kira Settings) —
+    // All personalisation comes from dira_memory (set via Dira Settings) —
     // no creator_profiles/brand_profiles joins needed.
     let systemPrompt = KIRA_SYSTEM_PROMPT;
 
@@ -1067,7 +1067,7 @@ serve(async (req) => {
       if (referenceMemories && fullResponse) {
         bgTasks.push(
           extractAndStoreMemories(sanitizedPrompt, fullResponse, user.id, userSupabase)
-            .catch(e => console.warn('[Kira] Memory extraction failed:', e)),
+            .catch(e => console.warn('[Dira] Memory extraction failed:', e)),
         );
       }
 
@@ -1082,7 +1082,7 @@ serve(async (req) => {
               { role: 'assistant', content: fullResponse },
             ],
             userSupabase,
-          ).catch(e => console.warn('[Kira] Summary update failed:', e)),
+          ).catch(e => console.warn('[Dira] Summary update failed:', e)),
         );
       }
 

@@ -1053,7 +1053,7 @@ export type Database = {
         }
         Relationships: []
       }
-      kira_conversations: {
+      dira_conversations: {
         Row: {
           created_at: string
           id: string
@@ -1083,15 +1083,15 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "kira_conversations_project_id_fkey"
+            foreignKeyName: "dira_conversations_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
-            referencedRelation: "kira_projects"
+            referencedRelation: "dira_projects"
             referencedColumns: ["id"]
           },
         ]
       }
-      kira_messages: {
+      dira_messages: {
         Row: {
           content: string
           conversation_id: string
@@ -1118,15 +1118,15 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "kira_messages_conversation_id_fkey"
+            foreignKeyName: "dira_messages_conversation_id_fkey"
             columns: ["conversation_id"]
             isOneToOne: false
-            referencedRelation: "kira_conversations"
+            referencedRelation: "dira_conversations"
             referencedColumns: ["id"]
           },
         ]
       }
-      kira_projects: {
+      dira_projects: {
         Row: {
           created_at: string
           custom_instructions: string | null
@@ -1602,12 +1602,12 @@ export type Database = {
           handle: string
           id: string
           is_verified: boolean | null
-          kira_actions_limit: number | null
-          kira_actions_used: number | null
-          kira_memory: Json | null
-          kira_tokens_limit: number | null
-          kira_tokens_used: number | null
-          kira_usage_month: string | null
+          dira_actions_limit: number | null
+          dira_actions_used: number | null
+          dira_memory: Json | null
+          dira_tokens_limit: number | null
+          dira_tokens_used: number | null
+          dira_usage_month: string | null
           paystack_customer_code: string | null
           subscription_expires_at: string | null
           subscription_plan: string | null
@@ -1630,12 +1630,12 @@ export type Database = {
           handle: string
           id: string
           is_verified?: boolean | null
-          kira_actions_limit?: number | null
-          kira_actions_used?: number | null
-          kira_memory?: Json | null
-          kira_tokens_limit?: number | null
-          kira_tokens_used?: number | null
-          kira_usage_month?: string | null
+          dira_actions_limit?: number | null
+          dira_actions_used?: number | null
+          dira_memory?: Json | null
+          dira_tokens_limit?: number | null
+          dira_tokens_used?: number | null
+          dira_usage_month?: string | null
           paystack_customer_code?: string | null
           subscription_expires_at?: string | null
           subscription_plan?: string | null
@@ -1658,12 +1658,12 @@ export type Database = {
           handle?: string
           id?: string
           is_verified?: boolean | null
-          kira_actions_limit?: number | null
-          kira_actions_used?: number | null
-          kira_memory?: Json | null
-          kira_tokens_limit?: number | null
-          kira_tokens_used?: number | null
-          kira_usage_month?: string | null
+          dira_actions_limit?: number | null
+          dira_actions_used?: number | null
+          dira_memory?: Json | null
+          dira_tokens_limit?: number | null
+          dira_tokens_used?: number | null
+          dira_usage_month?: string | null
           paystack_customer_code?: string | null
           subscription_expires_at?: string | null
           subscription_plan?: string | null

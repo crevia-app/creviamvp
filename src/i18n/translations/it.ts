@@ -19,7 +19,7 @@ const it = {
   "nav.dashboard": "Dashboard",
   "nav.connect": "Crevia Connect",
   "nav.studio": "Crevia Studio",
-  "nav.kira": "Kira AI",
+  "nav.dira": "Dira AI",
   "nav.pricing": "Prezzi",
   "nav.about": "Chi siamo",
   "nav.helpSupport": "Aiuto e supporto",
@@ -116,7 +116,7 @@ const it = {
   "payments.creviaChat": "Messaggistica Crevia Chat",
   "payments.priorityPlacement": "Posizionamento prioritario campagne",
   "payments.unlimitedCampaigns": "Campagne illimitate",
-  "payments.advancedAnalytics": "Analisi avanzate e insights Kira AI",
+  "payments.advancedAnalytics": "Analisi avanzate e insights Dira AI",
   "payments.customThemes": "Temi profilo personalizzati",
   "payments.creatorDiscovery": "Scoperta e abbinamento creatori",
 
@@ -129,8 +129,8 @@ const it = {
   "notifications.messagesDesc": "Nuovi messaggi e risposte",
   "notifications.paymentUpdates": "Aggiornamenti pagamenti",
   "notifications.paymentUpdatesDesc": "Notifiche pagamenti e fatturazione",
-  "notifications.kiraRecommendations": "Raccomandazioni di Kira",
-  "notifications.kiraRecommendationsDesc": "Insights e suggerimenti basati su IA",
+  "notifications.diraRecommendations": "Raccomandazioni di Dira",
+  "notifications.diraRecommendationsDesc": "Insights e suggerimenti basati su IA",
   "notifications.verificationAlerts": "Avvisi di verifica",
   "notifications.verificationAlertsDesc": "Aggiornamenti sullo stato di verifica",
   "notifications.specialSettings": "Impostazioni speciali",
@@ -210,9 +210,9 @@ const it = {
   "feedback.feedbackSubmittedDesc": "La tua voce plasma il futuro di Crevia.",
   "feedback.featureSubmitted": "Richiesta funzionalità inviata! 💡",
   "feedback.featureSubmittedDesc": "Ottima idea! La valuteremo per la nostra roadmap.",
-  "feedback.kiraBugMsg": "Non preoccuparti, i bug capitano! Il nostro team tecnico prende ogni segnalazione sul serio.",
-  "feedback.kiraFeedbackMsg": "Ogni feedback viene letto dal nostro team. Stai influenzando direttamente ciò che costruiamo!",
-  "feedback.kiraSays": "Kira dice:",
+  "feedback.diraBugMsg": "Non preoccuparti, i bug capitano! Il nostro team tecnico prende ogni segnalazione sul serio.",
+  "feedback.diraFeedbackMsg": "Ogni feedback viene letto dal nostro team. Stai influenzando direttamente ciò che costruiamo!",
+  "feedback.diraSays": "Dira dice:",
 
   "feedback.cat.dashboard": "Dashboard",
   "feedback.cat.campaigns": "Campagne",
@@ -227,7 +227,7 @@ const it = {
   "feedback.cat.discovery": "Scoperta creatori/brand",
   "feedback.cat.campaignTools": "Strumenti campagna",
   "feedback.cat.messagingSystem": "Sistema messaggistica",
-  "feedback.cat.kira": "Assistente Kira AI",
+  "feedback.cat.dira": "Assistente Dira AI",
 
   "integrations.title": "Integrazioni",
   "integrations.subtitle": "Collega le tue piattaforme preferite per semplificare il tuo flusso di lavoro.",
@@ -253,7 +253,7 @@ const it = {
 
   "sidebar.studio": "Crevia Studio",
   "sidebar.connect": "Crevia Connect",
-  "sidebar.kira": "Kira AI",
+  "sidebar.dira": "Dira AI",
   "sidebar.wallet": "Portafoglio",
 };
 

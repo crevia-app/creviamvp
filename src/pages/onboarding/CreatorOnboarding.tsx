@@ -87,7 +87,7 @@ const CreatorOnboarding = () => {
           <p className="text-sm text-muted-foreground">Step {step} of 4</p>
         </div>
 
-        {/* Kira Mascot */}
+        {/* Dira Mascot */}
         <div className="flex justify-center mb-6">
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-bronze to-bronze-light flex items-center justify-center">
             <span className="text-3xl">🎨</span>

@@ -81,7 +81,7 @@ const CreviaStudio = () => {
 
   const activeTabDef = STUDIO_TABS.find(t => t.id === activeTab) ?? STUDIO_TABS[0];
 
-  // Listen for TopBar's sidebar-toggle event (same pattern as Kira)
+  // Listen for TopBar's sidebar-toggle event (same pattern as Dira)
   useEffect(() => {
     const handler = () => setSidebarOpen(true);
     window.addEventListener("studio:toggle-sidebar", handler);

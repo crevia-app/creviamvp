@@ -31,7 +31,7 @@ const AuthCallback     = lazy(() => import("./pages/AuthCallback"));
 const NotFound         = lazy(() => import("./pages/NotFound"));
 const MFAVerify        = lazy(() => import("./components/auth/MFAVerify"));
 const ResetPassword    = lazy(() => import("./pages/ResetPassword"));
-const Kira             = lazy(() => import("./pages/Kira"));
+const Dira             = lazy(() => import("./pages/Dira"));
 const CreviaLink       = lazy(() => import("./pages/CreviaLink"));
 const CreviaStudio     = lazy(() => import("./pages/CreviaStudio"));
 const CreviaInvoice    = lazy(() => import("./pages/CreviaInvoice"));
@@ -131,7 +131,7 @@ function AppContent() {
   // the SW precache so subsequent navigations are instant (no network waterfall).
   useEffect(() => {
     if (!userId) return;
-    import("./pages/Kira");
+    import("./pages/Dira");
     import("./pages/CreviaStudio");
   }, [userId]);
 
@@ -219,8 +219,8 @@ function AppContent() {
           <Route path="/:username" element={<PublicPageWrapper><PublicProfile /></PublicPageWrapper>} />
 
           {/* Protected routes */}
-          <Route path="/dashboard" element={<Navigate to="/kira" replace />} />
-          <Route path="/kira" element={<ProtectedRoute><AppLayout><Kira /></AppLayout></ProtectedRoute>} />
+          <Route path="/dashboard" element={<Navigate to="/dira" replace />} />
+          <Route path="/dira" element={<ProtectedRoute><AppLayout><Dira /></AppLayout></ProtectedRoute>} />
           <Route path="/crevia-link" element={<ProtectedRoute><AppLayout><CreviaLink /></AppLayout></ProtectedRoute>} />
           <Route path="/crevia-studio" element={<ProtectedRoute><AppLayout><CreviaStudio /></AppLayout></ProtectedRoute>} />
           <Route path="/crevia-invoice" element={<ProtectedRoute><AppLayout><CreviaInvoice /></AppLayout></ProtectedRoute>} />

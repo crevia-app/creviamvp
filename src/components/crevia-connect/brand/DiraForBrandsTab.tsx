@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const KiraForBrandsTab = () => {
+const DiraForBrandsTab = () => {
   const { toast } = useToast();
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -32,7 +32,7 @@ const KiraForBrandsTab = () => {
         .eq("brand_id", user.id)
         .limit(10);
 
-      const { data } = await supabase.functions.invoke("kira-suggestions", {
+      const { data } = await supabase.functions.invoke("dira-suggestions", {
         body: {
           type: "brand",
           profile,
@@ -69,7 +69,7 @@ const KiraForBrandsTab = () => {
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-primary" />
-            Kira for Brands
+            Dira for Brands
           </h2>
           <p className="text-muted-foreground mt-1">
             Your AI marketing strategist
@@ -100,7 +100,7 @@ const KiraForBrandsTab = () => {
         {suggestions.length === 0 && (
           <Card className="md:col-span-2">
             <CardContent className="pt-6 text-center text-muted-foreground">
-              No suggestions available at the moment. Create campaigns to get personalized recommendations from Kira AI.
+              No suggestions available at the moment. Create campaigns to get personalized recommendations from Dira AI.
             </CardContent>
           </Card>
         )}
@@ -109,4 +109,4 @@ const KiraForBrandsTab = () => {
   );
 };
 
-export default KiraForBrandsTab;
+export default DiraForBrandsTab;

@@ -107,7 +107,7 @@ serve(async (req) => {
         const expiresAt = new Date();
         expiresAt.setMonth(expiresAt.getMonth() + 1);
 
-        const kiraLimit = subscriptionPlan === 'business' ? 200 : 40;
+        const diraLimit = subscriptionPlan === 'business' ? 200 : 40;
 
         await supabase
           .from('profiles')
@@ -116,7 +116,7 @@ serve(async (req) => {
             subscription_status: 'active',
             subscription_expires_at: expiresAt.toISOString(),
             paystack_customer_code: customer.customer_code,
-            kira_actions_limit: kiraLimit,
+            dira_actions_limit: diraLimit,
           })
           .eq('id', profile.id);
 
@@ -203,12 +203,12 @@ serve(async (req) => {
         .eq('email', customer.email);
     }
 
-    // ✅ Payment failed — cut off premium access and reset Kira limit to free tier
+    // ✅ Payment failed — cut off premium access and reset Dira limit to free tier
     if (event.event === 'invoice.payment_failed') {
       const { customer } = event.data;
       await supabase
         .from('profiles')
-        .update({ subscription_status: 'expired', kira_actions_limit: 10 })
+        .update({ subscription_status: 'expired', dira_actions_limit: 10 })
         .eq('email', customer.email);
     }
 
@@ -217,7 +217,7 @@ serve(async (req) => {
       const { customer } = event.data;
       await supabase
         .from('profiles')
-        .update({ subscription_status: 'cancelled', kira_actions_limit: 10 })
+        .update({ subscription_status: 'cancelled', dira_actions_limit: 10 })
         .eq('email', customer.email);
     }
     //we always tell paystack that the webhook has been received if not paystack will keep retrying the webhook

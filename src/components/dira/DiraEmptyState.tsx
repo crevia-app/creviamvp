@@ -1,7 +1,7 @@
 /**
- * KiraEmptyState
+ * DiraEmptyState
  * ──────────────
- * Premium "Dark Luxury" empty-chat state for Kira.
+ * Premium "Dark Luxury" empty-chat state for Dira.
  *
  * Layout:
  *   • Two absolute-positioned brand-orange blur orbs animate independently
@@ -10,7 +10,7 @@
  *   • Prompt chips below the greeting give instant-start suggestions.
  *
  * Usage:
- *   <KiraEmptyState userName="Anthony" activeProject={null} />
+ *   <DiraEmptyState userName="Anthony" activeProject={null} />
  */
 
 import { Sparkles } from "lucide-react";
@@ -20,7 +20,7 @@ interface ActiveProject {
   description?: string | null;
 }
 
-interface KiraEmptyStateProps {
+interface DiraEmptyStateProps {
   userName?: string | null;
   activeProject?: ActiveProject | null;
   onChipClick?: (text: string) => void;
@@ -37,11 +37,11 @@ const PROJECT_CHIPS = [
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────────
-const KiraEmptyState = ({
+const DiraEmptyState = ({
   userName,
   activeProject,
   onChipClick,
-}: KiraEmptyStateProps) => {
+}: DiraEmptyStateProps) => {
   const chips = activeProject ? PROJECT_CHIPS : DEFAULT_CHIPS;
 
   return (
@@ -111,7 +111,7 @@ const KiraEmptyState = ({
       {/* ── Content layer (z-10) ────────────────────────────────────────────── */}
       <div className="relative z-10 flex flex-col items-center text-center max-w-lg w-full">
 
-        {/* Kira icon badge */}
+        {/* Dira icon badge */}
         <div
           className="mb-6 flex items-center justify-center w-14 h-14 rounded-2xl"
           style={{
@@ -130,7 +130,7 @@ const KiraEmptyState = ({
         {activeProject ? (
           <>
             <h1
-              className="font-vollkorn text-3xl md:text-4xl font-bold mb-3 animate-kira-greeting"
+              className="font-vollkorn text-3xl md:text-4xl font-bold mb-3 animate-dira-greeting"
               style={{
                 background: "linear-gradient(135deg, #F0782F 0%, #FF9A5C 50%, #CF5A1A 100%)",
                 WebkitBackgroundClip: "text",
@@ -141,26 +141,26 @@ const KiraEmptyState = ({
               {activeProject.name}
             </h1>
             <p
-              className="font-poppins text-sm md:text-base text-muted-foreground mb-10 leading-relaxed animate-kira-greeting"
+              className="font-poppins text-sm md:text-base text-muted-foreground mb-10 leading-relaxed animate-dira-greeting"
               style={{ animationDelay: "0.1s" }}
             >
-              {activeProject.description || "Let's get to work. What do you need from Kira today?"}
+              {activeProject.description || "Let's get to work. What do you need from Dira today?"}
             </p>
           </>
         ) : (
           <>
             <h1
-              className="font-vollkorn text-3xl md:text-[2.25rem] font-bold mb-3 leading-tight text-foreground animate-kira-greeting"
+              className="font-vollkorn text-3xl md:text-[2.25rem] font-bold mb-3 leading-tight text-foreground animate-dira-greeting"
             >
               {userName
                 ? `Good to see you, ${userName}.`
                 : "Hello there."}
             </h1>
             <p
-              className="font-poppins text-sm md:text-base text-muted-foreground mb-10 leading-relaxed animate-kira-greeting"
+              className="font-poppins text-sm md:text-base text-muted-foreground mb-10 leading-relaxed animate-dira-greeting"
               style={{ animationDelay: "0.12s" }}
             >
-              I'm Kira — your creative business intelligence.
+              I'm Dira — your creative business intelligence.
               <br className="hidden sm:block" />
               What shall we work on?
             </p>
@@ -169,7 +169,7 @@ const KiraEmptyState = ({
 
         {/* ── Prompt chips ────────────────────────────────────────────────── */}
         <div
-          className="flex flex-wrap gap-2.5 justify-center animate-kira-greeting"
+          className="flex flex-wrap gap-2.5 justify-center animate-dira-greeting"
           style={{ animationDelay: "0.22s" }}
         >
           {chips.map((chip) => (
@@ -194,4 +194,4 @@ const KiraEmptyState = ({
   );
 };
 
-export default KiraEmptyState;
+export default DiraEmptyState;

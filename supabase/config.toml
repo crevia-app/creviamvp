@@ -3,10 +3,10 @@ project_id = "bcbzixdcsigxhqdiveei"
 [functions.ai-match-score]
 verify_jwt = false
 
-[functions.kira-suggestions]
+[functions.dira-suggestions]
 verify_jwt = false
 
-[functions.kira-chat]
+[functions.dira-chat]
 verify_jwt = false
 
 [functions.contracts-create]
@@ -18,16 +18,16 @@ verify_jwt = false
 [functions.approve-action]
 verify_jwt = false
 
-[functions.kira-gpt]
+[functions.dira-gpt]
 enabled = true
 verify_jwt = false
-import_map = "./functions/kira-gpt/deno.json"
+import_map = "./functions/dira-gpt/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/kira-gpt/index.ts"
+entrypoint = "./functions/dira-gpt/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/kira-gpt/*.html" ]
+# static_files = [ "./functions/dira-gpt/*.html" ]
 
 [functions.paystack-webhook]
 enabled = true

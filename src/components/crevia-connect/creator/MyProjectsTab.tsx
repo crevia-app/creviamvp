@@ -210,7 +210,7 @@ const MyProjectsTab = () => {
 
         {/* Discover Tab - Gig/Project Opportunities */}
         <TabsContent value="discover" className="space-y-6 mt-4">
-          {/* Kira's Best Matches */}
+          {/* Dira's Best Matches */}
           {bestMatches.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
@@ -219,7 +219,7 @@ const MyProjectsTab = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold flex items-center gap-2">
-                    Kira's Best Matches
+                    Dira's Best Matches
                     <Badge variant="secondary" className="text-xs">AI Powered</Badge>
                   </h3>
                   <p className="text-sm text-muted-foreground">Handpicked gigs based on your skills</p>

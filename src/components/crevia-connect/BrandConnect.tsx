@@ -6,7 +6,7 @@ import CreatorDiscoveryTab from "./brand/CreatorDiscoveryTab";
 import CampaignManagerTab from "./brand/CampaignManagerTab";
 import ProjectManagerTab from "./brand/ProjectManagerTab";
 import MyCreatorsTab from "./brand/MyCreatorsTab";
-import KiraForBrandsTab from "./brand/KiraForBrandsTab";
+import DiraForBrandsTab from "./brand/DiraForBrandsTab";
 import CreviaChat from "./shared/CreviaChat";
 import { cn } from "@/lib/utils";
 
@@ -25,8 +25,8 @@ const BrandConnect = () => {
         return <ProjectManagerTab />;
       case "creators":
         return <MyCreatorsTab />;
-      case "kira":
-        return <KiraForBrandsTab />;
+      case "dira":
+        return <DiraForBrandsTab />;
       case "chat":
         return <CreviaChat />;
       default:

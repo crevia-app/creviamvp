@@ -33,7 +33,7 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
   const { canInstall, isIOS, install, showIOSGuide, setShowIOSGuide } = usePWAInstall();
 
   const navItems = [
-    { id: "kira",   label: t("sidebar.kira"),   icon: Sparkles, path: "/kira",          prefetch: () => import("@/pages/Kira") },
+    { id: "dira",   label: t("sidebar.dira"),   icon: Sparkles, path: "/dira",          prefetch: () => import("@/pages/Dira") },
     { id: "studio", label: t("sidebar.studio"), icon: Briefcase, path: "/crevia-studio", prefetch: () => import("@/pages/CreviaStudio") },
   ];
 

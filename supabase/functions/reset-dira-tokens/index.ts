@@ -23,7 +23,7 @@ serve(async (req) => {
     const { data, error } = await supabase
       .from("profiles")
       .update({
-        kira_tokens_used_today: 0,
+        dira_tokens_used_today: 0,
         kira_last_reset: new Date().toISOString(),
       })
     //   .neq("id", ""); // Update all rows

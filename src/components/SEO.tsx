@@ -13,7 +13,7 @@ interface SEOProps {
 
 export const SEO = ({
   title = "Crevia - Own Your Story",
-  description = "The infrastructure to scale your creative operations. Kira brings the intelligence. Crevia Studio handles the operations.",
+  description = "The infrastructure to scale your creative operations. Dira brings the intelligence. Crevia Studio handles the operations.",
   image = DEFAULT_IMAGE,
   url,
   type = "website",

@@ -2,7 +2,7 @@
 create extension if not exists vector;
 
 -- ── Long-term memory vector store ──────────────────────────────────────────
-create table if not exists kira_memories (
+create table if not exists dira_memories (
   id          uuid        primary key default gen_random_uuid(),
   user_id     uuid        not null references auth.users(id) on delete cascade,
   content     text        not null,
@@ -12,19 +12,19 @@ create table if not exists kira_memories (
 );
 
 -- IVFFlat index for fast cosine similarity search
-create index if not exists kira_memories_embedding_idx
-  on kira_memories using ivfflat (embedding vector_cosine_ops)
+create index if not exists dira_memories_embedding_idx
+  on dira_memories using ivfflat (embedding vector_cosine_ops)
   with (lists = 100);
 
-alter table kira_memories enable row level security;
+alter table dira_memories enable row level security;
 
 create policy "Users own their memories"
-  on kira_memories for all
+  on dira_memories for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
 -- ── Similarity search RPC ───────────────────────────────────────────────────
-create or replace function match_kira_memories(
+create or replace function match_dira_memories(
   query_embedding vector(1536),
   match_count     int   default 5,
   filter          jsonb default '{}'
@@ -46,7 +46,7 @@ begin
     km.content,
     km.metadata,
     1 - (km.embedding <=> query_embedding) as similarity
-  from kira_memories km
+  from dira_memories km
   where
     filter->>'user_id' is null
     or km.user_id = (filter->>'user_id')::uuid
@@ -57,7 +57,7 @@ $$;
 
 -- ── Conversation summaries ──────────────────────────────────────────────────
 create table if not exists conversation_summaries (
-  conversation_id uuid        primary key references kira_conversations(id) on delete cascade,
+  conversation_id uuid        primary key references dira_conversations(id) on delete cascade,
   user_id         uuid        not null references auth.users(id) on delete cascade,
   summary         text        not null,
   message_count   int         not null default 0,

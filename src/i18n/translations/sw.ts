@@ -21,7 +21,7 @@ const sw = {
   "nav.dashboard": "Dashibodi",
   "nav.connect": "Crevia Connect",
   "nav.studio": "Crevia Studio",
-  "nav.kira": "Kira AI",
+  "nav.dira": "Dira AI",
   "nav.pricing": "Bei",
   "nav.about": "Kuhusu",
   "nav.helpSupport": "Msaada na Usaidizi",
@@ -122,7 +122,7 @@ const sw = {
   "payments.creviaChat": "Ujumbe wa Crevia Chat",
   "payments.priorityPlacement": "Nafasi ya kipaumbele ya kampeni",
   "payments.unlimitedCampaigns": "Kampeni zisizo na kikomo",
-  "payments.advancedAnalytics": "Uchambuzi wa hali ya juu na maarifa ya Kira AI",
+  "payments.advancedAnalytics": "Uchambuzi wa hali ya juu na maarifa ya Dira AI",
   "payments.customThemes": "Mandhari maalum ya wasifu",
   "payments.creatorDiscovery": "Ugunduzi na kulinganisha waundaji",
 
@@ -136,8 +136,8 @@ const sw = {
   "notifications.messagesDesc": "Ujumbe mpya na majibu",
   "notifications.paymentUpdates": "Sasisho za Malipo",
   "notifications.paymentUpdatesDesc": "Arifa za malipo na ankara",
-  "notifications.kiraRecommendations": "Mapendekezo ya Kira",
-  "notifications.kiraRecommendationsDesc": "Maarifa na mapendekezo ya AI",
+  "notifications.diraRecommendations": "Mapendekezo ya Dira",
+  "notifications.diraRecommendationsDesc": "Maarifa na mapendekezo ya AI",
   "notifications.verificationAlerts": "Arifa za Uthibitisho",
   "notifications.verificationAlertsDesc": "Sasisho kuhusu hali ya uthibitisho",
   "notifications.specialSettings": "Mipangilio Maalum",
@@ -219,9 +219,9 @@ const sw = {
   "feedback.feedbackSubmittedDesc": "Sauti yako inaunda mustakabali wa Crevia.",
   "feedback.featureSubmitted": "Ombi la kipengele limetumwa! 💡",
   "feedback.featureSubmittedDesc": "Wazo zuri! Tutalitathimini kwa mpango wetu.",
-  "feedback.kiraBugMsg": "Usijali—hitilafu hutokea! Timu yetu ya uhandisi inashughulikia kila ripoti kwa uzito.",
-  "feedback.kiraFeedbackMsg": "Kila maoni yanasomwa na timu yetu. Unaathiri moja kwa moja tunachokijenga!",
-  "feedback.kiraSays": "Kira anasema:",
+  "feedback.diraBugMsg": "Usijali—hitilafu hutokea! Timu yetu ya uhandisi inashughulikia kila ripoti kwa uzito.",
+  "feedback.diraFeedbackMsg": "Kila maoni yanasomwa na timu yetu. Unaathiri moja kwa moja tunachokijenga!",
+  "feedback.diraSays": "Dira anasema:",
 
   // Feedback categories
   "feedback.cat.dashboard": "Dashibodi",
@@ -237,7 +237,7 @@ const sw = {
   "feedback.cat.discovery": "Ugunduzi wa Muundaji/Chapa",
   "feedback.cat.campaignTools": "Zana za Kampeni",
   "feedback.cat.messagingSystem": "Mfumo wa Ujumbe",
-  "feedback.cat.kira": "Msaidizi wa Kira AI",
+  "feedback.cat.dira": "Msaidizi wa Dira AI",
 
   // Integrations
   "integrations.title": "Viunganishi",
@@ -266,7 +266,7 @@ const sw = {
   // Sidebar
   "sidebar.studio": "Crevia Studio",
   "sidebar.connect": "Crevia Connect",
-  "sidebar.kira": "Kira AI",
+  "sidebar.dira": "Dira AI",
   "sidebar.wallet": "Pochi",
 };
 

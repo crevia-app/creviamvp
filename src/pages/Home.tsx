@@ -57,13 +57,13 @@ const Home = () => {
             <ScrollReveal delay={0.26}>
               <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground font-poppins leading-relaxed max-w-2xl">
                 Build a business that runs as well as it creates.
-                Kira brings the intelligence. Crevia Studio handles the operations.
+                Dira brings the intelligence. Crevia Studio handles the operations.
                 Crevia is the infrastructure where both happen — without the chaos.
               </p>
             </ScrollReveal>
             <ScrollReveal delay={0.38}>
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Link to={isLoggedIn ? "/kira" : "/auth?mode=signup"} className="w-full sm:w-auto">
+                <Link to={isLoggedIn ? "/dira" : "/auth?mode=signup"} className="w-full sm:w-auto">
                   <Button
                     size="lg"
                     className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-sm sm:text-base md:text-lg px-6 sm:px-10 py-5 sm:py-7 font-poppins font-semibold shadow-lg hover-scale"
@@ -157,7 +157,7 @@ const Home = () => {
             </ScrollReveal>
           </div>
 
-          {/* KIRA */}
+          {/* DIRA */}
           <ScrollReveal variant="fade-up" className="mb-20 md:mb-28">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center">
               <div className="space-y-6 lg:col-span-2 max-w-3xl">
@@ -168,12 +168,12 @@ const Home = () => {
                   </span>
                 </div>
                 <h3 className="font-vollkorn text-3xl md:text-4xl font-bold leading-tight">
-                  Meet Kira.{" "}
+                  Meet Dira.{" "}
                   <span className="text-gradient-bronze">Your AI Chief of Staff.</span>
                 </h3>
                 <p className="text-lg text-muted-foreground leading-relaxed">
                   Whether you're a creative building your business or a brand scaling
-                  your operations — Kira is the intelligent partner in your corner.
+                  your operations — Dira is the intelligent partner in your corner.
                   Strategy, scoping, and guidance, exactly when you need it.
                 </p>
               </div>
@@ -266,7 +266,7 @@ const Home = () => {
             </p>
           </ScrollReveal>
           <ScrollReveal delay={0.24} variant="scale">
-            <Link to={isLoggedIn ? "/kira" : "/auth?mode=signup"} className="w-full sm:w-auto inline-block">
+            <Link to={isLoggedIn ? "/dira" : "/auth?mode=signup"} className="w-full sm:w-auto inline-block">
               <Button
                 size="lg"
                 className="w-full sm:w-auto bg-bronze hover:bg-bronze-dark text-sm sm:text-base md:text-lg px-6 sm:px-10 md:px-12 py-5 sm:py-7 font-poppins font-semibold shadow-lg hover-scale"

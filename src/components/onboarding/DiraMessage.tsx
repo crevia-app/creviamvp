@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 
-interface KiraMessageProps {
+interface DiraMessageProps {
   content: string;
 }
 
-const KiraMessage = ({ content }: KiraMessageProps) => {
+const DiraMessage = ({ content }: DiraMessageProps) => {
   const lines = content.split("\n");
 
   return (
@@ -24,4 +24,4 @@ const KiraMessage = ({ content }: KiraMessageProps) => {
   );
 };
 
-export default KiraMessage;
+export default DiraMessage;

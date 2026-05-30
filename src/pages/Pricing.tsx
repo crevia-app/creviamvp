@@ -31,7 +31,7 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterpriseP
       features: [
         "1 seat",
         "Crevia Link — basic templates",
-        "10 Kira AI actions per day",
+        "10 Dira AI actions per day",
         "1 active workspace",
         "2 Canvas per month (basic editing)",
         "2 invoices per month (Crevia watermark)",
@@ -54,7 +54,7 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterpriseP
       features: [
         "1 seat",
         "Verified badge on your profile",
-        "40 Kira AI actions per day",
+        "40 Dira AI actions per day",
         "Crevia Link — all premium themes & analytics",
         "Unlimited workspaces",
         "Unlimited Canvas with full E-Signatures",
@@ -78,7 +78,7 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterpriseP
       description: "The command center for brands and agencies that operate at scale.",
       features: [
         "3 seats included",
-        "200 Kira AI actions/day — multi-workspace context",
+        "200 Dira AI actions/day — multi-workspace context",
         "Crevia Link — advanced customization & analytics",
         "Team roles & permissions (RBAC)",
         "Unlimited Canvas + custom brand MSAs & clause library",
@@ -102,7 +102,7 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterpriseP
       description: "For organisations where volume, compliance, and control are non-negotiable.",
       features: [
         "Custom seats",
-        "Priority Kira processing — no throttling",
+        "Priority Dira processing — no throttling",
         "Custom domain mapping & white-labeling",
         "Dedicated account manager",
         "Concierge Canvas onboarding",
@@ -353,7 +353,7 @@ const Pricing = () => {
                       </Button>
                     </a>
                   ) : (
-                    <Link to={isLoggedIn ? "/kira" : "/auth?mode=signup"}>
+                    <Link to={isLoggedIn ? "/dira" : "/auth?mode=signup"}>
                       <Button
                         className="w-full font-poppins font-semibold bg-secondary hover:bg-secondary/80 text-foreground"
                         size="lg"
@@ -381,7 +381,7 @@ const Pricing = () => {
             {[
               {
                 q: "What's included in the free plan?",
-                a: "Crevia Link with basic templates, 10 Kira AI actions per day, 2 invoices and 2 Canvas per month. No credit card required.",
+                a: "Crevia Link with basic templates, 10 Dira AI actions per day, 2 invoices and 2 Canvas per month. No credit card required.",
               },
               {
                 q: "Can I switch plans anytime?",
@@ -424,7 +424,7 @@ const Pricing = () => {
             </p>
           </ScrollReveal>
           <ScrollReveal delay={0.15} variant="scale">
-            <Link to={isLoggedIn ? "/kira" : "/auth?mode=signup"}>
+            <Link to={isLoggedIn ? "/dira" : "/auth?mode=signup"}>
               <Button
                 size="lg"
                 className="bg-bronze hover:bg-bronze-dark text-lg px-12 py-7 font-poppins font-semibold shadow-lg hover-scale"

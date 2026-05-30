@@ -14,8 +14,8 @@ CREATE POLICY "Users can update own profile"
   );
 
 
--- ── 2. Fix match_kira_memories — always use auth.uid(), ignore filter.user_id ─
-CREATE OR REPLACE FUNCTION match_kira_memories(
+-- ── 2. Fix match_dira_memories — always use auth.uid(), ignore filter.user_id ─
+CREATE OR REPLACE FUNCTION match_dira_memories(
   query_embedding vector(1536),
   match_count     int   default 5,
   filter          jsonb default '{}'
@@ -29,7 +29,7 @@ BEGIN
   RETURN QUERY
   SELECT km.id, km.content, km.metadata,
          1 - (km.embedding <=> query_embedding) AS similarity
-  FROM kira_memories km
+  FROM dira_memories km
   WHERE km.user_id = auth.uid()
   ORDER BY km.embedding <=> query_embedding
   LIMIT match_count;
@@ -53,7 +53,7 @@ BEGIN
     'profile',               (SELECT row_to_json(p)   FROM profiles p             WHERE p.id = v_uid),
     'invoices',              (SELECT json_agg(i)       FROM invoices i             WHERE i.user_id = v_uid),
     'canvases',              (SELECT json_agg(c)       FROM canvases c             WHERE c.user_id = v_uid),
-    'kira_memories',         (SELECT json_agg(m)       FROM kira_memories m        WHERE m.user_id = v_uid),
+    'dira_memories',         (SELECT json_agg(m)       FROM dira_memories m        WHERE m.user_id = v_uid),
     'conversation_summaries',(SELECT json_agg(s)       FROM conversation_summaries s WHERE s.user_id = v_uid),
     'exported_at',           NOW()
   );

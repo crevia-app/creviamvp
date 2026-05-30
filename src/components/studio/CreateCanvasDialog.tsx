@@ -26,7 +26,7 @@ interface CreateCanvasDialogProps {
   editingCanvas?: any;
   onSuccess: (canvas?: any) => void;
   onCreated?: (id: string) => void;
-  kiraContext?: Record<string, unknown> | null;
+  diraContext?: Record<string, unknown> | null;
   applicationContext?: ApplicationContext | null;
   folderId?: string | null;
 }
@@ -103,7 +103,7 @@ const CreateCanvasDialog = ({
   editingCanvas,
   onSuccess,
   onCreated,
-  kiraContext,
+  diraContext,
   applicationContext,
   folderId,
 }: CreateCanvasDialogProps) => {
@@ -117,12 +117,12 @@ const CreateCanvasDialog = ({
       setContent(editingCanvas.content ?? "");
     } else if (applicationContext) {
       setContent(buildTemplate(applicationContext));
-    } else if (kiraContext) {
-      if (kiraContext.content) setContent(kiraContext.content as string);
+    } else if (diraContext) {
+      if (diraContext.content) setContent(diraContext.content as string);
     } else {
       setContent("");
     }
-  }, [editingCanvas, kiraContext, applicationContext, open]);
+  }, [editingCanvas, diraContext, applicationContext, open]);
 
   const handleSubmit = async () => {
     setLoading(true);

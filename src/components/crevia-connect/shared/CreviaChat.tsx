@@ -68,7 +68,7 @@ import { format, isToday, isYesterday } from "date-fns";
 import ChatMediaPanel from "./ChatMediaPanel";
 import { useE2EEncryption } from "@/hooks/use-e2e-encryption";
 import { iconOptions } from "@/components/crevia-link/iconOptions";
-// useIOSKeyboardFit removed: same reason as Kira — it applied position:fixed; top:vv.offsetTop
+// useIOSKeyboardFit removed: same reason as Dira — it applied position:fixed; top:vv.offsetTop
 // which pushes the container DOWN on modern iOS (where position:fixed is already relative to
 // the visual viewport), leaving a black gap above the header.
 // AppLayout h-dvh + flex chain + the keyboardOpen padding on the input handle it correctly.
@@ -2333,7 +2333,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                 </div>
               </div>
 
-              {/* Input Area — dynamic bottom padding like Kira: shrinks when keyboard is up */}
+              {/* Input Area — dynamic bottom padding like Dira: shrinks when keyboard is up */}
               <div
                 className="border-t bg-background/95 backdrop-blur flex-shrink-0 pt-3 px-3 md:p-4"
                 style={
@@ -2406,7 +2406,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                       <input ref={fileImageRef} type="file" accept="image/*"   className="sr-only" onChange={handleFileSelect} />
                       <input ref={fileVideoRef} type="file" accept="video/*"   className="sr-only" onChange={handleFileSelect} />
 
-                      {/* Kira-style pill input bar */}
+                      {/* Dira-style pill input bar */}
                       <div className="flex items-center gap-1 bg-muted/40 rounded-full border border-border/60 px-2 py-1 shadow-sm transition-all duration-200 focus-within:border-bronze/50 focus-within:bg-card focus-within:shadow-md">
 
                         {/* Attach menu */}

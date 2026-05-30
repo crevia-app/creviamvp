@@ -16,12 +16,12 @@ BEGIN
     RAISE EXCEPTION 'not_authenticated';
   END IF;
 
-  -- Kira data
-  DELETE FROM public.kira_messages      WHERE conversation_id IN (
-    SELECT id FROM public.kira_conversations WHERE user_id = uid
+  -- Dira data
+  DELETE FROM public.dira_messages      WHERE conversation_id IN (
+    SELECT id FROM public.dira_conversations WHERE user_id = uid
   );
-  DELETE FROM public.kira_conversations WHERE user_id = uid;
-  DELETE FROM public.kira_projects      WHERE user_id = uid;
+  DELETE FROM public.dira_conversations WHERE user_id = uid;
+  DELETE FROM public.dira_projects      WHERE user_id = uid;
 
   -- Canvas / invoices
   DELETE FROM public.invoice_items      WHERE invoice_id IN (
