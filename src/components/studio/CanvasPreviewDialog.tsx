@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -163,6 +163,7 @@ const CanvasPreviewDialog = ({
   const [printing, setPrinting]                         = useState(false);
   const [showSendDialog, setShowSendDialog]             = useState(false);
   const [autoSaveStatus, setAutoSaveStatus]             = useState<"idle" | "saving" | "saved">("idle");
+  const [sigStyle, setSigStyle]                         = useState<{ left: number; top: number; w: number; h: number } | null>(null);
 
   // ref on the INNER content padding div — DraggableSig lives inside here
   const contentAreaRef = useRef<HTMLDivElement>(null);
@@ -183,6 +184,23 @@ const CanvasPreviewDialog = ({
       setPlacementMode(null);
     }
   }, [canvas]);
+
+  // Compute signature pixel position AFTER the DOM is painted so offsetWidth/Height are real.
+  useLayoutEffect(() => {
+    const sp = localCanvas?.signature_position as SigPos | null;
+    const el = contentAreaRef.current;
+    if (!sp || !el || placementMode) { setSigStyle(null); return; }
+    if (sp.x != null) {
+      setSigStyle({ left: sp.x, top: sp.y!, w: sp.w ?? INIT_W, h: sp.h ?? INIT_H });
+    } else if (sp.xPct != null) {
+      setSigStyle({
+        left: sp.xPct * el.offsetWidth,
+        top:  sp.yPct! * el.offsetHeight,
+        w:    (sp.wPct ?? 0) * el.offsetWidth  || INIT_W,
+        h:    (sp.hPct ?? 0) * el.offsetHeight || INIT_H,
+      });
+    }
+  }, [localCanvas?.signature_position, localCanvas?.creator_signature, placementMode]);
 
   const fetchProfile = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -543,45 +561,26 @@ const CanvasPreviewDialog = ({
                   </div>
                   {/* End regular content ------------------------------------ */}
 
-                  {/* ── SAVED SIGNATURE: absolutely positioned at stored pixel coords ── */}
-                  {!placementMode && localCanvas.creator_signature && (() => {
-                    const sp = localCanvas.signature_position as SigPos | null;
-                    if (!sp) return null;
-                    // Prefer raw pixels (stored since this fix). Fall back to
-                    // percentage × offsetWidth/Height for older records.
-                    const el = contentAreaRef.current;
-                    const left = sp.x   != null ? sp.x   : (sp.xPct ?? 0) * (el?.offsetWidth  ?? 0);
-                    const top  = sp.y   != null ? sp.y   : (sp.yPct ?? 0) * (el?.offsetHeight ?? 0);
-                    const w    = sp.w   != null ? sp.w   : (sp.wPct ?? 0) * (el?.offsetWidth  ?? 0) || INIT_W;
-                    const h    = sp.h   != null ? sp.h   : (sp.hPct ?? 0) * (el?.offsetHeight ?? 0) || INIT_H;
-                    return (
-                      <div
-                        className="absolute pointer-events-none"
-                        style={{ left, top, width: w, height: h }}
-                      >
-                        <div className="flex flex-col h-full justify-end gap-1">
-                          {localCanvas.creator_signature.startsWith("data:image") ? (
-                            <img
-                              src={localCanvas.creator_signature}
-                              alt="Signature"
-                              className="max-h-12 object-contain object-left dark:invert"
-                              draggable={false}
-                            />
-                          ) : (
-                            <span className="font-vollkorn italic text-2xl text-foreground/85 truncate">
-                              {localCanvas.creator_signature}
-                            </span>
-                          )}
-                          <div className="h-px bg-border/60" />
-                          <p className="text-[11px] text-muted-foreground whitespace-nowrap">
-                            {localCanvas.creator_signed_at
-                              ? `Signed ${format(new Date(localCanvas.creator_signed_at), "MMM d, yyyy 'at' h:mm a")}`
-                              : "Creator Signature"}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })()}
+                  {/* ── SAVED SIGNATURE: pixel position resolved after mount ── */}
+                  {!placementMode && localCanvas.creator_signature && sigStyle && (
+                    <div
+                      className="absolute pointer-events-none"
+                      style={{ left: sigStyle.left, top: sigStyle.top, width: sigStyle.w, height: sigStyle.h }}
+                    >
+                      {localCanvas.creator_signature.startsWith("data:image") ? (
+                        <img
+                          src={localCanvas.creator_signature}
+                          alt="Signature"
+                          className="w-full h-full object-contain object-left dark:invert"
+                          draggable={false}
+                        />
+                      ) : (
+                        <span className="font-vollkorn italic text-2xl text-foreground/85 truncate">
+                          {localCanvas.creator_signature}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   {/* ── ACTIVE SIGNATURE WIDGET (placement mode only) ── */}
                   {placementMode?.pos && (
