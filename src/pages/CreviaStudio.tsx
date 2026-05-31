@@ -108,13 +108,12 @@ const CreviaStudio = () => {
       ═══════════════════════════════════════════════════════════════════ */}
       <div className={cn(
         "bg-background z-30 flex-shrink-0 border-b border-border",
-        // On mobile, only render when there's content (link sub-tabs)
         activeTab !== "link" && "hidden md:block"
       )}>
         <div className="mx-auto w-full max-w-7xl">
 
-          {/* ── Desktop tab bar ──────────────────────────────────────────── */}
-          <div className="hidden md:block px-4 pb-3">
+          {/* ── Desktop: main tab bar ─────────────────────────────────────── */}
+          <div className="hidden md:block px-6 pt-1">
             <div className="flex items-stretch gap-1 -mb-px">
               {STUDIO_TABS.map((tab) => {
                 const Icon     = tab.icon;
@@ -124,23 +123,48 @@ const CreviaStudio = () => {
                     key={tab.id}
                     onClick={() => handleTabChange(tab.id)}
                     className={cn(
-                      "flex-1 flex flex-row items-center justify-center relative",
-                      "gap-1.5 px-3 py-2.5 rounded-t-lg font-poppins",
-                      "transition-all duration-200 active:scale-[0.96] select-none",
+                      "flex items-center justify-center gap-2 px-5 py-3 rounded-t-lg font-poppins",
+                      "transition-all duration-200 active:scale-[0.97] select-none whitespace-nowrap",
                       isActive
-                        ? "text-bronze bg-bronze/10 border-b-2 border-bronze"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                        ? "text-bronze bg-bronze/10 border-b-2 border-bronze font-semibold"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/40 font-medium"
                     )}
                   >
                     <Icon className="h-4 w-4 flex-shrink-0" />
-                    <span className="text-sm font-medium whitespace-nowrap">{t(tab.labelKey)}</span>
+                    <span className="text-sm">{t(tab.labelKey)}</span>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* ── Link sub-sections (mobile only — compact icon + label row) ── */}
+          {/* ── Desktop: Link sub-sections (shown below main tabs when Link active) ── */}
+          {activeTab === "link" && (
+            <div className="hidden md:flex items-center gap-1 px-6 py-2 border-t border-border/40">
+              {LINK_SECTIONS.map((section) => {
+                const Icon     = section.icon;
+                const isActive = activeLinkSection === section.id;
+                return (
+                  <button
+                    key={section.id}
+                    onClick={() => handleLinkSectionChange(section.id)}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-poppins font-medium",
+                      "transition-all duration-150 select-none",
+                      isActive
+                        ? "bg-bronze/10 text-bronze"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    )}
+                  >
+                    <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                    {section.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* ── Mobile: Link sub-sections (compact icon + label row) ──────── */}
           {activeTab === "link" && (
             <div className="md:hidden border-t border-border/40">
               <div className="flex w-full px-2 py-1">
