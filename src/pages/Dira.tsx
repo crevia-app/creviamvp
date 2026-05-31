@@ -302,6 +302,11 @@ function detectDiraIntent(text: string): string | null {
 // Used to keep the 3-dot visible in the desktop sidebar on touch-primary devices.
 const isTouchPrimary = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
 
+// True on phones/tablets — Enter key should insert a newline, not send.
+const isMobileDevice =
+  typeof window !== "undefined" &&
+  (window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0);
+
 const Dira = () => {
   const { toast } = useToast();
   const { diraActionsToday, diraActionsLimit } = useSubscription();
@@ -360,6 +365,7 @@ const Dira = () => {
   const streamBufferRef = useRef('');
   const animFrameRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const networkDoneRef = useRef(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   // When handleSend creates a new conversation it calls setActiveChat, which
   // triggers the loadMessages effect. That effect would overwrite the optimistic
   // user message with an empty DB result (nothing saved yet). This ref tells the
@@ -493,6 +499,13 @@ const Dira = () => {
     });
   }, [messages]);
 
+  // Reset textarea height whenever input is cleared (after send or new chat).
+  useEffect(() => {
+    if (input === "" && textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+  }, [input]);
+
   const saveMessage = async (conversationId: string, role: "user" | "assistant", content: string, fileName?: string) => {
     if (!content) {
       console.log("saveMessage skipped- content is empty");
@@ -551,6 +564,10 @@ const Dira = () => {
       }
 
       if (networkDoneRef.current) {
+        // Haptic tap on completion — Android supports vibrate; iOS Safari silently ignores it.
+        if (typeof window !== "undefined" && "vibrate" in navigator) {
+          navigator.vibrate(50);
+        }
         setIsStreaming(false);
         return;
       }
@@ -1641,8 +1658,8 @@ const Dira = () => {
                 </div>
               )}
 
-              {/* Single-row pill input — Gemini/Claude style */}
-              <div className="flex items-center gap-1 bg-muted/40 rounded-full border border-border/60 px-2 py-1.5 shadow-sm transition-all duration-200 focus-within:border-bronze/50 focus-within:bg-card focus-within:shadow-md">
+              {/* Smart input — single line on load, grows up to ~5 lines */}
+              <div className="flex items-end gap-1 bg-muted/40 rounded-2xl border border-border/60 px-2 py-1.5 shadow-sm transition-all duration-200 focus-within:border-bronze/50 focus-within:bg-card focus-within:shadow-md">
                 <input type="file" ref={imageInputRef} onChange={handleFileSelect} className="hidden" accept="image/*" />
                 <input type="file" ref={textInputRef} onChange={handleFileSelect} className="hidden" accept=".txt,text/plain" />
 
@@ -1709,21 +1726,36 @@ const Dira = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {/* Text input */}
-                <Input
+                {/* Smart textarea — desktop: Enter sends / Shift+Enter newline; mobile: Enter = newline */}
+                <textarea
+                  ref={textareaRef}
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && !isLoading && !isAtDiraLimit && handleSend()}
+                  rows={1}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    e.target.style.height = "auto";
+                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      if (isMobileDevice) return; // mobile: natural newline
+                      if (!e.shiftKey && !isLoading && !isAtDiraLimit) {
+                        e.preventDefault();
+                        handleSend();
+                      }
+                      // shift+enter on desktop: natural newline
+                    }
+                  }}
                   placeholder={
                     isAtDiraLimit
-                      ? 'Daily limit reached · Upgrade to continue'
+                      ? "Daily limit reached · Upgrade to continue"
                       : isLoading
-                        ? 'Dira is responding...'
+                        ? "Dira is responding..."
                         : activeProject
                           ? `Ask Dira about ${activeProject.name}...`
-                          : 'Ask Dira anything...'
+                          : "Ask Dira anything..."
                   }
-                  className="border-0 bg-transparent h-9 text-base focus-visible:ring-0 px-2 flex-1 min-w-0 placeholder:text-muted-foreground/60"
+                  className="border-0 bg-transparent text-base px-2 flex-1 min-w-0 resize-none overflow-hidden leading-relaxed py-1.5 min-h-[36px] max-h-[120px] placeholder:text-muted-foreground/60 focus:outline-none"
                   disabled={isAtDiraLimit}
                   autoComplete="off"
                   autoCorrect="off"
