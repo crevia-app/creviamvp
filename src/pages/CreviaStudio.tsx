@@ -114,7 +114,7 @@ const CreviaStudio = () => {
 
           {/* ── Desktop: main tab bar ─────────────────────────────────────── */}
           <div className="hidden md:block px-6 pt-1">
-            <div className="flex items-stretch gap-1 -mb-px">
+            <div className="flex items-stretch gap-2 -mb-px">
               {STUDIO_TABS.map((tab) => {
                 const Icon     = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -123,7 +123,7 @@ const CreviaStudio = () => {
                     key={tab.id}
                     onClick={() => handleTabChange(tab.id)}
                     className={cn(
-                      "flex items-center justify-center gap-2 px-5 py-3 rounded-t-lg font-poppins",
+                      "flex items-center justify-center gap-2 px-7 py-3 rounded-t-lg font-poppins",
                       "transition-all duration-200 active:scale-[0.97] select-none whitespace-nowrap",
                       isActive
                         ? "text-bronze bg-bronze/10 border-b-2 border-bronze font-semibold"
@@ -140,7 +140,7 @@ const CreviaStudio = () => {
 
           {/* ── Desktop: Link sub-sections (shown below main tabs when Link active) ── */}
           {activeTab === "link" && (
-            <div className="hidden md:flex items-center gap-1 px-6 py-2 border-t border-border/40">
+            <div className="hidden md:flex items-center gap-2 px-6 py-2 border-t border-border/40">
               {LINK_SECTIONS.map((section) => {
                 const Icon     = section.icon;
                 const isActive = activeLinkSection === section.id;
@@ -149,7 +149,7 @@ const CreviaStudio = () => {
                     key={section.id}
                     onClick={() => handleLinkSectionChange(section.id)}
                     className={cn(
-                      "flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-poppins font-medium",
+                      "flex items-center gap-2 px-5 py-1.5 rounded-lg text-sm font-poppins font-medium",
                       "transition-all duration-150 select-none",
                       isActive
                         ? "bg-bronze/10 text-bronze"
