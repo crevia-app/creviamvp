@@ -12,7 +12,7 @@ import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check, Globe, Shield, Bell, BarChart3, TrendingUp, MousePointer, ExternalLink, Camera, AlertCircle, Users, Star, ArrowUp, ArrowDown, ChevronUp, ChevronDown, Image as ImageIcon, User, MousePointerClick, SlidersHorizontal, BarChart2 } from "lucide-react";
+import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check, Globe, Shield, Bell, BarChart3, TrendingUp, MousePointer, ExternalLink, Camera, AlertCircle, Users, Star, ArrowUp, ArrowDown, ChevronUp, ChevronDown, ChevronRight, Image as ImageIcon, User, MousePointerClick, SlidersHorizontal, BarChart2 } from "lucide-react";
 import ThemeSelector from "@/components/crevia-link/ThemeSelector";
 import { PRO_THEME_IDS } from "@/lib/linkThemes";
 import { AdvancedColorSelector } from "@/components/ui/AdvancedColorSelector";
@@ -67,6 +67,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [uploadingPicture, setUploadingPicture] = useState(false);
   const [uploadingBg, setUploadingBg] = useState(false);
+  const [showMobileProfileSheet, setShowMobileProfileSheet] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bgImageRefEmb = useRef<HTMLInputElement>(null);
   const bgImageRefStandalone = useRef<HTMLInputElement>(null);
@@ -604,42 +605,85 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
           {/* Main Content */}
           <div className="min-w-0 flex-1 xl:max-w-[54rem]">
             {embeddedTab === "profile" && (
-              <Card className="min-w-0 p-6 border-border/50">
-                <h3 className="font-vollkorn text-2xl font-bold mb-6">Profile Information</h3>
-                <div className="space-y-5">
-                  {renderProfilePicture()}
-                  {renderUsernameField("embedded-")}
+              <>
+                {/* Mobile: preview widget + premium edit button */}
+                <div className="md:hidden space-y-4">
                   <div>
-                    <Label className="text-sm font-medium mb-2 block">Display Name</Label>
-                    <Input
-                      value={linkProfile?.display_name || ""}
-                      onChange={(e) => setLinkProfile({ ...linkProfile, display_name: e.target.value })}
-                      placeholder="Your Name"
-                      className="h-11"
-                    />
+                    <p className="text-xs font-poppins font-medium text-center text-muted-foreground mb-3 tracking-widest uppercase">Live Preview</p>
+                    <LivePreview linkProfile={linkProfile} buttons={buttons} />
+                    <div className="mt-3 flex gap-2">
+                      <Button
+                        className="flex-1 bg-bronze hover:bg-bronze-dark text-white gap-1.5 text-sm h-11"
+                        onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/${linkProfile?.username}`); toast({ title: "Link copied!" }); }}
+                        style={{ touchAction: "manipulation" }}
+                      >
+                        <Copy className="w-3.5 h-3.5" /> Copy Link
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1 gap-1.5 text-sm h-11"
+                        onClick={() => navigate(`/${linkProfile?.username}`)}
+                        style={{ touchAction: "manipulation" }}
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" /> View Live
+                      </Button>
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">Bio</Label>
-                    <Textarea
-                      value={linkProfile?.bio || ""}
-                      onChange={(e) => setLinkProfile({ ...linkProfile, bio: e.target.value.slice(0, 150) })}
-                      placeholder="Tell people about yourself..."
-                      className="min-h-[100px] resize-none text-base"
-                      maxLength={150}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">{linkProfile?.bio?.length || 0}/150</p>
-                  </div>
-                  <div className="flex gap-3 pt-4">
-                    <Button onClick={handleSave} disabled={saving} className="bg-bronze hover:bg-bronze-dark">
-                      {saving ? "Saving..." : "Save Changes"}
-                    </Button>
-                    <Button variant="outline" onClick={() => setShowPreviewModal(true)}>
-                      <Eye className="w-4 h-4 mr-2" />
-                      Preview
-                    </Button>
-                  </div>
+
+                  <button
+                    onClick={() => setShowMobileProfileSheet(true)}
+                    className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl border border-border/50 bg-card hover:bg-muted/40 active:bg-muted/60 transition-all group"
+                    style={{ touchAction: "manipulation" }}
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-bronze/10 flex items-center justify-center flex-shrink-0">
+                      <User className="w-5 h-5 text-bronze" />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="font-poppins text-sm font-semibold text-foreground">Profile Information</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Name, username, bio & photo</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+                  </button>
                 </div>
-              </Card>
+
+                {/* Desktop: existing card, untouched */}
+                <Card className="hidden md:block min-w-0 p-6 border-border/50">
+                  <h3 className="font-vollkorn text-2xl font-bold mb-6">Profile Information</h3>
+                  <div className="space-y-5">
+                    {renderProfilePicture()}
+                    {renderUsernameField("embedded-")}
+                    <div>
+                      <Label className="text-sm font-medium mb-2 block">Display Name</Label>
+                      <Input
+                        value={linkProfile?.display_name || ""}
+                        onChange={(e) => setLinkProfile({ ...linkProfile, display_name: e.target.value })}
+                        placeholder="Your Name"
+                        className="h-11"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium mb-2 block">Bio</Label>
+                      <Textarea
+                        value={linkProfile?.bio || ""}
+                        onChange={(e) => setLinkProfile({ ...linkProfile, bio: e.target.value.slice(0, 150) })}
+                        placeholder="Tell people about yourself..."
+                        className="min-h-[100px] resize-none text-base"
+                        maxLength={150}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">{linkProfile?.bio?.length || 0}/150</p>
+                    </div>
+                    <div className="flex gap-3 pt-4">
+                      <Button onClick={handleSave} disabled={saving} className="bg-bronze hover:bg-bronze-dark">
+                        {saving ? "Saving..." : "Save Changes"}
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowPreviewModal(true)}>
+                        <Eye className="w-4 h-4 mr-2" />
+                        Preview
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              </>
             )}
 
             {embeddedTab === "buttons" && (
@@ -900,6 +944,94 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
           onSave={handleSaveEditButton}
           button={editingButton}
         />
+
+        {/* Mobile profile info bottom sheet — portal to document.body */}
+        {showMobileProfileSheet && createPortal(
+          <div
+            className="fixed inset-0 z-[500] flex items-end justify-center"
+            style={{ WebkitTransform: "translateZ(0)" }}
+          >
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setShowMobileProfileSheet(false)}
+            />
+            <div
+              className="relative w-full bg-background flex flex-col rounded-t-3xl border border-border/40 overflow-hidden max-h-[92dvh]"
+              style={{ boxShadow: "0 -12px 48px rgba(0,0,0,0.22), 0 0 0 1px rgba(255,255,255,0.04)" }}
+            >
+              {/* Drag handle */}
+              <div className="flex justify-center pt-3 pb-0 flex-shrink-0">
+                <div className="w-10 h-[3px] rounded-full bg-border/70" />
+              </div>
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 pt-4 pb-3 flex-shrink-0 border-b border-border/30">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-bronze/10 flex items-center justify-center flex-shrink-0">
+                    <User className="w-4 h-4 text-bronze" />
+                  </div>
+                  <h3 className="font-vollkorn text-xl font-bold">Profile Information</h3>
+                </div>
+                <button
+                  onClick={() => setShowMobileProfileSheet(false)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                  style={{ touchAction: "manipulation" }}
+                  aria-label="Close"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              {/* Scrollable form */}
+              <div
+                className="overflow-y-auto flex-1 px-5 pt-5 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] space-y-5"
+                style={{ WebkitOverflowScrolling: "touch" }}
+              >
+                {renderProfilePicture()}
+                {renderUsernameField("mobile-sheet-")}
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Display Name</Label>
+                  <Input
+                    value={linkProfile?.display_name || ""}
+                    onChange={(e) => setLinkProfile({ ...linkProfile, display_name: e.target.value })}
+                    placeholder="Your Name"
+                    className="h-11"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Bio</Label>
+                  <Textarea
+                    value={linkProfile?.bio || ""}
+                    onChange={(e) => setLinkProfile({ ...linkProfile, bio: e.target.value.slice(0, 150) })}
+                    placeholder="Tell people about yourself..."
+                    className="min-h-[100px] resize-none text-base"
+                    maxLength={150}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">{linkProfile?.bio?.length || 0}/150</p>
+                </div>
+                <div className="flex gap-3 pt-2 pb-2">
+                  <Button
+                    onClick={() => { handleSave(); setShowMobileProfileSheet(false); }}
+                    disabled={saving}
+                    className="flex-1 bg-bronze hover:bg-bronze-dark h-12 font-poppins font-semibold"
+                    style={{ touchAction: "manipulation" }}
+                  >
+                    {saving ? "Saving..." : "Save Changes"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-12 px-5"
+                    onClick={() => setShowMobileProfileSheet(false)}
+                    style={{ touchAction: "manipulation" }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
         {/* Preview modal — portal to document.body */}
         {showPreviewModal && createPortal(
