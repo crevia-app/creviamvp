@@ -1458,7 +1458,7 @@ const Dira = () => {
                 />
               ) : (
                 <div className="px-4 py-6">
-                  <div className="max-w-2xl mx-auto w-full">
+                  <div className="w-full">
                     <div className="space-y-6 py-4">
                       {messages.map((msg, idx) => (
                         <motion.div
@@ -1515,14 +1515,15 @@ const Dira = () => {
                                 <>
                                   {/* ── MESSAGE BUBBLE ── */}
                                   <div
-                                    className={`inline-block max-w-[85%] rounded-2xl px-4 py-3 ${
+                                    className={cn(
+                                      "rounded-2xl px-4 py-3",
                                       msg.role === 'user'
-                                        ? 'bg-bronze text-background rounded-tr-md'
-                                        : 'bg-muted rounded-tl-md'
-                                    }`}
+                                        ? 'inline-block max-w-[85%] bg-bronze text-background rounded-tr-md'
+                                        : 'block w-full bg-muted rounded-tl-md'
+                                    )}
                                   >
                                     {msg.role === 'assistant' ? (
-                                      <div className="prose prose-sm prose-invert max-w-none text-left [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                                      <div className="prose prose-base prose-invert max-w-none text-left leading-relaxed [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
                                         <ReactMarkdown>{msg.content}</ReactMarkdown>
                                         {isStreaming && idx === messages.length - 1 && (
                                           <StreamingCursor />
@@ -1755,7 +1756,7 @@ const Dira = () => {
                           ? `Ask Dira about ${activeProject.name}...`
                           : "Ask Dira anything..."
                   }
-                  className="border-0 bg-transparent text-base px-2 flex-1 min-w-0 resize-none overflow-hidden leading-relaxed py-1.5 min-h-[36px] max-h-[120px] placeholder:text-muted-foreground/60 focus:outline-none"
+                  className="border-none outline-none ring-0 focus:ring-0 focus:outline-none bg-transparent text-base px-2 flex-1 min-w-0 resize-none overflow-hidden leading-relaxed py-1.5 min-h-[36px] max-h-[120px] placeholder:text-muted-foreground/60"
                   disabled={isAtDiraLimit}
                   autoComplete="off"
                   autoCorrect="off"
