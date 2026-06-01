@@ -174,63 +174,61 @@ function ChatItem({
         </div>
       )}
 
-      {/* 3-dot: desktop only. Mobile uses long-press → bottom sheet instead. */}
-      {!isMobile && (
-        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-            <button
-              className={cn(
-                "flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg",
-                "text-muted-foreground hover:text-foreground",
-                "hover:bg-foreground/10 active:bg-foreground/15",
-                "transition-all duration-150",
-                (isActive || chat.pinned || menuOpen)
-                  ? "opacity-100"
-                  : "opacity-60 group-hover:opacity-100"
-              )}
-            >
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            sideOffset={4}
-            className="w-48 rounded-xl p-1.5 border border-border/40 bg-card/95 backdrop-blur-xl shadow-xl shadow-black/15"
+      {/* 3-dot — always visible on all platforms (desktop + iOS + Android). */}
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+          <button
+            className={cn(
+              "flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg",
+              "text-muted-foreground hover:text-foreground",
+              "hover:bg-foreground/10 active:bg-foreground/15",
+              "transition-all duration-150",
+              (isActive || chat.pinned || menuOpen)
+                ? "opacity-100"
+                : "opacity-60 group-hover:opacity-100"
+            )}
           >
-            <DropdownMenuItem
-              onClick={(e) => { e.stopPropagation(); onShare(); }}
-              className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm"
-            >
-              <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
-              Share conversation
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={(e) => { e.stopPropagation(); onStartRename(); }}
-              className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm"
-            >
-              <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
-              Rename
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={(e) => { e.stopPropagation(); onPin(); }}
-              className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm"
-            >
-              {chat.pinned
-                ? <PinOff className="w-3.5 h-3.5 text-muted-foreground" />
-                : <Pin className="w-3.5 h-3.5 text-muted-foreground" />}
-              {chat.pinned ? "Unpin" : "Pin"}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator className="my-1 opacity-50" />
-            <DropdownMenuItem
-              onClick={(e) => { e.stopPropagation(); onDelete(); }}
-              className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm text-destructive focus:text-destructive focus:bg-destructive/10"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
+            <MoreHorizontal className="w-4 h-4" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          sideOffset={4}
+          className="w-48 rounded-xl p-1.5 border border-border/40 bg-card/95 backdrop-blur-xl shadow-xl shadow-black/15"
+        >
+          <DropdownMenuItem
+            onClick={(e) => { e.stopPropagation(); onShare(); }}
+            className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm"
+          >
+            <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
+            Share conversation
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={(e) => { e.stopPropagation(); onStartRename(); }}
+            className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm"
+          >
+            <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+            Rename
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={(e) => { e.stopPropagation(); onPin(); }}
+            className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm"
+          >
+            {chat.pinned
+              ? <PinOff className="w-3.5 h-3.5 text-muted-foreground" />
+              : <Pin className="w-3.5 h-3.5 text-muted-foreground" />}
+            {chat.pinned ? "Unpin" : "Pin"}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator className="my-1 opacity-50" />
+          <DropdownMenuItem
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm text-destructive focus:text-destructive focus:bg-destructive/10"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
