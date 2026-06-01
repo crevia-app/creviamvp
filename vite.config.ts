@@ -85,6 +85,10 @@ export default defineConfig({
       }
     })
   ],
+  optimizeDeps: {
+    // @ffmpeg packages are ES modules with top-level await — Vite must not pre-bundle them.
+    exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

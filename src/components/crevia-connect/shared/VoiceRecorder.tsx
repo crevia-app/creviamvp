@@ -9,8 +9,63 @@ interface VoiceRecorderProps {
   isUploading?: boolean;
 }
 
+// Encode an AudioBuffer as a WAV Blob (PCM 16-bit, mono).
+// WAV has 100% playback support on every browser and device — no codec negotiation needed.
+function audioBufferToWav(buffer: AudioBuffer): Blob {
+  const numChannels = 1; // mix down to mono
+  const sampleRate = buffer.sampleRate;
+  const samples = buffer.getChannelData(0); // use first channel
+  const pcm = new Int16Array(samples.length);
+
+  // Float32 → Int16 with clamping
+  for (let i = 0; i < samples.length; i++) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+  }
+
+  const dataLen = pcm.byteLength;
+  const wavBuf = new ArrayBuffer(44 + dataLen);
+  const view = new DataView(wavBuf);
+
+  const write = (offset: number, str: string) => {
+    for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+  };
+
+  write(0, "RIFF");
+  view.setUint32(4, 36 + dataLen, true);
+  write(8, "WAVE");
+  write(12, "fmt ");
+  view.setUint32(16, 16, true);          // chunk size
+  view.setUint16(20, 1, true);           // PCM
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * numChannels * 2, true); // byte rate
+  view.setUint16(32, numChannels * 2, true);              // block align
+  view.setUint16(34, 16, true);          // bits per sample
+  write(36, "data");
+  view.setUint32(40, dataLen, true);
+
+  new Int16Array(wavBuf, 44).set(pcm);
+  return new Blob([wavBuf], { type: "audio/wav" });
+}
+
+// Decode any recorded blob (webm/mp4/ogg) → WAV via AudioContext.
+// AudioContext.decodeAudioData is supported on every modern browser including
+// Firefox, iOS Safari, and Android Chrome without exception.
+async function convertToWav(blob: Blob): Promise<Blob> {
+  const arrayBuffer = await blob.arrayBuffer();
+  const ctx = new AudioContext();
+  try {
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+    return audioBufferToWav(audioBuffer);
+  } finally {
+    ctx.close();
+  }
+}
+
 const VoiceRecorder = ({ onRecordingComplete, onCancel, isUploading }: VoiceRecorderProps) => {
   const [isRecording, setIsRecording] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
   const [duration, setDuration] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [waveformValues, setWaveformValues] = useState<number[]>([]);
@@ -21,6 +76,7 @@ const VoiceRecorder = ({ onRecordingComplete, onCancel, isUploading }: VoiceReco
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const durationRef = useRef(0);
 
   const formatDuration = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -33,7 +89,6 @@ const VoiceRecorder = ({ onRecordingComplete, onCancel, isUploading }: VoiceReco
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
 
-      // Set up audio analysis for waveform
       const audioContext = new AudioContext();
       const source = audioContext.createMediaStreamSource(stream);
       const analyser = audioContext.createAnalyser();
@@ -41,8 +96,8 @@ const VoiceRecorder = ({ onRecordingComplete, onCancel, isUploading }: VoiceReco
       source.connect(analyser);
       analyserRef.current = analyser;
 
-      // Pick a supported mime type
-      const mimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4", ""]
+      // Use whatever format the browser supports — we transcode to WAV after.
+      const mimeType = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", ""]
         .find((t) => t === "" || MediaRecorder.isTypeSupported(t))!;
 
       const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
@@ -53,24 +108,35 @@ const VoiceRecorder = ({ onRecordingComplete, onCancel, isUploading }: VoiceReco
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
 
-      mediaRecorder.onstop = () => {
-        const actualType = mediaRecorder.mimeType || "audio/webm";
-        const blob = new Blob(chunksRef.current, { type: actualType });
-        setAudioBlob(blob);
+      mediaRecorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
+        const actualType = mediaRecorder.mimeType || "audio/webm";
+        const raw = new Blob(chunksRef.current, { type: actualType });
+
+        // Convert to WAV so every device can play it — Firefox, iOS Safari, Android Chrome.
+        setIsConverting(true);
+        try {
+          const wav = await convertToWav(raw);
+          setAudioBlob(wav);
+        } catch {
+          // Conversion failed — fall back to the raw blob (better than nothing).
+          setAudioBlob(raw);
+        } finally {
+          setIsConverting(false);
+        }
       };
 
       mediaRecorder.start(100);
       setIsRecording(true);
       setDuration(0);
+      durationRef.current = 0;
       setWaveformValues([]);
 
-      // Timer
       timerRef.current = setInterval(() => {
-        setDuration((d) => d + 1);
+        durationRef.current += 1;
+        setDuration(durationRef.current);
       }, 1000);
 
-      // Waveform animation
       const updateWaveform = () => {
         if (!analyserRef.current) return;
         const data = new Uint8Array(analyserRef.current.frequencyBinCount);
@@ -97,12 +163,13 @@ const VoiceRecorder = ({ onRecordingComplete, onCancel, isUploading }: VoiceReco
 
   const handleSend = useCallback(() => {
     if (audioBlob) {
-      onRecordingComplete(audioBlob, duration);
+      onRecordingComplete(audioBlob, durationRef.current);
       setAudioBlob(null);
       setDuration(0);
+      durationRef.current = 0;
       setWaveformValues([]);
     }
-  }, [audioBlob, duration, onRecordingComplete]);
+  }, [audioBlob, onRecordingComplete]);
 
   const handleCancel = useCallback(() => {
     if (mediaRecorderRef.current?.state === "recording") {
@@ -114,13 +181,13 @@ const VoiceRecorder = ({ onRecordingComplete, onCancel, isUploading }: VoiceReco
     setIsRecording(false);
     setAudioBlob(null);
     setDuration(0);
+    durationRef.current = 0;
     setWaveformValues([]);
     if (timerRef.current) clearInterval(timerRef.current);
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     onCancel();
   }, [onCancel]);
 
-  // Auto-start recording on mount
   useEffect(() => {
     startRecording();
     return () => {
@@ -144,13 +211,11 @@ const VoiceRecorder = ({ onRecordingComplete, onCancel, isUploading }: VoiceReco
 
       {/* Waveform + timer */}
       <div className="flex-1 flex items-center gap-3 px-3 py-2 rounded-full bg-muted/60 border border-border/50">
-        {/* Recording indicator */}
         <div className={cn(
           "w-2.5 h-2.5 rounded-full flex-shrink-0",
-          isRecording ? "bg-red-500 animate-pulse" : "bg-muted-foreground/30"
+          isRecording ? "bg-red-500 animate-pulse" : isConverting ? "bg-bronze animate-pulse" : "bg-muted-foreground/30"
         )} />
 
-        {/* Waveform bars */}
         <div className="flex items-center gap-[2px] h-6 flex-1 overflow-hidden">
           {waveformValues.map((v, i) => (
             <div
@@ -159,16 +224,14 @@ const VoiceRecorder = ({ onRecordingComplete, onCancel, isUploading }: VoiceReco
               style={{ height: `${Math.max(4, v * 24)}px` }}
             />
           ))}
-          {/* Fill remaining space with placeholder bars */}
           {waveformValues.length < 40 &&
             Array.from({ length: 40 - waveformValues.length }).map((_, i) => (
               <div key={`p-${i}`} className="w-[3px] h-1 rounded-full bg-muted-foreground/15 flex-shrink-0" />
             ))}
         </div>
 
-        {/* Duration */}
         <span className="text-xs font-mono text-muted-foreground tabular-nums flex-shrink-0">
-          {formatDuration(duration)}
+          {isConverting ? "…" : formatDuration(duration)}
         </span>
       </div>
 
@@ -180,6 +243,14 @@ const VoiceRecorder = ({ onRecordingComplete, onCancel, isUploading }: VoiceReco
           className="h-10 w-10 rounded-full bg-red-500 hover:bg-red-600 text-white flex-shrink-0"
         >
           <Square className="h-4 w-4 fill-current" />
+        </Button>
+      ) : isConverting ? (
+        <Button
+          disabled
+          size="icon"
+          className="h-10 w-10 rounded-full bg-bronze/50 text-background flex-shrink-0"
+        >
+          <div className="w-4 h-4 border-2 border-background/40 border-t-background rounded-full animate-spin" />
         </Button>
       ) : audioBlob ? (
         <Button

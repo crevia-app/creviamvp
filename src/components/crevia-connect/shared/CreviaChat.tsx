@@ -73,6 +73,7 @@ import { iconOptions } from "@/components/crevia-link/iconOptions";
 // the visual viewport), leaving a black gap above the header.
 // AppLayout h-dvh + flex chain + the keyboardOpen padding on the input handle it correctly.
 import { useVisualViewport } from "@/hooks/use-visual-viewport";
+import { convertVideoToMp4, needsConversion, VIDEO_CONVERT_MAX_BYTES } from "@/lib/videoConverter";
 
 interface ChatRoom {
   id: string;
@@ -227,6 +228,8 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const [forwardingMessageId, setForwardingMessageId] = useState<string | null>(null);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [videoErrors, setVideoErrors] = useState<Set<string>>(new Set());
+  const [convertingVideo, setConvertingVideo] = useState(false);
+  const [videoConvertProgress, setVideoConvertProgress] = useState<{ stage: string; percent: number } | null>(null);
 
   // New features state
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
@@ -1173,7 +1176,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     if (!selectedRoom || !currentUserId) return;
     setUploadingVoice(true);
     try {
-      const ext = blob.type.includes("mp4") ? "mp4" : blob.type.includes("ogg") ? "ogg" : "webm";
+      const ext = blob.type.includes("wav") ? "wav" : blob.type.includes("mp4") ? "mp4" : blob.type.includes("ogg") ? "ogg" : "webm";
       const fileName = `${currentUserId}/${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from("voice-notes")
@@ -1254,15 +1257,40 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     URL.revokeObjectURL(url);
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error("Max file size is 10MB");
+    e.target.value = ""; // reset so same file can be re-selected
+    if (!file) return;
+
+    // Video that needs cross-browser conversion
+    if (needsConversion(file)) {
+      if (file.size > VIDEO_CONVERT_MAX_BYTES) {
+        toast.error("Video too large to convert on device (max 200 MB). Please trim to under ~3 minutes.");
         return;
       }
-      setSelectedFile(file);
+      setConvertingVideo(true);
+      setVideoConvertProgress({ stage: "loading", percent: 0 });
+      try {
+        const mp4 = await convertVideoToMp4(file, (p) => setVideoConvertProgress(p));
+        setSelectedFile(mp4);
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Video conversion failed. Please try a shorter clip.");
+      } finally {
+        setConvertingVideo(false);
+        setVideoConvertProgress(null);
+      }
+      return;
     }
+
+    // Non-video or already mp4 — use existing size limits
+    const isVideo = file.type.startsWith("video/");
+    const maxBytes = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    const maxLabel = isVideo ? "50 MB" : "10 MB";
+    if (file.size > maxBytes) {
+      toast.error(`File too large. Max ${maxLabel}.`);
+      return;
+    }
+    setSelectedFile(file);
   };
 
   const getFilePublicUrl = useCallback((filePath: string) => {
@@ -2397,6 +2425,27 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                     </div>
                   )}
 
+                  {/* Video conversion progress */}
+                  {convertingVideo && videoConvertProgress && (
+                    <div className="mb-2 px-3 py-2.5 bg-muted rounded-lg flex items-center gap-3">
+                      <div className="w-4 h-4 border-2 border-bronze/40 border-t-bronze rounded-full animate-spin flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground">
+                          {videoConvertProgress.stage === "loading" ? "Loading converter…" : "Converting to MP4…"}
+                        </p>
+                        <div className="mt-1 h-1 rounded-full bg-muted-foreground/20 overflow-hidden">
+                          <div
+                            className="h-full bg-bronze rounded-full transition-all duration-300"
+                            style={{ width: `${videoConvertProgress.percent}%` }}
+                          />
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono text-muted-foreground flex-shrink-0">
+                        {videoConvertProgress.percent}%
+                      </span>
+                    </div>
+                  )}
+
                   {selectedFile && !isRecordingVoice && (
                     <div className="mb-2 p-2 bg-muted rounded-lg flex items-center gap-2">
                       {selectedFile.type.startsWith("image/") ? (
@@ -2475,7 +2524,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                             if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
                           }}
                           className="flex-1 border-0 bg-transparent focus-visible:ring-0 text-sm resize-none min-h-[2rem] max-h-[120px] py-1.5 px-2 placeholder:text-muted-foreground/60"
-                          disabled={uploadingFile}
+                          disabled={uploadingFile || convertingVideo}
                           rows={1}
                         />
 
