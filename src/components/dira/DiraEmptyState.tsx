@@ -79,65 +79,9 @@ const DiraEmptyState = ({
   const greeting = getDailyGreeting();
 
   return (
-    <div className="relative min-h-[60dvh] flex flex-col items-center justify-center px-6 py-14 overflow-hidden select-none">
+    <div className="min-h-full flex flex-col items-center justify-center px-6 py-14 select-none">
 
-      {/* ── Aura layer — increased opacity for visible premium glow ─────────── */}
-
-      {/* Orb A — top-left, primary breathe */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute animate-aura-breathe"
-        style={{
-          top: "5%",
-          left: "10%",
-          width: "62%",
-          height: "62%",
-          background: "radial-gradient(ellipse at center, #F0782F 0%, #CF5A1A 38%, transparent 70%)",
-          borderRadius: "50%",
-          filter: "blur(64px)",
-          opacity: 0.48,
-          willChange: "transform, opacity",
-        }}
-      />
-
-      {/* Orb B — bottom-right, alt breathe */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute animate-aura-breathe-alt"
-        style={{
-          bottom: "5%",
-          right: "8%",
-          width: "54%",
-          height: "54%",
-          background: "radial-gradient(ellipse at center, #E8631C 0%, #B8440A 42%, transparent 70%)",
-          borderRadius: "50%",
-          filter: "blur(72px)",
-          opacity: 0.40,
-          willChange: "transform, opacity",
-          animationDelay: "2.5s",
-        }}
-      />
-
-      {/* Orb C — centre accent, slow drift */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute animate-aura-breathe"
-        style={{
-          top: "28%",
-          left: "28%",
-          width: "46%",
-          height: "46%",
-          background: "radial-gradient(ellipse at center, #FF9A5C 0%, transparent 62%)",
-          borderRadius: "50%",
-          filter: "blur(48px)",
-          opacity: 0.30,
-          willChange: "transform, opacity",
-          animationDelay: "4s",
-          animationDuration: "11s",
-        }}
-      />
-
-      {/* ── Content layer ───────────────────────────────────────────────────── */}
+      {/* ── Content layer (aura is rendered by parent — no internal orbs) ──── */}
       <div className="relative z-10 flex flex-col items-center text-center max-w-lg w-full">
 
         {/* Dira icon badge */}

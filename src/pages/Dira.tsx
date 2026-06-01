@@ -1423,7 +1423,73 @@ const Dira = () => {
             onDeleteProject={handleProjectDeleted}
           />
         ) : (
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 relative">
+
+          {/* ── Unified premium aura ──────────────────────────────────────────────
+              Single atmospheric layer that spans the ENTIRE chat column — from the
+              greeting down through the input bar — so the page reads as one canvas.
+              All three orbs are positioned inside an overflow:hidden clip container
+              so they never bleed outside the chat column into the sidebar.
+              Only visible on the empty (new-chat) state.                         */}
+          {messages.length === 0 && (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+            >
+              {/* Primary orb — upper-center, behind greeting */}
+              <div
+                className="absolute animate-aura-breathe"
+                style={{
+                  top: "-8%",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  width: "90%",
+                  height: "68%",
+                  background:
+                    "radial-gradient(ellipse at center, rgba(240,120,47,0.82) 0%, rgba(207,90,26,0.46) 28%, transparent 62%)",
+                  borderRadius: "50%",
+                  filter: "blur(88px)",
+                  willChange: "transform, opacity",
+                }}
+              />
+              {/* Bridge orb — dead-center, eliminates the dark band */}
+              <div
+                className="absolute animate-aura-breathe"
+                style={{
+                  top: "45%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  width: "60%",
+                  height: "44%",
+                  background:
+                    "radial-gradient(ellipse at center, rgba(255,130,60,0.38) 0%, transparent 62%)",
+                  borderRadius: "50%",
+                  filter: "blur(64px)",
+                  willChange: "transform, opacity",
+                  animationDelay: "4s",
+                  animationDuration: "10s",
+                }}
+              />
+              {/* Lower orb — anchored to the bottom, wraps the input bar */}
+              <div
+                className="absolute animate-aura-breathe-alt"
+                style={{
+                  bottom: "-6%",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  width: "78%",
+                  height: "58%",
+                  background:
+                    "radial-gradient(ellipse at center, rgba(232,99,28,0.58) 0%, rgba(184,68,10,0.30) 32%, transparent 64%)",
+                  borderRadius: "50%",
+                  filter: "blur(96px)",
+                  willChange: "transform, opacity",
+                  animationDelay: "2.5s",
+                }}
+              />
+            </div>
+          )}
+
           {/* Project Context Banner */}
           {activeProject && (
             <button
@@ -1448,7 +1514,7 @@ const Dira = () => {
               positioned scroll child a definite pixel height, which is the only
               100%-reliable cross-browser way to get overflow-y: auto to scroll
               on Android Chrome and iOS Safari inside a deep flex chain. */}
-          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden relative z-10">
             <UsageLimitBanner
               current={diraActionsToday}
               limit={diraActionsLimit}
@@ -1661,47 +1727,15 @@ const Dira = () => {
             </div>{/* end positioned wrapper */}
           </div>{/* end messages wrapper */}
 
-          {/* Aura glow above input bar — mirrors the empty-state orbs */}
-          <div aria-hidden="true" className="pointer-events-none relative h-0 overflow-visible flex-shrink-0">
-            <div
-              className="absolute animate-aura-breathe"
-              style={{
-                bottom: "0px",
-                left: "8%",
-                width: "54%",
-                height: "140px",
-                background: "radial-gradient(ellipse at center, #F0782F 0%, #CF5A1A 38%, transparent 70%)",
-                borderRadius: "50%",
-                filter: "blur(44px)",
-                opacity: 0.48,
-                willChange: "transform, opacity",
-                transform: "translateY(50%)",
-              }}
-            />
-            <div
-              className="absolute animate-aura-breathe-alt"
-              style={{
-                bottom: "0px",
-                right: "6%",
-                width: "40%",
-                height: "110px",
-                background: "radial-gradient(ellipse at center, #E8631C 0%, #CF5A1A 35%, transparent 68%)",
-                borderRadius: "50%",
-                filter: "blur(36px)",
-                opacity: 0.38,
-                willChange: "transform, opacity",
-                animationDelay: "3s",
-                transform: "translateY(50%)",
-              }}
-            />
-          </div>
-
           {/* Input Area
+              When on the empty (new-chat) state the wrapper is transparent so the
+              unified aura behind it shows through.  Once the conversation starts it
+              gets bg-background to keep the messages readable while scrolling.
               Bottom padding uses --nav-bottom-offset so it contracts in sync
               with the bottom nav sliding away. On desktop the variable is 0px
               (set in :root) so md:p-6 wins via the inline-style guard below. */}
           <div
-            className="flex-shrink-0 pt-3 px-4 bg-background transition-[padding-bottom] duration-300 ease-in-out md:p-6"
+            className={`flex-shrink-0 pt-3 px-4 relative z-10 transition-[padding-bottom,background-color] duration-300 ease-in-out md:p-6 ${messages.length === 0 ? 'bg-transparent' : 'bg-background'}`}
             style={
               // Only apply the dynamic padding on mobile — on desktop let md:p-6
               // handle it so the inline style doesn't override the 24 px desktop value.
