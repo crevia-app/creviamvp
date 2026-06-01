@@ -253,6 +253,8 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const fileVideoRef = useRef<HTMLInputElement>(null);
   // Keep the old name as an alias so any remaining references still compile.
   const fileInputRef = fileAnyRef;
+  // Auto-resizing textarea — used to read/write scrollHeight in onChange.
+  const chatTextareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typingTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -1127,6 +1129,10 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
       setSelectedFile(null);
       setReplyingTo(null);
       broadcastTyping(false);
+      // Reset auto-resize height so the bar snaps back to single-line.
+      if (chatTextareaRef.current) {
+        chatTextareaRef.current.style.height = "auto";
+      }
     } catch (error) {
       console.error("Send error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to send message");
@@ -2477,13 +2483,15 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                       <input ref={fileAnyRef}   type="file" accept="*/*"      className="sr-only" onChange={handleFileSelect} />
                       <input ref={fileVideoRef} type="file" accept="video/*"   className="sr-only" onChange={handleFileSelect} />
 
-                      {/* Dira-style pill input bar */}
-                      <div className="flex items-center gap-1 bg-muted/40 rounded-full border border-border/60 px-2 py-1 shadow-sm transition-all duration-200 focus-within:border-bronze/50 focus-within:bg-card focus-within:shadow-md">
+                      {/* Auto-resizing pill input bar.
+                          items-end keeps + and send pinned to the bottom edge
+                          as the textarea grows beyond one line. */}
+                      <div className="flex items-end gap-1 bg-muted/40 rounded-2xl border border-border/60 px-2 py-1.5 shadow-sm transition-all duration-200 focus-within:border-bronze/50 focus-within:bg-card focus-within:shadow-md">
 
                         {/* Attach menu */}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-background/80 flex-shrink-0">
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-background/80 flex-shrink-0 mb-0.5">
                               <Plus className="h-5 w-5 text-muted-foreground" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -2504,26 +2512,40 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                           </DropdownMenuContent>
                         </DropdownMenu>
 
-                        {/* Text input */}
-                        <Textarea
+                        {/* Auto-resizing textarea — min 1 line, max 5 lines (~120px) */}
+                        <textarea
+                          ref={chatTextareaRef}
                           placeholder="Type a message..."
                           value={newMessage}
-                          onChange={(e) => { setNewMessage(e.target.value); handleTyping(); }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-                          }}
-                          className="flex-1 border-0 bg-transparent focus-visible:ring-0 text-sm resize-none min-h-[2rem] max-h-[120px] py-1.5 px-2 placeholder:text-muted-foreground/60"
-                          disabled={uploadingFile || convertingVideo}
                           rows={1}
+                          onChange={(e) => {
+                            setNewMessage(e.target.value);
+                            handleTyping();
+                            // Auto-resize: reset to auto first so shrinking works correctly
+                            e.target.style.height = "auto";
+                            e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              sendMessage();
+                            }
+                          }}
+                          disabled={uploadingFile || convertingVideo}
+                          className="flex-1 min-w-0 resize-none overflow-y-auto border-none outline-none focus:ring-0 focus:outline-none bg-transparent text-sm leading-relaxed py-1.5 px-2 placeholder:text-muted-foreground/60 min-h-[36px] max-h-[120px]"
+                          style={{ height: "36px" }}
+                          autoComplete="off"
+                          autoCorrect="off"
+                          spellCheck={false}
                         />
 
-                        {/* Send / Mic */}
+                        {/* Send / Mic — stays at bottom when textarea grows */}
                         {newMessage.trim() || selectedFile ? (
                           <Button
                             onClick={sendMessage}
                             disabled={uploadingFile || (!newMessage.trim() && !selectedFile)}
                             size="icon"
-                            className="h-9 w-9 rounded-full bg-bronze hover:bg-bronze/90 text-background flex-shrink-0 disabled:opacity-30"
+                            className="h-9 w-9 rounded-full bg-bronze hover:bg-bronze/90 text-background flex-shrink-0 disabled:opacity-30 mb-0.5"
                           >
                             <Send className="h-4 w-4" />
                           </Button>
@@ -2532,7 +2554,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                             onClick={() => setIsRecordingVoice(true)}
                             variant="ghost"
                             size="icon"
-                            className="h-9 w-9 rounded-full flex-shrink-0 text-bronze hover:bg-bronze/10"
+                            className="h-9 w-9 rounded-full flex-shrink-0 text-bronze hover:bg-bronze/10 mb-0.5"
                           >
                             <Mic className="h-5 w-5" />
                           </Button>
