@@ -2499,9 +2499,6 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                             <DropdownMenuItem onClick={() => fileAnyRef.current?.click()}>
                               <Paperclip className="h-4 w-4 mr-2" />Attach File
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => fileVideoRef.current?.click()}>
-                              <Video className="h-4 w-4 mr-2" />Send Video
-                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => { fetchInvoices(); setShowInvoicePicker(true); }}>
                               <Receipt className="h-4 w-4 mr-2" />Attach Invoice
