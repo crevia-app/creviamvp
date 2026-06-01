@@ -183,9 +183,7 @@ function ChatItem({
               "text-muted-foreground hover:text-foreground",
               "hover:bg-foreground/10 active:bg-foreground/15",
               "transition-all duration-150",
-              (isActive || chat.pinned || menuOpen)
-                ? "opacity-100"
-                : "opacity-60 group-hover:opacity-100"
+              "opacity-100"
             )}
           >
             <MoreHorizontal className="w-4 h-4" />

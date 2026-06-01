@@ -68,6 +68,9 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const [uploadingPicture, setUploadingPicture] = useState(false);
   const [uploadingBg, setUploadingBg] = useState(false);
   const [showMobileProfileSheet, setShowMobileProfileSheet] = useState(false);
+  // Increments after each successful save — used as LivePreview key to guarantee
+  // a full re-render whenever saved data might differ from in-memory state.
+  const [previewNonce, setPreviewNonce] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bgImageRefEmb = useRef<HTMLInputElement>(null);
   const bgImageRefStandalone = useRef<HTMLInputElement>(null);
@@ -381,6 +384,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
       if (updatedLink) {
         setLinkProfile(updatedLink);
       }
+      setPreviewNonce(n => n + 1);
     }
     setSaving(false);
   };
@@ -610,7 +614,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 <div className="md:hidden space-y-4">
                   <div>
                     <p className="text-xs font-poppins font-medium text-center text-muted-foreground mb-3 tracking-widest uppercase">Live Preview</p>
-                    <LivePreview linkProfile={linkProfile} buttons={buttons} />
+                    <LivePreview key={`${previewNonce}-${linkProfile?.theme}-${linkProfile?.background?.custom_color ?? ''}-${linkProfile?.background?.custom_bg_url ? '1' : '0'}`} linkProfile={linkProfile} buttons={buttons} />
                     <div className="mt-3 flex gap-2">
                       <Button
                         className="flex-1 bg-bronze hover:bg-bronze-dark text-white gap-1.5 text-sm h-11"
@@ -913,7 +917,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
           <div className="hidden xl:block xl:w-[300px] xl:flex-shrink-0 2xl:w-[340px]">
             <div className="sticky top-24">
               <p className="text-sm font-medium text-center text-muted-foreground mb-4">Live Preview</p>
-              <LivePreview linkProfile={linkProfile} buttons={buttons} />
+              <LivePreview key={`${previewNonce}-${linkProfile?.theme}-${linkProfile?.background?.custom_color ?? ''}-${linkProfile?.background?.custom_bg_url ? '1' : '0'}`} linkProfile={linkProfile} buttons={buttons} />
               <div className="mt-4 flex gap-2">
                 <Button
                   className="flex-1 bg-bronze hover:bg-bronze-dark text-white gap-1.5 text-xs h-9"
@@ -1079,7 +1083,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
               {/* Phone mockup — scrollable */}
               <div className="overflow-y-auto flex flex-col items-center px-6 pt-3 pb-4" style={{ WebkitOverflowScrolling: "touch" }}>
-                <LivePreview linkProfile={linkProfile} buttons={buttons} />
+                <LivePreview key={`${previewNonce}-${linkProfile?.theme}-${linkProfile?.background?.custom_color ?? ''}-${linkProfile?.background?.custom_bg_url ? '1' : '0'}`} linkProfile={linkProfile} buttons={buttons} />
               </div>
 
               {/* Footer — pinned */}
@@ -1343,27 +1347,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                   <Eye className="w-5 h-5 mr-2" />
                   Preview
                 </Button>
-              </div>
-
-              {/* Live Preview inline on mobile */}
-              <div className="md:hidden">
-                <p className="text-sm font-medium text-center text-muted-foreground mb-4">Live Preview</p>
-                <LivePreview linkProfile={linkProfile} buttons={buttons} />
-                <div className="mt-4 flex gap-2">
-                  <Button
-                    className="flex-1 bg-bronze hover:bg-bronze-dark text-white gap-1.5 text-sm h-11"
-                    onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/${linkProfile?.username}`); toast({ title: "Link copied!" }); }}
-                  >
-                    <Copy className="w-3.5 h-3.5" /> Copy Link
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1 gap-1.5 text-sm h-11"
-                    onClick={() => navigate(`/${linkProfile?.username}`)}
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" /> View Page
-                  </Button>
-                </div>
               </div>
 
               {/* Typography Section */}
@@ -1660,10 +1643,10 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
           </div>
 
           {/* Live Preview - Desktop Only (Standalone) */}
-          <div className="hidden lg:block w-[340px] flex-shrink-0 sticky top-0 h-dvh py-8 pr-6">
-            <div className="sticky top-8">
+          <div className="hidden lg:block w-[340px] flex-shrink-0 py-8 pr-6">
+            <div className="sticky top-24">
               <p className="text-sm font-medium text-center text-muted-foreground mb-4">Live Preview</p>
-              <LivePreview linkProfile={linkProfile} buttons={buttons} />
+              <LivePreview key={`${previewNonce}-${linkProfile?.theme}-${linkProfile?.background?.custom_color ?? ''}-${linkProfile?.background?.custom_bg_url ? '1' : '0'}`} linkProfile={linkProfile} buttons={buttons} />
               <div className="mt-4 flex gap-2">
                 <Button
                   className="flex-1 bg-bronze hover:bg-bronze-dark text-white gap-1.5 text-xs h-9"
@@ -1726,7 +1709,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
             {/* Preview content */}
             <div className="overflow-y-auto flex flex-col items-center pt-7 pb-8 px-6 gap-5" style={{ WebkitOverflowScrolling: "touch" }}>
-              <LivePreview linkProfile={linkProfile} buttons={buttons} />
+              <LivePreview key={`${previewNonce}-${linkProfile?.theme}-${linkProfile?.background?.custom_color ?? ''}-${linkProfile?.background?.custom_bg_url ? '1' : '0'}`} linkProfile={linkProfile} buttons={buttons} />
               <p className="text-[11px] text-muted-foreground text-center max-w-[240px] leading-relaxed">
                 Preview of your current changes. Save to make them live.
               </p>

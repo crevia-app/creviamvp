@@ -11,14 +11,6 @@ const SOLID_PRESETS = [
   { name: "Sapphire", hex: "#0F2B6E" },
 ] as const;
 
-// ─── Premium Gradient Presets ─────────────────────────────────────────────────
-const GRADIENT_PRESETS = [
-  { name: "Midnight",      value: "linear-gradient(135deg,#0A0A0A 0%,#1A1A2E 100%)" },
-  { name: "Obsidian Gold", value: "linear-gradient(135deg,#0A0A0A 0%,#B07D3A 100%)" },
-  { name: "Emerald Night", value: "linear-gradient(135deg,#064E3B 0%,#0A0A0A 100%)" },
-  { name: "Sapphire Dusk", value: "linear-gradient(135deg,#0F2B6E 0%,#1A1A2E 100%)" },
-  { name: "Cognac Noir",   value: "linear-gradient(135deg,#7C4A2D 0%,#0A0A0A 100%)" },
-] as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function normalizeHex(raw: string): string {
@@ -184,38 +176,6 @@ export function AdvancedColorSelector({
       {/* ── Gradient panel — Crevia Link only ────────────────────────────────── */}
       {variant === "link" && tab === "gradient" && (
         <div className="space-y-4">
-
-          {/* Preset gradients */}
-          <div className="flex gap-2.5">
-            {GRADIENT_PRESETS.map(({ name, value: gv }) => {
-              const active = value === gv;
-              return (
-                <button
-                  key={name}
-                  title={name}
-                  onClick={() => onChange(gv)}
-                  className={cn(
-                    "relative w-11 h-11 rounded-xl border border-white/10 flex-shrink-0",
-                    "transition-all duration-200 focus:outline-none",
-                    "focus-visible:ring-2 focus-visible:ring-white/40",
-                    active
-                      ? "ring-2 ring-offset-2 ring-offset-[#0A0A0A] ring-white/50 scale-110"
-                      : "hover:scale-105 active:scale-[0.97]"
-                  )}
-                  style={{ background: gv }}
-                >
-                  {active && (
-                    <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/20" />
-                  )}
-                  {active && (
-                    <span className="absolute inset-0 flex items-center justify-center">
-                      <Check className="w-4 h-4 text-white drop-shadow" strokeWidth={2.5} />
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
 
           {/* Custom gradient builder */}
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-4">
