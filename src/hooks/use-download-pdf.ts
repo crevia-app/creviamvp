@@ -30,10 +30,21 @@ export function useDownloadPDF(
 
       pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
 
-      // Open in a new tab — works on iOS Safari, Android, and desktop.
-      // The browser's native PDF viewer lets users save/share from there.
-      const blobUrl = pdf.output("bloburl");
-      window.open(blobUrl, "_blank");
+      // Use <a download> instead of window.open — window.open() after an await
+      // is outside the user-gesture chain and is blocked by iOS Safari's popup
+      // blocker. An anchor click with a blob URL works on iOS 13+, Android, and
+      // desktop without triggering any popup restriction.
+      const blob = pdf.output("blob");
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `${filename}.pdf`;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      // Revoke after a delay to give iOS time to process the download
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
     } finally {
       setDownloading(false);
     }

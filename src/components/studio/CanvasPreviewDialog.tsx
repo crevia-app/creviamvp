@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -185,22 +185,37 @@ const CanvasPreviewDialog = ({
     }
   }, [canvas]);
 
-  // Compute signature pixel position AFTER the DOM is painted so offsetWidth/Height are real.
-  useLayoutEffect(() => {
-    const sp = localCanvas?.signature_position as SigPos | null;
-    const el = contentAreaRef.current;
-    if (!sp || !el || placementMode) { setSigStyle(null); return; }
-    if (sp.x != null) {
-      setSigStyle({ left: sp.x, top: sp.y!, w: sp.w ?? INIT_W, h: sp.h ?? INIT_H });
-    } else if (sp.xPct != null) {
-      setSigStyle({
-        left: sp.xPct * el.offsetWidth,
-        top:  sp.yPct! * el.offsetHeight,
-        w:    (sp.wPct ?? 0) * el.offsetWidth  || INIT_W,
-        h:    (sp.hPct ?? 0) * el.offsetHeight || INIT_H,
-      });
-    }
-  }, [localCanvas?.signature_position, localCanvas?.creator_signature, placementMode]);
+  // Compute signature pixel position once layout has settled.
+  //
+  // Why useEffect + rAF instead of useLayoutEffect:
+  //   useLayoutEffect fires when deps change — but the critical dep is `open`
+  //   (when the dialog first becomes visible). The canvas data is often already
+  //   loaded before `open` changes, so the effect fired with contentAreaRef=null
+  //   (dialog not yet in the DOM) and set sigStyle to null, never re-running.
+  //   Using useEffect + requestAnimationFrame guarantees the browser has done at
+  //   least one layout cycle after the dialog renders before we read offsetWidth.
+  useEffect(() => {
+    if (!open || isEditingDetails || placementMode) { setSigStyle(null); return; }
+
+    const raf = requestAnimationFrame(() => {
+      const sp = localCanvas?.signature_position as SigPos | null;
+      const el = contentAreaRef.current;
+      if (!sp || !el) { setSigStyle(null); return; }
+
+      if (sp.x != null) {
+        setSigStyle({ left: sp.x, top: sp.y!, w: sp.w ?? INIT_W, h: sp.h ?? INIT_H });
+      } else if (sp.xPct != null) {
+        setSigStyle({
+          left: sp.xPct * el.offsetWidth,
+          top:  sp.yPct! * el.offsetHeight,
+          w:    (sp.wPct ?? 0) * el.offsetWidth  || INIT_W,
+          h:    (sp.hPct ?? 0) * el.offsetHeight || INIT_H,
+        });
+      }
+    });
+
+    return () => cancelAnimationFrame(raf);
+  }, [open, localCanvas?.signature_position, localCanvas?.creator_signature, placementMode, isEditingDetails]);
 
   const fetchProfile = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -390,7 +405,8 @@ const CanvasPreviewDialog = ({
 
           {/* Action buttons — always right-aligned, never wrap */}
           <div className="flex items-center gap-1 flex-shrink-0">
-            {!isEditingDetails && !placementMode && (
+            {/* Edit is locked once signed — a placed signature is immutable */}
+            {!isEditingDetails && !placementMode && !localCanvas.creator_signature && (
               <Button variant="ghost" size="sm" title="Edit"
                 onClick={() => { setIsEditingDetails(true); setEditableContent(localCanvas.content || ""); }}
                 className="h-8 w-8 p-0 rounded-lg"

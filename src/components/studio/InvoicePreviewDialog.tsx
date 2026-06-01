@@ -68,10 +68,25 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
   );
 
   // ── Print to PDF (used in print-mode toolbar) ──────────────────────────────
+  // Trigger a PDF download via <a download> — window.open() after an await is
+  // outside the user-gesture chain and is blocked by iOS Safari's popup blocker.
+  const triggerPdfDownload = (blob: Blob, name: string) => {
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = name;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
+  };
+
   const handlePrintPDF = async () => {
     try {
       const opts = { scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false } as const;
       const M = 12;
+      const invoiceNum = invoice?.invoice_number ?? "invoice";
 
       if (hasPage2 && page1Ref.current && page2Ref.current) {
         const [c1, c2] = await Promise.all([
@@ -92,19 +107,19 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
         pdf.rect(0, 0, PW, 3, "F");
         pdf.setFontSize(7);
         pdf.setTextColor(180, 180, 180);
-        pdf.text(`Invoice ${invoice?.invoice_number ?? ""} · continued`, PW - M, 10, { align: "right" });
+        pdf.text(`Invoice ${invoiceNum} · continued`, PW - M, 10, { align: "right" });
         pdf.addImage(c2.toDataURL("image/png"), "PNG", M, 3 + M, CW, (c2.height / c2.width) * CW);
-        window.open(pdf.output("bloburl") as string, "_blank");
+        triggerPdfDownload(pdf.output("blob"), `Invoice-${invoiceNum}.pdf`);
       } else if (page1Ref.current) {
         const c   = await html2canvas(page1Ref.current, opts);
         const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
         const PW  = pdf.internal.pageSize.getWidth();
         const CW  = PW - M * 2;
         pdf.addImage(c.toDataURL("image/png"), "PNG", M, M, CW, (c.height / c.width) * CW);
-        window.open(pdf.output("bloburl") as string, "_blank");
+        triggerPdfDownload(pdf.output("blob"), `Invoice-${invoiceNum}.pdf`);
       }
     } catch {
-      toast.error("Could not prepare print preview");
+      toast.error("Could not prepare PDF — please try again.");
     }
   };
 

@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 interface SendDocumentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  type: "invoice" | "contract";
+  type: "invoice" | "contract" | "canvas";
   documentId: string;
   defaultEmail: string;
   documentLabel: string;
@@ -62,6 +62,8 @@ export function SendDocumentDialog({
   const Icon = type === "invoice" ? Receipt : FileSignature;
   const fnName = type === "invoice" ? "invoice-send" : "canvas-send";
   const bodyKey = type === "invoice" ? "invoice_id" : "contract_id";
+  // Chat message_type: canvas and contract both render as "contract" in the workspace chat renderer
+  const chatMessageType = type === "invoice" ? "invoice" : "contract";
 
   // Reset on open/close
   useEffect(() => {
@@ -204,7 +206,7 @@ export function SendDocumentDialog({
         room_id: selectedRoom.id,
         sender_id: userId,
         content,
-        message_type: type,
+        message_type: chatMessageType,
         is_encrypted: false,
       };
       if (type === "invoice") msgPayload.invoice_id = documentId;
