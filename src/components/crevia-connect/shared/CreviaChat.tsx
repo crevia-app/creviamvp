@@ -1369,6 +1369,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
       setShowPollCreator(false);
       setPollQuestion("");
       setPollOptions(["", ""]);
+      setReplyingTo(null);
       toast.success("Poll sent!");
     } catch {
       toast.error("Failed to send poll. Please try again.");
@@ -3149,7 +3150,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
           {/* Header */}
           <div className="flex items-center gap-3 px-5 pt-5 pb-4 border-b border-border/40">
             <div className="h-9 w-9 rounded-xl bg-bronze/10 flex items-center justify-center flex-shrink-0">
-              <BarChart2 className="h-4.5 w-4.5 text-bronze" />
+              <BarChart2 className="h-5 w-5 text-bronze" />
             </div>
             <div>
               <p className="font-semibold text-sm">Create a Poll</p>
