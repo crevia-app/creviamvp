@@ -228,6 +228,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const [forwardingMessageId, setForwardingMessageId] = useState<string | null>(null);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [videoErrors, setVideoErrors] = useState<Set<string>>(new Set());
+  const [playingVideoIds, setPlayingVideoIds] = useState<Set<string>>(new Set());
   const [convertingVideo, setConvertingVideo] = useState(false);
   const [videoConvertProgress, setVideoConvertProgress] = useState<{ stage: string; percent: number } | null>(null);
 
@@ -2219,50 +2220,59 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                             {(() => {
                                               const url = getFilePublicUrl(msg.file_url!);
                                               const hasError = videoErrors.has(msg.id);
+                                              const isPlaying = playingVideoIds.has(msg.id);
+
                                               if (!url) {
                                                 return (
-                                                  <div className="h-32 rounded-lg bg-muted/50 animate-pulse flex items-center justify-center">
-                                                    <Video className="h-6 w-6 text-muted-foreground/30" />
+                                                  <div className="w-full h-48 rounded-xl bg-black/60 animate-pulse flex items-center justify-center">
+                                                    <Video className="h-7 w-7 text-white/20" />
                                                   </div>
                                                 );
                                               }
                                               if (hasError) {
                                                 return (
-                                                  <div className="h-28 rounded-lg bg-muted/60 flex flex-col items-center justify-center gap-2 border border-border/40">
-                                                    <Video className="h-5 w-5 text-muted-foreground/50" />
-                                                    <p className="text-xs text-muted-foreground">Can't play this video</p>
-                                                    <Button
-                                                      size="sm"
-                                                      variant="outline"
+                                                  <div className="w-full h-36 rounded-xl bg-black/50 flex flex-col items-center justify-center gap-2">
+                                                    <Video className="h-5 w-5 text-white/40" />
+                                                    <p className="text-xs text-white/60">Can't play video</p>
+                                                    <button
                                                       onClick={() => downloadFile(msg.file_url!, msg.file_name || "video")}
-                                                      className="h-7 text-xs gap-1.5"
+                                                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors"
                                                     >
                                                       <Download className="h-3 w-3" /> Download
-                                                    </Button>
+                                                    </button>
                                                   </div>
                                                 );
                                               }
                                               return (
-                                                <div className="relative">
+                                                <div className="relative rounded-xl overflow-hidden bg-black">
                                                   <video
                                                     src={url}
-                                                    controls
                                                     preload="metadata"
-                                                    className="w-full rounded-lg max-h-[280px] bg-black"
+                                                    controls={isPlaying}
                                                     playsInline
+                                                    className="w-full max-h-[300px] object-cover block"
                                                     onError={() => setVideoErrors(prev => new Set([...prev, msg.id]))}
+                                                    onClick={() => {
+                                                      if (!isPlaying) setPlayingVideoIds(prev => new Set([...prev, msg.id]));
+                                                    }}
                                                   />
-                                                  <div className="flex items-center justify-between mt-1">
-                                                    <p className="text-[10px] opacity-60 truncate">{msg.file_name}</p>
-                                                    <Button
-                                                      size="sm"
-                                                      variant="ghost"
-                                                      onClick={() => downloadFile(msg.file_url!, msg.file_name || "video")}
-                                                      className="h-6 w-6 p-0 hover:bg-background/20"
+                                                  {!isPlaying && (
+                                                    <div
+                                                      className="absolute inset-0 flex items-center justify-center cursor-pointer"
+                                                      onClick={() => setPlayingVideoIds(prev => new Set([...prev, msg.id]))}
                                                     >
-                                                      <Download className="h-3 w-3" />
-                                                    </Button>
-                                                  </div>
+                                                      <div className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
+                                                        <Play className="w-6 h-6 text-white fill-white ml-1" />
+                                                      </div>
+                                                    </div>
+                                                  )}
+                                                  {/* Download icon — top-right corner */}
+                                                  <button
+                                                    onClick={(e) => { e.stopPropagation(); downloadFile(msg.file_url!, msg.file_name || "video"); }}
+                                                    className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
+                                                  >
+                                                    <Download className="h-3.5 w-3.5 text-white" />
+                                                  </button>
                                                 </div>
                                               );
                                             })()}
@@ -2296,7 +2306,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                       />
                                     )}
 
-                                    {msg.content && !isVoice && (
+                                    {msg.content && !isVoice && !(isFile && isVideoType(msg.file_type)) && (
                                       msg.content === "[Unable to decrypt message]" || msg.content === "[Encryption key unavailable]" ? (
                                         <div className="flex items-center gap-2">
                                           <Lock className="h-3.5 w-3.5 opacity-60" />
