@@ -23,7 +23,8 @@ const VoiceNotePlayer = ({ audioUrl, duration, isMine }: VoiceNotePlayerProps) =
 
   useEffect(() => {
     const audio = new Audio();
-    audio.crossOrigin = "anonymous";
+    // Do NOT set crossOrigin — it forces a CORS preflight that blocks playback
+    // on many Android/iOS devices when Supabase CDN headers don't match exactly.
     audio.preload = "metadata";
     audioRef.current = audio;
 

@@ -226,6 +226,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const [showForwardDialog, setShowForwardDialog] = useState(false);
   const [forwardingMessageId, setForwardingMessageId] = useState<string | null>(null);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  const [videoErrors, setVideoErrors] = useState<Set<string>>(new Set());
 
   // New features state
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
@@ -1267,9 +1268,17 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const getFilePublicUrl = useCallback((filePath: string) => {
     if (filePath.startsWith("http")) return filePath;
     if (signedUrls[filePath]) return signedUrls[filePath];
-    supabase.storage.from("chat-files").createSignedUrl(filePath, 3600).then(({ data }) => {
+
+    supabase.storage.from("chat-files").createSignedUrl(filePath, 3600).then(({ data, error }) => {
       if (data?.signedUrl) {
         setSignedUrls(prev => ({ ...prev, [filePath]: data.signedUrl }));
+      } else if (error) {
+        // Signed URL failed (likely a permissions issue for the recipient).
+        // Fall back to public URL — works when the bucket allows public reads.
+        const { data: pub } = supabase.storage.from("chat-files").getPublicUrl(filePath);
+        if (pub?.publicUrl) {
+          setSignedUrls(prev => ({ ...prev, [filePath]: pub.publicUrl }));
+        }
       }
     });
     return "";
@@ -2178,14 +2187,39 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                           <div className="mb-1">
                                             {(() => {
                                               const url = getFilePublicUrl(msg.file_url!);
-                                              return url ? (
+                                              const hasError = videoErrors.has(msg.id);
+                                              if (!url) {
+                                                return (
+                                                  <div className="h-32 rounded-lg bg-muted/50 animate-pulse flex items-center justify-center">
+                                                    <Video className="h-6 w-6 text-muted-foreground/30" />
+                                                  </div>
+                                                );
+                                              }
+                                              if (hasError) {
+                                                return (
+                                                  <div className="h-28 rounded-lg bg-muted/60 flex flex-col items-center justify-center gap-2 border border-border/40">
+                                                    <Video className="h-5 w-5 text-muted-foreground/50" />
+                                                    <p className="text-xs text-muted-foreground">Can't play this video</p>
+                                                    <Button
+                                                      size="sm"
+                                                      variant="outline"
+                                                      onClick={() => downloadFile(msg.file_url!, msg.file_name || "video")}
+                                                      className="h-7 text-xs gap-1.5"
+                                                    >
+                                                      <Download className="h-3 w-3" /> Download
+                                                    </Button>
+                                                  </div>
+                                                );
+                                              }
+                                              return (
                                                 <div className="relative">
                                                   <video
                                                     src={url}
                                                     controls
                                                     preload="metadata"
-                                                    className="max-w-full rounded-lg max-h-[280px]"
+                                                    className="w-full rounded-lg max-h-[280px] bg-black"
                                                     playsInline
+                                                    onError={() => setVideoErrors(prev => new Set([...prev, msg.id]))}
                                                   />
                                                   <div className="flex items-center justify-between mt-1">
                                                     <p className="text-[10px] opacity-60 truncate">{msg.file_name}</p>
@@ -2198,10 +2232,6 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                                       <Download className="h-3 w-3" />
                                                     </Button>
                                                   </div>
-                                                </div>
-                                              ) : (
-                                                <div className="h-32 rounded-lg bg-muted/50 animate-pulse flex items-center justify-center">
-                                                  <Video className="h-6 w-6 text-muted-foreground/30" />
                                                 </div>
                                               );
                                             })()}
