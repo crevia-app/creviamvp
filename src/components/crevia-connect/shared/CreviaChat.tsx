@@ -2220,7 +2220,6 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                           <div className="mb-1">
                                             {(() => {
                                               const url = getFilePublicUrl(msg.file_url!);
-                                              const hasError = videoErrors.has(msg.id);
                                               const isPlaying = playingVideoIds.has(msg.id);
 
                                               if (!url) {
@@ -2230,20 +2229,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                                   </div>
                                                 );
                                               }
-                                              if (hasError) {
-                                                return (
-                                                  <div className="w-full h-36 rounded-xl bg-black/50 flex flex-col items-center justify-center gap-2">
-                                                    <Video className="h-5 w-5 text-white/40" />
-                                                    <p className="text-xs text-white/60">Can't play video</p>
-                                                    <button
-                                                      onClick={() => downloadFile(msg.file_url!, msg.file_name || "video")}
-                                                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors"
-                                                    >
-                                                      <Download className="h-3 w-3" /> Download
-                                                    </button>
-                                                  </div>
-                                                );
-                                              }
+
                                               return (
                                                 <div className="relative rounded-xl overflow-hidden bg-black">
                                                   <video
@@ -2252,8 +2238,8 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                                     preload="metadata"
                                                     controls={isPlaying}
                                                     playsInline
-                                                    className="w-full max-h-[300px] object-cover block"
-                                                    onError={() => setVideoErrors(prev => new Set([...prev, msg.id]))}
+                                                    className="w-full max-h-[300px] block"
+                                                    style={{ minHeight: isPlaying ? undefined : "160px" }}
                                                   />
                                                   {!isPlaying && (
                                                     <div
@@ -2272,7 +2258,6 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                                       </div>
                                                     </div>
                                                   )}
-                                                  {/* Download icon — top-right corner */}
                                                   <button
                                                     onClick={(e) => { e.stopPropagation(); downloadFile(msg.file_url!, msg.file_name || "video"); }}
                                                     className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
