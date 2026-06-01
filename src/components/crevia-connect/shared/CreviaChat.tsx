@@ -12,6 +12,7 @@ import MessageContextMenu from "./MessageContextMenu";
 import EmojiReactionPicker from "./EmojiReactionPicker";
 import MessageReactions from "./MessageReactions";
 import AttachmentBubble from "@/components/chat/AttachmentBubble";
+import WorkspacePollMessage from "@/components/crevia-connect/shared/WorkspacePollMessage";
 import {
   Send,
   Paperclip,
@@ -443,7 +444,11 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                 // keep original content if decryption fails
               }
             }
-            setMessages((prev) => [...prev, msgWithProfile]);
+            // Skip if already added optimistically (sender's own message)
+            setMessages((prev) => {
+              if (prev.some(m => m.id === msgWithProfile.id)) return prev;
+              return [...prev, msgWithProfile];
+            });
             if (newMsg.sender_id !== currentUserId) {
               if (typingTimeoutsRef.current[newMsg.sender_id]) {
                 clearTimeout(typingTimeoutsRef.current[newMsg.sender_id]);
@@ -1112,7 +1117,27 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
         messageData.reply_to_id = replyingTo.id;
       }
 
-      await supabase.from("chat_messages").insert(messageData);
+      // Insert and get the row back so we can append it to local state immediately
+      // (no waiting for the WebSocket round-trip — WhatsApp-style instant display).
+      const { data: insertedMsg, error: insertErr } = await supabase
+        .from("chat_messages")
+        .insert(messageData)
+        .select()
+        .single();
+      if (insertErr) throw insertErr;
+
+      // Optimistic local append — show the sender's own message instantly
+      const myProfile = selectedRoom.members?.find(m => m.user_id === currentUserId)?.profile;
+      setMessages(prev => [...prev, {
+        ...insertedMsg,
+        content: plainContent,  // show plaintext; recipient sees decrypted via their own key
+        sender: {
+          display_name: myProfile?.display_name ?? null,
+          handle:       myProfile?.handle       ?? "",
+          avatar_url:   myProfile?.avatar_url   ?? null,
+        },
+        replyTo: replyingTo ?? null,
+      } as ChatMessage]);
 
       // Patch the notification body the trigger just created with the real plaintext preview.
       supabase.rpc("update_message_notification_preview", {
@@ -1199,16 +1224,38 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
       const plainContent = `🎤 Voice note (${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, "0")})`;
       const { content, is_encrypted } = await encryptContent(plainContent, selectedRoom.id);
 
-      await supabase.from("chat_messages").insert({
-        room_id: selectedRoom.id,
-        sender_id: currentUserId,
-        content,
-        message_type: "voice",
-        file_url: urlData.publicUrl,
-        file_name: `voice-${Date.now()}.${ext}`,
-        file_type: blob.type || "audio/webm",
-        file_size: blob.size,
-        is_encrypted,
+      const voiceFileName = `voice-${Date.now()}.${ext}`;
+      const { data: voiceMsg, error: voiceInsertErr } = await supabase
+        .from("chat_messages")
+        .insert({
+          room_id: selectedRoom.id,
+          sender_id: currentUserId,
+          content,
+          message_type: "voice",
+          file_url: urlData.publicUrl,
+          file_name: voiceFileName,
+          file_type: blob.type || "audio/webm",
+          file_size: blob.size,
+          is_encrypted,
+        })
+        .select()
+        .single();
+      if (voiceInsertErr) throw voiceInsertErr;
+
+      // Optimistic append — voice note appears in the chat immediately
+      const myProfile = selectedRoom.members?.find(m => m.user_id === currentUserId)?.profile;
+      setMessages(prev => {
+        if (prev.some(m => m.id === voiceMsg.id)) return prev;
+        return [...prev, {
+          ...voiceMsg,
+          content: plainContent,
+          sender: {
+            display_name: myProfile?.display_name ?? null,
+            handle:       myProfile?.handle       ?? "",
+            avatar_url:   myProfile?.avatar_url   ?? null,
+          },
+          replyTo: null,
+        } as ChatMessage];
       });
 
       await supabase.from("chat_rooms").update({ updated_at: new Date().toISOString() }).eq("id", selectedRoom.id);
@@ -1280,11 +1327,13 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
         toast.error("Video too large to convert on device (max 200 MB). Please trim to under ~3 minutes.");
         return;
       }
+      // Show the original file as a preview immediately — no blocking spinner
+      setSelectedFile(file);
       setConvertingVideo(true);
       setVideoConvertProgress({ stage: "loading", percent: 0 });
       try {
         const mp4 = await convertVideoToMp4(file, (p) => setVideoConvertProgress(p));
-        setSelectedFile(mp4);
+        setSelectedFile(mp4); // silently replace with the converted version
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Video conversion failed. Please try a shorter clip.");
       } finally {
@@ -1944,7 +1993,10 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                   iOS touch-momentum scrolling and misfires scroll detection.
                   Plain overflow-y-auto + overscroll-contain + touch-pan-y is
                   the correct cross-platform primitive for a chat list. */}
-              <div className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y p-3 md:p-4">
+              <div
+                className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y p-3 md:p-4"
+                style={{ overflowAnchor: "auto" }}
+              >
                 <div className="space-y-4 max-w-3xl mx-auto pb-4">
 
                   {messageGroups.map((group) => (
@@ -1965,6 +2017,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                         const isFile = msg.message_type === "file";
                         const isVoice = msg.message_type === "voice";
                         const isWorkspaceInvite = msg.message_type === "workspace_invite";
+                        const isPoll = msg.message_type === "poll";
                         const isDeletedForEveryone = (msg as any).deleted_for_everyone;
                         const isDeletedForMe = deletedForMeIds.has(msg.id);
                         const isPinned = pinnedMessageIds.has(msg.id);
@@ -2158,6 +2211,16 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                       </button>
                                     )}
 
+                                    {/* Poll — interactive voting card */}
+                                    {isPoll && msg.content && (
+                                      <WorkspacePollMessage
+                                        messageId={msg.id}
+                                        content={msg.content}
+                                        currentUserId={currentUserId}
+                                        isMine={isMine}
+                                      />
+                                    )}
+
                                     {/* Invoice attachment — interactive card */}
                                     {isInvoice && msg.invoice_id && (
                                       <div className="mb-1.5">
@@ -2275,21 +2338,39 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                             })()}
                                           </div>
                                         ) : (
-                                          <div className="p-2 rounded-lg bg-background/10 flex items-center gap-2">
-                                            <File className="h-4 w-4 flex-shrink-0" />
-                                            <div className="flex-1 min-w-0">
-                                              <p className="text-xs font-medium truncate">{msg.file_name}</p>
-                                              <p className="text-[10px] opacity-70">{formatFileSize(msg.file_size)}</p>
-                                            </div>
-                                            <Button
-                                              size="sm"
-                                              variant="ghost"
-                                              onClick={() => downloadFile(msg.file_url!, msg.file_name || "file")}
-                                              className="h-7 w-7 p-0 hover:bg-background/20"
-                                            >
-                                              <Download className="h-3.5 w-3.5" />
-                                            </Button>
-                                          </div>
+                                          {/* Generic file — name is a live link to open; button downloads */}
+                                          {(() => {
+                                            const fileOpenUrl = getFilePublicUrl(msg.file_url!);
+                                            return (
+                                              <div className="p-2 rounded-lg bg-background/10 flex items-center gap-2">
+                                                <File className="h-4 w-4 flex-shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                  {fileOpenUrl ? (
+                                                    <a
+                                                      href={fileOpenUrl}
+                                                      target="_blank"
+                                                      rel="noopener noreferrer"
+                                                      className="text-xs font-medium truncate block hover:underline"
+                                                      onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                      {msg.file_name}
+                                                    </a>
+                                                  ) : (
+                                                    <p className="text-xs font-medium truncate">{msg.file_name}</p>
+                                                  )}
+                                                  <p className="text-[10px] opacity-70">{formatFileSize(msg.file_size)}</p>
+                                                </div>
+                                                <Button
+                                                  size="sm"
+                                                  variant="ghost"
+                                                  onClick={() => downloadFile(msg.file_url!, msg.file_name || "file")}
+                                                  className="h-7 w-7 p-0 hover:bg-background/20"
+                                                >
+                                                  <Download className="h-3.5 w-3.5" />
+                                                </Button>
+                                              </div>
+                                            );
+                                          })()}
                                         )}
                                       </div>
                                     )}
@@ -2437,13 +2518,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                     </div>
                   )}
 
-                  {/* Video conversion — subtle indicator only */}
-                  {convertingVideo && (
-                    <div className="mb-2 flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg">
-                      <div className="w-3.5 h-3.5 border-2 border-bronze/40 border-t-bronze rounded-full animate-spin flex-shrink-0" />
-                      <span className="text-xs text-muted-foreground">Preparing video…</span>
-                    </div>
-                  )}
+                  {/* Conversion progress is now shown inline on the video thumbnail — no blocking banner */}
 
                   {selectedFile && !isRecordingVoice && (
                     <div className="mb-2 p-2 bg-muted rounded-lg flex items-center gap-2">
@@ -2452,7 +2527,20 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                           <img src={URL.createObjectURL(selectedFile)} alt="" className="h-full w-full object-cover" />
                         </div>
                       ) : selectedFile.type.startsWith("video/") ? (
-                        <Video className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        // Instant local thumbnail — URL.createObjectURL never touches the network
+                        <div className="relative h-12 w-12 rounded overflow-hidden flex-shrink-0 bg-black">
+                          <video
+                            src={URL.createObjectURL(selectedFile)}
+                            className="h-full w-full object-cover"
+                            muted
+                            playsInline
+                          />
+                          {convertingVideo && (
+                            <div className="absolute inset-0 bg-black/55 flex items-center justify-center">
+                              <div className="w-3 h-3 border border-white/60 border-t-white rounded-full animate-spin" />
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <File className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       )}
@@ -2911,7 +2999,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                           Crevia Profile
                         </p>
                         <a
-                          href={`/${contactLinkProfile.username}`}
+                          href={`https://crevia.app/${contactLinkProfile.username}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-3 p-3 rounded-xl bg-bronze/5 border border-bronze/20 hover:bg-bronze/10 transition-colors"
@@ -2921,7 +3009,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-foreground">
-                              crevia.io/{contactLinkProfile.username}
+                              crevia.app/{contactLinkProfile.username}
                             </p>
                             {contactLinkProfile.bio && (
                               <p className="text-xs text-muted-foreground truncate mt-0.5">

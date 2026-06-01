@@ -323,7 +323,27 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
           )}
 
           {search && !searching && searchResults.length === 0 && (
-            <p className="text-xs text-muted-foreground text-center py-2">No users found</p>
+            <div className="border border-border/50 rounded-xl p-3 space-y-2 bg-muted/20">
+              <p className="text-xs text-muted-foreground text-center">No Crevia users found for "{search}"</p>
+              {/* If it looks like an email, offer an invite link as fallback */}
+              {/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(search.trim()) && isCreator && !atSeatLimit && (
+                <button
+                  onClick={generateInviteLink}
+                  disabled={generatingLink}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-bronze/10 hover:bg-bronze/20 border border-bronze/30 transition-colors"
+                >
+                  <Link2 className="w-3.5 h-3.5 text-bronze flex-shrink-0" />
+                  <span className="text-xs font-medium text-bronze flex-1 text-left">
+                    Send invite link to {search.trim()}
+                  </span>
+                  {generatingLink
+                    ? <Loader2 className="w-3 h-3 animate-spin text-bronze flex-shrink-0" />
+                    : copiedLink
+                    ? <Check className="w-3 h-3 text-emerald-500 flex-shrink-0" />
+                    : <Copy className="w-3 h-3 text-bronze/60 flex-shrink-0" />}
+                </button>
+              )}
+            </div>
           )}
 
           {/* Current members */}

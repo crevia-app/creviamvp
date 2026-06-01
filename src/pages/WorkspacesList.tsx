@@ -53,6 +53,11 @@ const WorkspacesList = () => {
 
     if (!error && data) {
       await supabase.from("chat_room_members").insert({ room_id: data.id, user_id: userId, role: "admin" });
+      // Optimistic update — workspace appears in the list instantly on back-navigation
+      setWorkspaces(prev => [{
+        ...data,
+        chat_room_members: [{ user_id: userId, role: "admin" }],
+      }, ...prev]);
       navigate(`/crevia-workspace/${data.id}`);
     }
   };
