@@ -53,6 +53,7 @@ const About            = lazy(() => import("./pages/About"));
 const PrivacyPolicy    = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService   = lazy(() => import("./pages/TermsOfService"));
 const CookiePolicy     = lazy(() => import("./pages/CookiePolicy"));
+const CanvasSharePage  = lazy(() => import("./pages/CanvasSharePage"));
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -229,6 +230,8 @@ function AppContent() {
           <Route path="/crevia-workspace" element={<ProtectedRoute><AppLayout><WorkspacesList /></AppLayout></ProtectedRoute>} />
           <Route path="/crevia-workspace/:id" element={<ProtectedRoute><AppLayout><WorkspacePage /></AppLayout></ProtectedRoute>} />
           <Route path="/invite/:token" element={<WorkspaceInvitePage />} />
+          {/* Public canvas share — no auth required; RLS gates restricted docs */}
+          <Route path="/canvas/view/:token" element={<CanvasSharePage />} />
           <Route path="/received" element={<ProtectedRoute><AppLayout><ReceivedDocuments /></AppLayout></ProtectedRoute>} />
           <Route path="/profile/payments-billing" element={<ProtectedRoute><AppLayout><PaymentsBilling /></AppLayout></ProtectedRoute>} />
           <Route path="/profile/notifications" element={<ProtectedRoute><AppLayout><Notifications /></AppLayout></ProtectedRoute>} />

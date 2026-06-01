@@ -30,6 +30,8 @@ import {
   ChevronRight,
   ChevronDown,
   Loader2,
+  Lock,
+  Globe,
 } from "lucide-react";
 import {
   Dialog,
@@ -60,6 +62,7 @@ import UpgradePrompt from "@/components/subscription/UpgradePrompt";
 import CanvasPreviewDialog from "./CanvasPreviewDialog";
 import UploadCanvasDialog from "./UploadCanvasDialog";
 import { SendDocumentDialog } from "@/components/studio/SendDocumentDialog";
+import { ManageAccessDialog, type AccessLevel } from "@/components/studio/ManageAccessDialog";
 
 interface Canvas {
   id: string;
@@ -82,6 +85,8 @@ interface Canvas {
   exclusivity_details: string | null;
   usage_rights: string | null;
   termination_clause: string | null;
+  access_level?: AccessLevel;
+  share_token?: string;
 }
 
 interface Folder {
@@ -124,6 +129,8 @@ const ContractsTab = ({ workspaceId, initialContractId }: { workspaceId?: string
   const [previewCanvas, setPreviewCanvas] = useState<Canvas | null>(null);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [sendCanvas, setSendCanvas] = useState<Canvas | null>(null);
+  const [accessCanvas, setAccessCanvas] = useState<Canvas | null>(null);
+  const [accessFolder, setAccessFolder] = useState<Folder & { access_level?: AccessLevel; share_token?: string } | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
 
@@ -472,7 +479,7 @@ const ContractsTab = ({ workspaceId, initialContractId }: { workspaceId?: string
           <p className="text-sm text-muted-foreground">
             {currentFolder
               ? `Inside ${currentFolder.name} · ${canvases.length} canvas${canvases.length !== 1 ? "es" : ""}`
-              : "Professional agreements, e-signatures & document management"}
+              : "Document management & e-signatures"}
           </p>
         </div>
 
@@ -605,12 +612,21 @@ const ContractsTab = ({ workspaceId, initialContractId }: { workspaceId?: string
                         <MoreHorizontal className="h-4 w-4" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-36 rounded-xl">
+                    <DropdownMenuContent align="end" className="w-44 rounded-xl">
                       <DropdownMenuItem
                         onClick={() => { setRenamingFolderId(folder.id); setRenameFolderValue(folder.name); }}
                         className="rounded-lg gap-2 text-xs"
                       >
                         <Pencil className="h-3.5 w-3.5" /> Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setAccessFolder(folder as any)}
+                        className="rounded-lg gap-2 text-xs"
+                      >
+                        {(folder as any).access_level === "link_access"
+                          ? <Globe className="h-3.5 w-3.5 text-bronze" />
+                          : <Lock className="h-3.5 w-3.5" />}
+                        Manage Access
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
@@ -760,6 +776,12 @@ const ContractsTab = ({ workspaceId, initialContractId }: { workspaceId?: string
                             <Copy className="h-4 w-4 mr-2" />
                             Duplicate
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setAccessCanvas(canvas)} className="rounded-lg">
+                            {canvas.access_level === "link_access"
+                              ? <Globe className="h-4 w-4 mr-2 text-bronze" />
+                              : <Lock className="h-4 w-4 mr-2" />}
+                            Manage Access
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           {canvas.status === "sent" && (
                             <DropdownMenuItem onClick={() => handleStatusChange(canvas.id, "signed")} className="rounded-lg">
@@ -875,6 +897,42 @@ const ContractsTab = ({ workspaceId, initialContractId }: { workspaceId?: string
           defaultEmail={sendCanvas.client_email || ""}
           documentLabel={sendCanvas.title}
           onSent={() => setSendCanvas(null)}
+        />
+      )}
+
+      {/* Manage Access — canvas */}
+      {accessCanvas && (
+        <ManageAccessDialog
+          open={!!accessCanvas}
+          onOpenChange={(open) => !open && setAccessCanvas(null)}
+          target="canvas"
+          id={accessCanvas.id}
+          title={accessCanvas.title}
+          currentAccessLevel={accessCanvas.access_level ?? "restricted"}
+          shareToken={accessCanvas.share_token}
+          onAccessChanged={(level) => {
+            setCanvases(prev =>
+              prev.map(c => c.id === accessCanvas.id ? { ...c, access_level: level } : c)
+            );
+          }}
+        />
+      )}
+
+      {/* Manage Access — folder */}
+      {accessFolder && (
+        <ManageAccessDialog
+          open={!!accessFolder}
+          onOpenChange={(open) => !open && setAccessFolder(null)}
+          target="folder"
+          id={accessFolder.id}
+          title={accessFolder.name}
+          currentAccessLevel={(accessFolder as any).access_level ?? "restricted"}
+          shareToken={(accessFolder as any).share_token}
+          onAccessChanged={(level) => {
+            setFolders(prev =>
+              prev.map(f => f.id === accessFolder.id ? { ...f, access_level: level } : f) as any
+            );
+          }}
         />
       )}
     </div>
