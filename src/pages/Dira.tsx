@@ -186,7 +186,7 @@ function ChatItem({
                 "transition-all duration-150",
                 (isActive || chat.pinned || menuOpen)
                   ? "opacity-100"
-                  : "opacity-0 group-hover:opacity-100"
+                  : "opacity-60 group-hover:opacity-100"
               )}
             >
               <MoreHorizontal className="w-4 h-4" />
@@ -1146,7 +1146,7 @@ const Dira = () => {
                             isActive={activeChat === chat.id}
                             isRenaming={renamingChatId === chat.id}
                             renameValue={renameValue}
-                            isMobile={isTouchPrimary}
+                            isMobile={false}
                             onSelect={() => { setActiveChat(chat.id); setActiveProjectId(null); setViewMode("chat"); }}
                             onRenameChange={setRenameValue}
                             onRenameSubmit={() => handleRenameChat(chat.id)}
@@ -1168,7 +1168,7 @@ const Dira = () => {
                         isActive={activeChat === chat.id}
                         isRenaming={renamingChatId === chat.id}
                         renameValue={renameValue}
-                        isMobile={isTouchPrimary}
+                        isMobile={false}
                         onSelect={() => { setActiveChat(chat.id); setActiveProjectId(null); setViewMode("chat"); }}
                         onRenameChange={setRenameValue}
                         onRenameSubmit={() => handleRenameChat(chat.id)}
@@ -1202,7 +1202,7 @@ const Dira = () => {
                                 isRenaming={renamingChatId === chat.id}
                                 renameValue={renameValue}
                                 indent
-                                isMobile={isTouchPrimary}
+                                isMobile={false}
                                 onSelect={() => { setActiveChat(chat.id); setActiveProjectId(project.id); setViewMode("chat"); }}
                                 onRenameChange={setRenameValue}
                                 onRenameSubmit={() => handleRenameChat(chat.id)}
