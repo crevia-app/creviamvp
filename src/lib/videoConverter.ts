@@ -97,7 +97,8 @@ export async function convertVideoToMp4(
 
 /** Returns true if the file needs conversion before it can play cross-browser. */
 export function needsConversion(file: File): boolean {
-  // mp4 with H.264 plays everywhere. Everything else is risky.
-  // We convert all non-mp4 videos to be safe.
-  return file.type.startsWith("video/") && file.type !== "video/mp4";
+  // Convert ALL video files — including .mp4, because iPhone records mp4 in H.265/HEVC
+  // which Chrome can't decode (shows black video, audio only). FFmpeg re-encodes to H.264
+  // which plays everywhere. The extra pass on already-H.264 files is acceptable.
+  return file.type.startsWith("video/");
 }
