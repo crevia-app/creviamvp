@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, Square, Send, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface VoiceRecorderProps {
   onRecordingComplete: (blob: Blob, duration: number) => void;
@@ -96,11 +97,19 @@ const VoiceRecorder = ({ onRecordingComplete, onCancel, isUploading }: VoiceReco
       source.connect(analyser);
       analyserRef.current = analyser;
 
-      // Use whatever format the browser supports — we transcode to WAV after.
-      const mimeType = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", ""]
+      // webm/opus first — reliable on Chrome/Firefox/Android desktop.
+      // mp4 is fallback for iOS Safari which doesn't support webm.
+      // We convert everything to WAV after, so format here only matters for recording reliability.
+      const mimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4", ""]
         .find((t) => t === "" || MediaRecorder.isTypeSupported(t))!;
 
-      const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      // Some browsers return isTypeSupported=true but throw on construction — try/catch per type.
+      let mediaRecorder: MediaRecorder;
+      try {
+        mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      } catch {
+        mediaRecorder = new MediaRecorder(stream);
+      }
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -147,8 +156,9 @@ const VoiceRecorder = ({ onRecordingComplete, onCancel, isUploading }: VoiceReco
         animFrameRef.current = requestAnimationFrame(updateWaveform);
       };
       updateWaveform();
-    } catch {
-      console.error("Microphone access denied");
+    } catch (err) {
+      console.error("Recording failed:", err);
+      toast.error("Couldn't access microphone. Please allow microphone permission and try again.");
     }
   }, []);
 
