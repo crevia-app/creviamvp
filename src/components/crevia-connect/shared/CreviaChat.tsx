@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -657,8 +657,10 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     })();
   }, [showRoomInfo, selectedRoom?.id, currentUserId]);
 
-  // Scroll to bottom on new messages
-  useEffect(() => {
+  // Scroll to bottom on new messages.
+  // useLayoutEffect fires synchronously before the browser paints — eliminates
+  // the visible scroll jump on initial load (useEffect fires after paint).
+  useLayoutEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -2224,22 +2226,21 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
 
                                               if (!url) {
                                                 return (
-                                                  <div className="w-full h-48 rounded-xl bg-black/60 animate-pulse flex items-center justify-center">
+                                                  <div className="w-full max-w-[280px] sm:max-w-sm aspect-video rounded-xl bg-black/60 animate-pulse flex items-center justify-center">
                                                     <Video className="h-7 w-7 text-white/20" />
                                                   </div>
                                                 );
                                               }
 
                                               return (
-                                                <div className="relative rounded-xl overflow-hidden bg-black">
+                                                <div className="relative w-full max-w-[280px] sm:max-w-sm rounded-xl overflow-hidden bg-black aspect-video">
                                                   <video
                                                     ref={(el) => { videoRefs.current[msg.id] = el; }}
                                                     src={url}
                                                     preload="metadata"
                                                     controls={isPlaying}
                                                     playsInline
-                                                    className="w-full max-h-[300px] block"
-                                                    style={{ minHeight: isPlaying ? undefined : "160px" }}
+                                                    className="absolute inset-0 w-full h-full object-contain"
                                                   />
                                                   {!isPlaying && (
                                                     <div
@@ -2391,7 +2392,9 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                     </div>
                   )}
 
-                  <div ref={messagesEndRef} />
+                  {/* overflow-anchor: auto on this sentinel tells the browser to
+                      lock the scroll position here as content above grows */}
+                  <div ref={messagesEndRef} style={{ overflowAnchor: "auto", height: 1 }} />
                 </div>
               </div>
 
