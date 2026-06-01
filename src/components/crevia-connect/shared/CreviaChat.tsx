@@ -1231,30 +1231,33 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   };
 
   const downloadFile = async (fileUrl: string, fileName: string) => {
-    // If it's a full URL (e.g. voice notes), download directly
-    if (fileUrl.startsWith("http")) {
+    try {
+      let blob: Blob;
+
+      if (fileUrl.startsWith("http")) {
+        // Cross-origin URL — fetch as blob so the browser actually downloads
+        // instead of navigating (the <a download> attribute is ignored cross-origin).
+        const res = await fetch(fileUrl);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        blob = await res.blob();
+      } else {
+        const { data, error } = await supabase.storage.from("chat-files").download(fileUrl);
+        if (error) throw error;
+        blob = data;
+      }
+
+      const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = fileUrl;
+      a.href = blobUrl;
       a.download = fileName;
-      a.target = "_blank";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      return;
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10_000);
+    } catch (err) {
+      console.error("Download failed:", err);
+      toast.error("Download failed. Please try again.");
     }
-    const { data, error } = await supabase.storage.from("chat-files").download(fileUrl);
-    if (error) {
-      toast.error("Download failed");
-      return;
-    }
-    const url = URL.createObjectURL(data);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
