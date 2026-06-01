@@ -229,6 +229,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [videoErrors, setVideoErrors] = useState<Set<string>>(new Set());
   const [playingVideoIds, setPlayingVideoIds] = useState<Set<string>>(new Set());
+  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
   const [convertingVideo, setConvertingVideo] = useState(false);
   const [videoConvertProgress, setVideoConvertProgress] = useState<{ stage: string; percent: number } | null>(null);
 
@@ -2246,20 +2247,25 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                               return (
                                                 <div className="relative rounded-xl overflow-hidden bg-black">
                                                   <video
+                                                    ref={(el) => { videoRefs.current[msg.id] = el; }}
                                                     src={url}
                                                     preload="metadata"
                                                     controls={isPlaying}
                                                     playsInline
                                                     className="w-full max-h-[300px] object-cover block"
                                                     onError={() => setVideoErrors(prev => new Set([...prev, msg.id]))}
-                                                    onClick={() => {
-                                                      if (!isPlaying) setPlayingVideoIds(prev => new Set([...prev, msg.id]));
-                                                    }}
                                                   />
                                                   {!isPlaying && (
                                                     <div
                                                       className="absolute inset-0 flex items-center justify-center cursor-pointer"
-                                                      onClick={() => setPlayingVideoIds(prev => new Set([...prev, msg.id]))}
+                                                      onClick={() => {
+                                                        const video = videoRefs.current[msg.id];
+                                                        if (video) {
+                                                          video.controls = true;
+                                                          video.play().catch(() => {});
+                                                        }
+                                                        setPlayingVideoIds(prev => new Set([...prev, msg.id]));
+                                                      }}
                                                     >
                                                       <div className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
                                                         <Play className="w-6 h-6 text-white fill-white ml-1" />
