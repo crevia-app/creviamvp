@@ -38,7 +38,6 @@ import {
   Hash,
   Pin,
   Reply,
-  Play,
   Video,
   ZoomIn,
   SearchIcon,
@@ -74,7 +73,6 @@ import { iconOptions } from "@/components/crevia-link/iconOptions";
 // the visual viewport), leaving a black gap above the header.
 // AppLayout h-dvh + flex chain + the keyboardOpen padding on the input handle it correctly.
 import { useVisualViewport } from "@/hooks/use-visual-viewport";
-import { convertVideoToMp4, needsConversion, VIDEO_CONVERT_MAX_BYTES } from "@/lib/videoConverter";
 
 interface ChatRoom {
   id: string;
@@ -229,10 +227,6 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const [forwardingMessageId, setForwardingMessageId] = useState<string | null>(null);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [videoErrors, setVideoErrors] = useState<Set<string>>(new Set());
-  const [playingVideoIds, setPlayingVideoIds] = useState<Set<string>>(new Set());
-  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
-  const [convertingVideo, setConvertingVideo] = useState(false);
-  const [videoConvertProgress, setVideoConvertProgress] = useState<{ stage: string; percent: number } | null>(null);
 
   // New features state
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
@@ -1321,29 +1315,6 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     e.target.value = ""; // reset so same file can be re-selected
     if (!file) return;
 
-    // Video that needs cross-browser conversion
-    if (needsConversion(file)) {
-      if (file.size > VIDEO_CONVERT_MAX_BYTES) {
-        toast.error("Video too large to convert on device (max 200 MB). Please trim to under ~3 minutes.");
-        return;
-      }
-      // Show the original file as a preview immediately — no blocking spinner
-      setSelectedFile(file);
-      setConvertingVideo(true);
-      setVideoConvertProgress({ stage: "loading", percent: 0 });
-      try {
-        const mp4 = await convertVideoToMp4(file, (p) => setVideoConvertProgress(p));
-        setSelectedFile(mp4); // silently replace with the converted version
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Video conversion failed. Please try a shorter clip.");
-      } finally {
-        setConvertingVideo(false);
-        setVideoConvertProgress(null);
-      }
-      return;
-    }
-
-    // Non-video or already mp4 — use existing size limits
     const isVideo = file.type.startsWith("video/");
     const maxBytes = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
     const maxLabel = isVideo ? "50 MB" : "10 MB";
@@ -2288,54 +2259,20 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                           </div>
                                         ) : isVideoType(msg.file_type) ? (
                                           <div className="mb-1">
-                                            {(() => {
-                                              const url = getFilePublicUrl(msg.file_url!);
-                                              const isPlaying = playingVideoIds.has(msg.id);
-
-                                              if (!url) {
-                                                return (
-                                                  <div className="w-full max-w-[280px] sm:max-w-sm aspect-video rounded-xl bg-black/60 animate-pulse flex items-center justify-center">
-                                                    <Video className="h-7 w-7 text-white/20" />
-                                                  </div>
-                                                );
-                                              }
-
-                                              return (
-                                                <div className="relative w-full max-w-[280px] sm:max-w-sm rounded-xl overflow-hidden bg-black aspect-video">
-                                                  <video
-                                                    ref={(el) => { videoRefs.current[msg.id] = el; }}
-                                                    src={url}
-                                                    preload="metadata"
-                                                    controls={isPlaying}
-                                                    playsInline
-                                                    className="absolute inset-0 w-full h-full object-contain"
-                                                  />
-                                                  {!isPlaying && (
-                                                    <div
-                                                      className="absolute inset-0 flex items-center justify-center cursor-pointer"
-                                                      onClick={() => {
-                                                        const video = videoRefs.current[msg.id];
-                                                        if (video) {
-                                                          video.controls = true;
-                                                          video.play().catch(() => {});
-                                                        }
-                                                        setPlayingVideoIds(prev => new Set([...prev, msg.id]));
-                                                      }}
-                                                    >
-                                                      <div className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
-                                                        <Play className="w-6 h-6 text-white fill-white ml-1" />
-                                                      </div>
-                                                    </div>
-                                                  )}
-                                                  <button
-                                                    onClick={(e) => { e.stopPropagation(); downloadFile(msg.file_url!, msg.file_name || "video"); }}
-                                                    className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-colors"
-                                                  >
-                                                    <Download className="h-3.5 w-3.5 text-white" />
-                                                  </button>
-                                                </div>
-                                              );
-                                            })()}
+                                            {getFilePublicUrl(msg.file_url!) ? (
+                                              <video
+                                                src={getFilePublicUrl(msg.file_url!)!}
+                                                controls
+                                                playsInline
+                                                preload="metadata"
+                                                className="w-full max-w-[280px] sm:max-w-sm rounded-xl bg-black"
+                                                style={{ maxHeight: "260px" }}
+                                              />
+                                            ) : (
+                                              <div className="w-full max-w-[280px] sm:max-w-sm aspect-video rounded-xl bg-black/60 animate-pulse flex items-center justify-center">
+                                                <Video className="h-7 w-7 text-white/20" />
+                                              </div>
+                                            )}
                                           </div>
                                         ) : (
                                           <div className="p-2 rounded-lg bg-background/10 flex items-center gap-2">
@@ -2521,19 +2458,13 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                           <img src={URL.createObjectURL(selectedFile)} alt="" className="h-full w-full object-cover" />
                         </div>
                       ) : selectedFile.type.startsWith("video/") ? (
-                        // Instant local thumbnail — URL.createObjectURL never touches the network
-                        <div className="relative h-12 w-12 rounded overflow-hidden flex-shrink-0 bg-black">
+                        <div className="h-12 w-12 rounded overflow-hidden flex-shrink-0 bg-black">
                           <video
                             src={URL.createObjectURL(selectedFile)}
                             className="h-full w-full object-cover"
                             muted
                             playsInline
                           />
-                          {convertingVideo && (
-                            <div className="absolute inset-0 bg-black/55 flex items-center justify-center">
-                              <div className="w-3 h-3 border border-white/60 border-t-white rounded-full animate-spin" />
-                            </div>
-                          )}
                         </div>
                       ) : (
                         <File className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -2610,7 +2541,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                               sendMessage();
                             }
                           }}
-                          disabled={uploadingFile || convertingVideo}
+                          disabled={uploadingFile}
                           className="flex-1 min-w-0 resize-none overflow-y-auto border-none outline-none focus:ring-0 focus:outline-none bg-transparent text-sm leading-relaxed py-1.5 px-2 placeholder:text-muted-foreground/60 min-h-[36px] max-h-[120px]"
                           style={{ height: "36px" }}
                           autoComplete="off"
