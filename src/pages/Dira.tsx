@@ -124,7 +124,7 @@ function ChatItem({
       onTouchMove={onLongPressEnd}
       onContextMenu={(e) => { e.preventDefault(); onLongPress?.(); }}
       className={cn(
-        "relative flex items-center gap-2 rounded-xl cursor-pointer select-none",
+        "group relative flex items-center gap-2 rounded-xl cursor-pointer select-none",
         "transition-all duration-150 ease-out",
         indent ? "py-1.5 pl-8 pr-2" : "py-2 px-2.5",
         isMobile && "min-h-[44px]",
@@ -186,7 +186,7 @@ function ChatItem({
                 "transition-all duration-150",
                 (isActive || chat.pinned || menuOpen)
                   ? "opacity-100"
-                  : "opacity-30 hover:opacity-100"
+                  : "opacity-0 group-hover:opacity-100"
               )}
             >
               <MoreHorizontal className="w-4 h-4" />
@@ -291,9 +291,8 @@ interface Project {
 
 type ViewMode = "chat" | "projects";
 
-function detectDiraIntent(text: string): string | null {
-  const t = text.toLowerCase();
-  if (/\binvoice\b/.test(t) && /\b(create|draft|send|open|let'?s|ready|shall i|want me|here'?s|go ahead|click)\b/.test(t)) return 'open_invoice';
+function detectDiraIntent(_text: string): string | null {
+  // Action cards are disabled — users navigate to Crevia Studio directly.
   return null;
 }
 
@@ -1438,7 +1437,7 @@ const Dira = () => {
             >
               {/* Primary orb — upper-center, behind greeting */}
               <div
-                className="absolute animate-aura-breathe"
+                className="absolute"
                 style={{
                   top: "-8%",
                   left: "50%",
@@ -1446,33 +1445,29 @@ const Dira = () => {
                   width: "90%",
                   height: "68%",
                   background:
-                    "radial-gradient(ellipse at center, rgba(240,120,47,0.82) 0%, rgba(207,90,26,0.46) 28%, transparent 62%)",
+                    "radial-gradient(ellipse at center, rgba(240,120,47,0.72) 0%, rgba(207,90,26,0.38) 30%, transparent 64%)",
                   borderRadius: "50%",
                   filter: "blur(88px)",
-                  willChange: "transform, opacity",
                 }}
               />
-              {/* Bridge orb — dead-center, eliminates the dark band */}
+              {/* Bridge orb — dead-center, seals the gap between upper and lower */}
               <div
-                className="absolute animate-aura-breathe"
+                className="absolute"
                 style={{
                   top: "45%",
                   left: "50%",
                   transform: "translate(-50%, -50%)",
-                  width: "60%",
-                  height: "44%",
+                  width: "62%",
+                  height: "46%",
                   background:
-                    "radial-gradient(ellipse at center, rgba(255,130,60,0.38) 0%, transparent 62%)",
+                    "radial-gradient(ellipse at center, rgba(255,130,60,0.32) 0%, transparent 64%)",
                   borderRadius: "50%",
-                  filter: "blur(64px)",
-                  willChange: "transform, opacity",
-                  animationDelay: "4s",
-                  animationDuration: "10s",
+                  filter: "blur(68px)",
                 }}
               />
-              {/* Lower orb — anchored to the bottom, wraps the input bar */}
+              {/* Lower orb — wraps the input bar area */}
               <div
-                className="absolute animate-aura-breathe-alt"
+                className="absolute"
                 style={{
                   bottom: "-6%",
                   left: "50%",
@@ -1480,11 +1475,9 @@ const Dira = () => {
                   width: "78%",
                   height: "58%",
                   background:
-                    "radial-gradient(ellipse at center, rgba(232,99,28,0.58) 0%, rgba(184,68,10,0.30) 32%, transparent 64%)",
+                    "radial-gradient(ellipse at center, rgba(232,99,28,0.52) 0%, rgba(184,68,10,0.26) 34%, transparent 65%)",
                   borderRadius: "50%",
                   filter: "blur(96px)",
-                  willChange: "transform, opacity",
-                  animationDelay: "2.5s",
                 }}
               />
             </div>
