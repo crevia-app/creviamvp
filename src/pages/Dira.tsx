@@ -160,73 +160,71 @@ function ChatItem({
           className="flex-1 bg-transparent text-sm font-medium outline-none border-b border-bronze/50 focus:border-bronze text-foreground min-w-0 py-0"
         />
       ) : (
-        <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden">
-          <div
-            className="flex-1 min-w-0 overflow-hidden"
-            style={{
-              maskImage: "linear-gradient(to right, black 75%, transparent 100%)",
-              WebkitMaskImage: "linear-gradient(to right, black 75%, transparent 100%)",
-            }}
-          >
-            <span className="block text-sm font-medium whitespace-nowrap">{chat.title}</span>
-          </div>
-          {chat.pinned && <Pin className="w-2.5 h-2.5 flex-shrink-0 text-bronze/50" />}
-        </div>
+        /* Simple truncate — replaces the maskImage approach which was consuming
+           all flex space and leaving no room for the 3-dot button.             */
+        <span className="flex-1 min-w-0 text-sm font-medium truncate">
+          {chat.title}{chat.pinned ? " 📌" : ""}
+        </span>
       )}
 
-      {/* 3-dot — always visible on all platforms (desktop + iOS + Android). */}
-      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-          <button
-            className={cn(
-              "flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg",
-              "text-muted-foreground hover:text-foreground",
-              "hover:bg-foreground/10 active:bg-foreground/15",
-              "transition-all duration-150",
-              "opacity-100"
-            )}
+      {/* ── 3-dot menu ──────────────────────────────────────────────────────────
+          Wrapped in flex-shrink-0 div to GUARANTEE the button always gets its
+          32 px, regardless of how wide the title text wants to be. Without the
+          wrapper, browsers can let the DropdownMenuTrigger slot shrink to 0 when
+          the flex-1 title absorbs all available width.                         */}
+      <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+          <DropdownMenuTrigger asChild>
+            <button
+              className={cn(
+                "w-8 h-8 flex items-center justify-center rounded-lg",
+                "text-muted-foreground hover:text-foreground",
+                "hover:bg-foreground/10 active:bg-foreground/15",
+                "transition-colors duration-150"
+              )}
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            sideOffset={4}
+            className="w-48 rounded-xl p-1.5 border border-border/40 bg-card/95 backdrop-blur-xl shadow-xl shadow-black/15"
           >
-            <MoreHorizontal className="w-4 h-4" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          sideOffset={4}
-          className="w-48 rounded-xl p-1.5 border border-border/40 bg-card/95 backdrop-blur-xl shadow-xl shadow-black/15"
-        >
-          <DropdownMenuItem
-            onClick={(e) => { e.stopPropagation(); onShare(); }}
-            className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm"
-          >
-            <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
-            Share conversation
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={(e) => { e.stopPropagation(); onStartRename(); }}
-            className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm"
-          >
-            <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
-            Rename
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={(e) => { e.stopPropagation(); onPin(); }}
-            className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm"
-          >
-            {chat.pinned
-              ? <PinOff className="w-3.5 h-3.5 text-muted-foreground" />
-              : <Pin className="w-3.5 h-3.5 text-muted-foreground" />}
-            {chat.pinned ? "Unpin" : "Pin"}
-          </DropdownMenuItem>
-          <DropdownMenuSeparator className="my-1 opacity-50" />
-          <DropdownMenuItem
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm text-destructive focus:text-destructive focus:bg-destructive/10"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <DropdownMenuItem
+              onClick={(e) => { e.stopPropagation(); onShare(); }}
+              className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm"
+            >
+              <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
+              Share conversation
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => { e.stopPropagation(); onStartRename(); }}
+              className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm"
+            >
+              <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+              Rename
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => { e.stopPropagation(); onPin(); }}
+              className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm"
+            >
+              {chat.pinned
+                ? <PinOff className="w-3.5 h-3.5 text-muted-foreground" />
+                : <Pin className="w-3.5 h-3.5 text-muted-foreground" />}
+              {chat.pinned ? "Unpin" : "Pin"}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="my-1 opacity-50" />
+            <DropdownMenuItem
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              className="rounded-lg gap-2.5 cursor-pointer px-3 py-2 text-sm text-destructive focus:text-destructive focus:bg-destructive/10"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }
@@ -1431,49 +1429,49 @@ const Dira = () => {
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
             >
-              {/* Primary orb — upper-center, behind greeting */}
+              {/* Primary orb — upper-center, very soft ambient glow */}
               <div
                 className="absolute"
                 style={{
-                  top: "-8%",
+                  top: "-10%",
                   left: "50%",
                   transform: "translateX(-50%)",
-                  width: "90%",
-                  height: "68%",
+                  width: "88%",
+                  height: "65%",
                   background:
-                    "radial-gradient(ellipse at center, rgba(240,120,47,0.72) 0%, rgba(207,90,26,0.38) 30%, transparent 64%)",
+                    "radial-gradient(ellipse at center, rgba(240,120,47,0.20) 0%, rgba(207,90,26,0.10) 35%, transparent 65%)",
                   borderRadius: "50%",
-                  filter: "blur(88px)",
+                  filter: "blur(110px)",
                 }}
               />
-              {/* Bridge orb — dead-center, seals the gap between upper and lower */}
+              {/* Bridge orb — centre connector, barely visible */}
               <div
                 className="absolute"
                 style={{
-                  top: "45%",
+                  top: "48%",
                   left: "50%",
                   transform: "translate(-50%, -50%)",
-                  width: "62%",
-                  height: "46%",
+                  width: "58%",
+                  height: "40%",
                   background:
-                    "radial-gradient(ellipse at center, rgba(255,130,60,0.32) 0%, transparent 64%)",
+                    "radial-gradient(ellipse at center, rgba(255,140,70,0.08) 0%, transparent 62%)",
                   borderRadius: "50%",
-                  filter: "blur(68px)",
+                  filter: "blur(80px)",
                 }}
               />
-              {/* Lower orb — wraps the input bar area */}
+              {/* Lower orb — floats behind input, very diffuse */}
               <div
                 className="absolute"
                 style={{
-                  bottom: "-6%",
+                  bottom: "-8%",
                   left: "50%",
                   transform: "translateX(-50%)",
-                  width: "78%",
-                  height: "58%",
+                  width: "76%",
+                  height: "54%",
                   background:
-                    "radial-gradient(ellipse at center, rgba(232,99,28,0.52) 0%, rgba(184,68,10,0.26) 34%, transparent 65%)",
+                    "radial-gradient(ellipse at center, rgba(232,99,28,0.16) 0%, rgba(184,68,10,0.07) 38%, transparent 66%)",
                   borderRadius: "50%",
-                  filter: "blur(96px)",
+                  filter: "blur(120px)",
                 }}
               />
             </div>
