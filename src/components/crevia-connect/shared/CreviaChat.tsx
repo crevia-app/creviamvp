@@ -12,7 +12,7 @@ import MessageContextMenu from "./MessageContextMenu";
 import EmojiReactionPicker from "./EmojiReactionPicker";
 import MessageReactions from "./MessageReactions";
 import AttachmentBubble from "@/components/chat/AttachmentBubble";
-import WorkspacePollMessage from "@/components/crevia-connect/shared/WorkspacePollMessage";
+import WorkspacePollMessage, { buildPollContent } from "@/components/crevia-connect/shared/WorkspacePollMessage";
 import {
   Send,
   Paperclip,
@@ -46,6 +46,8 @@ import {
   CheckCircle2,
   Globe,
   ExternalLink,
+  BarChart2,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
@@ -241,6 +243,12 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const [memberReadTimes, setMemberReadTimes] = useState<Record<string, string>>({});
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const onlineChannelRef = useRef<any>(null);
+
+  // Poll creator
+  const [showPollCreator, setShowPollCreator] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState(["", ""]);
+  const [sendingPoll, setSendingPoll] = useState(false);
 
   // Three separate file inputs so we never mutate `accept` at click time —
   // iOS Safari blocks the file picker when accept is changed right before .click().
@@ -1323,6 +1331,50 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
       return;
     }
     setSelectedFile(file);
+  };
+
+  const isRoomAdmin = selectedRoom?.members?.find(m => m.user_id === currentUserId)?.role === "admin";
+
+  const sendPoll = async () => {
+    if (!selectedRoom || !currentUserId) return;
+    const question = pollQuestion.trim();
+    const validOptions = pollOptions.map(o => o.trim()).filter(Boolean);
+    if (!question || validOptions.length < 2) return;
+
+    setSendingPoll(true);
+    try {
+      const pollContent = buildPollContent(question, validOptions);
+      const { content: finalContent, is_encrypted } = await encryptContent(pollContent, selectedRoom.id);
+      if (!is_encrypted) throw new Error("Encryption required.");
+
+      const { data: insertedMsg, error } = await supabase
+        .from("chat_messages")
+        .insert({ room_id: selectedRoom.id, sender_id: currentUserId, content: finalContent, message_type: "poll", is_encrypted })
+        .select()
+        .single();
+      if (error) throw error;
+
+      const myProfile = selectedRoom.members?.find(m => m.user_id === currentUserId)?.profile;
+      setMessages(prev => [...prev, {
+        ...insertedMsg,
+        content: pollContent,
+        sender: {
+          display_name: myProfile?.display_name ?? null,
+          handle: myProfile?.handle ?? null,
+          avatar_url: myProfile?.avatar_url ?? null,
+          user_type: myProfile?.user_type ?? null,
+        },
+      } as ChatMessage]);
+
+      setShowPollCreator(false);
+      setPollQuestion("");
+      setPollOptions(["", ""]);
+      toast.success("Poll sent!");
+    } catch {
+      toast.error("Failed to send poll. Please try again.");
+    } finally {
+      setSendingPoll(false);
+    }
   };
 
   const getFilePublicUrl = useCallback((filePath: string) => {
@@ -2524,6 +2576,14 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                             <DropdownMenuItem onClick={() => { fetchContracts(); setShowContractPicker(true); }}>
                               <FileSignature className="h-4 w-4 mr-2" />Attach Canvas
                             </DropdownMenuItem>
+                            {isRoomAdmin && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => setShowPollCreator(true)}>
+                                  <BarChart2 className="h-4 w-4 mr-2" />Create Poll
+                                </DropdownMenuItem>
+                              </>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
 
@@ -3073,6 +3133,115 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
               </div>
             )}
           </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Poll Creator ─────────────────────────────────────────── */}
+      <Dialog open={showPollCreator} onOpenChange={(open) => {
+        if (!open) { setShowPollCreator(false); setPollQuestion(""); setPollOptions(["", ""]); }
+      }}>
+        <DialogContent className="max-w-md w-[92vw] p-0 overflow-hidden rounded-2xl border border-border/60 bg-card shadow-2xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Create Poll</DialogTitle>
+            <DialogDescription>Create a poll for workspace members to vote on.</DialogDescription>
+          </DialogHeader>
+
+          {/* Header */}
+          <div className="flex items-center gap-3 px-5 pt-5 pb-4 border-b border-border/40">
+            <div className="h-9 w-9 rounded-xl bg-bronze/10 flex items-center justify-center flex-shrink-0">
+              <BarChart2 className="h-4.5 w-4.5 text-bronze" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Create a Poll</p>
+              <p className="text-xs text-muted-foreground">Members will vote in real time</p>
+            </div>
+          </div>
+
+          <div className="px-5 py-4 space-y-5">
+            {/* Question */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Question</label>
+              <textarea
+                value={pollQuestion}
+                onChange={(e) => setPollQuestion(e.target.value)}
+                placeholder="Ask something…"
+                rows={2}
+                maxLength={200}
+                className="w-full resize-none rounded-xl border border-border/60 bg-muted/40 px-3.5 py-2.5 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-bronze/60 focus:bg-card transition-colors"
+              />
+            </div>
+
+            {/* Options */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Options</label>
+              <div className="space-y-2">
+                {pollOptions.map((opt, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="h-6 w-6 rounded-full border border-border/60 flex items-center justify-center flex-shrink-0">
+                      <span className="text-[10px] font-semibold text-muted-foreground">{String.fromCharCode(65 + i)}</span>
+                    </div>
+                    <input
+                      type="text"
+                      value={opt}
+                      onChange={(e) => {
+                        const next = [...pollOptions];
+                        next[i] = e.target.value;
+                        setPollOptions(next);
+                      }}
+                      placeholder={`Option ${String.fromCharCode(65 + i)}`}
+                      maxLength={100}
+                      className="flex-1 rounded-xl border border-border/60 bg-muted/40 px-3.5 py-2 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-bronze/60 focus:bg-card transition-colors"
+                    />
+                    {pollOptions.length > 2 && (
+                      <button
+                        onClick={() => setPollOptions(pollOptions.filter((_, idx) => idx !== i))}
+                        className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {pollOptions.length < 4 && (
+                <button
+                  onClick={() => setPollOptions([...pollOptions, ""])}
+                  className="flex items-center gap-1.5 text-xs text-bronze hover:text-bronze/80 transition-colors mt-1 pl-8"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add option
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-end gap-2 px-5 pb-5">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setShowPollCreator(false); setPollQuestion(""); setPollOptions(["", ""]); }}
+              className="rounded-xl"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={sendPoll}
+              disabled={sendingPoll || !pollQuestion.trim() || pollOptions.filter(o => o.trim()).length < 2}
+              className="rounded-xl bg-bronze hover:bg-bronze/90 text-background min-w-[100px]"
+            >
+              {sendingPoll ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <BarChart2 className="h-3.5 w-3.5 mr-1.5" />
+                  Send Poll
+                </>
+              )}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
