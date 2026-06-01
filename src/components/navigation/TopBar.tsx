@@ -120,7 +120,7 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent("studio:toggle-sidebar"))}
                 aria-label="Open Studio navigation"
-                style={{ touchAction: "manipulation" }}
+                style={{ touchAction: "manipulation", background: "rgba(30,30,30,0.72)", backdropFilter: "blur(8px)" }}
                 className={[
                   "group relative flex items-center justify-center",
                   "w-10 h-10 rounded-xl flex-shrink-0",
@@ -130,7 +130,6 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
                   "active:scale-[0.91]",
                   "transition-all duration-200 ease-out",
                 ].join(" ")}
-                style={{ background: "rgba(30,30,30,0.72)", backdropFilter: "blur(8px)" }}
               >
                 <StudioMenuIcon />
               </button>

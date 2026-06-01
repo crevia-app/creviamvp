@@ -2338,39 +2338,33 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                             })()}
                                           </div>
                                         ) : (
-                                          {/* Generic file — name is a live link to open; button downloads */}
-                                          {(() => {
-                                            const fileOpenUrl = getFilePublicUrl(msg.file_url!);
-                                            return (
-                                              <div className="p-2 rounded-lg bg-background/10 flex items-center gap-2">
-                                                <File className="h-4 w-4 flex-shrink-0" />
-                                                <div className="flex-1 min-w-0">
-                                                  {fileOpenUrl ? (
-                                                    <a
-                                                      href={fileOpenUrl}
-                                                      target="_blank"
-                                                      rel="noopener noreferrer"
-                                                      className="text-xs font-medium truncate block hover:underline"
-                                                      onClick={(e) => e.stopPropagation()}
-                                                    >
-                                                      {msg.file_name}
-                                                    </a>
-                                                  ) : (
-                                                    <p className="text-xs font-medium truncate">{msg.file_name}</p>
-                                                  )}
-                                                  <p className="text-[10px] opacity-70">{formatFileSize(msg.file_size)}</p>
-                                                </div>
-                                                <Button
-                                                  size="sm"
-                                                  variant="ghost"
-                                                  onClick={() => downloadFile(msg.file_url!, msg.file_name || "file")}
-                                                  className="h-7 w-7 p-0 hover:bg-background/20"
+                                          <div className="p-2 rounded-lg bg-background/10 flex items-center gap-2">
+                                            <File className="h-4 w-4 flex-shrink-0" />
+                                            <div className="flex-1 min-w-0">
+                                              {getFilePublicUrl(msg.file_url!) ? (
+                                                <a
+                                                  href={getFilePublicUrl(msg.file_url!)}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="text-xs font-medium truncate block hover:underline"
+                                                  onClick={(e) => e.stopPropagation()}
                                                 >
-                                                  <Download className="h-3.5 w-3.5" />
-                                                </Button>
-                                              </div>
-                                            );
-                                          })()}
+                                                  {msg.file_name}
+                                                </a>
+                                              ) : (
+                                                <p className="text-xs font-medium truncate">{msg.file_name}</p>
+                                              )}
+                                              <p className="text-[10px] opacity-70">{formatFileSize(msg.file_size)}</p>
+                                            </div>
+                                            <Button
+                                              size="sm"
+                                              variant="ghost"
+                                              onClick={() => downloadFile(msg.file_url!, msg.file_name || "file")}
+                                              className="h-7 w-7 p-0 hover:bg-background/20"
+                                            >
+                                              <Download className="h-3.5 w-3.5" />
+                                            </Button>
+                                          </div>
                                         )}
                                       </div>
                                     )}
