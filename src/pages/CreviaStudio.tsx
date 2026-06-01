@@ -214,7 +214,7 @@ const CreviaStudio = () => {
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto min-w-0 pb-16 md:pb-0">
-          <AnimatePresence mode="sync">
+          <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
               initial={{ opacity: 0 }}

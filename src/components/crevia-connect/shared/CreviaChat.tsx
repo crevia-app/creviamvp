@@ -2312,7 +2312,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                       />
                                     )}
 
-                                    {msg.content && !isVoice && !(isFile && isVideoType(msg.file_type)) && (
+                                    {msg.content && !isVoice && !(isFile && msg.file_url) && (
                                       msg.content === "[Unable to decrypt message]" || msg.content === "[Encryption key unavailable]" ? (
                                         <div className="flex items-center gap-2">
                                           <Lock className="h-3.5 w-3.5 opacity-60" />
