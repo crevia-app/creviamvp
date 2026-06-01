@@ -250,7 +250,6 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   // Three separate file inputs so we never mutate `accept` at click time —
   // iOS Safari blocks the file picker when accept is changed right before .click().
   const fileAnyRef   = useRef<HTMLInputElement>(null);
-  const fileImageRef = useRef<HTMLInputElement>(null);
   const fileVideoRef = useRef<HTMLInputElement>(null);
   // Keep the old name as an alias so any remaining references still compile.
   const fileInputRef = fileAnyRef;
@@ -2432,24 +2431,11 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                     </div>
                   )}
 
-                  {/* Video conversion progress */}
-                  {convertingVideo && videoConvertProgress && (
-                    <div className="mb-2 px-3 py-2.5 bg-muted rounded-lg flex items-center gap-3">
-                      <div className="w-4 h-4 border-2 border-bronze/40 border-t-bronze rounded-full animate-spin flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-foreground">
-                          {videoConvertProgress.stage === "loading" ? "Loading converter…" : "Converting to MP4…"}
-                        </p>
-                        <div className="mt-1 h-1 rounded-full bg-muted-foreground/20 overflow-hidden">
-                          <div
-                            className="h-full bg-bronze rounded-full transition-all duration-300"
-                            style={{ width: `${videoConvertProgress.percent}%` }}
-                          />
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-mono text-muted-foreground flex-shrink-0">
-                        {videoConvertProgress.percent}%
-                      </span>
+                  {/* Video conversion — subtle indicator only */}
+                  {convertingVideo && (
+                    <div className="mb-2 flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg">
+                      <div className="w-3.5 h-3.5 border-2 border-bronze/40 border-t-bronze rounded-full animate-spin flex-shrink-0" />
+                      <span className="text-xs text-muted-foreground">Preparing video…</span>
                     </div>
                   )}
 
@@ -2489,7 +2475,6 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                         Pre-wired refs require zero runtime mutation.
                       */}
                       <input ref={fileAnyRef}   type="file" accept="*/*"      className="sr-only" onChange={handleFileSelect} />
-                      <input ref={fileImageRef} type="file" accept="image/*"   className="sr-only" onChange={handleFileSelect} />
                       <input ref={fileVideoRef} type="file" accept="video/*"   className="sr-only" onChange={handleFileSelect} />
 
                       {/* Dira-style pill input bar */}
@@ -2505,9 +2490,6 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                           <DropdownMenuContent align="start" className="w-52">
                             <DropdownMenuItem onClick={() => fileAnyRef.current?.click()}>
                               <Paperclip className="h-4 w-4 mr-2" />Attach File
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => fileImageRef.current?.click()}>
-                              <ImageIcon className="h-4 w-4 mr-2" />Send Image
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => fileVideoRef.current?.click()}>
                               <Video className="h-4 w-4 mr-2" />Send Video
