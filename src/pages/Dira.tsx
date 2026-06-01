@@ -267,8 +267,8 @@ function StreamingCursor() {
   return (
     <motion.span
       animate={{ opacity: [1, 0] }}
-      transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
-      className="inline-block w-0.5 h-4 bg-foreground/70 ml-0.5 align-middle"
+      transition={{ duration: 0.48, repeat: Infinity, repeatType: "reverse" }}
+      className="inline-block w-[2px] h-[1.1em] bg-[#F0782F] ml-0.5 align-[-0.15em] rounded-sm"
     />
   );
 }
@@ -293,7 +293,6 @@ type ViewMode = "chat" | "projects";
 
 function detectDiraIntent(text: string): string | null {
   const t = text.toLowerCase();
-  if (/\b(canvas|contract|agreement)\b/.test(t) && /\b(create|draft|open|let'?s|ready|shall i|want me|here'?s|go ahead|click)\b/.test(t)) return 'open_contract';
   if (/\binvoice\b/.test(t) && /\b(create|draft|send|open|let'?s|ready|shall i|want me|here'?s|go ahead|click)\b/.test(t)) return 'open_invoice';
   return null;
 }
@@ -323,9 +322,8 @@ const Dira = () => {
   // percentage-based children (it can't always identify the scrollable ancestor).
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  // Removed window.scrollTo(0,0) — it was fighting the inner scroll container
+  // and causing sudden page jumps during conversation.
 
   const [userName, setUserName] = useState<string | null>(null);
   const [chatHistories, setChatHistories] = useState<ChatHistory[]>([]);
@@ -365,6 +363,8 @@ const Dira = () => {
   const streamBufferRef = useRef('');
   const animFrameRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const networkDoneRef = useRef(false);
+  // Accumulates chars already revealed to the user (for the final DB commit).
+  const streamDisplayRef = useRef('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   // When handleSend creates a new conversation it calls setActiveChat, which
   // triggers the loadMessages effect. That effect would overwrite the optimistic
@@ -384,6 +384,8 @@ const Dira = () => {
   const [editingContent, setEditingContent] = useState("");
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  // Separate streaming display state — keeps the messages array stable during streaming.
+  const [streamingDisplay, setStreamingDisplay] = useState("");
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -497,7 +499,7 @@ const Dira = () => {
     requestAnimationFrame(() => {
       el.scrollTop = el.scrollHeight;
     });
-  }, [messages]);
+  }, [messages, streamingDisplay]);
 
   // Reset textarea height whenever input is cleared (after send or new chat).
   useEffect(() => {
@@ -540,35 +542,45 @@ const Dira = () => {
     return projects.find(p => p.id === activeProjectId);
   };
 
-  // Text-reveal: drains streamBufferRef at 25fps (40 ms intervals).
-  // Using setTimeout instead of requestAnimationFrame cuts re-renders by ~58%
-  // (25 vs 60 per second) while still feeling smooth on mobile.
-  // We drain ALL buffered chars per tick so the text never lags behind the
-  // network — the interval just throttles how often React re-renders.
+  // Smooth text-reveal: drains streamBufferRef character-by-character at 50fps.
+  // The messages array is NEVER modified during streaming — only streamingDisplay
+  // state changes, so the rest of the conversation list is completely stable.
+  // When all chars are revealed + network is done, the final content is committed
+  // to the messages array in one atomic update and the stream is closed.
   useEffect(() => {
     if (!isStreaming) return;
-    const INTERVAL_MS = 40; // 25 fps
+    const INTERVAL_MS = 20;  // 50 fps
+    const CHARS_PER_TICK = 5; // ~250 chars/sec — fast but visibly "typing"
 
     const tick = () => {
-      if (streamBufferRef.current.length > 0) {
-        const batch = streamBufferRef.current;
-        streamBufferRef.current = '';
-        setMessages(prev => {
-          const updated = [...prev];
-          const last = updated[updated.length - 1];
-          if (last?.role === 'assistant') {
-            updated[updated.length - 1] = { ...last, content: last.content + batch };
-          }
-          return updated;
-        });
+      const available = streamBufferRef.current;
+
+      if (available.length > 0) {
+        // Near the end: drain remaining buffer in one shot for a snappy finish.
+        const batch = (networkDoneRef.current && available.length <= CHARS_PER_TICK * 4)
+          ? available
+          : available.slice(0, CHARS_PER_TICK);
+        streamBufferRef.current = available.slice(batch.length);
+        streamDisplayRef.current += batch;
+        setStreamingDisplay(streamDisplayRef.current);
       }
 
-      if (networkDoneRef.current) {
-        // Haptic tap on completion — Android supports vibrate; iOS Safari silently ignores it.
-        if (typeof window !== "undefined" && "vibrate" in navigator) {
+      if (networkDoneRef.current && streamBufferRef.current.length === 0) {
+        // All chars revealed — atomically commit to messages array.
+        const finalContent = streamDisplayRef.current;
+        if (finalContent.length > 0) {
+          setMessages(prev => {
+            newMessageIndexRef.current = -1; // content was already visible — skip entry animation
+            return [...prev, { role: 'assistant', content: finalContent, timestamp: new Date() }];
+          });
+        }
+        streamDisplayRef.current = '';
+        setStreamingDisplay('');
+        setIsStreaming(false);
+        // Haptic tap on Android — gracefully ignored on iOS Safari.
+        if (typeof window !== 'undefined' && 'vibrate' in navigator) {
           navigator.vibrate(50);
         }
-        setIsStreaming(false);
         return;
       }
 
@@ -632,11 +644,8 @@ const Dira = () => {
     if (contentType.includes('text/plain') && response.body) {
       streamBufferRef.current = '';
       networkDoneRef.current = false;
-      setMessages(prev => {
-        // Mark the new assistant bubble as the one that should fade in.
-        newMessageIndexRef.current = prev.length;
-        return [...prev, { role: 'assistant', content: '', timestamp: new Date() }];
-      });
+      streamDisplayRef.current = '';
+      setStreamingDisplay('');
       setIsStreaming(true);
 
       const reader = response.body.getReader();
@@ -794,6 +803,13 @@ const Dira = () => {
       }
 
     } catch (error) {
+      // Hard-stop any in-progress stream so the UI doesn't hang.
+      if (animFrameRef.current !== null) clearTimeout(animFrameRef.current);
+      streamBufferRef.current = '';
+      streamDisplayRef.current = '';
+      networkDoneRef.current = true;
+      setStreamingDisplay('');
+      setIsStreaming(false);
       toast({
         title: "Oops!",
         description: error instanceof Error ? error.message : "Couldn't reach Dira right now. Please try again!",
@@ -1442,6 +1458,7 @@ const Dira = () => {
             <div
               ref={scrollContainerRef}
               className="absolute inset-0 overflow-y-auto overscroll-y-contain touch-pan-y"
+              style={{ willChange: "transform" }}
               onScroll={() => {
                 const el = scrollContainerRef.current;
                 if (!el) return;
@@ -1525,9 +1542,6 @@ const Dira = () => {
                                     {msg.role === 'assistant' ? (
                                       <div className="prose prose-base prose-invert max-w-none text-left leading-relaxed [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
                                         <ReactMarkdown>{msg.content}</ReactMarkdown>
-                                        {isStreaming && idx === messages.length - 1 && (
-                                          <StreamingCursor />
-                                        )}
                                       </div>
                                     ) : (
                                       <p className="text-base whitespace-pre-wrap text-left">
@@ -1582,15 +1596,9 @@ const Dira = () => {
                           </div>
 
                           {/* Action card — shown below last assistant message */}
-                          {msg.role === 'assistant' && idx === messages.length - 1 && !isLoading && pendingAction && (
+                          {msg.role === 'assistant' && idx === messages.length - 1 && !isLoading && !isStreaming &&
+                            (pendingAction === 'open_invoice' || pendingAction === 'open_approve') && (
                             <div className="ml-11 mt-3">
-                              {pendingAction === 'open_contract' && (
-                                <button onClick={() => setContractDialogOpen(true)} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-bronze/40 bg-bronze/5 hover:bg-bronze/10 hover:border-bronze/60 transition-all text-left w-fit">
-                                  <div className="p-1.5 rounded-lg bg-bronze/15 text-bronze"><FileSignature className="w-4 h-4" /></div>
-                                  <div><p className="text-sm font-medium">Create Canvas</p><p className="text-xs text-muted-foreground">Open the Canvas builder</p></div>
-                                  <ArrowRight className="w-4 h-4 text-bronze ml-2" />
-                                </button>
-                              )}
                               {pendingAction === 'open_invoice' && (
                                 <button onClick={() => setInvoiceDialogOpen(true)} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-bronze/40 bg-bronze/5 hover:bg-bronze/10 hover:border-bronze/60 transition-all text-left w-fit">
                                   <div className="p-1.5 rounded-lg bg-bronze/15 text-bronze"><Receipt className="w-4 h-4" /></div>
@@ -1610,6 +1618,34 @@ const Dira = () => {
                         </motion.div>
                       ))}
                       
+                      {/* Standalone streaming bubble ─────────────────────────────────
+                          Lives outside the messages array so the rest of the list never
+                          re-renders during streaming.  Shows plain text (no ReactMarkdown)
+                          to prevent layout jumps from partially-formed markdown tokens.
+                          When the stream finishes, this bubble vanishes and the final
+                          message is committed to `messages` in the same React batch. */}
+                      <AnimatePresence>
+                        {isStreaming && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.18, ease: "easeOut" }}
+                            className="group"
+                          >
+                            <div className="flex gap-3">
+                              <div className="flex-1">
+                                <div className="block w-full bg-muted rounded-2xl rounded-tl-md px-4 py-3">
+                                  <div className="text-base leading-relaxed text-foreground text-left">
+                                    <span className="whitespace-pre-wrap">{streamingDisplay}</span>
+                                    <StreamingCursor />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
                       {/* Thinking indicator — shown before streaming begins */}
                       <AnimatePresence>
                         {isLoading && !isStreaming && messages[messages.length - 1]?.role === 'user' && (
@@ -1624,6 +1660,41 @@ const Dira = () => {
             </div>{/* end scroll container */}
             </div>{/* end positioned wrapper */}
           </div>{/* end messages wrapper */}
+
+          {/* Aura glow above input bar — mirrors the empty-state orbs */}
+          <div aria-hidden="true" className="pointer-events-none relative h-0 overflow-visible flex-shrink-0">
+            <div
+              className="absolute animate-aura-breathe"
+              style={{
+                bottom: "0px",
+                left: "8%",
+                width: "54%",
+                height: "140px",
+                background: "radial-gradient(ellipse at center, #F0782F 0%, #CF5A1A 38%, transparent 70%)",
+                borderRadius: "50%",
+                filter: "blur(44px)",
+                opacity: 0.48,
+                willChange: "transform, opacity",
+                transform: "translateY(50%)",
+              }}
+            />
+            <div
+              className="absolute animate-aura-breathe-alt"
+              style={{
+                bottom: "0px",
+                right: "6%",
+                width: "40%",
+                height: "110px",
+                background: "radial-gradient(ellipse at center, #E8631C 0%, #CF5A1A 35%, transparent 68%)",
+                borderRadius: "50%",
+                filter: "blur(36px)",
+                opacity: 0.38,
+                willChange: "transform, opacity",
+                animationDelay: "3s",
+                transform: "translateY(50%)",
+              }}
+            />
+          </div>
 
           {/* Input Area
               Bottom padding uses --nav-bottom-offset so it contracts in sync
@@ -1790,14 +1861,12 @@ const Dira = () => {
       </div>
 
       {/* Dialogs */}
-      {userId && (
-        <CreateProjectDialog
-          open={createProjectOpen}
-          onOpenChange={setCreateProjectOpen}
-          userId={userId}
-          onProjectCreated={handleProjectCreated}
-        />
-      )}
+      <CreateProjectDialog
+        open={createProjectOpen}
+        onOpenChange={setCreateProjectOpen}
+        userId={userId ?? ""}
+        onProjectCreated={handleProjectCreated}
+      />
 
       <ProjectDetailSheet
         project={selectedProject}

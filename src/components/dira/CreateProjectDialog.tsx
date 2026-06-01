@@ -51,7 +51,7 @@ export const CreateProjectDialog = ({
     setIsCreating(true);
     try {
       const { data, error } = await supabase
-        .from("kira_projects")
+        .from("dira_projects")
         .insert({
           user_id: userId,
           name: name.trim(),

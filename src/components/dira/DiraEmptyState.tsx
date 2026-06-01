@@ -1,18 +1,3 @@
-/**
- * DiraEmptyState
- * ──────────────
- * Premium "Dark Luxury" empty-chat state for Dira.
- *
- * Layout:
- *   • Two absolute-positioned brand-orange blur orbs animate independently
- *     (7 s & 8 s breathing cycles) to produce a diffuse, living glow.
- *   • Greeting text sits on z-10, fully above the aura layer.
- *   • Prompt chips below the greeting give instant-start suggestions.
- *
- * Usage:
- *   <DiraEmptyState userName="Anthony" activeProject={null} />
- */
-
 import { Sparkles } from "lucide-react";
 
 interface ActiveProject {
@@ -26,9 +11,6 @@ interface DiraEmptyStateProps {
   onChipClick?: (text: string) => void;
 }
 
-// ── Prompt chips shown when no project is active ──────────────────────────────
-const DEFAULT_CHIPS: string[] = [];
-
 const PROJECT_CHIPS = [
   "Summarise this project",
   "What tasks are outstanding?",
@@ -36,79 +18,126 @@ const PROJECT_CHIPS = [
   "Generate a project timeline",
 ];
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// Premium daily greetings — rotate by day of year, no username, no emoji.
+const DAILY_GREETINGS = [
+  "Hello.",
+  "Welcome back.",
+  "Ready when you are.",
+  "What's on your mind?",
+  "Let's get to work.",
+  "What can I help you with?",
+  "Good day.",
+  "How can I assist?",
+  "Hi there.",
+  "At your service.",
+  "What's the plan today?",
+  "Ready to work.",
+  "How can I help?",
+  "What are we working on?",
+  "Here whenever you need me.",
+  "Let's build something great.",
+  "What's on the agenda?",
+  "Tell me what you need.",
+  "How can I make your day easier?",
+  "Greetings.",
+  "Glad you're here.",
+  "Welcome.",
+  "Let's move.",
+  "What's next?",
+  "I'm here.",
+  "What do you need today?",
+  "Let's get things done.",
+  "Standing by.",
+  "Your move.",
+  "How can I sharpen your day?",
+  "Let's make it happen.",
+  "Here for you.",
+  "At the ready.",
+  "What's the goal today?",
+  "Hello, again.",
+  "Let's do this.",
+  "Good to connect.",
+  "What are we solving today?",
+  "Tell me everything.",
+  "How can I help you win today?",
+  "What's happening?",
+  "Let's think through this.",
+  "What needs your attention?",
+];
+
+function getDailyGreeting(): string {
+  const start = new Date(new Date().getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((Date.now() - start.getTime()) / 86_400_000);
+  return DAILY_GREETINGS[dayOfYear % DAILY_GREETINGS.length];
+}
+
 const DiraEmptyState = ({
-  userName,
   activeProject,
   onChipClick,
 }: DiraEmptyStateProps) => {
-  const chips = activeProject ? PROJECT_CHIPS : DEFAULT_CHIPS;
+  const chips = activeProject ? PROJECT_CHIPS : [];
+  const greeting = getDailyGreeting();
 
   return (
-    /**
-     * Outer shell: fills the scroll container (min-h keeps it vertically
-     * centred even when the scroll container is taller than the content).
-     * `overflow-hidden` clips the aura orbs at the edges.
-     */
     <div className="relative min-h-[60dvh] flex flex-col items-center justify-center px-6 py-14 overflow-hidden select-none">
 
-      {/* ── Aura layer ─────────────────────────────────────────────────────── */}
+      {/* ── Aura layer — increased opacity for visible premium glow ─────────── */}
 
-      {/* Orb A — top-left quadrant, primary pulse */}
+      {/* Orb A — top-left, primary breathe */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute animate-aura-breathe"
         style={{
-          top: "10%",
-          left: "15%",
-          width: "55%",
-          height: "55%",
-          background: "radial-gradient(ellipse at center, #F0782F 0%, #CF5A1A 40%, transparent 72%)",
+          top: "5%",
+          left: "10%",
+          width: "62%",
+          height: "62%",
+          background: "radial-gradient(ellipse at center, #F0782F 0%, #CF5A1A 38%, transparent 70%)",
           borderRadius: "50%",
-          filter: "blur(80px)",
-          opacity: 0.22,
+          filter: "blur(64px)",
+          opacity: 0.48,
           willChange: "transform, opacity",
         }}
       />
 
-      {/* Orb B — bottom-right quadrant, secondary pulse (opposite phase) */}
+      {/* Orb B — bottom-right, alt breathe */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute animate-aura-breathe-alt"
         style={{
-          bottom: "8%",
-          right: "10%",
-          width: "48%",
-          height: "48%",
-          background: "radial-gradient(ellipse at center, #E8631C 0%, #B8440A 45%, transparent 72%)",
+          bottom: "5%",
+          right: "8%",
+          width: "54%",
+          height: "54%",
+          background: "radial-gradient(ellipse at center, #E8631C 0%, #B8440A 42%, transparent 70%)",
           borderRadius: "50%",
-          filter: "blur(90px)",
-          opacity: 0.18,
+          filter: "blur(72px)",
+          opacity: 0.40,
           willChange: "transform, opacity",
           animationDelay: "2.5s",
         }}
       />
 
-      {/* Orb C — subtle centre accent, very slow drift */}
+      {/* Orb C — centre accent, slow drift */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute animate-aura-breathe"
         style={{
-          top: "30%",
-          left: "30%",
-          width: "40%",
-          height: "40%",
-          background: "radial-gradient(ellipse at center, #FF9A5C 0%, transparent 65%)",
+          top: "28%",
+          left: "28%",
+          width: "46%",
+          height: "46%",
+          background: "radial-gradient(ellipse at center, #FF9A5C 0%, transparent 62%)",
           borderRadius: "50%",
-          filter: "blur(60px)",
-          opacity: 0.10,
+          filter: "blur(48px)",
+          opacity: 0.30,
           willChange: "transform, opacity",
           animationDelay: "4s",
           animationDuration: "11s",
         }}
       />
 
-      {/* ── Content layer (z-10) ────────────────────────────────────────────── */}
+      {/* ── Content layer ───────────────────────────────────────────────────── */}
       <div className="relative z-10 flex flex-col items-center text-center max-w-lg w-full">
 
         {/* Dira icon badge */}
@@ -126,7 +155,7 @@ const DiraEmptyState = ({
           />
         </div>
 
-        {/* Greeting / heading */}
+        {/* Greeting */}
         {activeProject ? (
           <>
             <h1
@@ -148,18 +177,14 @@ const DiraEmptyState = ({
             </p>
           </>
         ) : (
-          <>
-            <h1
-              className="font-vollkorn text-3xl md:text-[2.25rem] font-bold mb-3 leading-tight text-foreground animate-dira-greeting"
-            >
-              {userName
-                ? `Good to see you, ${userName}.`
-                : "Hello there."}
-            </h1>
-          </>
+          <h1
+            className="font-vollkorn text-3xl md:text-[2.25rem] font-bold mb-3 leading-tight text-foreground animate-dira-greeting"
+          >
+            {greeting}
+          </h1>
         )}
 
-        {/* ── Prompt chips ────────────────────────────────────────────────── */}
+        {/* Prompt chips */}
         <div
           className="flex flex-wrap gap-2.5 justify-center animate-dira-greeting"
           style={{ animationDelay: "0.22s" }}

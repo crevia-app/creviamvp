@@ -134,14 +134,14 @@ export default {
         },
         // Dira empty-state aura — slow diffuse orange glow that breathes organically
         "aura-breathe": {
-          "0%, 100%": { transform: "scale(1) translate(0%, 0%)",      opacity: "0.22" },
-          "33%":       { transform: "scale(1.18) translate(2%, -3%)", opacity: "0.30" },
-          "66%":       { transform: "scale(0.92) translate(-2%, 2%)", opacity: "0.18" },
+          "0%, 100%": { transform: "scale(1) translate(0%, 0%)",      opacity: "0.48" },
+          "33%":       { transform: "scale(1.20) translate(2%, -4%)", opacity: "0.62" },
+          "66%":       { transform: "scale(0.90) translate(-3%, 3%)", opacity: "0.36" },
         },
         "aura-breathe-alt": {
-          "0%, 100%": { transform: "scale(1) translate(0%, 0%)",       opacity: "0.18" },
-          "33%":       { transform: "scale(0.88) translate(-3%, 2%)",  opacity: "0.26" },
-          "66%":       { transform: "scale(1.14) translate(3%, -2%)",  opacity: "0.22" },
+          "0%, 100%": { transform: "scale(1) translate(0%, 0%)",       opacity: "0.40" },
+          "33%":       { transform: "scale(0.86) translate(-4%, 3%)",  opacity: "0.55" },
+          "66%":       { transform: "scale(1.16) translate(4%, -3%)",  opacity: "0.44" },
         },
         // Dira empty-state text — soft fade-rise entrance
         "dira-greeting": {
