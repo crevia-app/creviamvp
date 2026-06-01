@@ -2275,33 +2275,38 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                             )}
                                           </div>
                                         ) : (
-                                          <div className="p-2 rounded-lg bg-background/10 flex items-center gap-2">
-                                            <File className="h-4 w-4 flex-shrink-0" />
-                                            <div className="flex-1 min-w-0">
+                                          <a
+                                            href={getFilePublicUrl(msg.file_url!) ?? undefined}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              if (!getFilePublicUrl(msg.file_url!)) e.preventDefault();
+                                            }}
+                                            className={`p-3 rounded-xl bg-background/10 flex items-center gap-3 min-h-[56px] transition-colors active:bg-background/20 ${getFilePublicUrl(msg.file_url!) ? "cursor-pointer" : "cursor-wait"}`}
+                                          >
+                                            <div className="h-9 w-9 rounded-lg bg-background/10 flex items-center justify-center flex-shrink-0">
                                               {getFilePublicUrl(msg.file_url!) ? (
-                                                <a
-                                                  href={getFilePublicUrl(msg.file_url!)}
-                                                  target="_blank"
-                                                  rel="noopener noreferrer"
-                                                  className="text-xs font-medium truncate block hover:underline"
-                                                  onClick={(e) => e.stopPropagation()}
-                                                >
-                                                  {msg.file_name}
-                                                </a>
+                                                <File className="h-4 w-4" />
                                               ) : (
-                                                <p className="text-xs font-medium truncate">{msg.file_name}</p>
+                                                <Loader2 className="h-4 w-4 animate-spin opacity-50" />
                                               )}
-                                              <p className="text-[10px] opacity-70">{formatFileSize(msg.file_size)}</p>
                                             </div>
-                                            <Button
-                                              size="sm"
-                                              variant="ghost"
-                                              onClick={() => downloadFile(msg.file_url!, msg.file_name || "file")}
-                                              className="h-7 w-7 p-0 hover:bg-background/20"
+                                            <div className="flex-1 min-w-0">
+                                              <p className="text-xs font-medium truncate">{msg.file_name}</p>
+                                              <p className="text-[10px] opacity-60">{formatFileSize(msg.file_size)}</p>
+                                            </div>
+                                            <button
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                downloadFile(msg.file_url!, msg.file_name || "file");
+                                              }}
+                                              className="h-8 w-8 rounded-full bg-background/10 flex items-center justify-center active:bg-background/30 transition-colors flex-shrink-0"
                                             >
                                               <Download className="h-3.5 w-3.5" />
-                                            </Button>
-                                          </div>
+                                            </button>
+                                          </a>
                                         )}
                                       </div>
                                     )}
