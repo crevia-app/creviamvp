@@ -82,25 +82,26 @@ export function VideoMessagePlayer({ src, fileType, onDownload, onExpand }: Vide
       {onExpand && (
         <button
           onClick={(e) => { e.stopPropagation(); onExpand(); }}
-          className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/80 rounded-full text-white backdrop-blur-md transition-all opacity-0 group-hover/video:opacity-100 active:opacity-100 active:scale-95"
+          className="absolute top-2 right-2 z-10 p-1.5 bg-black/50 hover:bg-black/80 rounded-full text-white backdrop-blur-md transition-all active:scale-95"
           aria-label="Expand video"
         >
           <Maximize2 className="w-3.5 h-3.5" />
         </button>
       )}
 
-      {/* Play overlay — shown when paused */}
+      {/* Play overlay — shown when paused. pointer-events-none so the
+          parent div's onClick handles play/pause without competing. */}
       {!playing && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
             <Play className="w-6 h-6 text-white fill-white ml-1" />
           </div>
         </div>
       )}
 
-      {/* Pause overlay — fades in on hover/tap while playing */}
+      {/* Pause overlay */}
       {playing && (
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 active:opacity-100 transition-opacity duration-150">
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 active:opacity-100 transition-opacity duration-150 pointer-events-none">
           <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
             <Pause className="w-5 h-5 text-white fill-white" />
           </div>
