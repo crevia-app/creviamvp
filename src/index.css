@@ -5,7 +5,7 @@
 /* Scale down base font on mobile so all rem-based text is proportionally smaller */
 @media (max-width: 767px) {
   html {
-    font-size: 14px;
+    font-size: 15px;
   }
 
   /* Prevent iOS Safari from zooming in on focused inputs (requires font-size >= 16px) */

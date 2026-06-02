@@ -21,6 +21,8 @@ import {
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePWAInstall } from "@/hooks/use-pwa-install";
 import { IOSInstallGuide } from "@/components/pwa/IOSInstallGuide";
+import { useSubscription } from "@/hooks/use-subscription";
+import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 
 interface MainSidebarProps {
   profile: any;
@@ -31,6 +33,7 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
   const location = useLocation();
   const { t } = useLanguage();
   const { canInstall, isIOS, install, showIOSGuide, setShowIOSGuide } = usePWAInstall();
+  const subscription = useSubscription();
 
   const navItems = [
     { id: "dira",   label: t("sidebar.dira"),   icon: Sparkles, path: "/dira",          prefetch: () => import("@/pages/Dira") },
@@ -145,9 +148,12 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
               {profile?.display_name?.charAt(0) || profile?.email?.charAt(0) || "U"}
             </AvatarFallback>
           </Avatar>
-          <span className="font-poppins text-xs font-medium text-center leading-tight truncate w-full">
-            {profile?.display_name || "User"}
-          </span>
+          <div className="flex items-center justify-center gap-1 w-full min-w-0">
+            <span className="font-poppins text-xs font-medium leading-tight truncate">
+              {profile?.display_name || "User"}
+            </span>
+            {subscription.limits.hasVerifiedBadge && <VerifiedBadge size="sm" />}
+          </div>
         </button>
       </div>
     </aside>
