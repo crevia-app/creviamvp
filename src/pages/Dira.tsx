@@ -4,7 +4,6 @@ import { useVisualViewport } from "@/hooks/use-visual-viewport";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   AlertDialog,
@@ -1136,7 +1135,14 @@ const Dira = () => {
               </p>
             </div>
 
-            <ScrollArea className="flex-1">
+            <div className={[
+                "flex-1 min-h-0 overflow-y-auto overscroll-contain",
+                "[&::-webkit-scrollbar]:w-1",
+                "[&::-webkit-scrollbar-track]:bg-transparent",
+                "[&::-webkit-scrollbar-thumb]:rounded-full",
+                "[&::-webkit-scrollbar-thumb]:bg-border/40",
+                "[&::-webkit-scrollbar-thumb:hover]:bg-border",
+              ].join(" ")}
               <div className="space-y-1 pb-3 px-2">
                 {isLoadingHistory ? (
                   <div className="py-8 text-center">
@@ -1239,7 +1245,7 @@ const Dira = () => {
                   </>
                 )}
               </div>
-            </ScrollArea>
+            </div>
           </>
         )}
 
@@ -1314,7 +1320,14 @@ const Dira = () => {
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent Chats</p>
             </div>
 
-            <ScrollArea className="flex-1">
+            <div className={[
+                "flex-1 min-h-0 overflow-y-auto overscroll-contain",
+                "[&::-webkit-scrollbar]:w-1",
+                "[&::-webkit-scrollbar-track]:bg-transparent",
+                "[&::-webkit-scrollbar-thumb]:rounded-full",
+                "[&::-webkit-scrollbar-thumb]:bg-border/40",
+                "[&::-webkit-scrollbar-thumb:hover]:bg-border",
+              ].join(" ")}
               <div className="space-y-1 pb-3 px-2">
                 {/* Pinned general chats */}
                 {pinnedGeneralChats.length > 0 && (
@@ -1409,7 +1422,7 @@ const Dira = () => {
                   );
                 })}
               </div>
-            </ScrollArea>
+            </div>
 
             {/* Settings — pinned to bottom of mobile sidebar */}
             <div className="border-t border-border/40 p-3 flex-shrink-0">
