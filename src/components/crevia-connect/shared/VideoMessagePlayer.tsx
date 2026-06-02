@@ -60,7 +60,7 @@ export function VideoMessagePlayer({ src, fileType, onDownload, onExpand }: Vide
 
   return (
     <div
-      className="relative group/video w-full max-w-[280px] sm:max-w-sm rounded-xl overflow-hidden bg-black cursor-pointer"
+      className="relative group/video w-full max-w-[280px] sm:max-w-sm rounded-xl overflow-hidden bg-black cursor-pointer min-h-[160px]"
       onClick={togglePlay}
     >
       {/* Video — no controls. w-full + block lets the element size from its
@@ -81,11 +81,12 @@ export function VideoMessagePlayer({ src, fileType, onDownload, onExpand }: Vide
       {/* Expand to fullscreen — top-right, always visible on hover */}
       {onExpand && (
         <button
-          onClick={(e) => { e.stopPropagation(); onExpand(); }}
-          className="absolute top-2 right-2 z-10 p-1.5 bg-black/50 hover:bg-black/80 rounded-full text-white backdrop-blur-md transition-all active:scale-95"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); e.preventDefault(); onExpand(); }}
+          className="absolute top-2 right-2 z-10 p-2 bg-black/60 hover:bg-black/90 rounded-full text-white backdrop-blur-md transition-all active:scale-95 touch-manipulation"
           aria-label="Expand video"
         >
-          <Maximize2 className="w-3.5 h-3.5" />
+          <Maximize2 className="w-4 h-4" />
         </button>
       )}
 
