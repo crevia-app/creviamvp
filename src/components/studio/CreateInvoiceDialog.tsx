@@ -124,6 +124,8 @@ const CreateInvoiceDialog = ({
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetails>(defaultPaymentDetails);
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
 
+  const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(null);
+
   // Address book state
   const [savedClients, setSavedClients] = useState<SavedClient[]>([]);
   const [autofillOpen, setAutofillOpen] = useState(false);
@@ -516,7 +518,7 @@ const CreateInvoiceDialog = ({
               <Input
                 type="date"
                 value={dueDate}
-                min={editingInvoice ? undefined : today}
+                min={editingInvoice ? undefined : issueDate}
                 onChange={(e) => setDueDate(e.target.value)}
                 className="mt-1 h-11 text-base"
               />
@@ -707,7 +709,7 @@ const CreateInvoiceDialog = ({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => removeItem(index)}
+                      onClick={() => setPendingDeleteIndex(index)}
                       disabled={items.length === 1}
                       className="h-11 w-11 text-destructive hover:text-destructive"
                     >
@@ -916,6 +918,48 @@ const CreateInvoiceDialog = ({
               className="w-full sm:w-auto bg-bronze hover:bg-bronze/90"
             >
               {loading ? "Saving..." : editingInvoice ? "Update Invoice" : "Create Invoice"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    {/* ── Delete Confirmation Modal ─────────────────────────────────── */}
+    <Dialog open={pendingDeleteIndex !== null} onOpenChange={(open) => { if (!open) setPendingDeleteIndex(null); }}>
+      <DialogContent className="max-w-sm w-[92vw] rounded-2xl border border-border/60 bg-card p-0 overflow-hidden shadow-2xl">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Remove Invoice Item</DialogTitle>
+        </DialogHeader>
+        <div className="p-6 space-y-4">
+          <div className="flex items-start gap-4">
+            <div className="h-10 w-10 rounded-xl bg-red-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Trash2 className="h-5 w-5 text-red-500" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-foreground">Remove Invoice Item</p>
+              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                Are you certain you wish to remove this item? This action is permanent and once deleted, the data will no longer be accessible.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setPendingDeleteIndex(null)}
+              className="rounded-xl"
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                if (pendingDeleteIndex !== null) removeItem(pendingDeleteIndex);
+                setPendingDeleteIndex(null);
+              }}
+              className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
+            >
+              Remove Item
             </Button>
           </div>
         </div>

@@ -11,6 +11,7 @@ import {
 import {
   Printer, Send, CheckCircle2, Clock, AlertCircle,
   Maximize2, Minimize2, Download, X, ArrowLeft, Eye, Trash2,
+  AlignLeft, AlignCenter, AlignRight,
 } from "lucide-react";
 import { useDownloadPDF } from "@/hooks/use-download-pdf";
 import { useSubscription } from "@/hooks/use-subscription";
@@ -54,6 +55,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
   const [viewMode, setViewMode]                 = useState<"main" | "print">("main");
   const [logoSize, setLogoSize]                 = useState<"sm" | "md" | "lg">("md");
   const [hideLogo, setHideLogo]                 = useState(false);
+  const [logoAlign, setLogoAlign]               = useState<"left" | "center" | "right">("right");
 
   const { isPro, isBrandWorkspace, isBusiness } = useSubscription();
   const isProUser = isPro || isBrandWorkspace || isBusiness;
@@ -197,44 +199,59 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
   /** Top accent bar */
   const AccentBar = () => <div className="h-1.5" style={{ background: accentColor }} />;
 
-  /** Header: INVOICE label + optional logo with size/delete controls */
+  /** Header: logo row (aligned) + INVOICE label below */
+  const alignClass = logoAlign === "left" ? "justify-start" : logoAlign === "center" ? "justify-center" : "justify-end";
+
   const InvoiceHeader = () => (
-    <div className="flex justify-between items-start gap-3 mb-2">
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">INVOICE</h1>
+    <div className="mb-2">
       {businessSettings?.logo_url && !hideLogo && (
-        <div className={`relative flex-shrink-0 ${viewMode === "main" ? "group" : ""}`}>
-          <img
-            src={businessSettings.logo_url}
-            alt="Business Logo"
-            className={`${logoSizeClass} object-contain rounded-lg transition-all duration-200`}
-          />
-          {/* Controls — only visible in main preview, invisible to PDF capture */}
-          {viewMode === "main" && (
-            <div className="absolute inset-0 flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-black/50 rounded-lg">
-              {(["sm", "md", "lg"] as const).map((s) => (
-                <button
-                  key={s}
-                  onClick={(e) => { e.stopPropagation(); setLogoSize(s); }}
-                  className={`w-6 h-6 rounded text-[10px] font-bold transition-all ${
-                    logoSize === s
-                      ? "bg-white text-black"
-                      : "bg-white/20 text-white hover:bg-white/40"
-                  }`}
-                >
-                  {s.toUpperCase()}
-                </button>
-              ))}
-              <button
-                onClick={(e) => { e.stopPropagation(); handleDeleteLogo(); }}
-                className="w-6 h-6 rounded bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center transition-all"
-                title="Remove logo"
-              >
-                <Trash2 className="w-3 h-3" />
-              </button>
-            </div>
-          )}
+        <div className={`flex mb-3 ${alignClass}`}>
+          <div className={`relative flex-shrink-0 ${viewMode === "main" ? "group" : ""}`}>
+            <img
+              src={businessSettings.logo_url}
+              alt="Business Logo"
+              className={`${logoSizeClass} object-contain rounded-lg transition-all duration-200`}
+            />
+            {viewMode === "main" && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-black/60 rounded-lg p-1">
+                {/* Alignment row */}
+                <div className="flex gap-0.5">
+                  {([["left", AlignLeft], ["center", AlignCenter], ["right", AlignRight]] as const).map(([pos, Icon]) => (
+                    <button
+                      key={pos}
+                      onClick={(e) => { e.stopPropagation(); setLogoAlign(pos); }}
+                      className={`w-5 h-5 rounded flex items-center justify-center transition-all ${logoAlign === pos ? "bg-white text-black" : "bg-white/20 text-white hover:bg-white/40"}`}
+                      title={`Align ${pos}`}
+                    >
+                      <Icon className="w-3 h-3" />
+                    </button>
+                  ))}
+                </div>
+                {/* Size + delete row */}
+                <div className="flex gap-0.5">
+                  {(["sm", "md", "lg"] as const).map((s) => (
+                    <button
+                      key={s}
+                      onClick={(e) => { e.stopPropagation(); setLogoSize(s); }}
+                      className={`w-5 h-5 rounded text-[9px] font-bold transition-all ${logoSize === s ? "bg-white text-black" : "bg-white/20 text-white hover:bg-white/40"}`}
+                    >
+                      {s.toUpperCase()}
+                    </button>
+                  ))}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDeleteLogo(); }}
+                    className="w-5 h-5 rounded bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center transition-all"
+                    title="Remove logo"
+                  >
+                    <Trash2 className="w-2.5 h-2.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">INVOICE</h1>
     </div>
   );
 
@@ -508,6 +525,16 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
             {viewMode === "main" ? (
               /* ── Main mode toolbar ── */
               <>
+                {/* Mobile-only back button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onOpenChange(false)}
+                  className="h-8 px-2 gap-1.5 text-xs font-medium flex-shrink-0 flex md:hidden"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  Back
+                </Button>
                 <DialogTitle className="font-vollkorn text-sm sm:text-base truncate min-w-0 flex-1">
                   Invoice Preview
                 </DialogTitle>
