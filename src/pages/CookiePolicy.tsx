@@ -140,7 +140,7 @@ const CookiePolicy = () => {
       <Section title="Contact">
         <p>
           Questions about how we use cookies? Email us at{" "}
-          <a href="mailto:privacy@crevia.app" className="text-bronze hover:underline">privacy@crevia.app</a>.
+          <a href="mailto:hi@crevia.app" className="text-bronze hover:underline">hi@crevia.app</a>.
         </p>
       </Section>
 
