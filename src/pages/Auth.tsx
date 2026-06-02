@@ -57,6 +57,13 @@ const Auth = () => {
     return () => clearTimeout(id);
   }, [resendCooldown]);
 
+  // Clear credentials on mount — safety net against browser autofill injecting
+  // values into controlled inputs before React's synthetic events can intercept.
+  useEffect(() => {
+    setEmail("");
+    setPassword("");
+  }, []);
+
   const validatePassword = (pwd: string): string[] => {
     const errors: string[] = [];
     if (pwd.length < 8) errors.push("At least 8 characters");
@@ -535,7 +542,8 @@ const Auth = () => {
                 id="email"
                 type="email"
                 placeholder="you@example.com"
-                autoComplete={isSignup ? "email" : "username"}
+                autoComplete="nope"
+                name="contact_identifier"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -564,7 +572,8 @@ const Auth = () => {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  autoComplete={isSignup ? "new-password" : "current-password"}
+                  autoComplete="new-password"
+                  name="user_secret"
                   value={password}
                   onChange={(e) => handlePasswordChange(e.target.value)}
                   required
