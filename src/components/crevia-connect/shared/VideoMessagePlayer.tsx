@@ -60,35 +60,35 @@ export function VideoMessagePlayer({ src, fileType, onDownload }: VideoMessagePl
   return (
     <div
       className="relative w-full max-w-[280px] sm:max-w-sm rounded-xl overflow-hidden bg-black cursor-pointer"
-      style={{ aspectRatio: "16 / 9" }}
       onClick={togglePlay}
     >
-      {/* Video — no controls, object-cover fills the bubble */}
+      {/* Video — no controls. w-full + block lets the element size from its
+          own intrinsic dimensions (loaded via preload="metadata"), which is
+          far more reliable than absolute positioning inside an aspect-ratio
+          container that has no explicit height to anchor against. */}
       <video
         ref={videoRef}
         playsInline
         preload="metadata"
-        className="absolute inset-0 w-full h-full object-cover"
+        className="w-full block"
         onEnded={() => setPlaying(false)}
         onError={() => setErrored(true)}
       >
-        {/* Explicit type attribute fixes black screen: browser knows the
-            codec immediately without having to sniff the byte stream */}
         <source src={src} type={mimeType} />
       </video>
 
       {/* Play overlay — shown when paused */}
       {!playing && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
             <Play className="w-6 h-6 text-white fill-white ml-1" />
           </div>
         </div>
       )}
 
-      {/* Pause overlay — visible on hover/tap while playing */}
+      {/* Pause overlay — fades in on hover/tap while playing */}
       {playing && (
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 active:opacity-100 transition-opacity duration-150 pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 active:opacity-100 transition-opacity duration-150">
           <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
             <Pause className="w-5 h-5 text-white fill-white" />
           </div>
