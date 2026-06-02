@@ -20,7 +20,7 @@ const en = {
   "nav.home": "Home",
   "nav.dashboard": "Dashboard",
   "nav.connect": "Crevia Connect",
-  "nav.studio": "Crevia Studio",
+  "nav.studio": "Studio",
   "nav.dira": "Dira AI",
   "nav.pricing": "Pricing",
   "nav.about": "About",
@@ -264,7 +264,7 @@ const en = {
   "toast.languageChangedDesc": "Interface language has been updated",
 
   // Studio tabs
-  "studio.title": "Crevia Studio",
+  "studio.title": "Studio",
   "studio.subtitle": "Your creative business toolkit",
   "studio.tab.link": "Crevia Link",
   "studio.tab.workspace": "Workspace",
@@ -272,7 +272,7 @@ const en = {
   "studio.tab.canvas": "Canvas",
 
   // Sidebar
-  "sidebar.studio": "Crevia Studio",
+  "sidebar.studio": "Studio",
   "sidebar.connect": "Crevia Connect",
   "sidebar.dira": "Dira AI",
   "sidebar.wallet": "Wallet",

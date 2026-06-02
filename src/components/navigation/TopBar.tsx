@@ -122,7 +122,7 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
                 aria-label="Open Studio navigation"
                 style={{ touchAction: "manipulation", background: "rgba(30,30,30,0.72)", backdropFilter: "blur(8px)" }}
                 className={[
-                  "group relative flex items-center justify-center",
+                  "group relative flex items-center justify-center md:hidden",
                   "w-10 h-10 rounded-xl flex-shrink-0",
                   "border border-white/20",
                   "hover:border-[rgba(207,129,80,0.5)]",
@@ -138,7 +138,7 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
                   to="/crevia-studio"
                   className="font-vollkorn text-base font-semibold text-foreground hover:text-bronze transition-colors duration-200"
                 >
-                  Crevia Studio
+                  Studio
                 </Link>
                 <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0" />
                 <span

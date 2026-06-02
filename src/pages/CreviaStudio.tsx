@@ -270,7 +270,7 @@ const CreviaStudio = () => {
               <div className="flex items-center justify-between px-5 pt-6 pb-5">
                 <div>
                   <h2 className="font-vollkorn text-xl font-bold text-foreground">
-                    Crevia Studio
+                    Studio
                   </h2>
                   <p className="text-xs text-muted-foreground font-poppins mt-0.5">
                     Your creative operations
@@ -351,7 +351,7 @@ const CreviaStudio = () => {
               {/* ── Sidebar footer ── */}
               <div className="px-5 py-4 border-t border-border/40">
                 <p className="text-[10px] text-muted-foreground/50 font-poppins text-center">
-                  Crevia Studio · All features
+                  Studio · All features
                 </p>
               </div>
             </motion.aside>

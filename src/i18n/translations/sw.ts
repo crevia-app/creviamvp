@@ -20,7 +20,7 @@ const sw = {
   "nav.home": "Nyumbani",
   "nav.dashboard": "Dashibodi",
   "nav.connect": "Crevia Connect",
-  "nav.studio": "Crevia Studio",
+  "nav.studio": "Studio",
   "nav.dira": "Dira AI",
   "nav.pricing": "Bei",
   "nav.about": "Kuhusu",
@@ -264,7 +264,7 @@ const sw = {
   "toast.languageChangedDesc": "Lugha ya kiolesura imesasishwa",
 
   // Sidebar
-  "sidebar.studio": "Crevia Studio",
+  "sidebar.studio": "Studio",
   "sidebar.connect": "Crevia Connect",
   "sidebar.dira": "Dira AI",
   "sidebar.wallet": "Pochi",

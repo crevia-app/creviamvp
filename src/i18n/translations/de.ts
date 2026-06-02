@@ -13,7 +13,7 @@ const de = {
   "nav.home": "Startseite",
   "nav.dashboard": "Dashboard",
   "nav.connect": "Crevia Connect",
-  "nav.studio": "Crevia Studio",
+  "nav.studio": "Studio",
   "nav.dira": "Dira AI",
   "nav.pricing": "Preise",
   "nav.about": "Über uns",
@@ -102,7 +102,7 @@ const de = {
   "toast.languageChanged": "Sprache geändert",
   "toast.languageChangedDesc": "Die Sprache der Benutzeroberfläche wurde aktualisiert",
 
-  "sidebar.studio": "Crevia Studio",
+  "sidebar.studio": "Studio",
   "sidebar.connect": "Crevia Connect",
   "sidebar.dira": "Dira AI",
   "sidebar.wallet": "Geldbörse",
