@@ -82,8 +82,10 @@ export function VideoMessagePlayer({ src, fileType, onDownload, onExpand }: Vide
       {onExpand && (
         <button
           onPointerDown={(e) => e.stopPropagation()}
+          onTouchEnd={(e) => { e.stopPropagation(); e.preventDefault(); onExpand(); }}
           onClick={(e) => { e.stopPropagation(); e.preventDefault(); onExpand(); }}
-          className="absolute top-2 right-2 z-10 p-2 bg-black/60 hover:bg-black/90 rounded-full text-white backdrop-blur-md transition-all active:scale-95 touch-manipulation"
+          className="absolute top-2 right-2 z-10 bg-black/60 hover:bg-black/90 rounded-full text-white backdrop-blur-md transition-all active:scale-95 touch-manipulation flex items-center justify-center"
+          style={{ width: 44, height: 44 }}
           aria-label="Expand video"
         >
           <Maximize2 className="w-4 h-4" />
