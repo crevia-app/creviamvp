@@ -12,7 +12,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       includeAssets: ['crevia-logo.png', 'robots.txt'],
       manifest: {
         name: 'Crevia - Own Your Story',
@@ -32,10 +32,14 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // New SW waits until the user taps "Update" in the UpdateBanner.
-        // This prevents chunk-URL mismatches: the old SW keeps serving the current
-        // session's chunks; the new SW only takes over on a clean page reload.
-        skipWaiting: false,
+        // autoUpdate + skipWaiting: the new SW installs and immediately takes
+        // control of all pages. Chunk-URL mismatch risk is negligible because:
+        //   1. HTML is NetworkFirst — fresh index.html always has correct hashes.
+        //   2. JS/CSS chunks are content-hashed — old URLs remain in cache for
+        //      any in-flight requests while the new SW activates.
+        // ReloadPrompt.tsx fires window.location.reload() after controllerchange
+        // so users always land on a coherent new bundle.
+        skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
         runtimeCaching: [

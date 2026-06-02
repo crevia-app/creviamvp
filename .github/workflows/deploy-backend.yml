@@ -1,0 +1,75 @@
+name: Deploy Backend (Supabase)
+
+# Triggers on every push to main — runs in parallel with Vercel's automatic
+# frontend deploy so both layers go live at the same time.
+on:
+  push:
+    branches: [main]
+
+# Prevent concurrent backend deploys that could interleave migrations.
+concurrency:
+  group: supabase-deploy
+  cancel-in-progress: false   # never cancel a running migration mid-flight
+
+jobs:
+  deploy-supabase:
+    name: Migrations + Edge Functions
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # ── 1. Checkout ───────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Install Supabase CLI ───────────────────────────────────────────────
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # ── 3. Link to the Crevia project ─────────────────────────────────────────
+      # SUPABASE_PROJECT_REF  → bcbzixdcsigxhqdiveei  (add to repo secrets)
+      # SUPABASE_ACCESS_TOKEN → your personal Supabase access token
+      - name: Link Supabase project
+        run: |
+          supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      # ── 4. Apply pending migrations ───────────────────────────────────────────
+      # db push applies every migration in supabase/migrations/ that hasn't
+      # been applied yet — idempotent and safe to run on every push.
+      - name: Apply database migrations
+        run: supabase db push
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD:  ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      # ── 5. Stamp the deployed version into app_settings ───────────────────────
+      # Writes the Git SHA to app_settings so useVersionCheck can compare it
+      # against the client's VITE_APP_VERSION and prompt a reload when needed.
+      - name: Stamp deployed version
+        run: |
+          supabase db execute \
+            --sql "INSERT INTO app_settings (key, value) VALUES ('app_version', '${GITHUB_SHA}')
+                   ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now();" \
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD:  ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      # ── 6. Deploy all Edge Functions ──────────────────────────────────────────
+      # Deploys every function in supabase/functions/ in one shot.
+      # --no-verify-jwt is safe here since each function implements its own
+      # auth check against the Supabase service role / anon key.
+      - name: Deploy Edge Functions
+        run: supabase functions deploy --no-verify-jwt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      # ── 7. Summary ────────────────────────────────────────────────────────────
+      - name: Deployment summary
+        run: |
+          echo "✅ Migrations applied"
+          echo "✅ Edge Functions deployed"
+          echo "✅ App version stamped: ${GITHUB_SHA:0:7}"

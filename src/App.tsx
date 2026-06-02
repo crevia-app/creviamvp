@@ -16,6 +16,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { CookieConsent } from "./components/CookieConsent";
+import { ReloadPrompt } from "./components/pwa/ReloadPrompt";
 import { BiometricLockScreen } from "./components/auth/BiometricLockScreen";
 import AppLayout from "./components/navigation/AppLayout";
 import PublicPageWrapper from "./components/PublicPageWrapper";
@@ -258,6 +259,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <ReloadPrompt />
             <BrowserRouter>
               <AppContent />
             </BrowserRouter>
