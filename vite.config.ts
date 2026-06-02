@@ -24,6 +24,7 @@ export default defineConfig({
         display_override: ['window-controls-overlay', 'standalone'],
         start_url: '/',
         scope: '/',
+        launch_handler: { client_mode: 'navigate-existing' },
         icons: [
           { src: '/crevia-logo.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
           { src: '/crevia-logo.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
