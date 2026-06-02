@@ -789,12 +789,6 @@ const ContractsTab = ({ workspaceId, initialContractId }: { workspaceId?: string
                               Mark as Signed
                             </DropdownMenuItem>
                           )}
-                          {canvas.status === "signed" && (
-                            <DropdownMenuItem onClick={() => handleStatusChange(canvas.id, "active")} className="rounded-lg">
-                              <CheckCircle2 className="h-4 w-4 mr-2" />
-                              Mark Active
-                            </DropdownMenuItem>
-                          )}
                           {canvas.status === "active" && (
                             <DropdownMenuItem onClick={() => handleStatusChange(canvas.id, "completed")} className="rounded-lg">
                               <CheckCircle2 className="h-4 w-4 mr-2" />

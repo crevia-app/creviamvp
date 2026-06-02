@@ -426,7 +426,7 @@ const ESignatureDialog = ({
                     onCheckedChange={(checked) => setSaveForLater(!!checked)}
                   />
                   <Label htmlFor="save-draw" className="text-xs text-muted-foreground cursor-pointer">
-                    Save for future Canvas
+                    Save for future documents
                   </Label>
                 </div>
               </div>
@@ -485,7 +485,7 @@ const ESignatureDialog = ({
                   onCheckedChange={(checked) => setSaveForLater(!!checked)}
                 />
                 <Label htmlFor="save-type" className="text-xs text-muted-foreground cursor-pointer">
-                  Save for future Canvas
+                  Save for future documents
                 </Label>
               </div>
             </div>

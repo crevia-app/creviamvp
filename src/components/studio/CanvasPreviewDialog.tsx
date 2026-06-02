@@ -244,36 +244,38 @@ const CanvasPreviewDialog = ({
     );
   };
 
-  // ── Print: screenshot the live DOM with html2canvas → print the image ──
-  // This is the only approach that guarantees the signature stays exactly where
-  // the user placed it — no coordinate remapping, no font/reflow differences.
   const handlePrint = async () => {
-    if (!contentAreaRef.current || printing) return;
+    const el = docRef.current;
+    if (!el || printing) return;
     setPrinting(true);
     try {
       const { default: html2canvas } = await import("html2canvas");
 
-      const canvas = await html2canvas(contentAreaRef.current, {
-        scale: 2,           // retina quality
+      // Capture the full document card at its scroll height so nothing is clipped
+      const captured = await html2canvas(el, {
+        scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
         logging: false,
-        removeContainer: true,
+        width:  el.scrollWidth,
+        height: el.scrollHeight,
+        windowWidth: el.scrollWidth,
       });
 
-      const imgSrc = canvas.toDataURL("image/png");
+      const imgSrc  = captured.toDataURL("image/png");
+      const imgW    = captured.width  / 2;   // logical (non-retina) px
+      const imgH    = captured.height / 2;
 
       const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8"/>
-  <title></title>
   <style>
-    @page { size: A4; margin: 0; }
+    @page { size: ${imgW}px ${imgH}px; margin: 0; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: white; }
-    img { width: 100%; display: block; }
+    body { background: white; width: ${imgW}px; }
+    img { width: 100%; height: auto; display: block; }
   </style>
 </head>
 <body><img src="${imgSrc}" /></body>
@@ -283,18 +285,24 @@ const CanvasPreviewDialog = ({
       iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;";
       document.body.appendChild(iframe);
 
-      const doc = iframe.contentDocument ?? iframe.contentWindow?.document;
-      if (!doc) { document.body.removeChild(iframe); return; }
+      const iDoc = iframe.contentDocument ?? iframe.contentWindow?.document;
+      if (!iDoc) { document.body.removeChild(iframe); return; }
+      iDoc.open(); iDoc.write(html); iDoc.close();
 
-      doc.open();
-      doc.write(html);
-      doc.close();
-
-      setTimeout(() => {
+      const printAndClean = () => {
         iframe.contentWindow?.focus();
         iframe.contentWindow?.print();
-        setTimeout(() => document.body.removeChild(iframe), 1000);
-      }, 500);
+        setTimeout(() => { try { document.body.removeChild(iframe); } catch { /* already removed */ } }, 1500);
+      };
+
+      // Data URLs load synchronously — img.complete is true immediately after write()
+      const img = iDoc.querySelector("img");
+      if (!img || img.complete) {
+        setTimeout(printAndClean, 300);
+      } else {
+        img.addEventListener("load", () => setTimeout(printAndClean, 200), { once: true });
+        setTimeout(printAndClean, 2000); // hard fallback
+      }
     } catch {
       toast.error("Print failed — please try again.");
     } finally {
@@ -474,7 +482,7 @@ const CanvasPreviewDialog = ({
                 <div className="h-1 bg-gradient-to-r from-primary via-primary/60 to-primary/20" />
                 <div className="p-6 md:p-10 space-y-6">
                   <div className="flex items-center justify-between">
-                    <h2 className="font-vollkorn text-xl font-bold text-foreground">Edit Canvas</h2>
+                    <h2 className="font-vollkorn text-xl font-bold text-foreground">Edit Document</h2>
                     <div className="flex items-center gap-1.5">
                       {autoSaveStatus === "saving" && (
                         <span className="text-[11px] text-muted-foreground">Saving…</span>
@@ -500,7 +508,7 @@ const CanvasPreviewDialog = ({
                     <Textarea
                       value={editableContent}
                       onChange={e => setEditableContent(e.target.value)}
-                      placeholder="Write your Canvas terms here…"
+                      placeholder="Write your document terms here…"
                       className="min-h-[380px] font-mono text-sm leading-relaxed rounded-xl resize-none"
                       autoFocus
                     />
@@ -569,7 +577,7 @@ const CanvasPreviewDialog = ({
                         </div>
                       ) : (
                         <div className="text-sm text-muted-foreground/40 italic p-8 rounded-xl bg-muted/20 border border-dashed border-border/30 text-center">
-                          No content yet — tap <strong>Edit</strong> to add your Canvas text.
+                          No content yet — tap <strong>Edit</strong> to add your document text.
                         </div>
                       )}
                     </div>

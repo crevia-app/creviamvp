@@ -13,11 +13,16 @@ export function useDownloadPDF(
     if (!ref.current) return;
     setDownloading(true);
     try {
-      const canvas = await html2canvas(ref.current, {
+      const el = ref.current;
+      const canvas = await html2canvas(el, {
         scale: 2,
         useCORS: true,
+        allowTaint: true,
         backgroundColor: "#ffffff",
         logging: false,
+        width:       el.scrollWidth,
+        height:      el.scrollHeight,
+        windowWidth: el.scrollWidth,
         ignoreElements: options?.ignoreElements,
       });
 

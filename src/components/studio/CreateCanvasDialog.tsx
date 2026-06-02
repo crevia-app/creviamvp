@@ -207,7 +207,7 @@ const CreateCanvasDialog = ({
             <Textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Start writing your Canvas here…"
+              placeholder="Start writing your document here…"
               className="rounded-xl font-mono text-base leading-relaxed min-h-[520px] resize-none bg-background border-border/60 focus:border-primary/30 focus-visible:ring-primary/20"
               spellCheck={false}
               autoFocus
