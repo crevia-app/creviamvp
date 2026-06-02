@@ -14,6 +14,7 @@ import MessageReactions from "./MessageReactions";
 import AttachmentBubble from "@/components/chat/AttachmentBubble";
 import WorkspacePollMessage, { buildPollContent } from "@/components/crevia-connect/shared/WorkspacePollMessage";
 import { VideoMessagePlayer } from "@/components/crevia-connect/shared/VideoMessagePlayer";
+import { MediaLightbox } from "@/components/crevia-connect/shared/MediaLightbox";
 import { convertVideoToMp4, needsConversion, VIDEO_CONVERT_MAX_BYTES } from "@/lib/videoConverter";
 import {
   Send,
@@ -236,6 +237,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   // New features state
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [activeMedia, setActiveMedia] = useState<{ url: string; type: "video" | "image" } | null>(null);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [messageSearch, setMessageSearch] = useState("");
   const [showMessageSearch, setShowMessageSearch] = useState(false);
@@ -2359,6 +2361,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                                 src={getFilePublicUrl(msg.file_url!)!}
                                                 fileType={msg.file_type}
                                                 onDownload={() => downloadFile(msg.file_url!, msg.file_name || "video")}
+                                                onExpand={() => setActiveMedia({ url: getFilePublicUrl(msg.file_url!)!, type: "video" })}
                                               />
                                             ) : (
                                               <div className="w-full max-w-[280px] sm:max-w-sm aspect-video rounded-xl bg-black/60 animate-pulse flex items-center justify-center">
@@ -2712,6 +2715,9 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
           )}
         </div>
       </div>
+
+      {/* Video / unified media lightbox */}
+      <MediaLightbox media={activeMedia} onClose={() => setActiveMedia(null)} />
 
       {/* Image Lightbox */}
       <Dialog open={!!lightboxUrl} onOpenChange={() => setLightboxUrl(null)}>

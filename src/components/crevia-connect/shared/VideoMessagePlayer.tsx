@@ -1,10 +1,11 @@
 import { useRef, useState } from "react";
-import { Play, Pause, Download, AlertCircle } from "lucide-react";
+import { Play, Pause, Download, AlertCircle, Maximize2 } from "lucide-react";
 
 interface VideoMessagePlayerProps {
   src: string;
   fileType: string | null;
   onDownload: () => void;
+  onExpand?: () => void;
 }
 
 /**
@@ -18,7 +19,7 @@ interface VideoMessagePlayerProps {
  * - onError fallback shows a download button when the browser
  *   can't decode the format (e.g. iOS Safari + WebM)
  */
-export function VideoMessagePlayer({ src, fileType, onDownload }: VideoMessagePlayerProps) {
+export function VideoMessagePlayer({ src, fileType, onDownload, onExpand }: VideoMessagePlayerProps) {
   const videoRef              = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const [errored, setErrored] = useState(false);
@@ -59,7 +60,7 @@ export function VideoMessagePlayer({ src, fileType, onDownload }: VideoMessagePl
 
   return (
     <div
-      className="relative w-full max-w-[280px] sm:max-w-sm rounded-xl overflow-hidden bg-black cursor-pointer"
+      className="relative group/video w-full max-w-[280px] sm:max-w-sm rounded-xl overflow-hidden bg-black cursor-pointer"
       onClick={togglePlay}
     >
       {/* Video — no controls. w-full + block lets the element size from its
@@ -76,6 +77,17 @@ export function VideoMessagePlayer({ src, fileType, onDownload }: VideoMessagePl
       >
         <source src={src} type={mimeType} />
       </video>
+
+      {/* Expand to fullscreen — top-right, always visible on hover */}
+      {onExpand && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onExpand(); }}
+          className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/80 rounded-full text-white backdrop-blur-md transition-all opacity-0 group-hover/video:opacity-100 active:opacity-100 active:scale-95"
+          aria-label="Expand video"
+        >
+          <Maximize2 className="w-3.5 h-3.5" />
+        </button>
+      )}
 
       {/* Play overlay — shown when paused */}
       {!playing && (
