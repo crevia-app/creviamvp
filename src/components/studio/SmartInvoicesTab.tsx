@@ -24,7 +24,19 @@ import {
   DollarSign,
   Sparkles,
   SlidersHorizontal,
+  FolderPlus,
+  FolderOpen,
+  ChevronRight,
+  ChevronDown,
+  Loader2,
+  Pencil,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { SendDocumentDialog } from "@/components/studio/SendDocumentDialog";
 import { toast } from "sonner";
 import { format, isAfter } from "date-fns";
@@ -61,6 +73,15 @@ interface Invoice {
   currency: string;
   created_at: string;
   accent_color: string | null;
+  folder_id?: string | null;
+}
+
+interface InvoiceFolder {
+  id: string;
+  name: string;
+  user_id: string;
+  created_at: string;
+  invoiceCount?: number;
 }
 
 const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: string; initialInvoiceId?: string } = {}) => {
@@ -77,6 +98,17 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
   const [receiptInvoice, setReceiptInvoice] = useState<Invoice | null>(null);
   const [sendInvoice, setSendInvoice] = useState<Invoice | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Folder navigation state
+  const [folders, setFolders] = useState<InvoiceFolder[]>([]);
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  const [currentFolder, setCurrentFolder] = useState<InvoiceFolder | null>(null);
+  const [createFolderOpen, setCreateFolderOpen] = useState(false);
+  const [folderName, setFolderName] = useState("");
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null);
+  const [renameFolderValue, setRenameFolderValue] = useState("");
+
   const [businessSettings, setBusinessSettings] = useState<{
     business_name: string;
     business_email: string;
@@ -89,7 +121,7 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
     default_payment_terms: string;
   } | null>(null);
 
-  const fetchInvoices = async () => {
+  const fetchInvoices = async (folderId: string | null = null) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
 
@@ -122,21 +154,111 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
 
     // Auto-mark overdue invoices
     const now = new Date();
-    const updated = (data || []).map(inv => {
-      if (inv.status === "sent" && isAfter(now, new Date(inv.due_date))) {
-        return { ...inv, status: "overdue" };
-      }
-      return inv;
-    });
+    const all = ((data || []) as any[]).map(inv =>
+      inv.status === "sent" && isAfter(now, new Date(inv.due_date))
+        ? { ...inv, status: "overdue" }
+        : inv
+    );
 
-    setInvoices(updated);
+    // Filter to current folder — client-side so backward-compat if column not yet migrated
+    const filtered = folderId
+      ? all.filter(inv => inv.folder_id === folderId)
+      : all.filter(inv => !inv.folder_id);
+
+    setInvoices(filtered);
     setLoading(false);
   };
 
+  const fetchFolders = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    const [{ data, error }, { data: invRows }] = await Promise.all([
+      (supabase as any)
+        .from("invoice_folders")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .order("name"),
+      supabase
+        .from("invoices")
+        .select("folder_id")
+        .eq("user_id", session.user.id)
+        .not("folder_id", "is", null),
+    ]);
+    if (error) { console.error("fetchFolders:", error); setFolders([]); return; }
+    if (!data) { setFolders([]); return; }
+    const countMap: Record<string, number> = {};
+    (invRows || []).forEach((inv: any) => {
+      countMap[inv.folder_id] = (countMap[inv.folder_id] || 0) + 1;
+    });
+    setFolders((data as InvoiceFolder[]).map(f => ({ ...f, invoiceCount: countMap[f.id] ?? 0 })));
+  };
+
+  const createFolder = async () => {
+    const name = folderName.trim();
+    if (!name) return;
+    setCreatingFolder(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { setCreatingFolder(false); return; }
+    const { data: newFolder, error } = await (supabase as any)
+      .from("invoice_folders")
+      .insert({ name, user_id: session.user.id })
+      .select()
+      .single();
+    setCreatingFolder(false);
+    if (error) { toast.error("Failed to create folder"); return; }
+    setFolders(prev => [...prev, { ...newFolder, invoiceCount: 0 }].sort((a: InvoiceFolder, b: InvoiceFolder) => a.name.localeCompare(b.name)));
+    toast.success("Folder created");
+    setCreateFolderOpen(false);
+    setFolderName("");
+  };
+
+  const deleteFolder = async (folder: InvoiceFolder) => {
+    const { error } = await (supabase as any)
+      .from("invoice_folders")
+      .delete()
+      .eq("id", folder.id);
+    if (error) { toast.error("Failed to delete folder"); return; }
+    toast.success("Folder deleted — invoices moved to root");
+    fetchFolders();
+    fetchInvoices(null);
+  };
+
+  const renameFolder = async (folder: InvoiceFolder) => {
+    const name = renameFolderValue.trim();
+    if (!name) return;
+    const { error } = await (supabase as any)
+      .from("invoice_folders")
+      .update({ name })
+      .eq("id", folder.id);
+    if (error) { toast.error("Failed to rename folder"); return; }
+    toast.success("Folder renamed");
+    setRenamingFolderId(null);
+    fetchFolders();
+    if (currentFolder?.id === folder.id) setCurrentFolder({ ...currentFolder, name });
+  };
+
+  const navigateToFolder = (folder: InvoiceFolder) => {
+    setCurrentFolderId(folder.id);
+    setCurrentFolder(folder);
+    fetchInvoices(folder.id);
+  };
+
+  const navigateToRoot = () => {
+    setCurrentFolderId(null);
+    setCurrentFolder(null);
+    fetchInvoices(null);
+    fetchFolders();
+  };
+
   useEffect(() => {
-    fetchInvoices();
+    if (workspaceId) {
+      fetchInvoices(currentFolderId);
+    } else {
+      Promise.all([fetchInvoices(currentFolderId), fetchFolders()]);
+    }
     fetchBusinessSettings();
-  }, [workspaceId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspaceId, currentFolderId]);
 
   // Auto-open a specific invoice when navigating from a notification
   useEffect(() => {
@@ -220,7 +342,7 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
     }
 
     toast.success("Invoice duplicated as draft");
-    fetchInvoices();
+    fetchInvoices(currentFolderId);
   };
 
   const handleStatusChange = async (id: string, status: string) => {
@@ -301,13 +423,29 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
   return (
     <div className="mx-auto w-full max-w-6xl min-w-0 space-y-6 p-4 md:p-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="font-vollkorn text-2xl md:text-3xl font-bold text-foreground tracking-tight">
-            Invoices
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Create, send, and track professional invoices
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-1.5 mb-1">
+            <button
+              onClick={navigateToRoot}
+              className="font-vollkorn text-2xl md:text-3xl font-bold tracking-tight text-foreground hover:text-bronze transition-colors"
+            >
+              Invoices
+            </button>
+            {currentFolder && (
+              <>
+                <ChevronRight className="h-5 w-5 text-muted-foreground/50 flex-shrink-0" />
+                <span className="font-vollkorn text-2xl md:text-3xl font-bold tracking-tight text-foreground truncate max-w-[200px] md:max-w-xs">
+                  {currentFolder.name}
+                </span>
+              </>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {currentFolder
+              ? `Inside ${currentFolder.name} · ${invoices.length} invoice${invoices.length !== 1 ? "s" : ""}`
+              : "Create, send, and track professional invoices"}
           </p>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
@@ -320,26 +458,46 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
           >
             <SlidersHorizontal className="h-4 w-4" />
           </Button>
-          <Button
-            onClick={() => {
-              if (invoiceLimitReached) {
-                toast.error("Monthly limit reached", {
-                  description: `Free plan allows ${limits.invoicesPerMonth} invoices per month. Upgrade to Pro or Business for unlimited.`,
-                });
-                return;
-              }
-              setCreateDialogOpen(true);
-            }}
-            className="gap-2 bg-bronze hover:bg-bronze/90 shadow-lg shadow-bronze/20 flex-1 md:flex-none"
-          >
-            <Plus className="h-4 w-4" />
-            New Invoice
-            {isFree && (
-              <span className="ml-1 text-[10px] opacity-70">
-                {limits.invoicesPerMonth - invoicesUsedThisMonth} left
-              </span>
-            )}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="gap-2 h-10 rounded-xl bg-bronze hover:bg-bronze/90 shadow-lg shadow-bronze/20 hover:shadow-xl hover:shadow-bronze/30 transition-all flex-1 md:flex-none">
+                <Plus className="h-4 w-4" />
+                New
+                <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 rounded-xl">
+              {!currentFolderId && (
+                <DropdownMenuItem
+                  onClick={() => { setFolderName(""); setCreateFolderOpen(true); }}
+                  className="rounded-lg gap-2"
+                >
+                  <FolderPlus className="h-4 w-4 text-bronze" />
+                  New Folder
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem
+                onClick={() => {
+                  if (invoiceLimitReached) {
+                    toast.error("Monthly limit reached", {
+                      description: `Free plan allows ${limits.invoicesPerMonth} invoices per month. Upgrade to Pro or Business for unlimited.`,
+                    });
+                    return;
+                  }
+                  setCreateDialogOpen(true);
+                }}
+                className="rounded-lg gap-2"
+              >
+                <FileText className="h-4 w-4 text-bronze" />
+                New Invoice
+                {isFree && (
+                  <span className="ml-auto text-[10px] text-muted-foreground">
+                    {limits.invoicesPerMonth - invoicesUsedThisMonth} left
+                  </span>
+                )}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -480,6 +638,83 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
         </div>
       </div>
 
+      {/* Folders Grid — shown at root only */}
+      {!currentFolderId && folders.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 px-0.5">
+            Folders
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {folders.map((folder) => (
+              <div key={folder.id} className="group relative">
+                <button
+                  onClick={() => navigateToFolder(folder)}
+                  className="w-full flex flex-col items-start gap-2.5 p-4 rounded-2xl border border-border/50 bg-card hover:border-bronze/40 hover:bg-bronze/5 hover:shadow-md hover:shadow-bronze/5 transition-all duration-200 text-left"
+                >
+                  <FolderOpen className="h-8 w-8 text-bronze/60 group-hover:text-bronze transition-colors" />
+                  {renamingFolderId === folder.id ? (
+                    <form
+                      onSubmit={(e) => { e.preventDefault(); renameFolder(folder); }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-full"
+                    >
+                      <input
+                        autoFocus
+                        value={renameFolderValue}
+                        onChange={(e) => setRenameFolderValue(e.target.value)}
+                        onKeyDown={(e) => e.key === "Escape" && setRenamingFolderId(null)}
+                        className="w-full h-6 text-xs rounded-md border border-bronze/40 bg-background px-2 focus:outline-none focus:ring-1 focus:ring-bronze/40"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </form>
+                  ) : (
+                    <div className="w-full min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate leading-tight">{folder.name}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {folder.invoiceCount ?? 0} invoice{(folder.invoiceCount ?? 0) !== 1 ? "s" : ""}
+                      </p>
+                    </div>
+                  )}
+                </button>
+
+                {/* Folder context menu */}
+                <div className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="w-7 h-7 flex items-center justify-center rounded-lg bg-background/80 border border-border/60 shadow-sm text-foreground hover:bg-muted transition-colors">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44 rounded-xl">
+                      <DropdownMenuItem
+                        onClick={() => { setRenamingFolderId(folder.id); setRenameFolderValue(folder.name); }}
+                        className="rounded-lg gap-2 text-xs"
+                      >
+                        <Pencil className="h-3.5 w-3.5" /> Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => deleteFolder(folder)}
+                        className="rounded-lg gap-2 text-xs text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Invoices section label */}
+      {!currentFolderId && (invoices.length > 0 || folders.length > 0) && (
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60 px-0.5 -mb-4">
+          Invoices
+        </p>
+      )}
+
       {/* Invoices List */}
       {filteredInvoices.length > 0 && (
         <div className="space-y-3">
@@ -592,8 +827,9 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
           if (!open) setEditingInvoice(null);
         }}
         editingInvoice={editingInvoice}
+        folderId={currentFolderId}
         onSuccess={() => {
-          fetchInvoices();
+          fetchInvoices(currentFolderId);
         }}
         businessSettings={businessSettings}
       />
@@ -626,6 +862,42 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
           onSent={() => setSendInvoice(null)}
         />
       )}
+
+      {/* Create Folder dialog */}
+      <Dialog open={createFolderOpen} onOpenChange={(o) => { if (!o) setCreateFolderOpen(false); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-semibold">
+              <FolderPlus className="h-4 w-4 text-bronze" />
+              New Folder
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground -mt-1">
+            Organise your invoices into folders, just like Google Drive.
+          </p>
+          <input
+            autoFocus
+            value={folderName}
+            onChange={(e) => setFolderName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && !creatingFolder && createFolder()}
+            placeholder="e.g. Q1 Billing, Retainer Clients"
+            className="w-full h-11 rounded-xl border border-border bg-background px-3 text-base focus:outline-none focus:ring-2 focus:ring-bronze/30"
+          />
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" className="h-11" onClick={() => setCreateFolderOpen(false)} disabled={creatingFolder}>
+              Cancel
+            </Button>
+            <Button
+              className="h-11 bg-bronze hover:bg-bronze/90 text-background gap-1.5"
+              onClick={createFolder}
+              disabled={!folderName.trim() || creatingFolder}
+            >
+              {creatingFolder ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FolderPlus className="h-3.5 w-3.5" />}
+              Create Folder
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

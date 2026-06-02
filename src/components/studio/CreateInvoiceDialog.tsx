@@ -47,6 +47,7 @@ interface CreateInvoiceDialogProps {
   editingInvoice?: any;
   onSuccess: (invoice?: any) => void;
   onCreated?: (id: string) => void;
+  folderId?: string | null;
   diraContext?: Record<string, unknown> | null;
 }
 
@@ -99,6 +100,7 @@ const CreateInvoiceDialog = ({
   editingInvoice,
   onSuccess,
   onCreated,
+  folderId,
   diraContext,
 }: CreateInvoiceDialogProps) => {
   const [loading, setLoading] = useState(false);
@@ -389,6 +391,7 @@ const CreateInvoiceDialog = ({
             payment_details: (showPaymentDetails && paymentDetails.method)
               ? paymentDetails as any : null,
             accent_color: invoiceAccentColor,
+            folder_id: folderId ?? null,
           })
           .select()
           .single();
