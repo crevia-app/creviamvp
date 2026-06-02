@@ -569,14 +569,14 @@ const CanvasPreviewDialog = ({
                       <div className="h-px bg-border/60" />
                     </div>
 
-                    {/* Agreement body */}
+                    {/* Agreement body — no nested box, text flows directly */}
                     <div>
                       {localCanvas.content ? (
-                        <div ref={textDivRef} className="text-sm text-foreground/80 leading-relaxed p-4 rounded-xl bg-muted/20 border border-border/20 overflow-hidden prose prose-sm prose-invert max-w-none">
+                        <div ref={textDivRef} className="text-sm text-foreground/80 leading-relaxed prose prose-sm dark:prose-invert max-w-none">
                           <ReactMarkdown>{localCanvas.content}</ReactMarkdown>
                         </div>
                       ) : (
-                        <div className="text-sm text-muted-foreground/40 italic p-8 rounded-xl bg-muted/20 border border-dashed border-border/30 text-center">
+                        <div className="text-sm text-muted-foreground/40 italic text-center py-8">
                           No content yet — tap <strong>Edit</strong> to add your document text.
                         </div>
                       )}
