@@ -469,11 +469,27 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
         (payload) => {
           const updated = payload.new as any;
           setMessages((prev) =>
-            prev.map((m) =>
-              m.id === updated.id
-                ? { ...m, deleted_for_everyone: updated.deleted_for_everyone, content: updated.content, file_url: updated.file_url, file_name: updated.file_name }
-                : m
-            )
+            prev.map((m) => {
+              if (m.id !== updated.id) return m;
+              // If the DB content is encrypted, preserve the already-decrypted local
+              // content. Blindly overwriting it with ciphertext causes two bugs:
+              //   1. Voice note 0:00 — parseDurationFromContent fails on ciphertext
+              //   2. "[Encryption key unavailable]" on the sender's own messages
+              // Only replace content when it is NOT encrypted (e.g. invite status
+              // updates, deleted_for_everyone placeholder text).
+              const keepLocalContent =
+                updated.is_encrypted &&
+                m.content &&
+                m.content !== "[Unable to decrypt message]" &&
+                m.content !== "[Encryption key unavailable]";
+              return {
+                ...m,
+                deleted_for_everyone: updated.deleted_for_everyone,
+                content: keepLocalContent ? m.content : updated.content,
+                file_url:  updated.file_url  ?? m.file_url,
+                file_name: updated.file_name ?? m.file_name,
+              };
+            })
           );
         }
       )
@@ -2375,6 +2391,18 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
 
                                     {msg.content && !isVoice && !isPoll && !(isFile && msg.file_url) && (
                                       msg.content === "[Unable to decrypt message]" || msg.content === "[Encryption key unavailable]" ? (
+                                        isMine ? (
+                                          // Sender's own message should never show a decryption error —
+                                          // suppress it and offer a silent retry instead of alarming text.
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-5 px-1.5 text-[10px] opacity-60 hover:opacity-100"
+                                            onClick={() => selectedRoom?.members && retryDecryption(msg.room_id, selectedRoom.members)}
+                                          >
+                                            Tap to retry
+                                          </Button>
+                                        ) : (
                                         <div className="flex items-center gap-2">
                                           <Lock className="h-3.5 w-3.5 opacity-60" />
                                           <span className="text-xs italic opacity-70">{msg.content}</span>
@@ -2389,6 +2417,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                             </Button>
                                           )}
                                         </div>
+                                        )
                                       ) : (
                                         <p className="text-xs md:text-sm whitespace-pre-wrap break-words">
                                           {linkifyContent(msg.content)}
