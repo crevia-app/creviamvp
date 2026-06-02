@@ -1142,7 +1142,7 @@ const Dira = () => {
                 "[&::-webkit-scrollbar-thumb]:rounded-full",
                 "[&::-webkit-scrollbar-thumb]:bg-border/40",
                 "[&::-webkit-scrollbar-thumb:hover]:bg-border",
-              ].join(" ")}
+              ].join(" ")}>
               <div className="space-y-1 pb-3 px-2">
                 {isLoadingHistory ? (
                   <div className="py-8 text-center">
@@ -1327,7 +1327,7 @@ const Dira = () => {
                 "[&::-webkit-scrollbar-thumb]:rounded-full",
                 "[&::-webkit-scrollbar-thumb]:bg-border/40",
                 "[&::-webkit-scrollbar-thumb:hover]:bg-border",
-              ].join(" ")}
+              ].join(" ")}>
               <div className="space-y-1 pb-3 px-2">
                 {/* Pinned general chats */}
                 {pinnedGeneralChats.length > 0 && (
