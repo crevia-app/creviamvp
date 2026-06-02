@@ -281,6 +281,13 @@ const CanvasPreviewDialog = ({
         width:       el.scrollWidth,
         height:      captureH,
         windowWidth: el.scrollWidth,
+        // Strip dark mode from the clone so text renders as black on white.
+        // Without this, dark mode CSS variables produce near-white text on
+        // the forced white background, making content invisible in the PDF.
+        onclone: (clonedDoc) => {
+          clonedDoc.documentElement.classList.remove("dark");
+          clonedDoc.documentElement.classList.add("light");
+        },
         // Hide the Canvas title row — print output is clean doc only
         ignoreElements: (node: Element) => node.hasAttribute("data-print-hide"),
       });
