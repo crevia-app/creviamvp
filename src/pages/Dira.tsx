@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/use-subscription";
+import { useLongPress } from "@/hooks/use-long-press";
 import UsageLimitBanner from "@/components/subscription/UsageLimitBanner";
 import {
   Lightbulb,
@@ -114,15 +115,21 @@ function ChatItem({
   onPin, onDelete, onShare,
   onLongPress, onLongPressStart, onLongPressEnd,
 }: ChatItemProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen]           = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  const longPress = useLongPress(() => {
+    setShowMobileMenu(true);
+    setMenuOpen(true);
+  }, { delay: 500 });
+
+  const dotVisible = menuOpen || showMobileMenu;
 
   return (
     <div
+      {...longPress}
       onClick={() => { if (!isRenaming) onSelect(); }}
-      onTouchStart={onLongPressStart}
-      onTouchEnd={onLongPressEnd}
-      onTouchMove={onLongPressEnd}
-      onContextMenu={(e) => { e.preventDefault(); onLongPress?.(); }}
+      onContextMenu={(e) => { e.preventDefault(); setShowMobileMenu(true); setMenuOpen(true); }}
       className={cn(
         "group relative flex items-center gap-2 rounded-xl cursor-pointer select-none",
         "transition-all duration-150 ease-out",
@@ -130,7 +137,11 @@ function ChatItem({
         isMobile && "min-h-[44px]",
         isActive
           ? "bg-foreground/[0.07] text-foreground"
-          : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
+          : [
+              "text-gray-600 dark:text-gray-400",
+              "hover:bg-gray-100 dark:hover:bg-[#1A1A1A]",
+              "hover:text-gray-900 dark:hover:text-gray-100",
+            ].join(" ")
       )}
     >
       {/* Left accent bar — active state */}
@@ -172,14 +183,28 @@ function ChatItem({
           32 px, regardless of how wide the title text wants to be. Without the
           wrapper, browsers can let the DropdownMenuTrigger slot shrink to 0 when
           the flex-1 title absorbs all available width.                         */}
-      <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+      <div
+        className={cn(
+          "flex-shrink-0 transition-opacity duration-200",
+          // Desktop: hidden until group-hover; mobile: hidden until long-press
+          "opacity-0 md:group-hover:opacity-100",
+          // Always visible when menu is open or long-press was triggered
+          dotVisible && "opacity-100"
+        )}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <DropdownMenu
+          open={menuOpen}
+          onOpenChange={(open) => { setMenuOpen(open); if (!open) setShowMobileMenu(false); }}
+        >
           <DropdownMenuTrigger asChild>
             <button
               className={cn(
                 "w-8 h-8 flex items-center justify-center rounded-lg",
-                "text-muted-foreground hover:text-foreground",
-                "hover:bg-foreground/10 active:bg-foreground/15",
+                "text-gray-500 dark:text-gray-400",
+                "hover:text-gray-900 dark:hover:text-gray-100",
+                "hover:bg-gray-100 dark:hover:bg-[#1A1A1A]",
+                "active:bg-gray-200 dark:active:bg-[#222]",
                 "transition-colors duration-150"
               )}
             >
