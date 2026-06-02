@@ -13,6 +13,8 @@ import EmojiReactionPicker from "./EmojiReactionPicker";
 import MessageReactions from "./MessageReactions";
 import AttachmentBubble from "@/components/chat/AttachmentBubble";
 import WorkspacePollMessage, { buildPollContent } from "@/components/crevia-connect/shared/WorkspacePollMessage";
+import { VideoMessagePlayer } from "@/components/crevia-connect/shared/VideoMessagePlayer";
+import { convertVideoToMp4, needsConversion, VIDEO_CONVERT_MAX_BYTES } from "@/lib/videoConverter";
 import {
   Send,
   Paperclip,
@@ -229,6 +231,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const [forwardingMessageId, setForwardingMessageId] = useState<string | null>(null);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [videoErrors, setVideoErrors] = useState<Set<string>>(new Set());
+  const [convertingVideo, setConvertingVideo] = useState(false);
 
   // New features state
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
@@ -1336,7 +1339,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    e.target.value = ""; // reset so same file can be re-selected
+    e.target.value = "";
     if (!file) return;
 
     const isVideo = file.type.startsWith("video/");
@@ -1346,6 +1349,29 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
       toast.error(`File too large. Max ${maxLabel}.`);
       return;
     }
+
+    // Videos are converted to H.264 MP4 for universal playback.
+    // Show the original file as a preview immediately, then silently
+    // swap it with the converted version when ready (~3-8 seconds).
+    if (needsConversion(file)) {
+      if (file.size > VIDEO_CONVERT_MAX_BYTES) {
+        toast.error("Video too large to convert (max 200 MB). Please trim it first.");
+        return;
+      }
+      setSelectedFile(file);
+      setConvertingVideo(true);
+      try {
+        const mp4 = await convertVideoToMp4(file);
+        setSelectedFile(mp4);
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Video conversion failed. Try a shorter clip.");
+        setSelectedFile(null);
+      } finally {
+        setConvertingVideo(false);
+      }
+      return;
+    }
+
     setSelectedFile(file);
   };
 
@@ -2329,13 +2355,10 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                                         ) : isVideoType(msg.file_type) ? (
                                           <div className="mb-1">
                                             {getFilePublicUrl(msg.file_url!) ? (
-                                              <video
+                                              <VideoMessagePlayer
                                                 src={getFilePublicUrl(msg.file_url!)!}
-                                                controls
-                                                playsInline
-                                                preload="metadata"
-                                                className="w-full max-w-[280px] sm:max-w-sm rounded-xl bg-black"
-                                                style={{ maxHeight: "260px" }}
+                                                fileType={msg.file_type}
+                                                onDownload={() => downloadFile(msg.file_url!, msg.file_name || "video")}
                                               />
                                             ) : (
                                               <div className="w-full max-w-[280px] sm:max-w-sm aspect-video rounded-xl bg-black/60 animate-pulse flex items-center justify-center">
@@ -2545,13 +2568,18 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                           <img src={URL.createObjectURL(selectedFile)} alt="" className="h-full w-full object-cover" />
                         </div>
                       ) : selectedFile.type.startsWith("video/") ? (
-                        <div className="h-12 w-12 rounded overflow-hidden flex-shrink-0 bg-black">
+                        <div className="relative h-12 w-12 rounded overflow-hidden flex-shrink-0 bg-black">
                           <video
                             src={URL.createObjectURL(selectedFile)}
                             className="h-full w-full object-cover"
                             muted
                             playsInline
                           />
+                          {convertingVideo && (
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                              <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <File className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -2636,7 +2664,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                               sendMessage();
                             }
                           }}
-                          disabled={uploadingFile}
+                          disabled={uploadingFile || convertingVideo}
                           className="flex-1 min-w-0 resize-none overflow-y-auto border-none outline-none focus:ring-0 focus:outline-none bg-transparent text-sm leading-relaxed py-1.5 px-2 placeholder:text-muted-foreground/60 min-h-[36px] max-h-[120px]"
                           style={{ height: "36px" }}
                           autoComplete="off"

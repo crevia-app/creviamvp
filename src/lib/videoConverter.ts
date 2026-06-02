@@ -14,26 +14,26 @@ async function loadFFmpeg(): Promise<FFmpeg> {
 
   if (!loadPromise) {
     ffmpeg = new FFmpeg();
-    // Load single-threaded core from CDN — no SharedArrayBuffer / COOP-COEP needed.
+    // jsDelivr is backed by Cloudflare + Fastly — far more reliable than unpkg
+    // for users in Africa and Asia. Single-threaded core needs no SharedArrayBuffer.
     loadPromise = (async () => {
-      const base = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm";
-      ffmpeg!.load({
+      const base = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm";
+      await ffmpeg!.load({
         coreURL: await toBlobURL(`${base}/ffmpeg-core.js`, "text/javascript"),
         wasmURL: await toBlobURL(`${base}/ffmpeg-core.wasm`, "application/wasm"),
-      });
-      // Wait for the internal load event
-      await new Promise<void>((resolve, reject) => {
-        ffmpeg!.on("log", () => {}); // keep listener alive
-        // Poll until loaded
-        const check = setInterval(() => {
-          if (ffmpeg?.loaded) { clearInterval(check); resolve(); }
-        }, 100);
-        setTimeout(() => { clearInterval(check); reject(new Error("FFmpeg load timeout")); }, 30_000);
       });
     })();
   }
 
-  await loadPromise;
+  // 60 s timeout — sufficient for 4G in East Africa to fetch the ~10 MB WASM.
+  // On a subsequent call the singleton is already loaded and returns instantly.
+  await Promise.race([
+    loadPromise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("FFmpeg load timeout — check your connection and try again.")), 60_000)
+    ),
+  ]);
+
   return ffmpeg!;
 }
 
