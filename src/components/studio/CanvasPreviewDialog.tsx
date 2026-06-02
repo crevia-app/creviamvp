@@ -257,24 +257,31 @@ const CanvasPreviewDialog = ({
   };
 
   const handlePrint = async () => {
-    const el = docRef.current;
+    // Capture contentAreaRef (not docRef) so the absolutely-positioned
+    // signature is always within the capture bounds. docRef.scrollHeight
+    // doesn't account for absolute children, so signatures near the bottom
+    // of a long doc get clipped. contentAreaRef directly contains the sig.
+    const el = contentAreaRef.current;
     if (!el || printing) return;
     setPrinting(true);
     try {
       const { default: html2canvas } = await import("html2canvas");
 
-      // Capture the full document card at its scroll height so nothing is clipped
+      // Ensure the capture height covers the signature even if it sits
+      // below the natural text flow (absolute elements don't grow scrollHeight)
+      const sigBottom = sigStyle ? sigStyle.top + sigStyle.h + 40 : 0;
+      const captureH  = Math.max(el.scrollHeight, sigBottom);
+
       const captured = await html2canvas(el, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
         logging: false,
-        width:  el.scrollWidth,
-        height: el.scrollHeight,
+        width:       el.scrollWidth,
+        height:      captureH,
         windowWidth: el.scrollWidth,
-        // Hide UI chrome (title, signed badge, accent bar) — print shows
-        // only the raw document content + signature, like a clean legal doc.
+        // Hide the Canvas title row — print output is clean doc only
         ignoreElements: (node: Element) => node.hasAttribute("data-print-hide"),
       });
 
