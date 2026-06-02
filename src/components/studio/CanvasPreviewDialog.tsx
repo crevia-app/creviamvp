@@ -197,24 +197,36 @@ const CanvasPreviewDialog = ({
   useEffect(() => {
     if (!open || isEditingDetails || placementMode) { setSigStyle(null); return; }
 
-    const raf = requestAnimationFrame(() => {
-      const sp = localCanvas?.signature_position as SigPos | null;
-      const el = contentAreaRef.current;
-      if (!sp || !el) { setSigStyle(null); return; }
+    const el = contentAreaRef.current;
+    if (!el) return;
 
+    const calculate = () => {
+      const sp = localCanvas?.signature_position as SigPos | null;
+      if (!sp) { setSigStyle(null); return; }
       if (sp.x != null) {
         setSigStyle({ left: sp.x, top: sp.y!, w: sp.w ?? INIT_W, h: sp.h ?? INIT_H });
       } else if (sp.xPct != null) {
+        // Use scrollHeight for Y — offsetHeight can be smaller than the full
+        // content height while ReactMarkdown is still rendering, causing the
+        // signature to appear too high. scrollHeight reflects the true total
+        // content height and matches what was measured when the user placed it.
         setSigStyle({
           left: sp.xPct * el.offsetWidth,
-          top:  sp.yPct! * el.offsetHeight,
+          top:  sp.yPct! * el.scrollHeight,
           w:    (sp.wPct ?? 0) * el.offsetWidth  || INIT_W,
-          h:    (sp.hPct ?? 0) * el.offsetHeight || INIT_H,
+          h:    (sp.hPct ?? 0) * el.scrollHeight || INIT_H,
         });
       }
-    });
+    };
 
-    return () => cancelAnimationFrame(raf);
+    // Initial pass after first paint
+    const raf = requestAnimationFrame(calculate);
+
+    // Recalculate whenever content height changes (ReactMarkdown renders async)
+    const ro = new ResizeObserver(calculate);
+    ro.observe(el);
+
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); };
   }, [open, localCanvas?.signature_position, localCanvas?.creator_signature, placementMode, isEditingDetails]);
 
   const fetchProfile = async () => {
@@ -261,6 +273,9 @@ const CanvasPreviewDialog = ({
         width:  el.scrollWidth,
         height: el.scrollHeight,
         windowWidth: el.scrollWidth,
+        // Hide UI chrome (title, signed badge, accent bar) — print shows
+        // only the raw document content + signature, like a clean legal doc.
+        ignoreElements: (node: Element) => node.hasAttribute("data-print-hide"),
       });
 
       const imgSrc  = captured.toDataURL("image/png");
@@ -319,9 +334,9 @@ const CanvasPreviewDialog = ({
     const normalizedPos: SigPos = {
       x: pos.x, y: pos.y, w: pos.w, h: pos.h,
       xPct: pos.x / el.offsetWidth,
-      yPct: pos.y / el.offsetHeight,
+      yPct: pos.y / el.scrollHeight,   // scrollHeight matches what rendering uses
       wPct: pos.w / el.offsetWidth,
-      hPct: pos.h / el.offsetHeight,
+      hPct: pos.h / el.scrollHeight,
     };
     const { error } = await supabase
       .from("canvases")
@@ -527,8 +542,8 @@ const CanvasPreviewDialog = ({
                */
               <div ref={docRef} className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl dark:shadow-2xl border border-border/20 print:shadow-none print:border-0">
 
-                {/* Gradient accent — separate overflow-hidden so corners clip correctly */}
-                <div className="overflow-hidden rounded-t-2xl">
+                {/* Gradient accent — hidden from print capture */}
+                <div className="overflow-hidden rounded-t-2xl" data-print-hide>
                   <div className="h-1 bg-gradient-to-r from-primary via-primary/60 to-primary/20" />
                 </div>
 
@@ -553,8 +568,8 @@ const CanvasPreviewDialog = ({
                   {/* Regular document content -------------------------------- */}
                   <div className="space-y-8">
 
-                    {/* Title */}
-                    <div className="space-y-4">
+                    {/* Title — hidden from print/PDF capture via data-print-hide */}
+                    <div className="space-y-4" data-print-hide>
                       <div className="flex items-start justify-between gap-4">
                         <h1 className="text-2xl md:text-3xl font-vollkorn font-bold text-foreground tracking-tight">
                           {localCanvas.title}
