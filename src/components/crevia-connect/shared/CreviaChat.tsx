@@ -1720,7 +1720,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     type?.startsWith("image/") || false;
 
   return (
-    <div className={hideRoomList ? "flex h-full w-full flex-col overflow-hidden bg-background" : "mx-auto flex h-[calc(100dvh-264px)] w-full min-w-0 max-w-7xl flex-col overflow-hidden bg-background md:h-[calc(100dvh-180px)]"}>
+    <div className="flex h-full w-full flex-col overflow-hidden bg-background">
       {/* Header — hidden when embedded in the hub (hideRoomList=true) */}
       {!hideRoomList && (
         <div className="flex items-center justify-between p-3 md:p-4 border-b bg-background flex-shrink-0">
