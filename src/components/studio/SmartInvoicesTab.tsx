@@ -491,8 +491,8 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
                 <FileText className="h-4 w-4 text-bronze" />
                 New Invoice
                 {isFree && (
-                  <span className="ml-auto text-[10px] text-muted-foreground">
-                    {limits.invoicesPerMonth - invoicesUsedThisMonth} left
+                  <span className={`ml-auto text-[10px] ${invoiceLimitReached ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
+                    {invoiceLimitReached ? "Limit reached" : `${limits.invoicesPerMonth - invoicesUsedThisMonth} left`}
                   </span>
                 )}
               </DropdownMenuItem>

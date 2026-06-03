@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import ESignatureDialog from "./ESignatureDialog";
 import { SendDocumentDialog } from "@/components/studio/SendDocumentDialog";
 import { useDownloadPDF } from "@/hooks/use-download-pdf";
+import { useSubscription } from "@/hooks/use-subscription";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -148,6 +149,7 @@ const CanvasPreviewDialog = ({
   onCanvasUpdate,
 }: CanvasPreviewDialogProps) => {
   const [profile, setProfile]                           = useState<any>(null);
+  const { isFree, esignaturesUsedThisMonth, limits } = useSubscription();
   const [showSignatureDialog, setShowSignatureDialog]   = useState(false);
   const [placementMode, setPlacementMode]               = useState<{
     signature: string;
@@ -453,7 +455,15 @@ const CanvasPreviewDialog = ({
             )}
             {!isEditingDetails && !placementMode && !localCanvas.creator_signature && (
               <Button variant="ghost" size="sm" title="Sign"
-                onClick={() => setShowSignatureDialog(true)}
+                onClick={() => {
+                  if (isFree && esignaturesUsedThisMonth >= limits.esignaturesPerMonth) {
+                    toast.error("Monthly e-signature limit reached", {
+                      description: "Free plan allows 1 finalized e-signature per month. Upgrade to Pro for unlimited.",
+                    });
+                    return;
+                  }
+                  setShowSignatureDialog(true);
+                }}
                 className="h-8 w-8 p-0 rounded-lg text-primary hover:bg-primary/10"
               >
                 <PenTool className="h-3.5 w-3.5" />

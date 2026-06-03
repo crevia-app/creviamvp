@@ -78,6 +78,7 @@ import { iconOptions } from "@/components/crevia-link/iconOptions";
 // the visual viewport), leaving a black gap above the header.
 // AppLayout h-dvh + flex chain + the keyboardOpen padding on the input handle it correctly.
 import { useVisualViewport } from "@/hooks/use-visual-viewport";
+import { useSubscription } from "@/hooks/use-subscription";
 
 interface ChatRoom {
   id: string;
@@ -202,6 +203,7 @@ const avatarStyle = (seed: string): React.CSSProperties => {
 const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {}) => {
   const navigate = useNavigate();
   const { keyboardOpen } = useVisualViewport();
+  const { canCreateWorkspace } = useSubscription();
   const [currentUserId, setCurrentUserId] = useState("");
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
@@ -357,7 +359,13 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
       .single();
 
     if (error || !room) {
-      toast.error("Failed to create workspace");
+      if (error?.message?.includes("workspace_creation_not_allowed")) {
+        toast.error("Cannot create workspace", {
+          description: "Free plan does not allow workspace creation. Upgrade to Pro to collaborate in workspaces.",
+        });
+      } else {
+        toast.error("Failed to create workspace");
+      }
       return;
     }
 
@@ -1037,6 +1045,13 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   const createGroupChat = async () => {
     if (!currentUserId || !groupName.trim() || selectedGroupMembers.length === 0) {
       toast.error("Please add a name and at least one member");
+      return;
+    }
+
+    if (!canCreateWorkspace) {
+      toast.error("Workspace creation not available", {
+        description: "Free plan does not allow creating workspaces. Upgrade to Pro.",
+      });
       return;
     }
 

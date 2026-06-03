@@ -123,7 +123,7 @@ const ContractsTab = ({ workspaceId, initialContractId }: { workspaceId?: string
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "value">("newest");
-  const { limits, isFree } = useSubscription();
+  const { limits, isFree, canvasesUsedThisMonth } = useSubscription();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingCanvas, setEditingCanvas] = useState<Canvas | null>(null);
   const [previewCanvas, setPreviewCanvas] = useState<Canvas | null>(null);
@@ -504,15 +504,12 @@ const ContractsTab = ({ workspaceId, initialContractId }: { workspaceId?: string
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem
-                onClick={async () => {
-                  if (isFree) {
-                    const { count } = await supabase
-                      .from("canvases")
-                      .select("*", { count: "exact", head: true });
-                    if ((count || 0) >= limits.canvasesPerMonth) {
-                      toast.error("Free plan limit: 2 Canvas. Upgrade to Pro for unlimited.");
-                      return;
-                    }
+                onClick={() => {
+                  if (isFree && canvasesUsedThisMonth >= limits.canvasesPerMonth) {
+                    toast.error("Monthly limit reached", {
+                      description: `Free plan allows ${limits.canvasesPerMonth} canvas drafts per month. Upgrade to Pro for unlimited.`,
+                    });
+                    return;
                   }
                   setCreateDialogOpen(true);
                 }}
@@ -520,6 +517,13 @@ const ContractsTab = ({ workspaceId, initialContractId }: { workspaceId?: string
               >
                 <FileSignature className="h-4 w-4 text-primary" />
                 New Canvas
+                {isFree && (
+                  <span className={`ml-auto text-[10px] ${isFree && canvasesUsedThisMonth >= limits.canvasesPerMonth ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
+                    {isFree && canvasesUsedThisMonth >= limits.canvasesPerMonth
+                      ? "Limit reached"
+                      : `${limits.canvasesPerMonth - canvasesUsedThisMonth} left`}
+                  </span>
+                )}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

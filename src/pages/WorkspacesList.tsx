@@ -14,7 +14,7 @@ const WorkspacesList = () => {
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
-  const { isFree, limits } = useSubscription();
+  const { canCreateWorkspace } = useSubscription();
 
   useEffect(() => { fetchWorkspaces(); }, []);
 
@@ -35,14 +35,11 @@ const WorkspacesList = () => {
   const createWorkspace = async () => {
     if (!userId) return;
 
-    if (isFree) {
-      const ownedCount = workspaces.filter(w => w.created_by === userId).length;
-      if (ownedCount >= limits.maxWorkspaces) {
-        toast.error("Workspace limit reached", {
-          description: "Free plan allows 1 workspace. Upgrade to Pro or Business for unlimited workspaces.",
-        });
-        return;
-      }
+    if (!canCreateWorkspace) {
+      toast.error("Workspace creation not available", {
+        description: "Free plan does not allow creating workspaces. Join an existing one, or upgrade to Pro.",
+      });
+      return;
     }
 
     const { data, error } = await supabase

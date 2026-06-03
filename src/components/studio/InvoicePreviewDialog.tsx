@@ -446,6 +446,11 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
   const Footer = () => (
     <div className="mt-8 pt-3 text-center" style={{ borderTop: `1px solid ${hexToRgba(accentColor, 0.2)}` }}>
       <p className="text-xs font-medium" style={{ color: accentColor }}>Thank you for your business!</p>
+      {!isProUser && (
+        <p className="mt-1 text-[10px] text-gray-400">
+          Created with <span className="font-semibold">Crevia</span> · crevia.app
+        </p>
+      )}
     </div>
   );
 

@@ -325,7 +325,7 @@ const isMobileDevice =
 
 const Dira = () => {
   const { toast } = useToast();
-  const { diraActionsToday, diraActionsLimit } = useSubscription();
+  const { diraActionsToday, diraActionsLimit, showDiraCounter, isFree } = useSubscription();
   const { keyboardOpen } = useVisualViewport();
   const isAtDiraLimit = diraActionsToday >= diraActionsLimit;
   const [userType, setUserType] = useState<'creator' | 'brand' | null>(null);
@@ -718,8 +718,10 @@ const Dira = () => {
     }
     if (isAtDiraLimit) {
       toast({
-        title: "Daily limit reached",
-        description: `You've used all ${diraActionsLimit} Dira messages for today. Upgrade for more.`,
+        title: "Monthly limit reached",
+        description: isFree
+          ? `You've used all ${diraActionsLimit} Dira prompts for this month. Upgrade to Pro for 500/month.`
+          : "You've reached your monthly Dira limit. It resets on the 1st of next month.",
         variant: "destructive",
       });
       return;
@@ -1540,11 +1542,13 @@ const Dira = () => {
               100%-reliable cross-browser way to get overflow-y: auto to scroll
               on Android Chrome and iOS Safari inside a deep flex chain. */}
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden relative z-10">
-            <UsageLimitBanner
-              current={diraActionsToday}
-              limit={diraActionsLimit}
-              feature="Dira AI actions"
-            />
+            {showDiraCounter && (
+              <UsageLimitBanner
+                current={diraActionsToday}
+                limit={diraActionsLimit}
+                feature="Dira AI prompts"
+              />
+            )}
             <div className="relative flex-1 min-h-0">
             <div
               ref={scrollContainerRef}
@@ -1895,8 +1899,8 @@ const Dira = () => {
                   data-form-type="other"
                 />
 
-                {/* Usage counter */}
-                {diraActionsLimit < 1000 && (
+                {/* Usage counter — Free only; hidden for Pro/Business per spec */}
+                {showDiraCounter && (
                   <span className={`text-[10px] font-semibold tabular-nums flex-shrink-0 pr-1 ${isAtDiraLimit ? "text-destructive" : "text-muted-foreground/40"}`}>
                     {diraActionsToday}/{diraActionsLimit}
                   </span>

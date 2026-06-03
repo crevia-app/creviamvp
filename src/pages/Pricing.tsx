@@ -13,11 +13,11 @@ import { supabase } from "@/integrations/supabase/client";
 
 const fmt = (n: number) => n === 0 ? "$0" : `$${n % 1 === 0 ? n.toLocaleString() : n.toFixed(2)}`;
 
-const BUSINESS_PRICE = 79;
+const DEFAULT_BUSINESS_PRICE = 74.99;
 
-const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterprisePrice: number) => {
+const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPrice: number, enterprisePrice: number) => {
   const proYearly      = parseFloat((proPrice * 10).toFixed(2));
-  const businessYearly = parseFloat((BUSINESS_PRICE * 10).toFixed(2));
+  const businessYearly = parseFloat((businessPrice * 10).toFixed(2));
   const entYearly      = parseFloat((enterprisePrice * 10).toFixed(2));
   return [
     {
@@ -27,14 +27,14 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterpriseP
       priceYearly: "$0",
       period: "",
       seatNote: null,
-      description: "Your first look at what structured operations feel like.",
+      description: "For the independent professional just getting started.",
       features: [
         "1 seat",
-        "Crevia Link — basic templates",
-        "10 Dira AI actions per day",
-        "1 active workspace",
-        "2 Canvas per month (basic editing)",
-        "2 invoices per month (Crevia watermark)",
+        "Crevia Link — standard profile templates, no analytics",
+        "15 Dira AI prompts per month",
+        "Join 1 workspace (view only, cannot create)",
+        "6 canvas drafts per month · 1 finalized e-signature",
+        "3 invoices per month (Crevia branding)",
         "Community support",
       ],
       cta: "Get Started",
@@ -50,14 +50,14 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterpriseP
       priceYearly: fmt(proYearly),
       period: billingCycle === "monthly" ? "/mo" : "/yr",
       seatNote: null,
-      description: "Turn yourself into a one-person enterprise.",
+      description: "For professionals scaling their independent operations.",
       features: [
         "1 seat",
         "Verified badge on your profile",
-        "40 Dira AI actions per day",
-        "Crevia Link — all premium themes & analytics",
-        "Unlimited workspaces",
-        "Unlimited Canvas with full E-Signatures",
+        "500 Dira AI prompts per month",
+        "Crevia Link — premium themes + visitor analytics",
+        "10 collaborative workspaces per month",
+        "Unlimited canvas + unlimited e-signatures",
         "Unlimited invoices — no watermark",
         "Client Portal access",
         "Priority support",
@@ -71,25 +71,25 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterpriseP
     {
       name: "Business",
       badge: billingCycle === "yearly" ? "2 Months Free" : "For Teams",
-      priceMonthly: fmt(BUSINESS_PRICE),
+      priceMonthly: fmt(businessPrice),
       priceYearly: fmt(businessYearly),
       period: billingCycle === "monthly" ? "/mo" : "/yr",
-      seatNote: "+ $14.99 per extra seat",
-      description: "The command center for brands and agencies that operate at scale.",
+      seatNote: "+ $19.99 per extra seat",
+      description: "For agencies and brands managing external rosters.",
       features: [
         "3 seats included",
-        "200 Dira AI actions/day — multi-workspace context",
-        "Crevia Link — advanced customization & analytics",
-        "Team roles & permissions (RBAC)",
-        "Unlimited Canvas + custom brand MSAs & clause library",
+        "Unlimited Dira AI prompts",
+        "Crevia Link — premium themes + visitor analytics",
+        "Unlimited client/project workspaces",
+        "Advanced RBAC — Admin & Editor permissions",
+        "Unlimited canvas + unlimited e-signatures",
         "Unlimited invoices — no watermark",
-        "E-Signatures inside the app",
         "Priority support",
       ],
       cta: "Get Business",
       highlighted: false,
       planKey: "business" as const,
-      monthlyAmount: BUSINESS_PRICE,
+      monthlyAmount: businessPrice,
       yearlyAmount: businessYearly,
     },
     {
@@ -99,14 +99,14 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, enterpriseP
       priceYearly: enterprisePrice > 0 ? fmt(entYearly) : "Custom",
       period: enterprisePrice > 0 ? (billingCycle === "monthly" ? "/mo" : "/yr") : "",
       seatNote: "Custom volume",
-      description: "For organisations where volume, compliance, and control are non-negotiable.",
+      description: "Scalable infrastructure for high-volume corporate operations.",
       features: [
         "Custom seats",
-        "Priority Dira processing — no throttling",
+        "Unlimited Dira AI — priority processing",
         "Custom domain mapping & white-labeling",
-        "Dedicated account manager",
+        "Direct ERP integrations (SAP, Oracle)",
         "Concierge Canvas onboarding",
-        "Consolidated master billing",
+        "Dedicated account manager",
         "SLA guarantee + SSO",
         "Custom API limits",
       ],
@@ -124,14 +124,15 @@ const Pricing = () => {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isPaystackLoading, setIsPaystackLoading] = useState<string | null>(null);
-  const [proPrice, setProPrice]             = useState(14.99);
+  const [proPrice, setProPrice]               = useState(14.99);
+  const [businessPrice, setBusinessPrice]     = useState(DEFAULT_BUSINESS_PRICE);
   const [enterprisePrice, setEnterprisePrice] = useState(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setIsLoggedIn(!!session));
     (supabase.from("app_settings" as any) as any)
       .select("key, value")
-      .in("key", ["plan_price_pro", "plan_price_enterprise"])
+      .in("key", ["plan_price_pro", "plan_price_business", "plan_price_enterprise"])
       .then(({ data }: { data: any[] | null }) => {
         if (!data) return;
         data.forEach(row => {
@@ -139,6 +140,7 @@ const Pricing = () => {
           // Only accept values in a sensible USD range — guards against stale KES values in app_settings
           if (!isNaN(n) && n > 0 && n < 999) {
             if (row.key === "plan_price_pro")        setProPrice(n);
+            if (row.key === "plan_price_business")   setBusinessPrice(n);
             if (row.key === "plan_price_enterprise") setEnterprisePrice(n);
           }
         });
@@ -172,7 +174,7 @@ const Pricing = () => {
     handler.openIframe();
   };
 
-  const plans = PLANS(billingCycle, proPrice, enterprisePrice);
+  const plans = PLANS(billingCycle, proPrice, businessPrice, enterprisePrice);
 
   return (
     <div className="min-h-screen bg-background page-bg-warm overflow-x-hidden">
@@ -342,7 +344,7 @@ const Pricing = () => {
                       )}
                     </Button>
                   ) : plan.name === "Enterprise" ? (
-                    <a href="mailto:hello@crevia.app">
+                    <a href="mailto:hi@crevia.app">
                       <Button
                         variant="outline"
                         className="w-full font-poppins font-semibold btn-ghost-bronze"

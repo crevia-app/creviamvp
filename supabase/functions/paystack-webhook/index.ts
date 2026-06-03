@@ -107,7 +107,13 @@ serve(async (req) => {
         const expiresAt = new Date();
         expiresAt.setMonth(expiresAt.getMonth() + 1);
 
-        const diraLimit = subscriptionPlan === 'business' ? 200 : 40;
+        // Dira limits per plan (NULL = unlimited for Business)
+        const diraLimit =
+          subscriptionPlan === 'business' || subscriptionPlan === 'brand_workspace'
+            ? null
+            : subscriptionPlan === 'pro' || subscriptionPlan === 'creative_pro'
+              ? 500
+              : 15; // free fallback (shouldn't normally reach this branch)
 
         await supabase
           .from('profiles')
@@ -208,7 +214,7 @@ serve(async (req) => {
       const { customer } = event.data;
       await supabase
         .from('profiles')
-        .update({ subscription_status: 'expired', dira_actions_limit: 10 })
+        .update({ subscription_status: 'expired', dira_actions_limit: 15 })
         .eq('email', customer.email);
     }
 
@@ -217,7 +223,7 @@ serve(async (req) => {
       const { customer } = event.data;
       await supabase
         .from('profiles')
-        .update({ subscription_status: 'cancelled', dira_actions_limit: 10 })
+        .update({ subscription_status: 'cancelled', dira_actions_limit: 15 })
         .eq('email', customer.email);
     }
     //we always tell paystack that the webhook has been received if not paystack will keep retrying the webhook
