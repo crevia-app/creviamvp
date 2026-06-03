@@ -479,7 +479,7 @@ const Auth = () => {
 
   // ── Main auth form ─────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 md:p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 md:p-6 relative overflow-hidden safe-area-pt safe-area-pb">
       <PageBg />
 
       <div className="relative z-10 w-full max-w-md animate-fade-in">

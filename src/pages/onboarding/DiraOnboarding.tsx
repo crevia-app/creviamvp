@@ -533,7 +533,7 @@ const DiraOnboarding = () => {
   const progress = ((currentStep + 1) / steps.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex flex-col safe-area-pt safe-area-pb">
       <OnboardingHeader progress={progress} />
       
       {/* Chat Container */}

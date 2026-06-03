@@ -521,8 +521,14 @@ const CreateInvoiceDialog = ({
               <Input
                 type="date"
                 value={dueDate}
-                min={editingInvoice ? undefined : issueDate}
-                onChange={(e) => setDueDate(e.target.value)}
+                min={issueDate > today ? issueDate : today}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (!val) return;
+                  const minDate = issueDate > today ? issueDate : today;
+                  if (val < minDate) return;
+                  setDueDate(val);
+                }}
                 className="mt-1 h-11 text-base"
               />
             </div>

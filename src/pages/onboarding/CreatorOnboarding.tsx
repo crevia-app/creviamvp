@@ -75,7 +75,7 @@ const CreatorOnboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center p-6 safe-area-pt safe-area-pb">
       <div className="w-full max-w-4xl">
         {/* Header */}
         <div className="text-center mb-8">

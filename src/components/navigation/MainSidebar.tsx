@@ -46,7 +46,7 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
 
   return (
     <>
-    <aside className="hidden md:flex flex-col bg-background/80 backdrop-blur-md border-r border-border/50 fixed left-0 top-14 bottom-0 z-30 w-[100px]">
+    <aside className="hidden md:flex flex-col bg-background/80 backdrop-blur-md border-r border-border/50 fixed left-0 top-14 bottom-0 z-30 w-[100px] pl-[env(safe-area-inset-left,0px)]">
       <nav className="flex-1 py-4 space-y-2">
         {navItems.map((item) => {
           const Icon = item.icon;

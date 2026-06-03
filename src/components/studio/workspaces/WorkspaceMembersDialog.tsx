@@ -15,8 +15,7 @@ import { Users, Search, UserPlus, X, Loader2, Crown, Link2, Copy, Check, ShieldC
 
 const getSeatLimit = (plan: string | null): number => {
   if (plan === "enterprise") return 100;
-  if (plan === "free") return 1;
-  return 8; // pro, creative_pro, business, brand_workspace
+  return 8; // free, pro, creative_pro, business, brand_workspace
 };
 
 interface Member {
