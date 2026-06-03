@@ -188,6 +188,7 @@ interface CreiaChatProps {
   externalRoomId?: string;
   hideRoomList?: boolean;
   onBack?: () => void;
+  onOpenGroupInfo?: () => void;
 }
 
 // Generates a unique, consistent hue-based color for each user (WhatsApp-style)
@@ -200,7 +201,7 @@ const avatarStyle = (seed: string): React.CSSProperties => {
   return { background: `hsl(${hue},55%,65%)`, color: `hsl(${hue},55%,22%)` };
 };
 
-const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {}) => {
+const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: CreiaChatProps = {}) => {
   const navigate = useNavigate();
   const { keyboardOpen } = useVisualViewport();
   const { canCreateWorkspace } = useSubscription();
@@ -1949,8 +1950,11 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                       </Button>
                     )}
                     <button
-                      onClick={() => setShowRoomInfo(true)}
-                      className="flex items-center gap-3 min-w-0 hover:opacity-75 transition-opacity"
+                      onClick={() => {
+                        if (onOpenGroupInfo && selectedRoom.is_group) onOpenGroupInfo();
+                        else setShowRoomInfo(true);
+                      }}
+                      className="flex items-center gap-3 min-w-0 hover:opacity-75 active:opacity-50 transition-opacity"
                     >
                     {(() => {
                       const otherMember = !selectedRoom.is_group
@@ -1962,11 +1966,11 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                       return (
                         <div className="relative h-10 w-10 flex-shrink-0">
                           <div
-                            className="h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden"
+                            className="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold overflow-hidden"
                             style={selectedRoom.is_group ? { background: "hsl(36,60%,65%)", color: "hsl(36,60%,22%)" } : avatarStyle(avatarSeed)}
                           >
                             {selectedRoom.is_group ? (
-                              <Users className="h-4 w-4" />
+                              <Sparkles className="h-4 w-4" />
                             ) : avatarUrl ? (
                               <img
                                 src={avatarUrl}
@@ -1991,10 +1995,10 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                       const isOtherOnline = otherMember ? onlineUserIds.has(otherMember.user_id) : false;
                       return (
                         <div className="min-w-0 flex-1">
-                          <p className="font-poppins font-semibold text-sm truncate">
+                          <p className="font-poppins font-semibold text-sm truncate leading-tight">
                             {getRoomDisplayName(selectedRoom)}
                           </p>
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 mt-0.5">
                             {typingUsers.length > 0 ? (
                               <span className="text-[10px] text-emerald-500 font-medium animate-pulse">
                                 {getTypingDisplayNames()} typing...
@@ -2003,7 +2007,8 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                               <span className="text-[10px] text-emerald-500 font-medium">online</span>
                             ) : selectedRoom.is_group && selectedRoom.members ? (
                               <span className="text-[10px] text-muted-foreground">
-                                {selectedRoom.members.length} members
+                                {selectedRoom.members.length} member{selectedRoom.members.length !== 1 ? "s" : ""}
+                                {onOpenGroupInfo ? " · tap for info" : ""}
                               </span>
                             ) : null}
                           </div>
@@ -2013,6 +2018,18 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                     </button>
                   </div>
                   <div className="flex flex-shrink-0 items-center gap-1">
+                    {/* Add People — workspace rooms only, when embedded with info handler */}
+                    {onOpenGroupInfo && selectedRoom.is_group && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-bronze hover:bg-bronze/10"
+                        onClick={onOpenGroupInfo}
+                        title="Members & info"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -2028,7 +2045,10 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setShowRoomInfo(true)}>
+                        <DropdownMenuItem onClick={() => {
+                          if (onOpenGroupInfo && selectedRoom.is_group) onOpenGroupInfo();
+                          else setShowRoomInfo(true);
+                        }}>
                           <Info className="h-4 w-4 mr-2" />
                           {selectedRoom.is_group ? "Group Info" : "Contact Info"}
                         </DropdownMenuItem>

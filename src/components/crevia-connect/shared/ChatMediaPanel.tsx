@@ -20,12 +20,13 @@ interface MediaMessage {
 
 interface ChatMediaPanelProps {
   roomId: string;
+  defaultTab?: TabType;
 }
 
 type TabType = "media" | "docs" | "links";
 
-const ChatMediaPanel = ({ roomId }: ChatMediaPanelProps) => {
-  const [activeTab, setActiveTab] = useState<TabType>("media");
+const ChatMediaPanel = ({ roomId, defaultTab = "media" }: ChatMediaPanelProps) => {
+  const [activeTab, setActiveTab] = useState<TabType>(defaultTab);
   const [allMessages, setAllMessages] = useState<MediaMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});

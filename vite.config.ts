@@ -33,22 +33,25 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // autoUpdate: the new SW installs and skips waiting automatically.
-        // AutoUpdate.tsx delays the hard reload until the user's next natural
-        // navigation or tab-switch, so the reload is never disruptive.
+        // skipWaiting: new SW calls self.skipWaiting() immediately during install,
+        // so it never sits in "waiting" state. Combined with clientsClaim it takes
+        // over all open tabs the moment it activates, firing controllerchange on
+        // every client so AutoUpdate.tsx can trigger a silent reload.
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
         runtimeCaching: [
-          // Always fetch the HTML shell from the network so users immediately
-          // get the latest index.html (with correct chunk hashes) on every
-          // navigation, falling back to cache only when offline.
+          // Navigation (HTML shell) — NetworkFirst with a tight timeout.
+          // On every route navigation the browser tries the network first.
+          // If the server returns a new index.html (new deploy), the SW caches it
+          // so the next cold open on iOS also gets the latest shell.
+          // 3 s timeout: fast enough for good UX, generous enough for slow mobile.
           {
             urlPattern: ({ request }: { request: Request }) => request.mode === 'navigate',
             handler: 'NetworkFirst' as const,
             options: {
               cacheName: 'navigation-cache',
-              networkTimeoutSeconds: 5,
+              networkTimeoutSeconds: 3,
             },
           },
           {
@@ -62,8 +65,8 @@ export default defineConfig({
             },
           },
           {
-            // REST read data — serve stale instantly, revalidate in background.
-            // Returning users see their profile/conversations with zero delay.
+            // REST read data — stale-while-revalidate: instant load, fresh data
+            // in the background. Returning users see content with zero wait.
             urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/.*/i,
             handler: 'StaleWhileRevalidate' as const,
             options: {
@@ -72,14 +75,23 @@ export default defineConfig({
             },
           },
           {
-            // JS/CSS chunks — cache-first: content-hashed filenames mean a new
-            // deploy always produces new URLs, so serving stale chunks is safe.
-            // Returning users load the app from disk with zero network round-trips.
+            // JS/CSS chunks — CacheFirst: content-hashed filenames guarantee a
+            // new deploy produces new URLs, so a cached chunk is never stale.
+            // Cold opens load from disk with zero network round-trips.
             urlPattern: /\.(?:js|css)$/i,
             handler: 'CacheFirst' as const,
             options: {
               cacheName: 'static-assets-cache',
               expiration: { maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
+          {
+            // Fonts and images — CacheFirst with a 90-day TTL.
+            urlPattern: /\.(?:woff2?|ttf|eot|png|jpg|jpeg|svg|gif|webp|ico)$/i,
+            handler: 'CacheFirst' as const,
+            options: {
+              cacheName: 'assets-cache',
+              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 90 },
             },
           },
         ],

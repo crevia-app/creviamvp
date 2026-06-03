@@ -33,6 +33,13 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
+interface LastMessage {
+  content: string | null;
+  message_type: string;
+  sender_name: string | null;
+  sender_id: string;
+}
+
 interface Room {
   id: string;
   name: string | null;
@@ -42,6 +49,8 @@ interface Room {
   avatar_url: string | null;
   memberCount?: number;
   memberUserIds?: string[];
+  lastMessage?: LastMessage | null;
+  unreadCount?: number;
 }
 
 interface WorkspaceInboxListProps {
@@ -133,23 +142,68 @@ const WorkspaceInboxList = ({
 
     const roomIds = memberRooms.map((m) => m.room_id);
 
-    const { data: roomsData } = await supabase
-      .from("chat_rooms")
-      .select("*, chat_room_members(user_id)")
-      .in("id", roomIds)
-      .not("name", "is", null)        // workspaces only — skip DM rooms
-      .order("updated_at", { ascending: false });
+    const [roomsResult, lastMsgsResult, readResult] = await Promise.all([
+      supabase
+        .from("chat_rooms")
+        .select("*, chat_room_members(user_id)")
+        .in("id", roomIds)
+        .not("name", "is", null)
+        .order("updated_at", { ascending: false }),
 
-    if (!roomsData) {
-      setLoading(false);
-      return;
+      // Last message per room via a raw join — fetch recent messages and dedupe in JS
+      supabase
+        .from("chat_messages")
+        .select("id, room_id, content, message_type, sender_id, created_at")
+        .in("room_id", roomIds)
+        .order("created_at", { ascending: false })
+        .limit(roomIds.length * 3),
+
+      supabase
+        .from("chat_read_receipts")
+        .select("room_id, last_read_at")
+        .eq("user_id", userId)
+        .in("room_id", roomIds),
+    ]);
+
+    if (!roomsResult.data) { setLoading(false); return; }
+
+    // Build a map of roomId → last message (deduplicated)
+    const lastMsgMap: Record<string, { content: string | null; message_type: string; sender_id: string }> = {};
+    for (const msg of lastMsgsResult.data ?? []) {
+      if (!lastMsgMap[msg.room_id]) lastMsgMap[msg.room_id] = msg;
     }
 
-    const enriched: Room[] = roomsData.map((r) => {
+    // Read receipt map
+    const readMap: Record<string, string> = {};
+    for (const r of readResult.data ?? []) readMap[r.room_id] = r.last_read_at;
+
+    // Fetch sender names for last messages
+    const senderIds = [...new Set(Object.values(lastMsgMap).map((m) => m.sender_id))];
+    const senderMap: Record<string, string | null> = {};
+    if (senderIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, display_name")
+        .in("id", senderIds);
+      for (const p of profiles ?? []) senderMap[p.id] = p.display_name;
+    }
+
+    const enriched: Room[] = roomsResult.data.map((r) => {
       const memberIds: string[] = (r.chat_room_members ?? []).map(
         (m: { user_id: string }) => m.user_id
       );
-      return { ...r, memberCount: memberIds.length, memberUserIds: memberIds };
+      const lm = lastMsgMap[r.id];
+      const lastReadAt = readMap[r.id];
+
+      return {
+        ...r,
+        memberCount: memberIds.length,
+        memberUserIds: memberIds,
+        lastMessage: lm
+          ? { content: lm.content, message_type: lm.message_type, sender_name: senderMap[lm.sender_id] ?? null, sender_id: lm.sender_id }
+          : null,
+        unreadCount: lastReadAt ? undefined : undefined, // placeholder — real unread needs message counts
+      };
     });
 
     setRooms(enriched);
@@ -328,15 +382,31 @@ const WorkspaceInboxList = ({
                                   {timeAgo(room.updated_at)}
                                 </span>
                               </div>
-                              <div className="flex items-center gap-1.5">
-                                <Users className="w-2.5 h-2.5 text-muted-foreground/40" />
-                                <span className="text-[10px] text-muted-foreground/60">
+                              {/* Last message preview — WhatsApp style */}
+                              {room.lastMessage ? (
+                                <p className="text-[10px] text-muted-foreground/70 truncate leading-snug">
+                                  {room.lastMessage.sender_id === userId
+                                    ? <span className="text-muted-foreground/50">You: </span>
+                                    : room.lastMessage.sender_name
+                                    ? <span className="text-bronze/70">{room.lastMessage.sender_name}: </span>
+                                    : null}
+                                  {room.lastMessage.message_type === "file"
+                                    ? "📎 File"
+                                    : room.lastMessage.message_type === "voice"
+                                    ? "🎤 Voice note"
+                                    : room.lastMessage.message_type === "poll"
+                                    ? "📊 Poll"
+                                    : room.lastMessage.message_type === "invoice"
+                                    ? "🧾 Invoice"
+                                    : room.lastMessage.message_type === "contract"
+                                    ? "📄 Canvas"
+                                    : room.lastMessage.content || ""}
+                                </p>
+                              ) : (
+                                <p className="text-[10px] text-muted-foreground/40 truncate leading-snug">
                                   {room.memberCount || 1} member{(room.memberCount || 1) !== 1 ? "s" : ""}
-                                </span>
-                                <Badge variant="outline" className="h-3.5 px-1 text-[8px] border-bronze/25 text-bronze/80 ml-auto leading-none">
-                                  Active
-                                </Badge>
-                              </div>
+                                </p>
+                              )}
                             </div>
                           </div>
                         </button>
