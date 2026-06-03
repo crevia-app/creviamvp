@@ -1846,10 +1846,10 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                   return (
                     <button
                       key={room.id}
-                      className={`w-full text-left p-3 rounded-xl cursor-pointer transition-colors ${
+                      className={`w-full text-left p-3 rounded-xl cursor-pointer transition-colors touch-manipulation ${
                         selectedRoom?.id === room.id
                           ? "bg-bronze/10 border border-bronze/20"
-                          : "hover:bg-muted/50 active:bg-muted/50"
+                          : "[@media(hover:hover)]:hover:bg-muted/50 active:bg-muted/50"
                       }`}
                       onClick={() => selectRoom(room)}
                     >

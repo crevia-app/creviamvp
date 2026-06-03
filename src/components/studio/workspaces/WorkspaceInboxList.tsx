@@ -298,22 +298,22 @@ const WorkspaceInboxList = ({
                           "relative flex items-center rounded-xl transition-all duration-150 group",
                           isSelected
                             ? "bg-bronze/10 border border-bronze/20 shadow-sm"
-                            : "hover:bg-gray-50 dark:hover:bg-muted/50 border border-transparent"
+                            : "[@media(hover:hover)]:hover:bg-gray-50 dark:[@media(hover:hover)]:hover:bg-muted/50 active:bg-muted/30 border border-transparent"
                         )}
                       >
                         {/* Selectable area */}
                         <button
                           onClick={() => onSelectRoom(room, "workspace")}
-                          className="flex-1 text-left p-2.5 min-w-0"
+                          className="flex-1 text-left p-2.5 min-w-0 touch-manipulation"
                         >
                           <div className="flex items-center gap-2.5">
                             <div className={cn(
                               "w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-150",
-                              isSelected ? "bg-bronze/20" : "bg-gray-100 dark:bg-muted group-hover:bg-bronze/10"
+                              isSelected ? "bg-bronze/20" : "bg-gray-100 dark:bg-muted [@media(hover:hover)]:group-hover:bg-bronze/10"
                             )}>
                               <Sparkles className={cn(
                                 "w-4 h-4 transition-colors duration-150",
-                                isSelected ? "text-bronze" : "text-muted-foreground/50 group-hover:text-bronze/60"
+                                isSelected ? "text-bronze" : "text-muted-foreground/50 [@media(hover:hover)]:group-hover:text-bronze/60"
                               )} />
                             </div>
                             <div className="min-w-0 flex-1">
@@ -346,7 +346,7 @@ const WorkspaceInboxList = ({
                           <DropdownMenuTrigger asChild>
                             <button
                               onClick={(e) => e.stopPropagation()}
-                              className="mr-1.5 w-6 h-6 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted text-muted-foreground/60 hover:text-foreground flex-shrink-0"
+                              className="mr-1.5 w-6 h-6 flex items-center justify-center rounded-lg opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-opacity [@media(hover:hover)]:hover:bg-muted text-muted-foreground/60 [@media(hover:hover)]:hover:text-foreground flex-shrink-0"
                             >
                               <MoreHorizontal className="w-3.5 h-3.5" />
                             </button>
