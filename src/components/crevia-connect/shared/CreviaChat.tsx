@@ -270,6 +270,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   // true  = auto-scroll is active (user is near the bottom or just sent a message)
   // false = user has scrolled up to read history — do NOT pull them back down
   const isNearBottomRef = useRef(true);
+  const scrollRafRef = useRef<number | null>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typingTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const presenceChannelRef = useRef<any>(null);
@@ -709,7 +710,11 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el || !isNearBottomRef.current) return;
-    requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
+    if (scrollRafRef.current !== null) cancelAnimationFrame(scrollRafRef.current);
+    scrollRafRef.current = requestAnimationFrame(() => {
+      el.scrollTop = el.scrollHeight;
+      scrollRafRef.current = null;
+    });
   }, [messages]);
 
   // Send a broadcast typing event
@@ -2092,7 +2097,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
               <div
                 ref={scrollContainerRef}
                 className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y p-3 md:p-4"
-                style={{ overflowAnchor: "auto" }}
+                style={{ overflowAnchor: "none", contain: "strict" }}
                 onScroll={() => {
                   const el = scrollContainerRef.current;
                   if (!el) return;

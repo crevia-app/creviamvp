@@ -256,10 +256,10 @@ function ChatItem({
 function ThinkingIndicator() {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -4 }}
-      transition={{ duration: 0.3 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
       className="flex gap-3"
     >
       <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
@@ -507,27 +507,30 @@ const Dira = () => {
     return () => window.removeEventListener("dira:toggle-sidebar", handler);
   }, []);
 
-  // Smart auto-scroll: pull to bottom only when the user is already near the
-  // bottom (~150 px threshold).  This means streaming chars don't yank the
-  // viewport while the user is scrolling up to read earlier messages.
-  // Force-scroll is triggered explicitly (handleSend / chat switch) by setting
-  // isNearBottomRef.current = true before the messages state update.
-  //
-  // iOS fix: cancel any pending rAF before scheduling a new one so that rapid
-  // streamingDisplay updates (50fps) never queue multiple overlapping scroll
-  // mutations in the same frame — the primary cause of the streaming jitter.
+  // ── Scroll path 1: non-streaming message updates ─────────────────────────
+  // Cancelable rAF so React state batches don't queue multiple scroll ops.
   useEffect(() => {
+    if (isStreaming) return; // streaming has its own direct path below
     const el = scrollContainerRef.current;
     if (!el || !isNearBottomRef.current) return;
-
-    if (scrollRafRef.current !== null) {
-      cancelAnimationFrame(scrollRafRef.current);
-    }
+    if (scrollRafRef.current !== null) cancelAnimationFrame(scrollRafRef.current);
     scrollRafRef.current = requestAnimationFrame(() => {
       el.scrollTop = el.scrollHeight;
       scrollRafRef.current = null;
     });
-  }, [messages, streamingDisplay]);
+  }, [messages, isStreaming]);
+
+  // ── Scroll path 2: active streaming (50fps) ───────────────────────────────
+  // Direct synchronous scrollTop — no rAF. At 50fps the 16ms rAF delay creates
+  // a visible lag between the DOM mutation and scroll position update, which is
+  // exactly what causes the "dancing" jitter on iOS. Synchronous assignment
+  // keeps scroll flush with each rendered token.
+  useEffect(() => {
+    if (!isStreaming) return;
+    const el = scrollContainerRef.current;
+    if (!el || !isNearBottomRef.current) return;
+    el.scrollTop = el.scrollHeight;
+  }, [streamingDisplay, isStreaming]);
 
   // Reset textarea height whenever input is cleared (after send or new chat).
   useEffect(() => {
@@ -1564,7 +1567,7 @@ const Dira = () => {
             <div
               ref={scrollContainerRef}
               className="absolute inset-0 overflow-y-auto overscroll-y-contain touch-pan-y"
-              style={{ willChange: "transform", overflowAnchor: "none" }}
+              style={{ overflowAnchor: "none", contain: "strict" }}
               onScroll={() => {
                 const el = scrollContainerRef.current;
                 if (!el) return;
@@ -1733,9 +1736,10 @@ const Dira = () => {
                       <AnimatePresence>
                         {isStreaming && (
                           <motion.div
-                            initial={{ opacity: 0, y: 6 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.18, ease: "easeOut" }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.15 }}
                             className="group"
                           >
                             <div className="flex gap-3">
