@@ -1952,7 +1952,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                     )}
                     <button
                       onClick={() => {
-                        if (onOpenGroupInfo && selectedRoom.is_group) onOpenGroupInfo();
+                        if (onOpenGroupInfo && selectedRoom.name) onOpenGroupInfo();
                         else setShowRoomInfo(true);
                       }}
                       className="flex items-center gap-3 min-w-0 hover:opacity-75 active:opacity-50 transition-opacity"
@@ -2006,7 +2006,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                               </span>
                             ) : isOtherOnline ? (
                               <span className="text-[10px] text-emerald-500 font-medium">online</span>
-                            ) : selectedRoom.is_group && selectedRoom.members ? (
+                            ) : selectedRoom.name && selectedRoom.members ? (
                               <span className="text-[10px] text-muted-foreground">
                                 {selectedRoom.members.length} member{selectedRoom.members.length !== 1 ? "s" : ""}
                                 {onOpenGroupInfo ? " · tap for info" : ""}
@@ -2020,7 +2020,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                   </div>
                   <div className="flex flex-shrink-0 items-center gap-1">
                     {/* Add People — workspace rooms only, when embedded with info handler */}
-                    {onOpenGroupInfo && selectedRoom.is_group && (
+                    {onOpenGroupInfo && selectedRoom.name && (
                       <Button
                         variant="ghost"
                         size="icon"
@@ -2047,7 +2047,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => {
-                          if (onOpenGroupInfo && selectedRoom.is_group) onOpenGroupInfo();
+                          if (onOpenGroupInfo && selectedRoom.name) onOpenGroupInfo();
                           else setShowRoomInfo(true);
                         }}>
                           <Info className="h-4 w-4 mr-2" />

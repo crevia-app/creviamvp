@@ -81,7 +81,7 @@ const WorkspaceInboxList = ({
   onSelectRoom,
   userId,
 }: WorkspaceInboxListProps) => {
-  const { canCreateWorkspace } = useSubscription();
+  useSubscription(); // keep import used; gate removed — all plans can create workspaces
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -215,13 +215,6 @@ const WorkspaceInboxList = ({
 
   const createWorkspace = async () => {
     if (!createName.trim()) return;
-
-    if (!canCreateWorkspace) {
-      toast.error("Upgrade required", {
-        description: "Free plan is join-only. Upgrade to Pro to create workspaces.",
-      });
-      return;
-    }
 
     setCreating(true);
     const { data, error } = await supabase
@@ -426,7 +419,7 @@ const WorkspaceInboxList = ({
                                     : room.lastMessage.message_type === "contract"
                                     ? "📄 Canvas"
                                     : room.lastMessage.is_encrypted
-                                    ? "🔒 Encrypted message"
+                                    ? "New message"
                                     : (room.lastMessage.content || "").slice(0, 45)}
                                 </p>
                               ) : (
