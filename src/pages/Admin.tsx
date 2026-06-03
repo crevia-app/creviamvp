@@ -426,26 +426,13 @@ const UsersSection = () => {
     setSelStats(null);
     setSelTxns([]);
     setDetailLoad(true);
-    const [{ count: inv }, { count: con }, { data: invData }, { data: brandEscrows }, { data: creatorEscrows }] = await Promise.all([
+    const [{ count: inv }, { count: con }, { data: invData }] = await Promise.all([
       supabase.from("invoices").select("id", { count: "exact", head: true }).eq("user_id", u.id),
       supabase.from("canvases").select("id", { count: "exact", head: true }).eq("user_id", u.id),
       supabase.from("invoices").select("total").eq("user_id", u.id),
-      supabase.from("escrow_payments" as any).select("id").eq("brand_id", u.id),
-      supabase.from("escrow_payments" as any).select("id").eq("creator_id", u.id),
     ]);
     const total = (invData ?? []).reduce((s: number, r: any) => s + (r.total ?? 0), 0);
     setSelStats({ invoices: inv ?? 0, contracts: con ?? 0, invoiceTotal: total });
-
-    const escrowIds = [...(brandEscrows ?? []), ...(creatorEscrows ?? [])].map((e: any) => e.id);
-    if (escrowIds.length > 0) {
-      const { data: txData } = await supabase
-        .from("payment_transactions")
-        .select("id, amount, status, payment_method, transaction_type, transaction_reference, created_at")
-        .in("escrow_id", escrowIds)
-        .order("created_at", { ascending: false })
-        .limit(15);
-      setSelTxns(txData ?? []);
-    }
     setDetailLoad(false);
   };
 
@@ -809,13 +796,7 @@ const BillingSection = () => {
     const [{ data: txnData }, { data: profData }, { data: settingsData }] = await Promise.all([
       supabase
         .from("payment_transactions")
-        .select(`
-          *,
-          escrow:escrow_id (
-            brand:profiles!escrow_payments_brand_id_fkey ( display_name, handle, avatar_url ),
-            creator:profiles!escrow_payments_creator_id_fkey ( display_name, handle, avatar_url )
-          )
-        `)
+        .select("*")
         .order("created_at", { ascending: false })
         .limit(150),
       supabase
@@ -951,28 +932,9 @@ const BillingSection = () => {
           <div className="divide-y divide-white/[0.04]">
             {txns.length === 0 && <p className="text-center py-16 text-white/20 text-sm">No transactions yet</p>}
             {txns.map(t => {
-              const brand   = t.escrow?.brand;
-              const creator = t.escrow?.creator;
               return (
                 <div key={t.id} className="px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
-                  {brand ? (
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <Av url={brand.avatar_url} name={brand.display_name || brand.handle} size="7" />
-                      {creator && (
-                        <>
-                          <span className="text-[10px] text-white/15">→</span>
-                          <Av url={creator.avatar_url} name={creator.display_name || creator.handle} size="7" />
-                        </>
-                      )}
-                    </div>
-                  ) : null}
                   <div className="flex-1 min-w-0">
-                    {brand && (
-                      <p className="text-xs text-white/70 font-medium truncate leading-tight">
-                        {brand.display_name || `@${brand.handle}`}
-                        {creator && <span className="text-white/25"> → {creator.display_name || `@${creator.handle}`}</span>}
-                      </p>
-                    )}
                     <p className="text-xs text-white/60 font-mono truncate">{t.transaction_reference || t.id.slice(0, 20)}</p>
                     <p className="text-[11px] text-white/25 mt-0.5">{t.payment_method || t.transaction_type} · {format(new Date(t.created_at), "dd MMM yyyy, HH:mm")}</p>
                   </div>
@@ -1000,12 +962,9 @@ const BillingSection = () => {
               </div>
               <div className="divide-y divide-white/[0.04]">
                 {refundable.map(t => {
-                  const brand = t.escrow?.brand;
                   return (
                     <div key={t.id} className="px-4 md:px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
-                      {brand && <Av url={brand.avatar_url} name={brand.display_name || brand.handle} size="7" />}
                       <div className="flex-1 min-w-0">
-                        {brand && <p className="text-xs text-white/70 font-medium truncate leading-tight">{brand.display_name || `@${brand.handle}`}</p>}
                         <p className="text-xs text-white/60 font-mono truncate">{t.transaction_reference || t.id.slice(0, 16)}</p>
                         <p className="text-[11px] text-white/25 mt-0.5 truncate">{format(new Date(t.created_at), "dd MMM yyyy, HH:mm")}</p>
                       </div>
@@ -1030,12 +989,9 @@ const BillingSection = () => {
               </div>
               <div className="divide-y divide-white/[0.04]">
                 {refundedList.map(t => {
-                  const brand = t.escrow?.brand;
                   return (
                     <div key={t.id} className="px-4 md:px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
-                      {brand && <Av url={brand.avatar_url} name={brand.display_name || brand.handle} size="7" />}
                       <div className="flex-1 min-w-0">
-                        {brand && <p className="text-xs text-white/70 font-medium truncate leading-tight">{brand.display_name || `@${brand.handle}`}</p>}
                         <p className="text-xs text-white/60 font-mono truncate">{t.transaction_reference || t.id.slice(0, 16)}</p>
                         <p className="text-[11px] text-white/25 mt-0.5 truncate">{format(new Date(t.created_at), "dd MMM yy")}</p>
                       </div>

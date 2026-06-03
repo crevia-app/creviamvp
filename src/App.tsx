@@ -214,9 +214,7 @@ function AppContent() {
           <Route path="/privacy-policy" element={<AppLayout><PrivacyPolicy /></AppLayout>} />
           <Route path="/terms-of-service" element={<AppLayout><TermsOfService /></AppLayout>} />
           <Route path="/cookie-policy" element={<AppLayout><CookiePolicy /></AppLayout>} />
-          <Route path="/user-type-selection" element={<Navigate to="/auth" replace />} />
-          <Route path="/signup/creator" element={<Navigate to="/auth?mode=signup" replace />} />
-          <Route path="/signup/brand" element={<Navigate to="/auth?mode=signup" replace />} />
+
           <Route path="/:username" element={<PublicPageWrapper><PublicProfile /></PublicPageWrapper>} />
 
           {/* Protected routes */}
