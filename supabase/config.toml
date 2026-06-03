@@ -6,12 +6,6 @@ verify_jwt = false
 [functions.dira-suggestions]
 verify_jwt = false
 
-[functions.dira-chat]
-verify_jwt = false
-
-[functions.contracts-create]
-verify_jwt = false
-
 [functions.invoices-create]
 verify_jwt = false
 

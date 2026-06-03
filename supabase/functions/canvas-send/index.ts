@@ -6,7 +6,7 @@ const ALLOWED_ORIGINS = [
   "https://www.crevia.app",
   "http://localhost:8080",
   "http://localhost:5173",
-  "https://creviamvp.vercel.app",
+  "https://crevia.app",
 ];
 
 function getCorsHeaders(req: Request) {
@@ -157,7 +157,7 @@ serve(async (req) => {
                 <td>
                   <table cellpadding="0" cellspacing="0"><tr>
                     <td style="vertical-align:middle;padding-right:10px;">
-                      <img src="https://creviamvp.vercel.app/crevia-logo.png" alt="Crevia" width="40" height="40" style="display:block;border-radius:50%;border:1px solid #333;" />
+                      <img src="https://crevia.app/crevia-logo.png" alt="Crevia" width="40" height="40" style="display:block;border-radius:50%;border:1px solid #333;" />
                     </td>
                     <td style="vertical-align:middle;">
                       <span style="font-size:22px;font-weight:700;color:#c9a96e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">Crevia</span>
@@ -240,7 +240,7 @@ serve(async (req) => {
           <tr>
             <td style="padding:28px 40px;">
               <table width="100%"><tr><td align="center">
-                <a href="https://creviamvp.vercel.app/received?tab=canvases&id=${contract_id}" style="display:inline-block;background:#c9a96e;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:15px;">
+                <a href="https://crevia.app/received?tab=canvases&id=${contract_id}" style="display:inline-block;background:#c9a96e;color:#fff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:15px;">
                   View &amp; Sign Canvas
                 </a>
               </td></tr></table>
@@ -251,7 +251,7 @@ serve(async (req) => {
           <tr>
             <td style="padding:0 40px 32px;border-top:1px solid #f0ede8;">
               <p style="margin:16px 0 0;font-size:12px;color:#aaa;line-height:1.7;">
-                This Canvas was sent via <strong style="color:#c9a96e;">Crevia</strong> · creviamvp.vercel.app<br/>
+                This Canvas was sent via <strong style="color:#c9a96e;">Crevia</strong> · crevia.app<br/>
                 Log in to your Crevia account to review and sign.
               </p>
             </td>

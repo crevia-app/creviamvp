@@ -9,7 +9,7 @@ const ALLOWED_ORIGINS = [
   "https://www.crevia.app",
   "http://localhost:8080",
   "http://localhost:5173",
-  "https://creviamvp.vercel.app",
+  "https://crevia.app",
 ];
 
 function getCorsHeaders(req: Request) {
@@ -169,7 +169,7 @@ serve(async (req: Request) => {
   <div class="header">
     <table cellpadding="0" cellspacing="0" style="margin-bottom:12px;"><tr>
       <td style="vertical-align:middle;padding-right:10px;">
-        <img src="https://creviamvp.vercel.app/crevia-logo.png" alt="Crevia" width="36" height="36" style="display:block;border-radius:50%;border:1px solid #444;" />
+        <img src="https://crevia.app/crevia-logo.png" alt="Crevia" width="36" height="36" style="display:block;border-radius:50%;border:1px solid #444;" />
       </td>
       <td style="vertical-align:middle;">
         <span style="font-size:20px;font-weight:700;color:#c9a96e;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">Crevia</span>
