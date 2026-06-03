@@ -415,7 +415,7 @@ const UsersSection = () => {
   const load = async () => {
     const { data } = await supabase
       .from("profiles")
-      .select("id, display_name, handle, email, avatar_url, subscription_plan, subscription_status, subscription_expires_at, created_at, is_verified, is_admin, user_type")
+      .select("id, display_name, handle, email, avatar_url, subscription_plan, subscription_status, subscription_expires_at, created_at, is_verified, is_admin, user_type, dira_actions_used, dira_actions_limit, invoices_used_this_month, canvases_used_this_month, esignatures_used_this_month, workspaces_created_this_month")
       .order("created_at", { ascending: false });
     setUsers(data ?? []);
     setLoading(false);
@@ -599,6 +599,70 @@ const UsersSection = () => {
                 <div key={r.label} className={cn("flex items-center justify-between px-4 py-3", i !== 0 && "border-t border-white/[0.04]")}>
                   <span className="text-xs text-white/35">{r.label}</span>
                   <span className="text-xs text-white/70 font-medium">{r.value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Usage this month */}
+            <div className="bg-[#111] border border-white/[0.06] rounded-xl overflow-hidden">
+              <p className="text-[11px] text-white/35 px-4 py-2.5 border-b border-white/[0.04] font-semibold uppercase tracking-wider">
+                Usage this month
+              </p>
+              {[
+                {
+                  label: "Dira prompts",
+                  used: selected.dira_actions_used ?? 0,
+                  limit: selected.dira_actions_limit == null ? "∞" : String(selected.dira_actions_limit),
+                  pct: selected.dira_actions_limit == null ? 0
+                    : Math.min(100, Math.round(((selected.dira_actions_used ?? 0) / selected.dira_actions_limit) * 100)),
+                },
+                {
+                  label: "Invoices",
+                  used: selected.invoices_used_this_month ?? 0,
+                  limit: ["pro","business","creative_pro","brand_workspace","enterprise"].includes(selected.subscription_plan) ? "∞" : "3",
+                  pct: ["pro","business","creative_pro","brand_workspace","enterprise"].includes(selected.subscription_plan) ? 0
+                    : Math.min(100, Math.round(((selected.invoices_used_this_month ?? 0) / 3) * 100)),
+                },
+                {
+                  label: "Canvas drafts",
+                  used: selected.canvases_used_this_month ?? 0,
+                  limit: ["pro","business","creative_pro","brand_workspace","enterprise"].includes(selected.subscription_plan) ? "∞" : "6",
+                  pct: ["pro","business","creative_pro","brand_workspace","enterprise"].includes(selected.subscription_plan) ? 0
+                    : Math.min(100, Math.round(((selected.canvases_used_this_month ?? 0) / 6) * 100)),
+                },
+                {
+                  label: "E-signatures",
+                  used: selected.esignatures_used_this_month ?? 0,
+                  limit: ["pro","business","creative_pro","brand_workspace","enterprise"].includes(selected.subscription_plan) ? "∞" : "1",
+                  pct: ["pro","business","creative_pro","brand_workspace","enterprise"].includes(selected.subscription_plan) ? 0
+                    : Math.min(100, Math.round(((selected.esignatures_used_this_month ?? 0) / 1) * 100)),
+                },
+                {
+                  label: "Workspaces created",
+                  used: selected.workspaces_created_this_month ?? 0,
+                  limit: ["business","brand_workspace","enterprise"].includes(selected.subscription_plan) ? "∞"
+                    : ["pro","creative_pro"].includes(selected.subscription_plan) ? "10" : "0",
+                  pct: ["business","brand_workspace","enterprise"].includes(selected.subscription_plan) ? 0
+                    : ["pro","creative_pro"].includes(selected.subscription_plan)
+                      ? Math.min(100, Math.round(((selected.workspaces_created_this_month ?? 0) / 10) * 100))
+                      : 0,
+                },
+              ].map(({ label, used, limit, pct }) => (
+                <div key={label} className="px-4 py-2.5 border-t border-white/[0.04] first:border-t-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] text-white/40">{label}</span>
+                    <span className="text-[11px] text-white/60 font-semibold tabular-nums">
+                      {used} / {limit}
+                    </span>
+                  </div>
+                  {limit !== "∞" && limit !== "0" && (
+                    <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">
+                      <div
+                        className={cn("h-full rounded-full transition-all", pct >= 100 ? "bg-red-500" : pct >= 80 ? "bg-amber-500" : "bg-bronze")}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
