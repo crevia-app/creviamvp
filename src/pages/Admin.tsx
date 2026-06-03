@@ -459,8 +459,21 @@ const UsersSection = () => {
     setActionLoad(false);
   };
 
-  const changePlan = (plan: string) =>
-    applyUpdate(selected.id, { subscription_plan: plan || null }, `Plan changed to ${plan || "free"}`);
+  const changePlan = (plan: string) => {
+    const isFreeDowngrade = !plan || plan === "free";
+    const diraLimit =
+      plan === "business" || plan === "brand_workspace" ? null
+      : plan === "pro" || plan === "creative_pro"       ? 500
+      : 15;
+    const expires = new Date();
+    expires.setFullYear(expires.getFullYear() + 10); // 10-year manual grant
+    applyUpdate(selected.id, {
+      subscription_plan:       plan || null,
+      subscription_status:     isFreeDowngrade ? "inactive" : "active",
+      subscription_expires_at: isFreeDowngrade ? null : expires.toISOString(),
+      dira_actions_limit:      isFreeDowngrade ? 15 : diraLimit,
+    }, `Plan changed to ${plan || "free"}`);
+  };
 
   const toggleVerified = () =>
     applyUpdate(selected.id, { is_verified: !selected.is_verified }, selected.is_verified ? "Verification removed" : "User verified");
@@ -621,21 +634,33 @@ const UsersSection = () => {
                 <div className="bg-[#111] border border-white/[0.06] rounded-xl p-3">
                   <p className="text-[11px] text-white/35 mb-2">Subscription plan</p>
                   <div className="flex gap-1.5 flex-wrap">
-                    {["free", "pro", "enterprise"].map(plan => (
-                      <button
-                        key={plan}
-                        disabled={actionLoad || (selected.subscription_plan || "free") === plan}
-                        onClick={() => changePlan(plan === "free" ? "" : plan)}
-                        className={cn(
-                          "px-3 py-1 rounded-lg text-[11px] font-semibold transition-all capitalize",
-                          (selected.subscription_plan || "free") === plan
-                            ? plan === "pro" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                              : plan === "enterprise" ? "bg-violet-500/20 text-violet-400 border border-violet-500/30"
-                              : "bg-white/10 text-white/50 border border-white/10"
-                            : "bg-white/[0.04] text-white/30 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white/60"
-                        )}
-                      >{plan}</button>
-                    ))}
+                    {[
+                      { key: "free",       label: "Free" },
+                      { key: "pro",        label: "Pro" },
+                      { key: "business",   label: "Business" },
+                      { key: "enterprise", label: "Enterprise" },
+                    ].map(({ key, label }) => {
+                      const current = selected.subscription_plan || "free";
+                      const isActive = current === key;
+                      const activeStyle =
+                        key === "pro"        ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                        : key === "business"   ? "bg-amber-500/20  text-amber-400  border-amber-500/30"
+                        : key === "enterprise" ? "bg-violet-500/20  text-violet-400  border-violet-500/30"
+                        : "bg-white/10 text-white/50 border-white/10";
+                      return (
+                        <button
+                          key={key}
+                          disabled={actionLoad || isActive}
+                          onClick={() => changePlan(key === "free" ? "" : key)}
+                          className={cn(
+                            "px-3 py-1 rounded-lg text-[11px] font-semibold transition-all border",
+                            isActive
+                              ? activeStyle
+                              : "bg-white/[0.04] text-white/30 border-white/[0.06] hover:bg-white/[0.08] hover:text-white/60"
+                          )}
+                        >{label}</button>
+                      );
+                    })}
                   </div>
                 </div>
 
