@@ -59,9 +59,19 @@ export function PwaUpdateBanner() {
               <X className="h-3.5 w-3.5" />
             </button>
 
-            {/* Update — posts SKIP_WAITING then reloads when user is ready */}
+            {/* Update — triple-layer reload guarantee:
+                1. updateServiceWorker(true) posts SKIP_WAITING via the hook
+                2. Direct SW message as fallback if hook reference is stale
+                3. Hard reload after 800ms if neither triggered controllerchange */}
             <button
-              onClick={() => updateServiceWorker(true)}
+              onClick={async () => {
+                await updateServiceWorker(true);
+                const reg = await navigator.serviceWorker.getRegistration().catch(() => null);
+                if (reg?.waiting) {
+                  reg.waiting.postMessage({ type: "SKIP_WAITING" });
+                }
+                setTimeout(() => window.location.reload(), 800);
+              }}
               className="flex-shrink-0 flex items-center gap-1.5 h-8 px-3 rounded-xl bg-[#F0782F] hover:bg-[#F0782F]/90 active:scale-95 transition-all text-[12px] font-bold text-white"
             >
               <RefreshCw className="h-3 w-3" />
