@@ -25,12 +25,10 @@ import {
   Check,
   ShieldCheck,
   ShieldOff,
-  Lock,
   Pencil,
   Image as ImageIcon,
-  File,
-  Hash,
   Sparkles,
+  Camera,
 } from "lucide-react";
 
 const getSeatLimit = (plan: string | null): number => {
@@ -73,13 +71,11 @@ interface Props {
   initialTab?: Tab;
 }
 
-type Tab = "members" | "media" | "docs" | "links";
+type Tab = "members" | "media";
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: "members", label: "Members", icon: Users },
-  { id: "media", label: "Media", icon: ImageIcon },
-  { id: "docs", label: "Files", icon: File },
-  { id: "links", label: "Links", icon: Hash },
+  { id: "media",   label: "Media",   icon: ImageIcon },
 ];
 
 const WorkspaceInfoSheet = ({
@@ -107,19 +103,25 @@ const WorkspaceInfoSheet = ({
   const [nameValue, setNameValue] = useState(roomName ?? "");
   const [savingName, setSavingName] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const isCreator = currentUserId === createdBy;
+  // Admins can manage members (but only creator can delete/demote other admins)
+  const currentUserRole = members.find(m => m.user_id === currentUserId)?.role ?? "member";
+  const isAdminOrCreator = isCreator || currentUserRole === "admin";
   const seatLimit = getSeatLimit(creatorPlan);
   const atSeatLimit = members.length >= seatLimit;
-  const isBusinessPlan = creatorPlan === "business" || creatorPlan === "brand_workspace" || creatorPlan === "enterprise";
 
   useEffect(() => {
     if (open) {
       setActiveTab(initialTab);
       fetchMembers();
       fetchCreatorPlan();
+      fetchRoomAvatar();
       setSearch("");
       setSearchResults([]);
       setShowSearch(false);
@@ -128,6 +130,15 @@ const WorkspaceInfoSheet = ({
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, roomId]);
+
+  const fetchRoomAvatar = async () => {
+    const { data } = await supabase
+      .from("chat_rooms")
+      .select("avatar_url")
+      .eq("id", roomId)
+      .single();
+    if (data) setAvatarUrl(data.avatar_url);
+  };
 
   const fetchCreatorPlan = async () => {
     const { data } = await supabase
@@ -161,6 +172,43 @@ const WorkspaceInfoSheet = ({
     setLoadingMembers(false);
   };
 
+  // ── Avatar upload ──────────────────────────────────────────────────────────
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image too large — max 5 MB");
+      return;
+    }
+    setUploadingAvatar(true);
+    const ext = file.name.split(".").pop() ?? "jpg";
+    const path = `workspace-avatars/${roomId}-${Date.now()}.${ext}`;
+    const { error: uploadErr } = await supabase.storage
+      .from("chat-files")
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (uploadErr) {
+      toast.error("Failed to upload image");
+      setUploadingAvatar(false);
+      return;
+    }
+    const { data: urlData } = supabase.storage.from("chat-files").getPublicUrl(path);
+    const publicUrl = urlData.publicUrl;
+    const { error: dbErr } = await supabase
+      .from("chat_rooms")
+      .update({ avatar_url: publicUrl })
+      .eq("id", roomId);
+    if (dbErr) {
+      toast.error("Failed to save avatar");
+    } else {
+      setAvatarUrl(publicUrl);
+      toast.success("Workspace photo updated");
+    }
+    setUploadingAvatar(false);
+    // Reset input so same file can be re-selected
+    if (avatarInputRef.current) avatarInputRef.current.value = "";
+  };
+
+  // ── Member management ──────────────────────────────────────────────────────
   const handleSearchChange = (value: string) => {
     setSearch(value);
     if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -216,13 +264,15 @@ const WorkspaceInfoSheet = ({
     setRemovingId(null);
   };
 
-  const toggleRole = async (userId: string, currentRole: string) => {
-    if (!isBusinessPlan) {
-      toast.error("Business feature", { description: "Upgrade to Business to assign admin roles." });
+  const toggleRole = async (userId: string, targetCurrentRole: string) => {
+    // Admins can promote members → admin.
+    // Only the creator/owner can demote admins → member.
+    if (targetCurrentRole === "admin" && !isCreator) {
+      toast.error("Only the workspace owner can demote admins.");
       return;
     }
     setPromotingId(userId);
-    const newRole = currentRole === "admin" ? "member" : "admin";
+    const newRole = targetCurrentRole === "admin" ? "member" : "admin";
     const { error } = await supabase
       .from("chat_room_members")
       .update({ role: newRole })
@@ -231,6 +281,8 @@ const WorkspaceInfoSheet = ({
     if (!error) {
       setMembers((prev) => prev.map((m) => m.user_id === userId ? { ...m, role: newRole } : m));
       toast.success(newRole === "admin" ? "Promoted to admin" : "Demoted to member");
+    } else {
+      toast.error("Failed to update role");
     }
     setPromotingId(null);
   };
@@ -297,12 +349,46 @@ const WorkspaceInfoSheet = ({
         <div className="flex flex-col items-center pt-6 pb-4 px-5 border-b border-border/50 flex-shrink-0 gap-3 bg-card/30">
           <SheetTitle className="sr-only">Workspace Info</SheetTitle>
 
-          {/* Group avatar */}
-          <div
-            className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold shadow-sm flex-shrink-0"
-            style={groupAvatar}
-          >
-            <Sparkles className="w-9 h-9" />
+          {/* Group avatar — owner can change by clicking */}
+          <div className="relative group/avatar">
+            <div
+              className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold shadow-sm flex-shrink-0 overflow-hidden"
+              style={avatarUrl ? {} : groupAvatar}
+            >
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt="Workspace"
+                  className="w-20 h-20 object-cover"
+                  onError={() => setAvatarUrl(null)}
+                />
+              ) : (
+                <Sparkles className="w-9 h-9" />
+              )}
+            </div>
+            {/* Camera overlay — owner only */}
+            {isCreator && (
+              <>
+                <button
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                  className="absolute inset-0 rounded-2xl bg-black/50 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity cursor-pointer"
+                  title="Change workspace photo"
+                >
+                  {uploadingAvatar
+                    ? <Loader2 className="w-5 h-5 text-white animate-spin" />
+                    : <Camera className="w-5 h-5 text-white" />
+                  }
+                </button>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={handleAvatarChange}
+                />
+              </>
+            )}
           </div>
 
           {/* Name — editable by creator */}
@@ -343,8 +429,8 @@ const WorkspaceInfoSheet = ({
             </p>
           </div>
 
-          {/* Quick actions */}
-          {isCreator && (
+          {/* Quick actions — visible to creator AND admins */}
+          {isAdminOrCreator && (
             <div className="flex gap-2 w-full max-w-[280px]">
               <Button
                 size="sm"
@@ -374,7 +460,7 @@ const WorkspaceInfoSheet = ({
           )}
         </div>
 
-        {/* ── Tab bar ── */}
+        {/* ── Tab bar — Members + Media only ── */}
         <div className="flex border-b border-border/50 flex-shrink-0 bg-background/50">
           {TABS.map((tab) => {
             const Icon = tab.icon;
@@ -398,6 +484,7 @@ const WorkspaceInfoSheet = ({
 
         {/* ── Tab content ── */}
         <div className="flex-1 min-h-0 overflow-hidden">
+
           {/* Members Tab */}
           {activeTab === "members" && (
             <ScrollArea className="h-full">
@@ -426,9 +513,9 @@ const WorkspaceInfoSheet = ({
                   )}
                 </div>
 
-                {/* Search to add — visible when isCreator */}
+                {/* Search to add — visible to creator AND admins */}
                 <AnimatePresence>
-                  {isCreator && showSearch && (
+                  {isAdminOrCreator && showSearch && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
@@ -449,7 +536,6 @@ const WorkspaceInfoSheet = ({
                         )}
                       </div>
 
-                      {/* Search results */}
                       {searchResults.length > 0 && (
                         <div className="border border-border rounded-xl overflow-hidden divide-y divide-border mb-2">
                           {searchResults.map((user) => (
@@ -489,7 +575,7 @@ const WorkspaceInfoSheet = ({
                   )}
                 </AnimatePresence>
 
-                {isCreator && !showSearch && (
+                {isAdminOrCreator && !showSearch && (
                   <button
                     onClick={() => setShowSearch(true)}
                     className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-border hover:border-bronze/40 hover:bg-bronze/5 transition-all text-left"
@@ -511,13 +597,20 @@ const WorkspaceInfoSheet = ({
                     {members.map((m) => {
                       const isOwner = m.user_id === createdBy;
                       const isMe = m.user_id === currentUserId;
+                      const targetIsAdmin = m.role === "admin";
+                      // Admins can add admins; only creator can demote admins
+                      const canToggleRole = isAdminOrCreator && !isOwner && !isMe &&
+                        (!targetIsAdmin || isCreator);
+                      // Only creator/admin can remove; cannot remove owner or self
+                      const canRemove = isAdminOrCreator && !isOwner && !isMe;
+
                       return (
                         <motion.div
                           key={m.user_id}
                           layout
                           className="flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-muted/30 transition-colors"
                         >
-                          {/* Avatar with online dot */}
+                          {/* Avatar */}
                           <div className="relative flex-shrink-0">
                             <div
                               className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold overflow-hidden"
@@ -553,29 +646,27 @@ const WorkspaceInfoSheet = ({
                             </p>
                           </div>
 
-                          {/* Actions — creator only, not self */}
-                          {isCreator && !isOwner && (
-                            <div className="flex items-center gap-0.5 flex-shrink-0">
+                          {/* Actions */}
+                          <div className="flex items-center gap-0.5 flex-shrink-0">
+                            {/* Promote / demote */}
+                            {canToggleRole && (
                               <button
                                 onClick={() => toggleRole(m.user_id, m.role)}
                                 disabled={promotingId === m.user_id}
-                                title={m.role === "admin" ? "Demote to member" : "Promote to admin"}
-                                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${
-                                  isBusinessPlan
-                                    ? "text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10"
-                                    : "text-muted-foreground/30 cursor-not-allowed"
-                                }`}
+                                title={targetIsAdmin ? "Demote to member" : "Promote to admin"}
+                                className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors text-muted-foreground hover:text-blue-500 hover:bg-blue-500/10"
                               >
                                 {promotingId === m.user_id ? (
                                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                ) : m.role === "admin" ? (
+                                ) : targetIsAdmin ? (
                                   <ShieldOff className="w-3.5 h-3.5" />
-                                ) : isBusinessPlan ? (
-                                  <ShieldCheck className="w-3.5 h-3.5" />
                                 ) : (
-                                  <Lock className="w-3.5 h-3.5" />
+                                  <ShieldCheck className="w-3.5 h-3.5" />
                                 )}
                               </button>
+                            )}
+                            {/* Remove */}
+                            {canRemove && (
                               <button
                                 onClick={() => removeMember(m.user_id)}
                                 disabled={removingId === m.user_id}
@@ -588,8 +679,8 @@ const WorkspaceInfoSheet = ({
                                   <X className="w-3.5 h-3.5" />
                                 )}
                               </button>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </motion.div>
                       );
                     })}
@@ -599,11 +690,11 @@ const WorkspaceInfoSheet = ({
             </ScrollArea>
           )}
 
-          {/* Media / Docs / Links — reuse ChatMediaPanel with internal tab forcing */}
-          {activeTab !== "members" && (
+          {/* Media tab — ChatMediaPanel has its own Media / Docs / Links tabs internally */}
+          {activeTab === "media" && (
             <ScrollArea className="h-full">
               <div className="px-4 py-3">
-                <ChatMediaPanelForTab roomId={roomId} tab={activeTab} />
+                <ChatMediaPanel roomId={roomId} defaultTab="media" />
               </div>
             </ScrollArea>
           )}
@@ -611,13 +702,6 @@ const WorkspaceInfoSheet = ({
       </SheetContent>
     </Sheet>
   );
-};
-
-// Thin wrapper that forces ChatMediaPanel to start on the correct tab
-const ChatMediaPanelForTab = ({ roomId, tab }: { roomId: string; tab: "media" | "docs" | "links" }) => {
-  // Map our tab IDs to ChatMediaPanel tab IDs
-  const panelTab = tab === "docs" ? "docs" : tab === "links" ? "links" : "media";
-  return <ChatMediaPanel roomId={roomId} defaultTab={panelTab as any} />;
 };
 
 export default WorkspaceInfoSheet;

@@ -53,6 +53,7 @@ interface Room {
   memberUserIds?: string[];
   lastMessage?: LastMessage | null;
   unreadCount?: number;
+  myRole?: string; // current user's role in this room
 }
 
 interface WorkspaceInboxListProps {
@@ -135,7 +136,7 @@ const WorkspaceInboxList = ({
   const fetchRooms = async () => {
     const { data: memberRooms } = await supabase
       .from("chat_room_members")
-      .select("room_id")
+      .select("room_id, role")
       .eq("user_id", userId);
 
     if (!memberRooms?.length) {
@@ -144,6 +145,9 @@ const WorkspaceInboxList = ({
     }
 
     const roomIds = memberRooms.map((m) => m.room_id);
+    // Map roomId → current user's role
+    const myRoleMap: Record<string, string> = {};
+    for (const m of memberRooms) myRoleMap[m.room_id] = m.role;
 
     const [roomsResult, lastMsgsResult, readResult] = await Promise.all([
       supabase
@@ -205,7 +209,8 @@ const WorkspaceInboxList = ({
         lastMessage: lm
           ? { content: lm.content, message_type: lm.message_type, sender_name: senderMap[lm.sender_id] ?? null, sender_id: lm.sender_id, is_encrypted: lm.is_encrypted }
           : null,
-        unreadCount: lastReadAt ? undefined : undefined, // placeholder — real unread needs message counts
+        unreadCount: lastReadAt ? undefined : undefined,
+        myRole: myRoleMap[r.id] ?? "member",
       };
     });
 
@@ -431,32 +436,38 @@ const WorkspaceInboxList = ({
                           </div>
                         </button>
 
-                        {/* ⋮ context menu */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              onClick={(e) => e.stopPropagation()}
-                              className="mr-1.5 w-6 h-6 flex items-center justify-center rounded-lg opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-opacity [@media(hover:hover)]:hover:bg-muted text-muted-foreground/60 [@media(hover:hover)]:hover:text-foreground flex-shrink-0"
-                            >
-                              <MoreHorizontal className="w-3.5 h-3.5" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-36">
-                            <DropdownMenuItem
-                              onClick={(e) => { e.stopPropagation(); setRenameValue(room.name ?? ""); setRenameDialog(room); }}
-                              className="text-xs gap-2"
-                            >
-                              <Pencil className="w-3.5 h-3.5" /> Rename
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={(e) => { e.stopPropagation(); setDeleteConfirm(room); }}
-                              className="text-xs gap-2 text-destructive focus:text-destructive"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" /> Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        {/* ⋮ context menu — owner+admin can rename; only owner can delete */}
+                        {(room.created_by === userId || room.myRole === "admin") && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                onClick={(e) => e.stopPropagation()}
+                                className="mr-1.5 w-6 h-6 flex items-center justify-center rounded-lg opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-opacity [@media(hover:hover)]:hover:bg-muted text-muted-foreground/60 [@media(hover:hover)]:hover:text-foreground flex-shrink-0"
+                              >
+                                <MoreHorizontal className="w-3.5 h-3.5" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-36">
+                              <DropdownMenuItem
+                                onClick={(e) => { e.stopPropagation(); setRenameValue(room.name ?? ""); setRenameDialog(room); }}
+                                className="text-xs gap-2"
+                              >
+                                <Pencil className="w-3.5 h-3.5" /> Rename
+                              </DropdownMenuItem>
+                              {room.created_by === userId && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={(e) => { e.stopPropagation(); setDeleteConfirm(room); }}
+                                    className="text-xs gap-2 text-destructive focus:text-destructive"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </motion.div>
                     );
                   })}
