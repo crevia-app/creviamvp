@@ -395,6 +395,9 @@ const Dira = () => {
   // Smart auto-scroll: only pull to bottom if the user is already near it.
   // When the user scrolls up to read history, streaming chars don't fight them.
   const isNearBottomRef = useRef(true);
+  // Tracks the pending rAF so we cancel before scheduling a new one.
+  // Prevents multiple overlapping scroll mutations during streaming on iOS.
+  const scrollRafRef = useRef<number | null>(null);
 
   // ── NEW: message interaction state ──
   const [editingMessageIdx, setEditingMessageIdx] = useState<number | null>(null);
@@ -509,12 +512,20 @@ const Dira = () => {
   // viewport while the user is scrolling up to read earlier messages.
   // Force-scroll is triggered explicitly (handleSend / chat switch) by setting
   // isNearBottomRef.current = true before the messages state update.
+  //
+  // iOS fix: cancel any pending rAF before scheduling a new one so that rapid
+  // streamingDisplay updates (50fps) never queue multiple overlapping scroll
+  // mutations in the same frame — the primary cause of the streaming jitter.
   useEffect(() => {
     const el = scrollContainerRef.current;
-    if (!el) return;
-    if (!isNearBottomRef.current) return;
-    requestAnimationFrame(() => {
+    if (!el || !isNearBottomRef.current) return;
+
+    if (scrollRafRef.current !== null) {
+      cancelAnimationFrame(scrollRafRef.current);
+    }
+    scrollRafRef.current = requestAnimationFrame(() => {
       el.scrollTop = el.scrollHeight;
+      scrollRafRef.current = null;
     });
   }, [messages, streamingDisplay]);
 
@@ -1553,7 +1564,7 @@ const Dira = () => {
             <div
               ref={scrollContainerRef}
               className="absolute inset-0 overflow-y-auto overscroll-y-contain touch-pan-y"
-              style={{ willChange: "transform" }}
+              style={{ willChange: "transform", overflowAnchor: "none" }}
               onScroll={() => {
                 const el = scrollContainerRef.current;
                 if (!el) return;
@@ -1747,7 +1758,7 @@ const Dira = () => {
                           <ThinkingIndicator />
                         )}
                       </AnimatePresence>
-                      <div ref={messagesEndRef} />
+                      <div ref={messagesEndRef} className="h-px w-full" />
                     </div>
                   </div>
                 </div>
