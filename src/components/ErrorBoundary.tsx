@@ -2,6 +2,7 @@ import React from "react";
 
 interface State {
   hasError: boolean;
+  isChunkError: boolean;
   message: string;
   stack: string;
 }
@@ -30,10 +31,16 @@ export class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
   State
 > {
-  state: State = { hasError: false, message: "", stack: "" };
+  state: State = { hasError: false, isChunkError: false, message: "", stack: "" };
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, message: error.message, stack: error.stack ?? "" };
+    const isChunkError =
+      error.message.includes("Failed to fetch dynamically imported module") ||
+      error.message.includes("Importing a module script failed") ||
+      error.message.includes("Unable to preload CSS") ||
+      error.message.includes("Loading chunk") ||
+      error.message.includes("ChunkLoadError");
+    return { hasError: !isChunkError, isChunkError, message: error.message, stack: error.stack ?? "" };
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
@@ -65,6 +72,7 @@ export class ErrorBoundary extends React.Component<
   };
 
   render() {
+    if (this.state.isChunkError) return null;
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
