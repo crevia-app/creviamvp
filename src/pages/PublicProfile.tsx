@@ -148,23 +148,23 @@ const PublicProfile = () => {
     return extras;
   };
 
-  // Get theme-based styles
-  const getFontFamily = () => {
-    const font = profile?.background?.font_family || "plus-jakarta"; // plus-jakarta is the default theme font
+  // Returns a CSS font-family value (not a Tailwind class) so it is never
+  // purged by Tailwind's content scanner and always applied in production.
+  const getFontFamily = (): string => {
+    const font = profile?.background?.font_family || "plus-jakarta";
     const fontMap: Record<string, string> = {
-      // 6 curated premium Google Fonts
-      "cormorant":    "font-[Cormorant_Garamond]",
-      "playfair":     "font-[Playfair_Display]",
-      "dm-serif":     "font-[DM_Serif_Display]",
-      "plus-jakarta": "font-[Plus_Jakarta_Sans]",
-      "outfit":       "font-[Outfit]",
-      "syne":         "font-[Syne]",
-      // Legacy keys — kept so existing profiles don't break
-      poppins:        "font-poppins",
-      vollkorn:       "font-vollkorn",
-      inter:          "font-[Inter]",
+      cormorant:      "'Cormorant Garamond', serif",
+      playfair:       "'Playfair Display', serif",
+      "dm-serif":     "'DM Serif Display', serif",
+      "plus-jakarta": "'Plus Jakarta Sans', sans-serif",
+      outfit:         "'Outfit', sans-serif",
+      syne:           "'Syne', sans-serif",
+      // Legacy keys
+      poppins:        "'Poppins', sans-serif",
+      vollkorn:       "'Vollkorn', serif",
+      inter:          "'Inter', sans-serif",
     };
-    return fontMap[font] || "font-[Plus_Jakarta_Sans]";
+    return fontMap[font] || "'Plus Jakarta Sans', sans-serif";
   };
 
   const getFontSize = () => {
@@ -280,8 +280,9 @@ const PublicProfile = () => {
   
   return (
     <div
-      className={`min-h-screen ${themeStyles.className} ${getFontFamily()} ${getFontSize()} pt-12 px-6 relative`}
+      className={`min-h-screen ${themeStyles.className} ${getFontSize()} pt-12 px-6 relative`}
       style={{
+        fontFamily: getFontFamily(),
         scrollBehavior: smoothScroll ? 'smooth' : 'auto',
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 3rem)',
         ...(isCustomImage ? { backgroundImage: `url(${customBgUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' } : {})

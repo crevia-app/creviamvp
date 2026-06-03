@@ -432,6 +432,17 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkProfile?.theme, linkProfile?.background, linkProfile?.layout]);
 
+  // Save immediately (flushing any pending debounce) then open the live page
+  // in a new tab so the user always sees the latest data.
+  const handleViewLivePage = async () => {
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
+    await silentSave(linkProfile);
+    window.open(`/${linkProfile?.username}`, "_blank", "noopener,noreferrer");
+  };
+
   const handleCopyLink = async () => {
     const link = `${window.location.origin}/${linkProfile?.username}`;
     try {
@@ -669,7 +680,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                       <Button
                         variant="outline"
                         className="flex-1 gap-1.5 text-sm h-11"
-                        onClick={() => navigate(`/${linkProfile?.username}`)}
+                        onClick={handleViewLivePage}
                         style={{ touchAction: "manipulation" }}
                       >
                         <ExternalLink className="w-3.5 h-3.5" /> View Live
@@ -974,7 +985,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 <Button
                   variant="outline"
                   className="flex-1 gap-1.5 text-xs h-9"
-                  onClick={() => navigate(`/${linkProfile?.username}`)}
+                  onClick={handleViewLivePage}
                 >
                   <ExternalLink className="w-3.5 h-3.5" /> View Page
                 </Button>
@@ -1151,7 +1162,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
                 {/* View Live Page */}
                 <button
-                  onClick={() => navigate(`/${linkProfile?.username}`)}
+                  onClick={handleViewLivePage}
                   style={{ touchAction: 'manipulation' }}
                   className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border border-border/60 bg-background hover:bg-muted/40 active:bg-muted/60 text-foreground text-sm font-semibold font-poppins transition-colors"
                 >
@@ -1706,7 +1717,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 <Button
                   variant="outline"
                   className="flex-1 gap-1.5 text-xs h-9"
-                  onClick={() => navigate(`/${linkProfile?.username}`)}
+                  onClick={handleViewLivePage}
                 >
                   <ExternalLink className="w-3.5 h-3.5" /> View Page
                 </Button>

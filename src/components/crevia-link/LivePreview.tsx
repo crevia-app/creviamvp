@@ -44,21 +44,19 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
   // Determine if text is light based on luminance heuristic
   const lightText = !(textColor === "#0A0A0A" || textColor === "#1A1A1A" || textColor === "#2B241E" || textColor === "#000000");
 
-  // Font family class — must match every key the font selector can produce
+  // CSS font-family values (not Tailwind classes) — immune to Tailwind purging.
   const fontMap: Record<string, string> = {
-    // 6 curated Google Fonts (current keys)
-    cormorant:      "font-[Cormorant_Garamond,serif]",
-    playfair:       "font-[Playfair_Display,serif]",
-    "dm-serif":     "font-[DM_Serif_Display,serif]",
-    "plus-jakarta": "font-[Plus_Jakarta_Sans,sans-serif]",
-    outfit:         "font-[Outfit,sans-serif]",
-    syne:           "font-[Syne,sans-serif]",
-    // Legacy keys kept for backward-compat
-    poppins:        "font-poppins",
-    vollkorn:       "font-vollkorn",
-    inter:          "font-[Inter,sans-serif]",
+    cormorant:      "'Cormorant Garamond', serif",
+    playfair:       "'Playfair Display', serif",
+    "dm-serif":     "'DM Serif Display', serif",
+    "plus-jakarta": "'Plus Jakarta Sans', sans-serif",
+    outfit:         "'Outfit', sans-serif",
+    syne:           "'Syne', sans-serif",
+    poppins:        "'Poppins', sans-serif",
+    vollkorn:       "'Vollkorn', serif",
+    inter:          "'Inter', sans-serif",
   };
-  const fontClass = fontMap[fontFamily] || "font-[Plus_Jakarta_Sans,sans-serif]";
+  const fontFamilyCSS = fontMap[fontFamily] || "'Plus Jakarta Sans', sans-serif";
 
   // Button border radius
   const btnRadiusMap: Record<string, string> = {
@@ -96,10 +94,13 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
         {/* Screen */}
         <div className="h-[520px] flex flex-col relative">
           <div
-            className={cn("flex-1 overflow-y-auto relative scrollbar-none", fontClass)}
-            style={isCustomImage
-              ? { backgroundImage: `url(${customBgUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-              : { background: bgValue }}
+            className="flex-1 overflow-y-auto relative scrollbar-none"
+            style={{
+              fontFamily: fontFamilyCSS,
+              ...(isCustomImage
+                ? { backgroundImage: `url(${customBgUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                : { background: bgValue }),
+            }}
           >
             {/* Custom image overlay */}
             {isCustomImage && <div className="absolute inset-0 bg-black/50 z-0" />}
