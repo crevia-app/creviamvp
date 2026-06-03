@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
-import { Search, Plus, MessageSquare, Users, Sparkles, Loader2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Search, Plus, Users, Sparkles, Loader2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,15 +30,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
-
-const avatarStyle = (seed: string): React.CSSProperties => {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = seed.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const hue = Math.abs(hash) % 360;
-  return { background: `hsl(${hue},55%,65%)`, color: `hsl(${hue},55%,22%)` };
-};
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
@@ -50,9 +41,6 @@ interface Room {
   updated_at: string;
   avatar_url: string | null;
   memberCount?: number;
-  dmPartnerName?: string | null;
-  dmPartnerAvatar?: string | null;
-  dmPartnerInitial?: string;
   memberUserIds?: string[];
 }
 
@@ -85,7 +73,6 @@ const WorkspaceInboxList = ({
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [mobileTab, setMobileTab] = useState<"workspaces" | "dms">("workspaces");
 
   // Workspace CRUD state
   const [renameDialog, setRenameDialog] = useState<Room | null>(null);
@@ -98,13 +85,6 @@ const WorkspaceInboxList = ({
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createName, setCreateName] = useState("");
   const [creating, setCreating] = useState(false);
-
-  // New DM dialog state
-  const [dmDialogOpen, setDmDialogOpen] = useState(false);
-  const [allUsers, setAllUsers] = useState<any[]>([]);
-  const [userSearch, setUserSearch] = useState("");
-  const [loadingUsers, setLoadingUsers] = useState(false);
-  const [startingDM, setStartingDM] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -140,34 +120,6 @@ const WorkspaceInboxList = ({
     return () => { supabase.removeChannel(channel); };
   }, [userId]);
 
-  // Sync DM partner avatar changes in real time
-  useEffect(() => {
-    if (!userId) return;
-    const ch = supabase
-      .channel(`profile-sync-inbox:${userId}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "profiles" },
-        (payload) => {
-          const updated = payload.new as any;
-          setRooms((prev) =>
-            prev.map((room) => {
-              if (!room.is_group && room.memberUserIds?.includes(updated.id)) {
-                return {
-                  ...room,
-                  dmPartnerAvatar: updated.avatar_url ?? room.dmPartnerAvatar,
-                  dmPartnerName: updated.display_name ?? room.dmPartnerName,
-                };
-              }
-              return room;
-            })
-          );
-        }
-      )
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [userId]);
-
   const fetchRooms = async () => {
     const { data: memberRooms } = await supabase
       .from("chat_room_members")
@@ -185,6 +137,7 @@ const WorkspaceInboxList = ({
       .from("chat_rooms")
       .select("*, chat_room_members(user_id)")
       .in("id", roomIds)
+      .not("name", "is", null)        // workspaces only — skip DM rooms
       .order("updated_at", { ascending: false });
 
     if (!roomsData) {
@@ -192,42 +145,12 @@ const WorkspaceInboxList = ({
       return;
     }
 
-    const enriched: Room[] = await Promise.all(
-      roomsData.map(async (r) => {
-        const memberIds: string[] = (r.chat_room_members ?? []).map(
-          (m: { user_id: string }) => m.user_id
-        );
-        const base: Room = {
-          ...r,
-          memberCount: memberIds.length,
-          memberUserIds: memberIds,
-        };
-
-        if (r.name === null && !r.is_group) {
-          const partnerId = memberIds.find((id) => id !== userId);
-          if (partnerId) {
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("display_name, handle, avatar_url")
-              .eq("id", partnerId)
-              .single();
-
-            if (profile) {
-              const displayName =
-                profile.display_name ||
-                (profile.handle ? `@${profile.handle}` : null);
-              return {
-                ...base,
-                dmPartnerName: displayName,
-                dmPartnerAvatar: profile.avatar_url,
-                dmPartnerInitial: (displayName ?? "?")[0].toUpperCase(),
-              };
-            }
-          }
-        }
-        return base;
-      })
-    );
+    const enriched: Room[] = roomsData.map((r) => {
+      const memberIds: string[] = (r.chat_room_members ?? []).map(
+        (m: { user_id: string }) => m.user_id
+      );
+      return { ...r, memberCount: memberIds.length, memberUserIds: memberIds };
+    });
 
     setRooms(enriched);
     setLoading(false);
@@ -293,105 +216,10 @@ const WorkspaceInboxList = ({
     setDeleting(false);
   };
 
-  const openDmDialog = async () => {
-    setDmDialogOpen(true);
-    setUserSearch("");
-    if (!allUsers.length) {
-      setLoadingUsers(true);
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, display_name, handle, avatar_url, user_type")
-        .neq("id", userId)
-        .order("display_name");
-      setAllUsers(data || []);
-      setLoadingUsers(false);
-    }
-  };
-
-  const startDirectChat = async (otherUserId: string) => {
-    setStartingDM(otherUserId);
-    try {
-      // Check for existing DM room between these two users
-      const { data: myRooms } = await supabase
-        .from("chat_room_members")
-        .select("room_id")
-        .eq("user_id", userId);
-
-      const { data: theirRooms } = await supabase
-        .from("chat_room_members")
-        .select("room_id")
-        .eq("user_id", otherUserId);
-
-      if (myRooms && theirRooms) {
-        const myRoomIds = new Set(myRooms.map((r) => r.room_id));
-        const commonIds = theirRooms
-          .filter((r) => myRoomIds.has(r.room_id))
-          .map((r) => r.room_id);
-
-        if (commonIds.length > 0) {
-          const { data: existing } = await supabase
-            .from("chat_rooms")
-            .select("*")
-            .in("id", commonIds)
-            .eq("is_group", false)
-            .is("name", null);
-
-          if (existing?.length) {
-            setDmDialogOpen(false);
-            // Find or add to rooms list
-            const existingInList = rooms.find((r) => r.id === existing[0].id);
-            if (existingInList) {
-              onSelectRoom(existingInList, "dm");
-            } else {
-              await fetchRooms();
-              onSelectRoom({ ...existing[0], memberCount: 2 }, "dm");
-            }
-            return;
-          }
-        }
-      }
-
-      // Create new DM room
-      const { data: room, error } = await supabase
-        .from("chat_rooms")
-        .insert({ created_by: userId, is_group: false })
-        .select()
-        .single();
-
-      if (error || !room) { toast.error("Failed to start conversation"); return; }
-
-      await supabase.from("chat_room_members").insert([
-        { room_id: room.id, user_id: userId, role: "admin" },
-        { room_id: room.id, user_id: otherUserId, role: "member" },
-      ]);
-
-      setDmDialogOpen(false);
-      await fetchRooms();
-      onSelectRoom({ ...room, memberCount: 2 }, "dm");
-    } finally {
-      setStartingDM(null);
-    }
-  };
-
   const q = search.toLowerCase();
   const workspaces = rooms.filter(
     (r) => r.name !== null && (!q || r.name!.toLowerCase().includes(q))
   );
-  const dms = rooms.filter(
-    (r) =>
-      r.name === null &&
-      !r.is_group &&
-      (!q || (r.dmPartnerName ?? "").toLowerCase().includes(q))
-  );
-
-  const filteredUsers = allUsers.filter((u) => {
-    const term = userSearch.toLowerCase();
-    return (
-      !term ||
-      u.display_name?.toLowerCase().includes(term) ||
-      u.handle?.toLowerCase().includes(term)
-    );
-  });
 
   const SkeletonItem = () => (
     <div className="flex items-center gap-2.5 p-2.5 rounded-xl">
@@ -408,7 +236,7 @@ const WorkspaceInboxList = ({
       <div className="flex flex-col w-full h-full bg-background overflow-hidden">
         {/* Header */}
         <div className="px-3 pt-3 pb-2.5 border-b border-gray-100 dark:border-border/50 flex-shrink-0 space-y-2.5">
-          <h3 className="font-semibold text-sm tracking-tight">Messages</h3>
+          <h3 className="font-semibold text-sm tracking-tight">Workspaces</h3>
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60" />
             <Input
@@ -420,37 +248,10 @@ const WorkspaceInboxList = ({
           </div>
         </div>
 
-        {/* Mobile tab bar — WhatsApp style */}
-        <div className="md:hidden flex-shrink-0 flex bg-background border-b border-gray-100 dark:border-border/50">
-          {([
-            { id: "workspaces" as const, label: "Workspaces", icon: Sparkles },
-            { id: "dms" as const, label: "Messages", icon: MessageSquare },
-          ] as const).map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setMobileTab(tab.id)}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-all relative",
-                mobileTab === tab.id ? "text-bronze" : "text-muted-foreground/50"
-              )}
-            >
-              <tab.icon className="w-3.5 h-3.5" />
-              {tab.label}
-              {mobileTab === tab.id && (
-                <motion.div
-                  layoutId="mobile-tab-underline"
-                  className="absolute bottom-0 left-6 right-6 h-0.5 bg-bronze rounded-full"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
-              )}
-            </button>
-          ))}
-        </div>
-
         <ScrollArea className="flex-1">
           <div className="pb-2">
             {/* Active Workspaces */}
-            <div className={cn(mobileTab !== "workspaces" && "hidden md:block")}>
+            <div>
               <div className="flex items-center justify-between px-4 py-2 sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/30">
                 <p className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">
                   Active Workspaces
@@ -572,112 +373,6 @@ const WorkspaceInboxList = ({
                 </div>
               )}
             </div>
-
-            {/* Direct Messages */}
-            <div className={cn(mobileTab !== "dms" && "hidden md:block")}>
-              <div className="flex items-center justify-between px-4 py-2 sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/30">
-                <p className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">
-                  Direct Messages
-                </p>
-                <button
-                  onClick={openDmDialog}
-                  title="New direct message"
-                  className="w-9 h-9 flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted transition-all duration-150"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {loading ? (
-                <div className="space-y-0.5 px-2 pt-1">
-                  {[...Array(2)].map((_, i) => (
-                    <SkeletonItem key={i} />
-                  ))}
-                </div>
-              ) : dms.length === 0 ? (
-                <div className="px-4 py-5 text-center">
-                  <MessageSquare className="w-6 h-6 text-muted-foreground/20 mx-auto mb-2" />
-                  <p className="text-[11px] text-muted-foreground">
-                    No direct messages
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-0.5 px-2 pt-1">
-                  {dms.map((room) => {
-                    const isSelected = selectedRoomId === room.id;
-                    const name = room.dmPartnerName ?? "Unknown user";
-                    const initial = room.dmPartnerInitial ?? name[0].toUpperCase();
-                    return (
-                      <div
-                        key={room.id}
-                        className={cn(
-                          "relative flex items-center rounded-xl transition-all duration-150 group border",
-                          isSelected
-                            ? "bg-accent border-border"
-                            : "hover:bg-gray-50 dark:hover:bg-muted/50 border-transparent"
-                        )}
-                      >
-                        <button
-                          onClick={() => onSelectRoom(room, "dm")}
-                          className="flex-1 text-left p-2.5 min-w-0"
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <div
-                              className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden font-bold text-[13px]"
-                              style={avatarStyle(room.memberUserIds?.find(id => id !== userId) || name)}
-                            >
-                              {room.dmPartnerAvatar ? (
-                                <img
-                                  src={room.dmPartnerAvatar}
-                                  alt={name}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                                />
-                              ) : (
-                                initial
-                              )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center justify-between gap-1 mb-0.5">
-                                <p className="text-[12px] font-semibold truncate text-foreground/85">
-                                  {name}
-                                </p>
-                                <span className="text-[9px] text-muted-foreground/50 whitespace-nowrap flex-shrink-0">
-                                  {timeAgo(room.updated_at)}
-                                </span>
-                              </div>
-                              <p className="text-[10px] text-muted-foreground/50">
-                                Direct message
-                              </p>
-                            </div>
-                          </div>
-                        </button>
-
-                        {/* ⋮ context menu for DMs */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              onClick={(e) => e.stopPropagation()}
-                              className="mr-1.5 w-6 h-6 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted text-muted-foreground/60 hover:text-foreground flex-shrink-0"
-                            >
-                              <MoreHorizontal className="w-3.5 h-3.5" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-36">
-                            <DropdownMenuItem
-                              onClick={(e) => { e.stopPropagation(); setDeleteConfirm(room); }}
-                              className="text-xs gap-2 text-destructive focus:text-destructive"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" /> Delete Chat
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
           </div>
         </ScrollArea>
       </div>
@@ -737,11 +432,11 @@ const WorkspaceInboxList = ({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="text-sm font-semibold">
-              {deleteConfirm?.name ? "Delete Workspace" : "Delete Chat"}
+              Delete Workspace
             </AlertDialogTitle>
             <AlertDialogDescription className="text-xs">
               Permanently delete{" "}
-              <strong>{deleteConfirm?.name ?? deleteConfirm?.dmPartnerName ?? "this conversation"}</strong>{" "}
+              <strong>{deleteConfirm?.name ?? "this workspace"}</strong>{" "}
               and all its messages? This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -754,85 +449,6 @@ const WorkspaceInboxList = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* New DM Dialog */}
-      <Dialog open={dmDialogOpen} onOpenChange={setDmDialogOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-sm font-semibold">
-              New Direct Message
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="relative mb-3">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60" />
-            <Input
-              value={userSearch}
-              onChange={(e) => setUserSearch(e.target.value)}
-              placeholder="Search people..."
-              className="pl-8 h-11 text-base"
-              autoFocus
-            />
-          </div>
-
-          <ScrollArea className="max-h-64">
-            {loadingUsers ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : filteredUsers.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-sm text-muted-foreground">No users found</p>
-              </div>
-            ) : (
-              <div className="space-y-0.5 pr-2">
-                {filteredUsers.map((user) => {
-                  const name =
-                    user.display_name ||
-                    (user.handle ? `@${user.handle}` : "Unknown");
-                  const initial = name[0].toUpperCase();
-                  const isStarting = startingDM === user.id;
-                  return (
-                    <button
-                      key={user.id}
-                      onClick={() => startDirectChat(user.id)}
-                      disabled={!!startingDM}
-                      className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted transition-all duration-150 text-left disabled:opacity-60"
-                    >
-                      <div
-                        className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden font-bold text-[13px]"
-                        style={avatarStyle(user.id)}
-                      >
-                        {user.avatar_url ? (
-                          <img
-                            src={user.avatar_url}
-                            alt={name}
-                            className="w-full h-full object-cover rounded-full"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                          />
-                        ) : (
-                          initial
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium truncate">{name}</p>
-                        {user.handle && (
-                          <p className="text-xs text-muted-foreground truncate">
-                            @{user.handle}
-                          </p>
-                        )}
-                      </div>
-                      {isStarting && (
-                        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground flex-shrink-0" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
     </>
   );
 };
