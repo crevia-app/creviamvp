@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -266,6 +266,10 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   // Auto-resizing textarea — used to read/write scrollHeight in onChange.
   const chatTextareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // true  = auto-scroll is active (user is near the bottom or just sent a message)
+  // false = user has scrolled up to read history — do NOT pull them back down
+  const isNearBottomRef = useRef(true);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const typingTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const presenceChannelRef = useRef<any>(null);
@@ -275,7 +279,10 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   // is never obscured by unread content. Replaces the removed useIOSKeyboardFit callback.
   useEffect(() => {
     if (!keyboardOpen || typeof window === "undefined" || window.innerWidth >= 768) return;
-    const t = setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 80);
+    const t = setTimeout(() => {
+      const el = scrollContainerRef.current;
+      if (el) el.scrollTop = el.scrollHeight;
+    }, 80);
     return () => clearTimeout(t);
   }, [keyboardOpen]);
 
@@ -694,11 +701,15 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
     })();
   }, [showRoomInfo, selectedRoom?.id, currentUserId]);
 
-  // Scroll to bottom on new messages.
-  // useLayoutEffect fires synchronously before the browser paints — eliminates
-  // the visible scroll jump on initial load (useEffect fires after paint).
-  useLayoutEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // Smart auto-scroll: only pull to bottom when the user is already near it.
+  // Fixes the glitch where reactions/read-receipts/decryption updates were
+  // calling scrollIntoView on every messages state change, snapping the user
+  // back to the bottom mid-scroll. Uses direct scrollTop (more reliable than
+  // scrollIntoView on iOS Safari inside a deep flex chain).
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el || !isNearBottomRef.current) return;
+    requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
   }, [messages]);
 
   // Send a broadcast typing event
@@ -945,6 +956,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
   };
 
   const selectRoom = async (room: ChatRoom) => {
+    isNearBottomRef.current = true; // always land at the bottom of a freshly opened room
     setSelectedRoom(room);
     setReplyingTo(null);
     setShowMessageSearch(false);
@@ -1188,6 +1200,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
         .update({ updated_at: new Date().toISOString() })
         .eq("id", selectedRoom.id);
 
+      isNearBottomRef.current = true; // always scroll to your own sent message
       setNewMessage("");
       setSelectedFile(null);
       setReplyingTo(null);
@@ -2077,8 +2090,14 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack }: CreiaChatProps = {
                   Plain overflow-y-auto + overscroll-contain + touch-pan-y is
                   the correct cross-platform primitive for a chat list. */}
               <div
+                ref={scrollContainerRef}
                 className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y p-3 md:p-4"
                 style={{ overflowAnchor: "auto" }}
+                onScroll={() => {
+                  const el = scrollContainerRef.current;
+                  if (!el) return;
+                  isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+                }}
               >
                 <div className="space-y-4 max-w-3xl mx-auto pb-4">
 
