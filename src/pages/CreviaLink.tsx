@@ -845,10 +845,12 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="poppins">Poppins (Modern)</SelectItem>
-                          <SelectItem value="vollkorn">Vollkorn (Classic)</SelectItem>
-                          <SelectItem value="inter">Inter (Clean)</SelectItem>
-                          <SelectItem value="playfair">Playfair (Elegant)</SelectItem>
+                          <SelectItem value="cormorant">Cormorant · Luxury Serif</SelectItem>
+                          <SelectItem value="playfair">Playfair · Editorial</SelectItem>
+                          <SelectItem value="dm-serif">DM Serif · Bold &amp; Clean</SelectItem>
+                          <SelectItem value="plus-jakarta">Jakarta Sans · Modern</SelectItem>
+                          <SelectItem value="outfit">Outfit · Contemporary</SelectItem>
+                          <SelectItem value="syne">Syne · Fashion</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1370,10 +1372,12 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="poppins">Poppins (Modern)</SelectItem>
-                        <SelectItem value="vollkorn">Vollkorn (Classic)</SelectItem>
-                        <SelectItem value="inter">Inter (Clean)</SelectItem>
-                        <SelectItem value="playfair">Playfair (Elegant)</SelectItem>
+                        <SelectItem value="cormorant">Cormorant · Luxury Serif</SelectItem>
+                        <SelectItem value="playfair">Playfair · Editorial</SelectItem>
+                        <SelectItem value="dm-serif">DM Serif · Bold &amp; Clean</SelectItem>
+                        <SelectItem value="plus-jakarta">Jakarta Sans · Modern</SelectItem>
+                        <SelectItem value="outfit">Outfit · Contemporary</SelectItem>
+                        <SelectItem value="syne">Syne · Fashion</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

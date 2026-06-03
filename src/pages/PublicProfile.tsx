@@ -150,20 +150,21 @@ const PublicProfile = () => {
 
   // Get theme-based styles
   const getFontFamily = () => {
-    const font = profile?.background?.font_family || "poppins";
+    const font = profile?.background?.font_family || "plus-jakarta";
     const fontMap: Record<string, string> = {
-      poppins: "font-poppins",
-      vollkorn: "font-vollkorn",
-      inter: "font-[Inter]",
-      playfair: "font-[Playfair_Display]",
-      montserrat: "font-[Montserrat]",
-      roboto: "font-[Roboto]",
-      lora: "font-[Lora]",
-      "space-grotesk": "font-[Space_Grotesk]",
-      "plus-jakarta":  "font-[Plus_Jakarta_Sans]",
-      "dm-serif":      "font-[DM_Serif_Display]",
+      // 6 curated premium Google Fonts
+      "cormorant":    "font-[Cormorant_Garamond]",
+      "playfair":     "font-[Playfair_Display]",
+      "dm-serif":     "font-[DM_Serif_Display]",
+      "plus-jakarta": "font-[Plus_Jakarta_Sans]",
+      "outfit":       "font-[Outfit]",
+      "syne":         "font-[Syne]",
+      // Legacy keys — kept so existing profiles don't break
+      poppins:        "font-poppins",
+      vollkorn:       "font-vollkorn",
+      inter:          "font-[Inter]",
     };
-    return fontMap[font] || "font-poppins";
+    return fontMap[font] || "font-[Plus_Jakarta_Sans]";
   };
 
   const getFontSize = () => {
