@@ -1,6 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface LinkTabsMobileProps {
   userType: "creator" | "brand";
@@ -20,11 +19,12 @@ const LinkTabsMobile = ({ userType }: LinkTabsMobileProps) => {
 
   return (
     <div className="md:hidden sticky top-16 z-30 bg-background border-b border-border/40 mb-10">
-      <ScrollArea className="w-full">
+      {/* Plain overflow-x-auto — no Radix ScrollArea so there is no extra
+          vertical scrollbar track bleeding into the page's single scrollbar */}
+      <div className="overflow-x-auto scrollbar-hide">
         <div className="flex gap-2 px-6 py-3">
           {tabs.map((tab) => {
             const isActive = currentTab === tab.id;
-            
             return (
               <Link
                 key={tab.id}
@@ -41,8 +41,7 @@ const LinkTabsMobile = ({ userType }: LinkTabsMobileProps) => {
             );
           })}
         </div>
-        <ScrollBar orientation="horizontal" className="h-1.5" />
-      </ScrollArea>
+      </div>
     </div>
   );
 };
