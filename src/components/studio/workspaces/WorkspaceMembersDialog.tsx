@@ -14,9 +14,9 @@ import { toast } from "sonner";
 import { Users, Search, UserPlus, X, Loader2, Crown, Link2, Copy, Check, ShieldCheck, ShieldOff, Lock } from "lucide-react";
 
 const getSeatLimit = (plan: string | null): number => {
-  if (plan === "business" || plan === "brand_workspace") return 3;
   if (plan === "enterprise") return 100;
-  return 1; // free, pro, creative_pro
+  if (plan === "free") return 1;
+  return 8; // pro, creative_pro, business, brand_workspace
 };
 
 interface Member {
