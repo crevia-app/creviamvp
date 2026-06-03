@@ -14,7 +14,7 @@ import { RecoveryPasswordModal } from "@/components/auth/RecoveryPasswordModal";
 import { SetRecoveryPasswordDialog } from "@/components/auth/SetRecoveryPasswordDialog";
 import ScrollToTop from "./components/ScrollToTop";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { PwaUpdateBanner } from "./components/pwa/PwaUpdateBanner";
+import { AutoUpdate } from "./components/pwa/AutoUpdate";
 import { CookieConsent } from "./components/CookieConsent";
 import { BiometricLockScreen } from "./components/auth/BiometricLockScreen";
 import AppLayout from "./components/navigation/AppLayout";
@@ -244,7 +244,7 @@ function AppContent() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
-      {!location.pathname.startsWith("/crv-9x4m2k") && <PwaUpdateBanner />}
+      {!location.pathname.startsWith("/crv-9x4m2k") && <AutoUpdate />}
     </>
   );
 }

@@ -12,7 +12,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       includeAssets: ['crevia-logo.png', 'robots.txt'],
       manifest: {
         name: 'Crevia - Own Your Story',
@@ -33,10 +33,10 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // prompt mode: the new SW installs and waits. PwaUpdateBanner.tsx shows
-        // a manual "Update" button. updateServiceWorker(true) posts SKIP_WAITING
-        // only when the user approves — no mid-chat forced reloads.
-        // clientsClaim: true so the new SW takes all tabs the moment it activates.
+        // autoUpdate: the new SW installs and skips waiting automatically.
+        // AutoUpdate.tsx delays the hard reload until the user's next natural
+        // navigation or tab-switch, so the reload is never disruptive.
+        skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
         runtimeCaching: [
