@@ -14,9 +14,8 @@ import { RecoveryPasswordModal } from "@/components/auth/RecoveryPasswordModal";
 import { SetRecoveryPasswordDialog } from "@/components/auth/SetRecoveryPasswordDialog";
 import ScrollToTop from "./components/ScrollToTop";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { UpdateBanner } from "./components/UpdateBanner";
+import { PwaUpdateBanner } from "./components/pwa/PwaUpdateBanner";
 import { CookieConsent } from "./components/CookieConsent";
-import { ReloadPrompt } from "./components/pwa/ReloadPrompt";
 import { BiometricLockScreen } from "./components/auth/BiometricLockScreen";
 import AppLayout from "./components/navigation/AppLayout";
 import PublicPageWrapper from "./components/PublicPageWrapper";
@@ -245,7 +244,7 @@ function AppContent() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
-      {!location.pathname.startsWith("/crv-9x4m2k") && <UpdateBanner />}
+      {!location.pathname.startsWith("/crv-9x4m2k") && <PwaUpdateBanner />}
     </>
   );
 }
@@ -259,7 +258,6 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <ReloadPrompt />
             <BrowserRouter>
               <AppContent />
             </BrowserRouter>
