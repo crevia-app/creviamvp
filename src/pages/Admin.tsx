@@ -470,6 +470,18 @@ const UsersSection = () => {
     applyUpdate(selected.id, { is_admin: !selected.is_admin }, selected.is_admin ? "Admin access removed" : "Admin access granted");
   };
 
+  const sendProNotification = async () => {
+    setActionLoad(true);
+    const { error } = await supabase.from("notifications").insert({
+      user_id: selected.id,
+      title: "Welcome to Crevia Pro 🎉",
+      body: "Welcome to Crevia Pro. Unrestricted access to your operational tools is now live.",
+      type: "system",
+    });
+    if (error) { toast.error(error.message); } else { toast.success("Notification sent"); }
+    setActionLoad(false);
+  };
+
   const filtered = users.filter(u => {
     const q = search.toLowerCase();
     const ok = !q || u.display_name?.toLowerCase().includes(q) || u.handle?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q);
@@ -743,6 +755,16 @@ const UsersSection = () => {
                 >
                   <span>{selected.is_admin ? "Admin" : "Not admin"}</span>
                   <span className="text-[11px] opacity-60">{selected.is_admin ? "Revoke access" : "Grant access"}</span>
+                </button>
+
+                {/* Send Pro notification */}
+                <button
+                  disabled={actionLoad}
+                  onClick={sendProNotification}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-sm font-medium transition-all bg-[#F0782F]/10 border-[#F0782F]/25 text-[#F0782F] hover:bg-[#F0782F]/20"
+                >
+                  <span>Send Pro notification</span>
+                  <span className="text-[11px] opacity-60">Notify user</span>
                 </button>
 
               </div>

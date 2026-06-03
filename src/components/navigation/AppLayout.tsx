@@ -6,6 +6,7 @@ import MobileBottomNav from "./MobileBottomNav";
 import TopBar from "./TopBar";
 import ProfileDrawer from "./ProfileDrawer";
 import { BackButton } from "@/components/BackButton";
+import ProUpgradeToast from "@/components/subscription/ProUpgradeToast";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -107,6 +108,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         </main>
       </div>
 
+      <ProUpgradeToast plan={profile?.subscription_plan} />
       <MobileBottomNav />
 
       <ProfileDrawer
