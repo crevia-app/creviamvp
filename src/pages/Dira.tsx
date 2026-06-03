@@ -1646,7 +1646,7 @@ const Dira = () => {
                                     )}
                                   >
                                     {msg.role === 'assistant' ? (
-                                      <div className="prose prose-base prose-invert max-w-none text-left leading-relaxed [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                                      <div className="prose prose-base dark:prose-invert max-w-none text-left leading-relaxed [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
                                         <ReactMarkdown>{msg.content}</ReactMarkdown>
                                       </div>
                                     ) : (
