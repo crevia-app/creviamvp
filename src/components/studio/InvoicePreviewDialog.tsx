@@ -318,10 +318,10 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
         <table className="w-full">
           <thead>
             <tr style={{ borderBottom: `2px solid ${accentColor}` }}>
-              <th className="text-left py-3 text-xs uppercase tracking-wider font-bold" style={{ color: accentColor }}>Description</th>
-              <th className="text-center py-3 text-xs uppercase tracking-wider font-bold w-16" style={{ color: accentColor }}>Qty</th>
-              <th className="text-right py-3 text-xs uppercase tracking-wider font-bold w-28" style={{ color: accentColor }}>Rate</th>
-              <th className="text-right py-3 text-xs uppercase tracking-wider font-bold w-28" style={{ color: accentColor }}>Amount</th>
+              <th className="text-left py-3 text-xs uppercase tracking-wider font-bold" style={{ color: accentColor, width: "50%" }}>Description</th>
+              <th className="text-center py-3 text-xs uppercase tracking-wider font-bold" style={{ color: accentColor, width: "10%" }}>Qty</th>
+              <th className="text-right py-3 text-xs uppercase tracking-wider font-bold" style={{ color: accentColor, width: "20%" }}>Rate</th>
+              <th className="text-right py-3 text-xs uppercase tracking-wider font-bold" style={{ color: accentColor, width: "20%" }}>Amount</th>
             </tr>
           </thead>
           <tbody>

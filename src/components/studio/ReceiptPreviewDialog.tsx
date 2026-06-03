@@ -110,7 +110,7 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
 
         {/* ── Receipt Document ─────────────────────────────────────────────── */}
         <div className="p-4 sm:p-6">
-          <div ref={docRef} className="bg-white text-black rounded-xl shadow-lg overflow-hidden print:shadow-none">
+          <div ref={docRef} className="bg-white text-black rounded-xl shadow-lg overflow-hidden print:shadow-none w-full">
 
             {/* Accent bar — uses invoice's accent color (user's customization) */}
             <div className="h-1.5" style={{ background: accentColor }} />
@@ -183,10 +183,10 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
                 <table className="w-full">
                   <thead>
                     <tr style={{ borderBottom: `2px solid ${accentColor}` }}>
-                      <th className="text-left py-3 text-xs uppercase tracking-wider font-bold" style={{ color: accentColor }}>Description</th>
-                      <th className="text-center py-3 text-xs uppercase tracking-wider font-bold w-20" style={{ color: accentColor }}>Qty</th>
-                      <th className="text-right py-3 text-xs uppercase tracking-wider font-bold w-32" style={{ color: accentColor }}>Rate</th>
-                      <th className="text-right py-3 text-xs uppercase tracking-wider font-bold w-32" style={{ color: accentColor }}>Amount</th>
+                      <th className="text-left py-3 text-xs uppercase tracking-wider font-bold" style={{ color: accentColor, width: "50%" }}>Description</th>
+                      <th className="text-center py-3 text-xs uppercase tracking-wider font-bold" style={{ color: accentColor, width: "10%" }}>Qty</th>
+                      <th className="text-right py-3 text-xs uppercase tracking-wider font-bold" style={{ color: accentColor, width: "20%" }}>Rate</th>
+                      <th className="text-right py-3 text-xs uppercase tracking-wider font-bold" style={{ color: accentColor, width: "20%" }}>Amount</th>
                     </tr>
                   </thead>
                   <tbody>

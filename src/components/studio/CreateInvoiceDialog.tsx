@@ -506,7 +506,7 @@ const CreateInvoiceDialog = ({
               <Input
                 type="date"
                 value={issueDate}
-                min={editingInvoice ? undefined : today}
+                min={today}
                 onChange={(e) => {
                   const val = e.target.value;
                   setIssueDate(val);
