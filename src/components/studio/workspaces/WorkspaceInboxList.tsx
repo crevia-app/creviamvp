@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/hooks/use-subscription";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -80,6 +81,7 @@ const WorkspaceInboxList = ({
   onSelectRoom,
   userId,
 }: WorkspaceInboxListProps) => {
+  const { canCreateWorkspace } = useSubscription();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -213,6 +215,14 @@ const WorkspaceInboxList = ({
 
   const createWorkspace = async () => {
     if (!createName.trim()) return;
+
+    if (!canCreateWorkspace) {
+      toast.error("Upgrade required", {
+        description: "Free plan is join-only. Upgrade to Pro to create workspaces.",
+      });
+      return;
+    }
+
     setCreating(true);
     const { data, error } = await supabase
       .from("chat_rooms")
@@ -220,16 +230,29 @@ const WorkspaceInboxList = ({
       .select()
       .single();
 
-    if (!error && data) {
-      await supabase
+    if (error) {
+      toast.error("Failed to create workspace", { description: error.message });
+      setCreating(false);
+      return;
+    }
+
+    if (data) {
+      const { error: memberError } = await supabase
         .from("chat_room_members")
         .insert({ room_id: data.id, user_id: userId, role: "admin" });
-      const newRoom: Room = { ...data, memberCount: 1 };
-      setRooms((prev) => [newRoom, ...prev]);
-      onSelectRoom(newRoom, "workspace");
-      setCreateDialogOpen(false);
-      setCreateName("");
+
+      if (memberError) {
+        toast.error("Workspace created but failed to add you as admin", { description: memberError.message });
+      } else {
+        const newRoom: Room = { ...data, memberCount: 1 };
+        setRooms((prev) => [newRoom, ...prev]);
+        onSelectRoom(newRoom, "workspace");
+        setCreateDialogOpen(false);
+        setCreateName("");
+        toast.success("Workspace created!");
+      }
     }
+
     setCreating(false);
   };
 
@@ -314,9 +337,10 @@ const WorkspaceInboxList = ({
                 <button
                   onClick={() => { setCreateName(""); setCreateDialogOpen(true); }}
                   title="New workspace"
-                  className="w-9 h-9 flex items-center justify-center rounded-md text-muted-foreground/50 hover:text-bronze hover:bg-bronze/10 transition-all duration-150"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-150 hover:scale-105 active:scale-95"
+                  style={{ background: "#F0782F", color: "#ffffff" }}
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  <Plus className="w-4 h-4" strokeWidth={2.5} />
                 </button>
               </div>
 

@@ -407,6 +407,31 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     autoSaveTimerRef.current = setTimeout(() => silentSave(updatedProfile), 1200);
   }, [silentSave]);
 
+  // Auto-save ANY appearance change (theme, colors, buttons, layout, font, bg image…)
+  // without requiring the user to click Save. The public page reflects changes
+  // within ~1.2 seconds of the user touching any appearance control.
+  const appearanceInitRef = useRef(false);
+  const lastAppearanceKeyRef = useRef("");
+  useEffect(() => {
+    if (!linkProfile) return;
+    const key = JSON.stringify({
+      theme: linkProfile.theme,
+      background: linkProfile.background,
+      layout: linkProfile.layout,
+    });
+    if (!appearanceInitRef.current) {
+      appearanceInitRef.current = true;
+      lastAppearanceKeyRef.current = key;
+      return;
+    }
+    if (key !== lastAppearanceKeyRef.current) {
+      lastAppearanceKeyRef.current = key;
+      scheduleAutoSave(linkProfile);
+    }
+  // linkProfile is an object; stringifying the relevant fields is the correct dep
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [linkProfile?.theme, linkProfile?.background, linkProfile?.layout]);
+
   const handleCopyLink = async () => {
     const link = `${window.location.origin}/${linkProfile?.username}`;
     try {
