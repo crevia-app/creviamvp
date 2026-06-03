@@ -19,6 +19,8 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useBottomNavVisibility } from "@/hooks/use-bottom-nav-visibility";
 import { usePWAInstall } from "@/hooks/use-pwa-install";
 import { IOSInstallGuide } from "@/components/pwa/IOSInstallGuide";
+import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
+import { useSubscription } from "@/hooks/use-subscription";
 
 // ── Custom Icons ──────────────────────────────────────────────────────────────
 
@@ -113,6 +115,7 @@ const MobileBottomNav = () => {
   const [profile, setProfile]     = useState<any>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const { visible }               = useBottomNavVisibility();
+  const subscription              = useSubscription();
   const { canInstall, isIOS, install, showIOSGuide, setShowIOSGuide } = usePWAInstall();
 
   useEffect(() => {
@@ -260,9 +263,12 @@ const MobileBottomNav = () => {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="font-poppins text-sm font-semibold text-foreground truncate">
-                      {profile?.display_name || "User"}
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-poppins text-sm font-semibold text-foreground truncate">
+                        {profile?.display_name || "User"}
+                      </p>
+                      {subscription.limits.hasVerifiedBadge && <VerifiedBadge size="sm" />}
+                    </div>
                     <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
                   </div>
                 </div>
