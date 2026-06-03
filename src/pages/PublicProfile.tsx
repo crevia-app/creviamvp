@@ -150,7 +150,7 @@ const PublicProfile = () => {
 
   // Get theme-based styles
   const getFontFamily = () => {
-    const font = profile?.background?.font_family || "plus-jakarta";
+    const font = profile?.background?.font_family || "plus-jakarta"; // plus-jakarta is the default theme font
     const fontMap: Record<string, string> = {
       // 6 curated premium Google Fonts
       "cormorant":    "font-[Cormorant_Garamond]",
@@ -305,7 +305,7 @@ const PublicProfile = () => {
           )}
           
           <div className="flex items-center justify-center gap-2 mb-2">
-            <h1 className="font-vollkorn text-3xl font-bold">
+            <h1 className="text-3xl font-bold">
               {profile?.display_name || profile?.username}
             </h1>
             {profile?.show_verified_badge && profile?.profiles?.is_verified && (
@@ -318,7 +318,7 @@ const PublicProfile = () => {
           </div>
 
           {profile?.bio && (
-            <p className="font-poppins text-muted-foreground max-w-md mx-auto">
+            <p className="text-muted-foreground max-w-md mx-auto">
               {profile.bio}
             </p>
           )}
@@ -382,7 +382,7 @@ const PublicProfile = () => {
             <Sparkles className="w-4 h-4" />
             Get your Crevia Link
           </a>
-          <p className="text-xs mt-2 opacity-40 font-poppins">Built with Crevia</p>
+          <p className="text-xs mt-2 opacity-40">Built with Crevia</p>
         </div>
 
       </div>

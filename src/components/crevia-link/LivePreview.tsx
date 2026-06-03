@@ -44,16 +44,21 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
   // Determine if text is light based on luminance heuristic
   const lightText = !(textColor === "#0A0A0A" || textColor === "#1A1A1A" || textColor === "#2B241E" || textColor === "#000000");
 
-  // Font family class
+  // Font family class — must match every key the font selector can produce
   const fontMap: Record<string, string> = {
+    // 6 curated Google Fonts (current keys)
+    cormorant:      "font-[Cormorant_Garamond,serif]",
+    playfair:       "font-[Playfair_Display,serif]",
+    "dm-serif":     "font-[DM_Serif_Display,serif]",
     "plus-jakarta": "font-[Plus_Jakarta_Sans,sans-serif]",
-    playfair: "font-[Playfair_Display,serif]",
-    "dm-serif": "font-[DM_Serif_Display,serif]",
-    poppins: "font-poppins",
-    vollkorn: "font-vollkorn",
-    inter: "font-[Inter,sans-serif]",
+    outfit:         "font-[Outfit,sans-serif]",
+    syne:           "font-[Syne,sans-serif]",
+    // Legacy keys kept for backward-compat
+    poppins:        "font-poppins",
+    vollkorn:       "font-vollkorn",
+    inter:          "font-[Inter,sans-serif]",
   };
-  const fontClass = fontMap[fontFamily] || "font-poppins";
+  const fontClass = fontMap[fontFamily] || "font-[Plus_Jakarta_Sans,sans-serif]";
 
   // Button border radius
   const btnRadiusMap: Record<string, string> = {

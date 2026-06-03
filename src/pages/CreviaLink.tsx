@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -71,6 +71,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   // Increments after each successful save — used as LivePreview key to guarantee
   // a full re-render whenever saved data might differ from in-memory state.
   const [previewNonce, setPreviewNonce] = useState(0);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bgImageRefEmb = useRef<HTMLInputElement>(null);
   const bgImageRefStandalone = useRef<HTMLInputElement>(null);
@@ -388,6 +389,23 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     }
     setSaving(false);
   };
+
+  // Silent background save — no toast, no spinner. Used for appearance/font changes
+  // so the public page always reflects the latest state without user action.
+  const silentSave = useCallback(async (profile: any) => {
+    if (!profile?.id) return;
+    await supabase.from("link_profiles").update({
+      theme: profile.theme,
+      layout: profile.layout,
+      background: profile.background,
+    }).eq("id", profile.id);
+    setPreviewNonce(n => n + 1);
+  }, []);
+
+  const scheduleAutoSave = useCallback((updatedProfile: any) => {
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => silentSave(updatedProfile), 1200);
+  }, [silentSave]);
 
   const handleCopyLink = async () => {
     const link = `${window.location.origin}/${linkProfile?.username}`;
@@ -835,22 +853,23 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                     <div>
                       <Label className="text-sm font-medium mb-2 block">Font Family</Label>
                       <Select
-                        value={linkProfile?.background?.font_family || "poppins"}
-                        onValueChange={(value) => setLinkProfile({ 
-                          ...linkProfile, 
-                          background: { ...linkProfile?.background, font_family: value }
-                        })}
+                        value={linkProfile?.background?.font_family || "plus-jakarta"}
+                        onValueChange={(value) => {
+                          const updated = { ...linkProfile, background: { ...linkProfile?.background, font_family: value } };
+                          setLinkProfile(updated);
+                          scheduleAutoSave(updated);
+                        }}
                       >
                         <SelectTrigger className="h-11">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="cormorant">Cormorant · Luxury Serif</SelectItem>
-                          <SelectItem value="playfair">Playfair · Editorial</SelectItem>
-                          <SelectItem value="dm-serif">DM Serif · Bold &amp; Clean</SelectItem>
-                          <SelectItem value="plus-jakarta">Jakarta Sans · Modern</SelectItem>
-                          <SelectItem value="outfit">Outfit · Contemporary</SelectItem>
-                          <SelectItem value="syne">Syne · Fashion</SelectItem>
+                          <SelectItem value="cormorant" style={{ fontFamily: "'Cormorant Garamond', serif" }}>Cormorant · Luxury Serif</SelectItem>
+                          <SelectItem value="playfair" style={{ fontFamily: "'Playfair Display', serif" }}>Playfair · Editorial</SelectItem>
+                          <SelectItem value="dm-serif" style={{ fontFamily: "'DM Serif Display', serif" }}>DM Serif · Bold & Clean</SelectItem>
+                          <SelectItem value="plus-jakarta" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Jakarta Sans · Modern</SelectItem>
+                          <SelectItem value="outfit" style={{ fontFamily: "'Outfit', sans-serif" }}>Outfit · Contemporary</SelectItem>
+                          <SelectItem value="syne" style={{ fontFamily: "'Syne', sans-serif" }}>Syne · Fashion</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1362,22 +1381,23 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                   <div>
                     <Label htmlFor="fontFamily" className="text-sm sm:text-base md:text-lg font-medium mb-2 md:mb-4 block">Font Family</Label>
                     <Select
-                      value={linkProfile?.background?.font_family || "poppins"}
-                      onValueChange={(value) => setLinkProfile({ 
-                        ...linkProfile, 
-                        background: { ...linkProfile?.background, font_family: value }
-                      })}
+                      value={linkProfile?.background?.font_family || "plus-jakarta"}
+                      onValueChange={(value) => {
+                        const updated = { ...linkProfile, background: { ...linkProfile?.background, font_family: value } };
+                        setLinkProfile(updated);
+                        scheduleAutoSave(updated);
+                      }}
                     >
                       <SelectTrigger className="mt-2 h-10 sm:h-11 md:h-12 text-sm sm:text-base">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="cormorant">Cormorant · Luxury Serif</SelectItem>
-                        <SelectItem value="playfair">Playfair · Editorial</SelectItem>
-                        <SelectItem value="dm-serif">DM Serif · Bold &amp; Clean</SelectItem>
-                        <SelectItem value="plus-jakarta">Jakarta Sans · Modern</SelectItem>
-                        <SelectItem value="outfit">Outfit · Contemporary</SelectItem>
-                        <SelectItem value="syne">Syne · Fashion</SelectItem>
+                        <SelectItem value="cormorant" style={{ fontFamily: "'Cormorant Garamond', serif" }}>Cormorant · Luxury Serif</SelectItem>
+                        <SelectItem value="playfair" style={{ fontFamily: "'Playfair Display', serif" }}>Playfair · Editorial</SelectItem>
+                        <SelectItem value="dm-serif" style={{ fontFamily: "'DM Serif Display', serif" }}>DM Serif · Bold & Clean</SelectItem>
+                        <SelectItem value="plus-jakarta" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Jakarta Sans · Modern</SelectItem>
+                        <SelectItem value="outfit" style={{ fontFamily: "'Outfit', sans-serif" }}>Outfit · Contemporary</SelectItem>
+                        <SelectItem value="syne" style={{ fontFamily: "'Syne', sans-serif" }}>Syne · Fashion</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

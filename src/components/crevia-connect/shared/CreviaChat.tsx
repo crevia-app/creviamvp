@@ -1477,7 +1477,8 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
 
   // Helpers
   const getRoomDisplayName = (room: ChatRoom) => {
-    if (room.is_group) return room.name || "Group Chat";
+    // Named rooms are workspaces — name always wins regardless of is_group flag
+    if (room.name) return room.name;
     const otherMember = room.members?.find((m) => m.user_id !== currentUserId);
     return otherMember?.profile?.display_name || otherMember?.profile?.handle || "Chat";
   };

@@ -38,6 +38,7 @@ interface LastMessage {
   message_type: string;
   sender_name: string | null;
   sender_id: string;
+  is_encrypted: boolean;
 }
 
 interface Room {
@@ -153,7 +154,7 @@ const WorkspaceInboxList = ({
       // Last message per room via a raw join — fetch recent messages and dedupe in JS
       supabase
         .from("chat_messages")
-        .select("id, room_id, content, message_type, sender_id, created_at")
+        .select("id, room_id, content, message_type, sender_id, is_encrypted, created_at")
         .in("room_id", roomIds)
         .order("created_at", { ascending: false })
         .limit(roomIds.length * 3),
@@ -168,7 +169,7 @@ const WorkspaceInboxList = ({
     if (!roomsResult.data) { setLoading(false); return; }
 
     // Build a map of roomId → last message (deduplicated)
-    const lastMsgMap: Record<string, { content: string | null; message_type: string; sender_id: string }> = {};
+    const lastMsgMap: Record<string, { content: string | null; message_type: string; sender_id: string; is_encrypted: boolean }> = {};
     for (const msg of lastMsgsResult.data ?? []) {
       if (!lastMsgMap[msg.room_id]) lastMsgMap[msg.room_id] = msg;
     }
@@ -200,7 +201,7 @@ const WorkspaceInboxList = ({
         memberCount: memberIds.length,
         memberUserIds: memberIds,
         lastMessage: lm
-          ? { content: lm.content, message_type: lm.message_type, sender_name: senderMap[lm.sender_id] ?? null, sender_id: lm.sender_id }
+          ? { content: lm.content, message_type: lm.message_type, sender_name: senderMap[lm.sender_id] ?? null, sender_id: lm.sender_id, is_encrypted: lm.is_encrypted }
           : null,
         unreadCount: lastReadAt ? undefined : undefined, // placeholder — real unread needs message counts
       };
@@ -215,7 +216,7 @@ const WorkspaceInboxList = ({
     setCreating(true);
     const { data, error } = await supabase
       .from("chat_rooms")
-      .insert({ created_by: userId, is_group: false, name: createName.trim() })
+      .insert({ created_by: userId, is_group: true, name: createName.trim() })
       .select()
       .single();
 
@@ -400,7 +401,9 @@ const WorkspaceInboxList = ({
                                     ? "🧾 Invoice"
                                     : room.lastMessage.message_type === "contract"
                                     ? "📄 Canvas"
-                                    : room.lastMessage.content || ""}
+                                    : room.lastMessage.is_encrypted
+                                    ? "🔒 Encrypted message"
+                                    : (room.lastMessage.content || "").slice(0, 45)}
                                 </p>
                               ) : (
                                 <p className="text-[10px] text-muted-foreground/40 truncate leading-snug">
