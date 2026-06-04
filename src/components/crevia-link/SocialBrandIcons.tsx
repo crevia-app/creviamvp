@@ -1,5 +1,9 @@
 import React from "react";
-import * as SimpleIcons from "simple-icons";
+import {
+  siX, siGithub, siFacebook, siTwitch, siDiscord, siThreads,
+  siReddit, siPinterest, siSnapchat, siWhatsapp, siTelegram,
+  siSignal, siSpotify, siApplemusic, siSoundcloud,
+} from "simple-icons";
 
 type SocialIcon = { id: string; platform: string; url: string };
 
@@ -79,17 +83,28 @@ const MULTICOLOR_SVGS: Record<string, React.ReactElement> = {
   ),
 };
 
-// Map platform keys to simple-icons slugs where they differ from the key name.
-const SLUG_OVERRIDES: Record<string, string> = {
-  twitter:       "x",          // Twitter rebranded to X
-  "apple-music": "applemusic",
+// Static map — only the icons we use, fully tree-shakeable.
+const SI_MAP: Record<string, { hex: string; path: string }> = {
+  twitter:       siX,
+  x:             siX,
+  github:        siGithub,
+  facebook:      siFacebook,
+  twitch:        siTwitch,
+  discord:       siDiscord,
+  threads:       siThreads,
+  reddit:        siReddit,
+  pinterest:     siPinterest,
+  snapchat:      siSnapchat,
+  whatsapp:      siWhatsapp,
+  telegram:      siTelegram,
+  signal:        siSignal,
+  spotify:       siSpotify,
+  "apple-music": siApplemusic,
+  soundcloud:    siSoundcloud,
 };
 
 function getSimpleIcon(platform: string): { hex: string; path: string } | null {
-  const slug = SLUG_OVERRIDES[platform] ?? platform.replace(/[^a-z0-9]/g, "");
-  const key  = `si${slug.charAt(0).toUpperCase()}${slug.slice(1)}`;
-  const icon = (SimpleIcons as any)[key];
-  return icon ? { hex: icon.hex as string, path: icon.path as string } : null;
+  return SI_MAP[platform] ?? null;
 }
 
 export function getSocialSvg(platform: string): React.ReactElement {
