@@ -27,7 +27,7 @@ const LinkSidebarDesktop = ({ userType, onCollapsedChange }: LinkSidebarDesktopP
   ];
 
   return (
-    <aside className="hidden md:flex flex-col bg-black text-white fixed left-[100px] top-16 bottom-0 z-20 w-[100px]">
+    <aside className="hidden md:flex flex-col bg-background text-foreground border-r border-border/50 fixed left-[100px] top-14 bottom-0 z-20 w-[100px]">
       {/* Navigation - matching MainSidebar style */}
       <nav className="flex-1 py-4 space-y-2">
         {items.map((item) => {
@@ -42,7 +42,7 @@ const LinkSidebarDesktop = ({ userType, onCollapsedChange }: LinkSidebarDesktopP
                 "flex flex-col items-center justify-center gap-1.5 px-3 py-3 transition-all duration-200",
                 isActive
                   ? "text-bronze"
-                  : "text-white/70 hover:text-bronze hover:bg-white/5"
+                  : "text-muted-foreground hover:text-bronze hover:bg-muted/50"
               )}
             >
               <div className={cn(
