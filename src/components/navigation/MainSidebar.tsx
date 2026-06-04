@@ -1,11 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  Home,
-  Sparkles,
   MoreHorizontal,
   MessageSquare,
-  Briefcase,
   Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +21,28 @@ import { IOSInstallGuide } from "@/components/pwa/IOSInstallGuide";
 import { useSubscription } from "@/hooks/use-subscription";
 import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 
+const DiraIcon = ({ active }: { active: boolean }) => (
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"
+    fill={active ? "currentColor" : "none"}
+    stroke={active ? "none" : "currentColor"}
+    strokeWidth={1.65} strokeLinejoin="round"
+  >
+    <path d="M12 2 L14.83 9.17 L22 12 L14.83 14.83 L12 22 L9.17 14.83 L2 12 L9.17 9.17 Z" />
+  </svg>
+);
+
+const StudioIcon = ({ active }: { active: boolean }) => (
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+    {([[3,3],[13,3],[3,13],[13,13]] as [number,number][]).map(([x,y],i) => (
+      <rect key={i} x={x} y={y} width={8} height={8} rx={2.5}
+        fill={active ? "currentColor" : "none"}
+        stroke={active ? "none" : "currentColor"}
+        strokeWidth={1.65} strokeLinejoin="round"
+      />
+    ))}
+  </svg>
+);
+
 interface MainSidebarProps {
   profile: any;
   onProfileClick: () => void;
@@ -36,8 +55,8 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
   const subscription = useSubscription();
 
   const navItems = [
-    { id: "dira",   label: t("sidebar.dira"),   icon: Sparkles, path: "/dira",          prefetch: () => import("@/pages/Dira") },
-    { id: "studio", label: t("sidebar.studio"), icon: Briefcase, path: "/crevia-studio", prefetch: () => import("@/pages/CreviaStudio") },
+    { id: "dira",   label: "Dira AI",       Icon: DiraIcon,   path: "/dira",           prefetch: () => import("@/pages/Dira") },
+    { id: "studio", label: "Studio",        Icon: StudioIcon, path: "/crevia-studio",  prefetch: () => import("@/pages/CreviaStudio") },
   ];
 
   const isActive = (path: string) => {
@@ -49,34 +68,32 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
     <aside className="hidden md:flex flex-col bg-background/80 backdrop-blur-md border-r border-border/50 fixed left-0 top-14 bottom-0 z-30 w-[100px] pl-[env(safe-area-inset-left,0px)]">
       <nav className="flex-1 py-4 space-y-2">
         {navItems.map((item) => {
-          const Icon = item.icon;
           const active = isActive(item.path);
-
           return (
             <Link
               key={item.id}
               to={item.path}
               onMouseEnter={item.prefetch}
               onTouchStart={item.prefetch}
-              className={cn(
-                "flex flex-col items-center justify-center gap-1.5 px-3 py-3 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] group",
-                active
-                  ? "text-bronze"
-                  : "text-muted-foreground hover:text-bronze hover:bg-muted/50"
-              )}
+              className="flex flex-col items-center justify-center gap-1.5 py-2"
             >
               <div className={cn(
-                "p-2.5 rounded-xl transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105",
-                active && "bg-bronze/15"
+                "flex items-center justify-center w-14 h-10 rounded-2xl transition-all duration-300 ease-out",
+                active ? "bg-bronze/15 scale-100" : "bg-transparent scale-95 hover:scale-100"
               )}>
-                <Icon 
-                  className={cn(
-                    "h-6 w-6 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)]",
-                    active && "drop-shadow-[0_0_10px_rgba(207,129,80,0.5)]"
-                  )} 
-                />
+                <span className={cn(
+                  "transition-all duration-300 ease-out",
+                  active
+                    ? "text-bronze drop-shadow-[0_0_10px_rgba(207,129,80,0.45)]"
+                    : "text-foreground/42"
+                )}>
+                  <item.Icon active={active} />
+                </span>
               </div>
-              <span className="font-poppins text-xs font-medium text-center leading-tight transition-all duration-300">
+              <span className={cn(
+                "font-poppins text-[10px] font-medium text-center leading-tight transition-colors duration-300",
+                active ? "text-bronze" : "text-muted-foreground"
+              )}>
                 {item.label}
               </span>
             </Link>
@@ -85,11 +102,13 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex flex-col items-center justify-center gap-1.5 px-3 py-3 transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] w-full text-muted-foreground hover:text-bronze hover:bg-muted/50 group">
-              <div className="p-2.5 rounded-xl transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105">
-                <MoreHorizontal className="h-6 w-6 transition-all duration-300" />
+            <button className="flex flex-col items-center justify-center gap-1.5 py-2 w-full group">
+              <div className="flex items-center justify-center w-14 h-10 rounded-2xl transition-all duration-300 ease-out bg-transparent scale-95 hover:scale-100 group-data-[state=open]:bg-bronze/15">
+                <span className="text-foreground/42 group-data-[state=open]:text-bronze transition-all duration-300 ease-out">
+                  <MoreHorizontal className="h-[22px] w-[22px]" />
+                </span>
               </div>
-              <span className="font-poppins text-xs font-medium text-center leading-tight">
+              <span className="font-poppins text-[10px] font-medium text-center leading-tight text-muted-foreground group-data-[state=open]:text-bronze transition-colors duration-300">
                 {t("common.more")}
               </span>
             </button>
