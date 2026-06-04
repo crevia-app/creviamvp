@@ -33,7 +33,7 @@ const Auth = () => {
   const [isResetting, setIsResetting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(() => !!localStorage.getItem("crevia_terms_v1"));
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const [emailConfirmPending, setEmailConfirmPending] = useState(false);
   const [showWelcomeScreen, setShowWelcomeScreen] = useState(false);
@@ -142,7 +142,8 @@ const Auth = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    if (isSignup && !termsAccepted) {
+    if (!termsAccepted) {
+      setIsSignup(true);
       toast({
         title: "Please agree first",
         description: "Tick the Terms of Use and Privacy Policy checkbox before continuing.",
@@ -597,7 +598,12 @@ const Auth = () => {
                 <Checkbox
                   id="terms"
                   checked={termsAccepted}
-                  onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                  onCheckedChange={(checked) => {
+                    const accepted = checked === true;
+                    setTermsAccepted(accepted);
+                    if (accepted) localStorage.setItem("crevia_terms_v1", "1");
+                    else localStorage.removeItem("crevia_terms_v1");
+                  }}
                   className="mt-0.5 shrink-0 h-5 w-5 rounded-md border-2 border-gray-400 dark:border-white/60 bg-transparent dark:bg-white/10 data-[state=checked]:bg-[#F0782F] data-[state=checked]:border-[#F0782F]"
                 />
                 <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none font-poppins">
