@@ -1,7 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CheckCircle2 } from "lucide-react";
+import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 import { LINK_THEMES } from "@/lib/linkThemes";
 
 interface LivePreviewProps {
@@ -140,7 +140,7 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
                   <h2 className="font-semibold text-lg" style={{ color: textColor }}>
                     {linkProfile?.display_name || "Your Name"}
                   </h2>
-                  {showVerified && <CheckCircle2 className="w-4 h-4 text-[#CF8150]" />}
+                  {showVerified && <VerifiedBadge size="sm" />}
                 </div>
 
                 <p className="text-xs opacity-70 mb-1.5" style={{ color: textColor }}>
