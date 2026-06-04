@@ -46,6 +46,47 @@ const validateUsername = (username: string): string | null => {
 
 const PREMIUM_THEMES = PRO_THEME_IDS;
 
+const FIELD_LABELS: Record<string, string> = {
+  username:                    "Username",
+  display_name:                "Display Name",
+  bio:                         "Bio",
+  profile_picture:             "Profile Picture",
+  show_verified_badge:         "Verified Badge",
+  show_crevia_branding:        "Branding",
+  contact_enabled:             "Contact",
+  contact_email:               "Contact Email",
+  seo_title:                   "SEO Title",
+  seo_description:             "SEO Description",
+  layout:                      "Layout",
+  theme:                       "Theme",
+  "background.font_family":    "Typography",
+  "background.button_style":   "Button Style",
+  "background.button_spacing": "Button Spacing",
+  "background.hover_effects":  "Hover Effects",
+  "background.fade_animation": "Animations",
+  "background.smooth_scroll":  "Smooth Scroll",
+  "background.page_width":     "Page Width",
+  "background.custom_color":   "Custom Color",
+  "background.custom_bg_url":  "Background Image",
+  "background.style":          "Background Style",
+};
+
+const BG_KEYS = ["font_family","button_style","button_spacing","hover_effects","fade_animation","smooth_scroll","page_width","custom_color","custom_bg_url","style"] as const;
+const TOP_KEYS = ["username","display_name","bio","profile_picture","show_verified_badge","show_crevia_branding","contact_enabled","contact_email","seo_title","seo_description","layout","theme"] as const;
+
+function diffLinkProfile(saved: any, current: any): string[] {
+  const labels = new Set<string>();
+  for (const key of TOP_KEYS) {
+    if (JSON.stringify(saved?.[key]) !== JSON.stringify(current?.[key]))
+      labels.add(FIELD_LABELS[key] ?? key);
+  }
+  for (const key of BG_KEYS) {
+    if (JSON.stringify(saved?.background?.[key]) !== JSON.stringify(current?.background?.[key]))
+      labels.add(FIELD_LABELS[`background.${key}`] ?? key);
+  }
+  return [...labels];
+}
+
 const SOCIAL_PLATFORMS = [
   // Core social
   { value: "instagram",   label: "Instagram",   placeholder: "https://instagram.com/yourhandle" },
@@ -104,6 +145,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   // a full re-render whenever saved data might differ from in-memory state.
   const [previewNonce, setPreviewNonce] = useState(0);
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedProfileRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bgImageRefEmb = useRef<HTMLInputElement>(null);
   const bgImageRefStandalone = useRef<HTMLInputElement>(null);
@@ -162,6 +204,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
     if (existingLink) {
       setLinkProfile(existingLink);
+      savedProfileRef.current = existingLink;
     } else {
       const { data: newLink } = await supabase
         .from("link_profiles")
@@ -175,6 +218,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
         .select()
         .single();
       setLinkProfile(newLink);
+      savedProfileRef.current = newLink;
     }
 
     setLoading(false);
@@ -372,6 +416,12 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
       return;
     }
 
+    const changedFields = diffLinkProfile(savedProfileRef.current, linkProfile);
+    if (changedFields.length === 0) {
+      toast({ title: "No changes to save.", description: "Your profile is already up to date." });
+      return;
+    }
+
     setSaving(true);
     const { error: saveError } = await supabase
       .from("link_profiles")
@@ -401,16 +451,19 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     } else {
       toast({
         title: "Saved!",
-        description: "Your Crevia Link has been updated.",
+        description: `Changes saved: ${changedFields.join(", ")}.`,
       });
       const { data: updatedLink } = await supabase
         .from("link_profiles")
         .select("*")
         .eq("id", linkProfile.id)
         .single();
-      
+
       if (updatedLink) {
         setLinkProfile(updatedLink);
+        savedProfileRef.current = updatedLink;
+      } else {
+        savedProfileRef.current = { ...linkProfile };
       }
       setPreviewNonce(n => n + 1);
     }
