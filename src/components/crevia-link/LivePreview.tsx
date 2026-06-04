@@ -3,14 +3,16 @@ import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 import { LINK_THEMES } from "@/lib/linkThemes";
+import { SocialBadgeRow } from "@/components/crevia-link/SocialBrandIcons";
 
 interface LivePreviewProps {
   linkProfile: any;
   buttons: any[];
   isPro?: boolean;
+  socialIcons?: any[];
 }
 
-const LivePreview = ({ linkProfile, buttons, isPro = false }: LivePreviewProps) => {
+const LivePreview = ({ linkProfile, buttons, isPro = false, socialIcons }: LivePreviewProps) => {
   const themeId = linkProfile?.theme || "elite_obsidian";
   const bgStyle = linkProfile?.background?.style || "solid";
   const customBgUrl = linkProfile?.background?.custom_bg_url;
@@ -154,6 +156,8 @@ const LivePreview = ({ linkProfile, buttons, isPro = false }: LivePreviewProps) 
                   </p>
                 )}
               </div>
+
+              <SocialBadgeRow icons={socialIcons ?? []} size="sm" />
 
               {/* Buttons */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: `${Math.max(4, buttonSpacing * 0.6)}px` }}>

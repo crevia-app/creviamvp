@@ -3,7 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Instagram, Linkedin, Youtube, Mail, Globe, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { SocialBadgeRow } from "@/components/crevia-link/SocialBrandIcons";
 import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 import { BackButton } from "@/components/BackButton";
 
@@ -214,17 +215,6 @@ const PublicProfile = () => {
     }
   };
 
-  const getSocialIcon = (platform: string) => {
-    switch (platform.toLowerCase()) {
-      case "instagram": return <Instagram className="w-5 h-5" />;
-      case "linkedin": return <Linkedin className="w-5 h-5" />;
-      case "youtube": return <Youtube className="w-5 h-5" />;
-      case "email": return <Mail className="w-5 h-5" />;
-      case "website": return <Globe className="w-5 h-5" />;
-      default: return <Globe className="w-5 h-5" />;
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
@@ -327,21 +317,7 @@ const PublicProfile = () => {
         </div>
 
         {/* Social Icons */}
-        {socialIcons.length > 0 && (
-          <div className="flex justify-center gap-4 mb-8">
-            {socialIcons.map((icon) => (
-              <a
-                key={icon.id}
-                href={icon.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-3 rounded-full border border-[#CF8150] hover:bg-[#CF8150]/10 transition-colors"
-              >
-                {getSocialIcon(icon.platform)}
-              </a>
-            ))}
-          </div>
-        )}
+        <SocialBadgeRow icons={socialIcons} />
 
         {/* Buttons */}
         <div className="mb-12" style={{ display: 'flex', flexDirection: 'column', gap: getButtonSpacing() }}>
