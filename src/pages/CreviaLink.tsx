@@ -59,6 +59,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const [linkProfile, setLinkProfile] = useState<any>(null);
   const [buttons, setButtons] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
+  const [viewingLive, setViewingLive] = useState(false);
   const [showAddButton, setShowAddButton] = useState(false);
   const [showEditButton, setShowEditButton] = useState(false);
   const [editingButton, setEditingButton] = useState<any>(null);
@@ -432,31 +433,39 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkProfile?.theme, linkProfile?.background, linkProfile?.layout]);
 
-  // Open the tab immediately (preserves user-gesture context so popups aren't blocked),
-  // then save all fields and navigate the tab once the save completes.
   const handleViewLivePage = async () => {
-    if (!linkProfile?.id || !linkProfile?.username) return;
-    const win = window.open("", "_blank", "noopener,noreferrer");
+    if (!linkProfile?.id || !linkProfile?.username) {
+      toast({ title: "No username set", description: "Set a username in your Profile tab first.", variant: "destructive" });
+      return;
+    }
+    setViewingLive(true);
     if (autoSaveTimerRef.current) {
       clearTimeout(autoSaveTimerRef.current);
       autoSaveTimerRef.current = null;
     }
-    await supabase.from("link_profiles").update({
-      username:             linkProfile.username,
-      display_name:         linkProfile.display_name,
-      bio:                  linkProfile.bio,
-      theme:                linkProfile.theme,
-      layout:               linkProfile.layout,
-      show_verified_badge:  linkProfile.show_verified_badge,
-      show_crevia_branding: linkProfile.show_crevia_branding,
-      contact_enabled:      linkProfile.contact_enabled,
-      contact_email:        linkProfile.contact_email,
-      background:           linkProfile.background,
-      profile_picture:      linkProfile.profile_picture,
-      seo_title:            linkProfile.seo_title,
-      seo_description:      linkProfile.seo_description,
-    }).eq("id", linkProfile.id);
-    if (win) win.location.href = `/${linkProfile.username}`;
+    const liveUrl = `${window.location.origin}/${linkProfile.username}`;
+    try {
+      await supabase.from("link_profiles").update({
+        username:             linkProfile.username,
+        display_name:         linkProfile.display_name,
+        bio:                  linkProfile.bio,
+        theme:                linkProfile.theme,
+        layout:               linkProfile.layout,
+        show_verified_badge:  linkProfile.show_verified_badge,
+        show_crevia_branding: linkProfile.show_crevia_branding,
+        contact_enabled:      linkProfile.contact_enabled,
+        contact_email:        linkProfile.contact_email,
+        background:           linkProfile.background,
+        profile_picture:      linkProfile.profile_picture,
+        seo_title:            linkProfile.seo_title,
+        seo_description:      linkProfile.seo_description,
+      }).eq("id", linkProfile.id);
+    } catch {
+      // Non-fatal — still navigate so user can see the page
+    }
+    const win = window.open(liveUrl, "_blank", "noopener,noreferrer");
+    if (!win) window.location.href = liveUrl;
+    setViewingLive(false);
   };
 
   const handleCopyLink = async () => {
@@ -700,9 +709,10 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         variant="outline"
                         className="flex-1 gap-1.5 text-sm h-11"
                         onClick={handleViewLivePage}
+                        disabled={viewingLive}
                         style={{ touchAction: "manipulation" }}
                       >
-                        <ExternalLink className="w-3.5 h-3.5" /> View Live
+                        <ExternalLink className="w-3.5 h-3.5" /> {viewingLive ? "Opening..." : "View Live"}
                       </Button>
                     </div>
                   </div>
@@ -1005,8 +1015,9 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                   variant="outline"
                   className="flex-1 gap-1.5 text-xs h-9"
                   onClick={handleViewLivePage}
+                  disabled={viewingLive}
                 >
-                  <ExternalLink className="w-3.5 h-3.5" /> View Page
+                  <ExternalLink className="w-3.5 h-3.5" /> {viewingLive ? "Opening..." : "View Page"}
                 </Button>
               </div>
             </div>
@@ -1182,8 +1193,9 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 {/* View Live Page */}
                 <button
                   onClick={handleViewLivePage}
+                  disabled={viewingLive}
                   style={{ touchAction: 'manipulation' }}
-                  className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border border-border/60 bg-background hover:bg-muted/40 active:bg-muted/60 text-foreground text-sm font-semibold font-poppins transition-colors"
+                  className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border border-border/60 bg-background hover:bg-muted/40 active:bg-muted/60 text-foreground text-sm font-semibold font-poppins transition-colors disabled:opacity-50"
                 >
                   <ExternalLink className="w-4 h-4" />
                   View Live Page
@@ -1723,8 +1735,9 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                   variant="outline"
                   className="flex-1 gap-1.5 text-xs h-9"
                   onClick={handleViewLivePage}
+                  disabled={viewingLive}
                 >
-                  <ExternalLink className="w-3.5 h-3.5" /> View Page
+                  <ExternalLink className="w-3.5 h-3.5" /> {viewingLive ? "Opening..." : "View Page"}
                 </Button>
               </div>
             </div>
