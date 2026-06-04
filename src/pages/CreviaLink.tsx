@@ -717,7 +717,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 <div className="md:hidden space-y-4">
                   <div>
                     <p className="text-xs font-poppins font-medium text-center text-muted-foreground mb-3 tracking-widest uppercase">Live Preview</p>
-                    <LivePreview key={`${previewNonce}-${linkProfile?.theme}-${linkProfile?.background?.custom_color ?? ''}-${linkProfile?.background?.custom_bg_url ? '1' : '0'}`} linkProfile={linkProfile} buttons={buttons} />
+                    <LivePreview key={`${previewNonce}-${linkProfile?.theme}-${linkProfile?.background?.custom_color ?? ''}-${linkProfile?.background?.custom_bg_url ? '1' : '0'}`} linkProfile={linkProfile} buttons={buttons} isPro={isProUser} />
                     <div className="mt-3 flex gap-2">
                       <Button
                         className="flex-1 bg-bronze hover:bg-bronze-dark text-white gap-1.5 text-sm h-11"
@@ -1024,7 +1024,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
           <div className="hidden xl:block xl:w-[300px] xl:flex-shrink-0 2xl:w-[340px]">
             <div className="sticky top-24">
               <p className="text-sm font-medium text-center text-muted-foreground mb-4">Live Preview</p>
-              <LivePreview key={`${previewNonce}-${linkProfile?.theme}-${linkProfile?.background?.custom_color ?? ''}-${linkProfile?.background?.custom_bg_url ? '1' : '0'}`} linkProfile={linkProfile} buttons={buttons} />
+              <LivePreview key={`${previewNonce}-${linkProfile?.theme}-${linkProfile?.background?.custom_color ?? ''}-${linkProfile?.background?.custom_bg_url ? '1' : '0'}`} linkProfile={linkProfile} buttons={buttons} isPro={isProUser} />
               <div className="mt-4 flex gap-2">
                 <Button
                   className="flex-1 bg-bronze hover:bg-bronze-dark text-white gap-1.5 text-xs h-9"
@@ -1191,7 +1191,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
               {/* Phone mockup — scrollable */}
               <div className="overflow-y-auto flex flex-col items-center px-6 pt-3 pb-4" style={{ WebkitOverflowScrolling: "touch" }}>
-                <LivePreview key={`${previewNonce}-${linkProfile?.theme}-${linkProfile?.background?.custom_color ?? ''}-${linkProfile?.background?.custom_bg_url ? '1' : '0'}`} linkProfile={linkProfile} buttons={buttons} />
+                <LivePreview key={`${previewNonce}-${linkProfile?.theme}-${linkProfile?.background?.custom_color ?? ''}-${linkProfile?.background?.custom_bg_url ? '1' : '0'}`} linkProfile={linkProfile} buttons={buttons} isPro={isProUser} />
               </div>
 
               {/* Footer — pinned */}
@@ -1744,7 +1744,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
           <div className="hidden lg:block w-[340px] flex-shrink-0 py-8 pr-6">
             <div className="sticky top-24">
               <p className="text-sm font-medium text-center text-muted-foreground mb-4">Live Preview</p>
-              <LivePreview key={`${previewNonce}-${linkProfile?.theme}-${linkProfile?.background?.custom_color ?? ''}-${linkProfile?.background?.custom_bg_url ? '1' : '0'}`} linkProfile={linkProfile} buttons={buttons} />
+              <LivePreview key={`${previewNonce}-${linkProfile?.theme}-${linkProfile?.background?.custom_color ?? ''}-${linkProfile?.background?.custom_bg_url ? '1' : '0'}`} linkProfile={linkProfile} buttons={buttons} isPro={isProUser} />
               <div className="mt-4 flex gap-2">
                 <Button
                   className="flex-1 bg-bronze hover:bg-bronze-dark text-white gap-1.5 text-xs h-9"
@@ -1808,7 +1808,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
             {/* Preview content */}
             <div className="overflow-y-auto flex flex-col items-center pt-7 pb-8 px-6 gap-5" style={{ WebkitOverflowScrolling: "touch" }}>
-              <LivePreview key={`${previewNonce}-${linkProfile?.theme}-${linkProfile?.background?.custom_color ?? ''}-${linkProfile?.background?.custom_bg_url ? '1' : '0'}`} linkProfile={linkProfile} buttons={buttons} />
+              <LivePreview key={`${previewNonce}-${linkProfile?.theme}-${linkProfile?.background?.custom_color ?? ''}-${linkProfile?.background?.custom_bg_url ? '1' : '0'}`} linkProfile={linkProfile} buttons={buttons} isPro={isProUser} />
               <p className="text-[11px] text-muted-foreground text-center max-w-[240px] leading-relaxed">
                 Preview of your current changes. Save to make them live.
               </p>

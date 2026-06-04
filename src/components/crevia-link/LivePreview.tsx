@@ -7,9 +7,10 @@ import { LINK_THEMES } from "@/lib/linkThemes";
 interface LivePreviewProps {
   linkProfile: any;
   buttons: any[];
+  isPro?: boolean;
 }
 
-const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
+const LivePreview = ({ linkProfile, buttons, isPro = false }: LivePreviewProps) => {
   const themeId = linkProfile?.theme || "elite_obsidian";
   const bgStyle = linkProfile?.background?.style || "solid";
   const customBgUrl = linkProfile?.background?.custom_bg_url;
@@ -19,7 +20,7 @@ const LivePreview = ({ linkProfile, buttons }: LivePreviewProps) => {
   const fontFamily = linkProfile?.background?.font_family || "plus-jakarta";
   const hoverEffects = linkProfile?.background?.hover_effects !== false;
   const fadeAnimation = linkProfile?.background?.fade_animation !== false;
-  const showVerified = linkProfile?.show_verified_badge;
+  const showVerified = linkProfile?.show_verified_badge && isPro;
   const isCustomImage = themeId === "custom_image" && customBgUrl;
   const hasCustomColor = !!customColor && !isCustomImage;
 

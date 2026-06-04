@@ -313,7 +313,8 @@ const PublicProfile = () => {
             <h1 className="text-3xl font-bold">
               {profile?.display_name || profile?.username}
             </h1>
-            {profile?.show_verified_badge && profile?.profiles?.is_verified && (
+            {profile?.show_verified_badge && profile?.profiles?.is_verified &&
+              ["pro", "enterprise", "business"].includes(profile?.profiles?.subscription_plan) && (
               <VerifiedBadge size="lg" />
             )}
           </div>
