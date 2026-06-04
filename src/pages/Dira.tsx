@@ -73,6 +73,7 @@ import { DiraSettingsPanel } from "@/components/dira/DiraSettingsPanel";
 import DiraEmptyState from "@/components/dira/DiraEmptyState";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useUpgradeModal } from "@/components/subscription/UpgradeModal";
 // useIOSKeyboardFit removed: it set position:fixed on the Dira container,
 // which overlapped and hid the TopBar on iOS Safari (z-index conflict).
 // The absolute/inset-0 scroll container + 100dvh AppLayout + useVisualViewport
@@ -326,6 +327,7 @@ const isMobileDevice =
 const Dira = () => {
   const { toast } = useToast();
   const { diraActionsToday, diraActionsLimit, showDiraCounter, isFree } = useSubscription();
+  const { openUpgradeModal } = useUpgradeModal();
   const { keyboardOpen } = useVisualViewport();
   const isAtDiraLimit = diraActionsToday >= diraActionsLimit;
   const [userType, setUserType] = useState<'creator' | 'brand' | null>(null);
@@ -731,13 +733,15 @@ const Dira = () => {
       return;
     }
     if (isAtDiraLimit) {
-      toast({
-        title: "Monthly limit reached",
-        description: isFree
-          ? `You've used all ${diraActionsLimit} Dira prompts for this month. Upgrade to Pro for 500/month.`
-          : "You've reached your monthly Dira limit. It resets on the 1st of next month.",
-        variant: "destructive",
-      });
+      if (isFree) {
+        openUpgradeModal("Dira AI – Power Credits");
+      } else {
+        toast({
+          title: "Monthly limit reached",
+          description: "You've reached your monthly Dira limit. It resets on the 1st of next month.",
+          variant: "destructive",
+        });
+      }
       return;
     }
     

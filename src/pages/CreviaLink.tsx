@@ -12,7 +12,7 @@ import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check, Globe, Shield, Bell, BarChart3, TrendingUp, MousePointer, ExternalLink, Camera, AlertCircle, Users, Star, ArrowUp, ArrowDown, ChevronUp, ChevronDown, ChevronRight, Image as ImageIcon, User, MousePointerClick, SlidersHorizontal, BarChart2, Trash2, Share2 } from "lucide-react";
+import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check, Globe, Shield, Bell, BarChart3, TrendingUp, MousePointer, ExternalLink, Camera, AlertCircle, Users, Star, ArrowUp, ArrowDown, ChevronUp, ChevronDown, ChevronRight, Image as ImageIcon, User, MousePointerClick, SlidersHorizontal, BarChart2, Trash2, Share2, Lock } from "lucide-react";
 import ThemeSelector from "@/components/crevia-link/ThemeSelector";
 import { PRO_THEME_IDS } from "@/lib/linkThemes";
 import { AdvancedColorSelector } from "@/components/ui/AdvancedColorSelector";
@@ -1076,9 +1076,24 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                     {/* Custom Accent Color */}
                     {!hasCustomBg && (
                       <div className="pt-4 border-t border-border/40">
-                        <Label className="text-sm font-medium mb-3 block">Custom Color Override</Label>
+                        <div className="flex items-center justify-between mb-1">
+                          <Label className="text-sm font-medium">Custom Color Override</Label>
+                          {!isProUser && (
+                            <span className="text-[10px] font-semibold text-bronze uppercase tracking-wider border border-bronze/40 rounded-full px-2 py-0.5">Pro</span>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground mb-4">Override the theme background with a solid color or gradient.</p>
-                        <div className="rounded-2xl bg-[#0A0A0A] border border-white/10 p-4">
+                        <div className={cn("relative rounded-2xl bg-[#0A0A0A] border border-white/10 p-4", !isProUser && "pointer-events-none select-none")}>
+                          {!isProUser && (
+                            <button
+                              type="button"
+                              className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-black/60 backdrop-blur-sm"
+                              onClick={() => navigate("/profile/payments-billing")}
+                            >
+                              <Lock className="w-4 h-4 text-bronze" />
+                              <span className="text-xs font-semibold text-bronze">Upgrade to Pro to unlock</span>
+                            </button>
+                          )}
                           <AdvancedColorSelector
                             variant="link"
                             value={linkProfile?.background?.custom_color || ""}
@@ -1087,7 +1102,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                             }
                           />
                         </div>
-                        {linkProfile?.background?.custom_color && (
+                        {isProUser && linkProfile?.background?.custom_color && (
                           <button
                             className="mt-2 text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
                             onClick={() =>

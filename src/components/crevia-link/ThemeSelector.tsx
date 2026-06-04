@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LINK_THEMES } from "@/lib/linkThemes";
 
@@ -9,17 +9,18 @@ interface ThemeSelectorProps {
   onUpgrade: () => void;
 }
 
-const ThemeSelector = ({ value, onChange }: ThemeSelectorProps) => {
+const ThemeSelector = ({ value, onChange, isProUser, onUpgrade }: ThemeSelectorProps) => {
   return (
     <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
       {LINK_THEMES.map((theme) => {
         const isSelected = value === theme.value;
+        const isLocked = theme.tier === "pro" && !isProUser;
 
         return (
           <button
             key={theme.value}
             type="button"
-            onClick={() => onChange(theme.value, theme.fontKey)}
+            onClick={() => isLocked ? onUpgrade() : onChange(theme.value, theme.fontKey)}
             className={cn(
               "group relative rounded-2xl overflow-hidden transition-all duration-200 focus:outline-none",
               isSelected
@@ -55,9 +56,17 @@ const ThemeSelector = ({ value, onChange }: ThemeSelectorProps) => {
               />
 
               {/* Selected checkmark */}
-              {isSelected && (
+              {isSelected && !isLocked && (
                 <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-bronze flex items-center justify-center shadow-lg">
                   <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                </div>
+              )}
+
+              {/* Pro lock overlay */}
+              {isLocked && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-[1px] gap-1">
+                  <Lock className="w-3.5 h-3.5 text-bronze" />
+                  <span className="text-[9px] font-semibold text-bronze uppercase tracking-wider">Pro</span>
                 </div>
               )}
             </div>

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { Plus, MessageSquare, FileSignature, Receipt, ArrowRight, Sparkles, Users } from "lucide-react";
 import { useSubscription } from "@/hooks/use-subscription";
-import { toast } from "sonner";
+import { useFeatureGate } from "@/components/subscription/UpgradeModal";
 
 const WorkspacesList = () => {
   const navigate = useNavigate();
@@ -15,6 +15,7 @@ const WorkspacesList = () => {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const { canCreateWorkspace } = useSubscription();
+  const { triggerUpgrade: triggerWorkspaceUpgrade } = useFeatureGate("Workspaces");
 
   useEffect(() => { fetchWorkspaces(); }, []);
 
@@ -36,9 +37,7 @@ const WorkspacesList = () => {
     if (!userId) return;
 
     if (!canCreateWorkspace) {
-      toast.error("Workspace creation not available", {
-        description: "Free plan does not allow creating workspaces. Join an existing one, or upgrade to Pro.",
-      });
+      triggerWorkspaceUpgrade();
       return;
     }
 

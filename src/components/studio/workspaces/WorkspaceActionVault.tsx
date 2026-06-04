@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useSubscription } from "@/hooks/use-subscription";
+import { useUpgradeModal } from "@/components/subscription/UpgradeModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -74,6 +76,8 @@ const WorkspaceActionVault = ({
   onRefresh,
 }: WorkspaceActionVaultProps) => {
   const navigate = useNavigate();
+  const { invoicesUsedThisMonth, limits } = useSubscription();
+  const { openUpgradeModal } = useUpgradeModal();
   const [contractDialog, setContractDialog] = useState<Contract | null>(null);
   const [invoiceDialog, setInvoiceDialog] = useState<Invoice | null>(null);
   const [confirmDeleteContract, setConfirmDeleteContract] = useState<Contract | null>(null);
@@ -292,7 +296,10 @@ const WorkspaceActionVault = ({
                   <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider">Invoices</span>
                 </div>
                 <button
-                  onClick={() => setCreateInvoiceOpen(true)}
+                  onClick={() => {
+                    if (invoicesUsedThisMonth >= limits.invoicesPerMonth) { openUpgradeModal("Unlimited Invoices"); return; }
+                    setCreateInvoiceOpen(true);
+                  }}
                   className="w-5 h-5 rounded-md flex items-center justify-center text-muted-foreground/50 hover:text-bronze hover:bg-bronze/8 transition-colors"
                 >
                   <Plus className="w-3 h-3" />
@@ -303,7 +310,10 @@ const WorkspaceActionVault = ({
                   <Receipt className="w-5 h-5 text-muted-foreground/20 mx-auto mb-1.5" />
                   <p className="text-[10px] text-muted-foreground/60">No invoices yet</p>
                   <button
-                    onClick={() => setCreateInvoiceOpen(true)}
+                    onClick={() => {
+                    if (invoicesUsedThisMonth >= limits.invoicesPerMonth) { openUpgradeModal("Unlimited Invoices"); return; }
+                    setCreateInvoiceOpen(true);
+                  }}
                     className="mt-1.5 text-[10px] text-bronze/70 hover:text-bronze font-medium transition-colors"
                   >
                     + Add invoice

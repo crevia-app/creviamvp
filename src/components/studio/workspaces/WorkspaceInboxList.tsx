@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscription } from "@/hooks/use-subscription";
+import { useFeatureGate } from "@/components/subscription/UpgradeModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -82,7 +83,8 @@ const WorkspaceInboxList = ({
   onSelectRoom,
   userId,
 }: WorkspaceInboxListProps) => {
-  useSubscription(); // keep import used; gate removed — all plans can create workspaces
+  const { canCreateWorkspace } = useSubscription();
+  const { triggerUpgrade: triggerWorkspaceUpgrade } = useFeatureGate("Workspaces");
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -219,6 +221,7 @@ const WorkspaceInboxList = ({
   };
 
   const createWorkspace = async () => {
+    if (!canCreateWorkspace) { triggerWorkspaceUpgrade(); return; }
     if (!createName.trim()) return;
 
     setCreating(true);
