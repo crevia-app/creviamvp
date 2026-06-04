@@ -435,6 +435,10 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   // Save immediately (flushing any pending debounce) then open the live page
   // in a new tab so the user always sees the latest data.
   const handleViewLivePage = async () => {
+    if (!linkProfile?.username) {
+      toast({ title: "No username set", description: "Set a username in your Profile tab first." });
+      return;
+    }
     if (autoSaveTimerRef.current) {
       clearTimeout(autoSaveTimerRef.current);
       autoSaveTimerRef.current = null;
@@ -1161,14 +1165,17 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 </button>
 
                 {/* View Live Page */}
-                <button
-                  onClick={handleViewLivePage}
+                <a
+                  href={linkProfile?.username ? `/${linkProfile.username}` : undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={!linkProfile?.username ? (e) => { e.preventDefault(); toast({ title: "No username set", description: "Set a username in your Profile tab first." }); } : undefined}
                   style={{ touchAction: 'manipulation' }}
                   className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border border-border/60 bg-background hover:bg-muted/40 active:bg-muted/60 text-foreground text-sm font-semibold font-poppins transition-colors"
                 >
                   <ExternalLink className="w-4 h-4" />
                   View Live Page
-                </button>
+                </a>
 
                 {/* Keep Editing + Save */}
                 <div className="flex gap-2.5">
