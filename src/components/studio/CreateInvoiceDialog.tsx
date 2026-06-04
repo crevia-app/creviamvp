@@ -494,7 +494,7 @@ const CreateInvoiceDialog = ({
           {/* Invoice Details */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label>Invoice Number</Label>
+              <Label>Invoice Name</Label>
               <Input
                 value={invoiceNumber}
                 onChange={(e) => setInvoiceNumber(e.target.value)}

@@ -257,7 +257,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
 
   /** Invoice number + sender business block */
   const BusinessBlock = () => (
-    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-6">
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start print:flex-row print:justify-between print:items-start gap-3 mb-6">
       <p className="text-gray-400 text-xs sm:text-base font-mono">{invoice.invoice_number}</p>
       <div className="sm:text-right">
         <h2 className="text-base font-bold text-gray-900">{businessName}</h2>
@@ -298,7 +298,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
   const ItemsSection = () => (
     <div className="mb-6">
       {/* Mobile */}
-      <div className="sm:hidden">
+      <div className="sm:hidden print:hidden">
         <div className="flex justify-between pb-2 mb-2" style={{ borderBottom: `2px solid ${accentColor}` }}>
           <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: accentColor }}>Description</span>
           <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: accentColor }}>Amount</span>
@@ -314,7 +314,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
         ))}
       </div>
       {/* Desktop */}
-      <div className="hidden sm:block overflow-x-auto">
+      <div className="hidden sm:block print:block overflow-x-auto print:overflow-visible">
         <table className="w-full">
           <thead>
             <tr style={{ borderBottom: `2px solid ${accentColor}` }}>
@@ -326,7 +326,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
           </thead>
           <tbody>
             {items.map((item, idx) => (
-              <tr key={item.id} className={idx === items.length - 1 ? "border-b border-gray-200" : "border-b border-gray-100"}>
+              <tr key={item.id} className={`print:break-inside-avoid ${idx === items.length - 1 ? "border-b border-gray-200" : "border-b border-gray-100"}`}>
                 <td className="py-3 text-gray-900 font-medium text-sm">{item.description}</td>
                 <td className="py-3 text-center text-gray-600 text-sm">{item.quantity}</td>
                 <td className="py-3 text-right text-gray-600 text-sm">{formatCurrency(item.unit_price)}</td>
@@ -342,7 +342,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
   /** Subtotal / tax / discount / total */
   const TotalsSection = () => (
     <div className="flex justify-end mb-6">
-      <div className="w-full sm:w-64 space-y-1.5">
+      <div className="w-full sm:w-64 print:w-64 space-y-1.5">
         <div className="flex justify-between text-gray-500 text-sm">
           <span>Subtotal</span>
           <span className="font-medium">{formatCurrency(Number(invoice.subtotal))}</span>
@@ -456,9 +456,9 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
 
   // ── MAIN PREVIEW — single flowing document, no page breaks ─────────────────
   const MainPreview = () => (
-    <div ref={docRef} className="invoice-print-area bg-white text-black rounded-xl shadow-lg overflow-hidden">
+    <div ref={docRef} className="invoice-print-area bg-white text-black rounded-xl shadow-lg print:shadow-none print:rounded-none">
       <AccentBar />
-      <div className="p-4 sm:p-8">
+      <div className="p-4 sm:p-8 print:p-8">
         <InvoiceHeader />
         <BusinessBlock />
         <BillToSection />
@@ -478,11 +478,11 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
 
   // ── PRINT PREVIEW — paged layout (PAGE 1 + divider + PAGE 2) ──────────────
   const PrintPreview = () => (
-    <div className="invoice-print-area bg-white text-black rounded-xl shadow-lg overflow-hidden">
+    <div className="invoice-print-area bg-white text-black rounded-xl shadow-lg print:shadow-none print:rounded-none">
       {/* PAGE 1 */}
       <div ref={page1Ref} className="bg-white">
         <AccentBar />
-        <div className="p-4 sm:p-8">
+        <div className="p-4 sm:p-8 print:p-8">
           <InvoiceHeader />
           <BusinessBlock />
           <BillToSection />
@@ -594,7 +594,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
                     title="Open print-ready PDF"
                   >
                     <Printer className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Print / Save PDF</span>
+                    <span>Print / Save PDF</span>
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="h-8 w-8 p-0" title="Close">
                     <X className="h-4 w-4" />
