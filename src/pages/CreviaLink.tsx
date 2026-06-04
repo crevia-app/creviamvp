@@ -16,9 +16,6 @@ import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check, Globe, 
 import ThemeSelector from "@/components/crevia-link/ThemeSelector";
 import { PRO_THEME_IDS } from "@/lib/linkThemes";
 import { AdvancedColorSelector } from "@/components/ui/AdvancedColorSelector";
-import { AddButtonDialog } from "@/components/crevia-link/AddButtonDialog";
-import { EditButtonDialog } from "@/components/crevia-link/EditButtonDialog";
-import { ButtonItem } from "@/components/crevia-link/ButtonItem";
 import LinkSidebarDesktop from "@/components/crevia-link/LinkSidebarDesktop";
 import LinkTabsMobile from "@/components/crevia-link/LinkTabsMobile";
 import LivePreview from "@/components/crevia-link/LivePreview";
@@ -50,16 +47,32 @@ const validateUsername = (username: string): string | null => {
 const PREMIUM_THEMES = PRO_THEME_IDS;
 
 const SOCIAL_PLATFORMS = [
-  { value: "instagram", label: "Instagram",   placeholder: "https://instagram.com/yourhandle" },
-  { value: "twitter",   label: "Twitter / X", placeholder: "https://x.com/yourhandle" },
-  { value: "tiktok",    label: "TikTok",      placeholder: "https://tiktok.com/@yourhandle" },
-  { value: "youtube",   label: "YouTube",     placeholder: "https://youtube.com/@yourchannel" },
-  { value: "linkedin",  label: "LinkedIn",    placeholder: "https://linkedin.com/in/yourprofile" },
-  { value: "github",    label: "GitHub",      placeholder: "https://github.com/yourusername" },
-  { value: "whatsapp",  label: "WhatsApp",    placeholder: "+1 234 567 8900" },
-  { value: "email",     label: "Email",       placeholder: "you@example.com" },
-  { value: "phone",     label: "Phone",       placeholder: "+1 234 567 8900" },
-  { value: "website",   label: "Website",     placeholder: "https://yourwebsite.com" },
+  // Core social
+  { value: "instagram",   label: "Instagram",   placeholder: "https://instagram.com/yourhandle" },
+  { value: "twitter",     label: "Twitter / X", placeholder: "https://x.com/yourhandle" },
+  { value: "tiktok",      label: "TikTok",      placeholder: "https://tiktok.com/@yourhandle" },
+  { value: "youtube",     label: "YouTube",     placeholder: "https://youtube.com/@yourchannel" },
+  { value: "linkedin",    label: "LinkedIn",    placeholder: "https://linkedin.com/in/yourprofile" },
+  { value: "facebook",    label: "Facebook",    placeholder: "https://facebook.com/yourpage" },
+  { value: "threads",     label: "Threads",     placeholder: "https://threads.net/@yourhandle" },
+  { value: "github",      label: "GitHub",      placeholder: "https://github.com/yourusername" },
+  { value: "twitch",      label: "Twitch",      placeholder: "https://twitch.tv/yourchannel" },
+  { value: "discord",     label: "Discord",     placeholder: "https://discord.gg/yourserver" },
+  { value: "reddit",      label: "Reddit",      placeholder: "https://reddit.com/u/yourusername" },
+  { value: "pinterest",   label: "Pinterest",   placeholder: "https://pinterest.com/yourprofile" },
+  { value: "snapchat",    label: "Snapchat",    placeholder: "https://snapchat.com/add/yourusername" },
+  // Messaging
+  { value: "whatsapp",    label: "WhatsApp",    placeholder: "+1 234 567 8900" },
+  { value: "telegram",    label: "Telegram",    placeholder: "https://t.me/yourhandle" },
+  { value: "signal",      label: "Signal",      placeholder: "+1 234 567 8900" },
+  // Music & Content
+  { value: "spotify",     label: "Spotify",     placeholder: "https://open.spotify.com/artist/..." },
+  { value: "apple-music", label: "Apple Music", placeholder: "https://music.apple.com/artist/..." },
+  { value: "soundcloud",  label: "SoundCloud",  placeholder: "https://soundcloud.com/yourprofile" },
+  // General
+  { value: "email",       label: "Email",       placeholder: "you@example.com" },
+  { value: "phone",       label: "Phone",       placeholder: "+1 234 567 8900" },
+  { value: "website",     label: "Website",     placeholder: "https://yourwebsite.com" },
 ];
 
 const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
@@ -78,9 +91,9 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const [addingSocial, setAddingSocial] = useState(false);
   const [saving, setSaving] = useState(false);
   const [viewingLive, setViewingLive] = useState(false);
-  const [showAddButton, setShowAddButton] = useState(false);
-  const [showEditButton, setShowEditButton] = useState(false);
-  const [editingButton, setEditingButton] = useState<any>(null);
+  const [newLinkTitle, setNewLinkTitle] = useState("");
+  const [newLinkUrl, setNewLinkUrl] = useState("");
+  const [addingLink, setAddingLink] = useState(false);
   const [copied, setCopied] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -241,34 +254,24 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleAddButton = async (buttonData: any) => {
-    const maxOrder = buttons.length > 0 
-      ? Math.max(...buttons.map(b => b.order_index)) 
-      : -1;
-
+  const handleAddLink = async () => {
+    if (!newLinkTitle.trim() || !newLinkUrl.trim() || !linkProfile?.id) return;
+    setAddingLink(true);
+    const maxOrder = buttons.length > 0 ? Math.max(...buttons.map(b => b.order_index)) : -1;
     const { data, error } = await supabase
       .from("link_buttons")
-      .insert({
-        profile_id: linkProfile.id,
-        ...buttonData,
-        order_index: maxOrder + 1,
-      })
+      .insert({ profile_id: linkProfile.id, title: newLinkTitle.trim(), url: newLinkUrl.trim(), icon: "link", style: "filled", visible: true, order_index: maxOrder + 1 })
       .select()
       .single();
-
     if (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       setButtons([...buttons, data]);
-      toast({
-        title: "Button added!",
-        description: "Your new button has been created.",
-      });
+      setNewLinkTitle("");
+      setNewLinkUrl("");
+      toast({ title: "Link added!" });
     }
+    setAddingLink(false);
   };
 
   const handleDeleteButton = async (id: string) => {
@@ -337,30 +340,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
       setButtons(buttons.map(b => 
         b.id === id ? { ...b, visible } : b
       ));
-    }
-  };
-
-  const handleEditButton = (button: any) => {
-    setEditingButton(button);
-    setShowEditButton(true);
-  };
-
-  const handleSaveEditButton = async (updatedButton: any) => {
-    const { error } = await supabase
-      .from("link_buttons")
-      .update({
-        title: updatedButton.title,
-        url: updatedButton.url,
-        icon: updatedButton.icon,
-        style: updatedButton.style,
-      })
-      .eq("id", updatedButton.id);
-
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      setButtons(buttons.map(b => b.id === updatedButton.id ? { ...b, ...updatedButton } : b));
-      toast({ title: "Button updated!" });
     }
   };
 
@@ -635,6 +614,86 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
       )}
       <p className="text-xs text-muted-foreground mt-1">3-30 chars. Letters, numbers, dots, underscores, hyphens. Cannot start/end with special chars.</p>
     </div>
+  );
+
+  const renderLinksCard = (compact = false) => (
+    <Card className={cn("border-border/50", compact ? "min-w-0 p-6" : "p-6 md:p-8")}>
+      <div className="flex items-center gap-3 mb-6">
+        <Link2 className={cn("text-bronze flex-shrink-0", compact ? "w-5 h-5" : "w-6 h-6")} />
+        <h3 className={cn("font-vollkorn font-bold", compact ? "text-xl" : "text-xl md:text-2xl")}>Links</h3>
+      </div>
+
+      {buttons.length > 0 ? (
+        <div className="space-y-2 mb-6">
+          {buttons.map((button, idx) => (
+            <div key={button.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/40">
+              <div className="flex flex-col flex-shrink-0">
+                <button
+                  onClick={() => handleMoveButton(button.id, "up")}
+                  disabled={idx === 0}
+                  className="h-5 w-5 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+                >
+                  <ChevronUp className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => handleMoveButton(button.id, "down")}
+                  disabled={idx === buttons.length - 1}
+                  className="h-5 w-5 flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
+                >
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <Switch
+                checked={button.visible !== false}
+                onCheckedChange={(v) => handleToggleVisibility(button.id, v)}
+                className="flex-shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{button.title}</p>
+                <p className="text-xs text-muted-foreground truncate">{button.url}</p>
+              </div>
+              <button
+                onClick={() => handleDeleteButton(button.id)}
+                className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-destructive/10 hover:text-destructive text-muted-foreground transition-colors flex-shrink-0"
+                aria-label={`Remove ${button.title}`}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-8 text-muted-foreground mb-6">
+          <Link2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
+          <p className="text-sm">No links yet. Add one below.</p>
+        </div>
+      )}
+
+      <div className="space-y-3 pt-2 border-t border-border/30">
+        <p className="text-sm font-medium pt-3">Add a link</p>
+        <Input
+          className="h-11 text-sm"
+          value={newLinkTitle}
+          onChange={(e) => setNewLinkTitle(e.target.value)}
+          placeholder="Button title (e.g. My Portfolio)"
+        />
+        <Input
+          className="h-11 text-sm"
+          value={newLinkUrl}
+          onChange={(e) => setNewLinkUrl(e.target.value)}
+          placeholder="https://example.com"
+          onKeyDown={(e) => { if (e.key === "Enter") handleAddLink(); }}
+        />
+        <Button
+          onClick={handleAddLink}
+          disabled={!newLinkTitle.trim() || !newLinkUrl.trim() || addingLink}
+          className="w-full bg-bronze hover:bg-bronze-dark h-11"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          {addingLink ? "Adding..." : "Add Link"}
+        </Button>
+      </div>
+    </Card>
   );
 
   const renderSocialLinksCard = (compact = false) => (
@@ -927,37 +986,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
             {embeddedTab === "buttons" && (
               <div className="space-y-6">
-                <Card className="min-w-0 p-6 border-border/50">
-                  <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <h3 className="font-vollkorn text-2xl font-bold">Links & Buttons</h3>
-                    <Button onClick={() => setShowAddButton(true)} className="bg-bronze hover:bg-bronze-dark">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Button
-                    </Button>
-                  </div>
-                  {buttons.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <Link2 className="w-10 h-10 mx-auto mb-3 opacity-50" />
-                      <p>No buttons yet. Add one to get started.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {buttons.map((button, idx) => (
-                        <ButtonItem
-                          key={button.id}
-                          button={button}
-                          onEdit={handleEditButton}
-                          onDelete={handleDeleteButton}
-                          onToggleVisibility={handleToggleVisibility}
-                          onMoveUp={(id) => handleMoveButton(id, "up")}
-                          onMoveDown={(id) => handleMoveButton(id, "down")}
-                          isFirst={idx === 0}
-                          isLast={idx === buttons.length - 1}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </Card>
+                {renderLinksCard(true)}
                 {renderSocialLinksCard(true)}
               </div>
             )}
@@ -1179,17 +1208,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
           </div>
         </div>
 
-        <AddButtonDialog
-          open={showAddButton}
-          onOpenChange={setShowAddButton}
-          onAdd={handleAddButton}
-        />
-        <EditButtonDialog
-          open={showEditButton}
-          onOpenChange={setShowEditButton}
-          onSave={handleSaveEditButton}
-          button={editingButton}
-        />
 
         {/* Mobile profile info bottom sheet — portal to document.body */}
         {showMobileProfileSheet && createPortal(
@@ -1524,41 +1542,10 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
             </div>
           )}
 
-          {/* ===== BUTTONS TAB ===== */}
+          {/* ===== LINKS TAB ===== */}
           {currentTab === "buttons" && (
             <div className="space-y-8 md:space-y-10">
-              <Card className="p-6 md:p-8 border-border/50">
-                <div className="flex items-center justify-between mb-8">
-                  <h3 className="font-vollkorn text-xl sm:text-3xl md:text-4xl font-bold text-bronze">Links & Buttons</h3>
-                  <Button onClick={() => setShowAddButton(true)} className="bg-bronze hover:bg-bronze-dark">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Button
-                  </Button>
-                </div>
-
-                {buttons.length === 0 ? (
-                  <div className="text-center py-16 text-muted-foreground">
-                    <Link2 className="w-14 h-14 mx-auto mb-4 opacity-50" />
-                    <p className="text-lg font-poppins">No buttons yet. Add one to get started.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {buttons.map((button, idx) => (
-                      <ButtonItem
-                        key={button.id}
-                        button={button}
-                        onEdit={handleEditButton}
-                        onDelete={handleDeleteButton}
-                        onToggleVisibility={handleToggleVisibility}
-                        onMoveUp={(id) => handleMoveButton(id, "up")}
-                        onMoveDown={(id) => handleMoveButton(id, "down")}
-                        isFirst={idx === 0}
-                        isLast={idx === buttons.length - 1}
-                      />
-                    ))}
-                  </div>
-                )}
-              </Card>
+              {renderLinksCard()}
               {renderSocialLinksCard()}
             </div>
           )}
@@ -1903,17 +1890,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
         </main>
       </div>
 
-      <AddButtonDialog
-        open={showAddButton}
-        onOpenChange={setShowAddButton}
-        onAdd={handleAddButton}
-      />
-      <EditButtonDialog
-        open={showEditButton}
-        onOpenChange={setShowEditButton}
-        onSave={handleSaveEditButton}
-        button={editingButton}
-      />
 
       {/* Live preview modal — rendered via portal to escape overflow/flex context on iOS */}
       {showPreviewModal && createPortal(
