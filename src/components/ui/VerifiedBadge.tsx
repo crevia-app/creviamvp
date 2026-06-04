@@ -19,7 +19,7 @@ export function VerifiedBadge({ className, size = "md" }: VerifiedBadgeProps) {
       />
       <path
         fill="#FFFFFF"
-        d="M9.5 16.5l-4-4 1.41-1.42L9.5 13.67l5.59-5.59L16.5 9.5z"
+        d="M8.84 16.56L3.32 11l1.72-1.72 3.8 3.8 8.12-8.12 1.72 1.72z"
       />
     </svg>
   );
