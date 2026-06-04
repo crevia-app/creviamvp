@@ -24,6 +24,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSubscription } from "@/hooks/use-subscription";
+import { useUpgradeModal } from "@/components/subscription/UpgradeModal";
 
 interface CreviaLinkProps {
   isEmbedded?: boolean;
@@ -120,8 +121,10 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { isPro, isBusiness, isBrandWorkspace } = useSubscription();
+  const { isPro, isBusiness, isBrandWorkspace, limits } = useSubscription();
   const isProUser = isPro || isBusiness || isBrandWorkspace;
+  const { openUpgradeModal } = useUpgradeModal();
+  const PRO_FONTS = ["playfair", "dm-serif", "outfit", "syne"];
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [linkProfile, setLinkProfile] = useState<any>(null);
@@ -834,6 +837,22 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   );
 
   // Analytics section shared
+  const renderAnalyticsGate = () => (
+    <div className="flex flex-col items-center justify-center py-20 text-center px-6">
+      <div className="w-14 h-14 rounded-2xl bg-bronze/10 flex items-center justify-center mb-4">
+        <BarChart3 className="w-7 h-7 text-bronze" />
+      </div>
+      <h3 className="font-vollkorn text-xl font-bold mb-2">Analytics is a Pro feature</h3>
+      <p className="text-sm text-muted-foreground mb-6 max-w-xs">Unlock visitor stats, click-through rates, and detailed link performance. Upgrade to Pro to see your audience.</p>
+      <button
+        onClick={() => openUpgradeModal("Visitor Analytics")}
+        className="px-6 py-2.5 rounded-xl bg-bronze hover:bg-bronze/90 text-white font-semibold text-sm transition-colors"
+      >
+        Upgrade to Pro
+      </button>
+    </div>
+  );
+
   const renderAnalytics = () => (
     <div className="space-y-6">
       {/* Overview Stats */}
@@ -1172,6 +1191,10 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                       <Select
                         value={linkProfile?.background?.font_family || "plus-jakarta"}
                         onValueChange={(value) => {
+                          if (limits.freeFontsOnly && PRO_FONTS.includes(value)) {
+                            openUpgradeModal("Premium Fonts");
+                            return;
+                          }
                           const updated = { ...linkProfile, background: { ...linkProfile?.background, font_family: value } };
                           setLinkProfile(updated);
                           scheduleAutoSave(updated);
@@ -1182,11 +1205,11 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="cormorant" style={{ fontFamily: "'Cormorant Garamond', serif" }}>Cormorant · Luxury Serif</SelectItem>
-                          <SelectItem value="playfair" style={{ fontFamily: "'Playfair Display', serif" }}>Playfair · Editorial</SelectItem>
-                          <SelectItem value="dm-serif" style={{ fontFamily: "'DM Serif Display', serif" }}>DM Serif · Bold & Clean</SelectItem>
                           <SelectItem value="plus-jakarta" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Jakarta Sans · Modern</SelectItem>
-                          <SelectItem value="outfit" style={{ fontFamily: "'Outfit', sans-serif" }}>Outfit · Contemporary</SelectItem>
-                          <SelectItem value="syne" style={{ fontFamily: "'Syne', sans-serif" }}>Syne · Fashion</SelectItem>
+                          <SelectItem value="playfair" style={{ fontFamily: "'Playfair Display', serif" }}>{!isProUser && "🔒 "}Playfair · Editorial{!isProUser && " · Pro"}</SelectItem>
+                          <SelectItem value="dm-serif" style={{ fontFamily: "'DM Serif Display', serif" }}>{!isProUser && "🔒 "}DM Serif · Bold & Clean{!isProUser && " · Pro"}</SelectItem>
+                          <SelectItem value="outfit" style={{ fontFamily: "'Outfit', sans-serif" }}>{!isProUser && "🔒 "}Outfit · Contemporary{!isProUser && " · Pro"}</SelectItem>
+                          <SelectItem value="syne" style={{ fontFamily: "'Syne', sans-serif" }}>{!isProUser && "🔒 "}Syne · Fashion{!isProUser && " · Pro"}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1215,18 +1238,23 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                           { value: "sharp", label: "Sharp", class: "" },
                           { value: "soft", label: "Soft", class: "rounded-lg" },
                           { value: "pill", label: "Pill", class: "rounded-full bg-bronze" },
-                        ].map((style) => (
-                          <div key={style.value}>
-                            <RadioGroupItem value={style.value} id={`emb-btn-${style.value}`} className="peer sr-only" />
-                            <Label
-                              htmlFor={`emb-btn-${style.value}`}
-                              className="flex flex-col items-center p-4 rounded-xl border-2 border-muted peer-data-[state=checked]:border-bronze cursor-pointer"
-                            >
-                              <div className={cn("w-full h-10 mb-2", style.value === "pill" ? style.class : `${style.class} bg-bronze/20 border-2 border-bronze`)} />
-                              <span className="text-sm font-medium">{style.label}</span>
-                            </Label>
-                          </div>
-                        ))}
+                        ].map((style) => {
+                          const isLockedStyle = limits.layoutLocked === "sharp" && style.value !== "sharp";
+                          return (
+                            <div key={style.value} className="relative">
+                              <RadioGroupItem value={style.value} id={`emb-btn-${style.value}`} className="peer sr-only" disabled={isLockedStyle} />
+                              <Label
+                                htmlFor={`emb-btn-${style.value}`}
+                                onClick={isLockedStyle ? (e) => { e.preventDefault(); openUpgradeModal("Custom Layout Styles"); } : undefined}
+                                className={cn("flex flex-col items-center p-4 rounded-xl border-2 border-muted peer-data-[state=checked]:border-bronze cursor-pointer", isLockedStyle && "opacity-50")}
+                              >
+                                <div className={cn("w-full h-10 mb-2", style.value === "pill" ? style.class : `${style.class} bg-bronze/20 border-2 border-bronze`)} />
+                                <span className="text-sm font-medium">{style.label}</span>
+                                {isLockedStyle && <span className="text-[10px] text-bronze font-semibold mt-0.5">Pro</span>}
+                              </Label>
+                            </div>
+                          );
+                        })}
                       </RadioGroup>
                     </div>
                   </div>
@@ -1248,7 +1276,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
               </div>
             )}
 
-            {embeddedTab === "analytics" && renderAnalytics()}
+            {embeddedTab === "analytics" && (limits.hasFullAnalytics ? renderAnalytics() : renderAnalyticsGate())}
           </div>
 
           {/* Live Preview - Desktop Only */}
@@ -1928,7 +1956,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
 
           {/* ===== ANALYTICS TAB ===== */}
-          {currentTab === "analytics" && renderAnalytics()}
+          {currentTab === "analytics" && (limits.hasFullAnalytics ? renderAnalytics() : renderAnalyticsGate())}
         </div>
           </div>
 

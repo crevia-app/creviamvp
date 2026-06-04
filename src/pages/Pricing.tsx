@@ -384,7 +384,7 @@ const Pricing = () => {
             {[
               {
                 q: "What's included in the free plan?",
-                a: "Crevia Link with basic templates, 10 Dira AI actions per day, 2 invoices and 2 Canvas per month. No credit card required.",
+                a: "Crevia Link with basic templates, 5 Dira AI actions per day, 2 invoices per month, and unlimited Canvas drafts. No credit card required.",
               },
               {
                 q: "Can I switch plans anytime?",

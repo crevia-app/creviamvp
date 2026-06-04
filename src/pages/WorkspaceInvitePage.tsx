@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Sparkles, CheckCircle2, AlertTriangle, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSubscription } from "@/hooks/use-subscription";
 
 type State =
   | { status: "loading" }
@@ -14,6 +15,7 @@ type State =
 export default function WorkspaceInvitePage() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
+  const { canJoinWorkspace } = useSubscription();
   const [state, setState] = useState<State>({ status: "loading" });
 
   useEffect(() => {
@@ -25,9 +27,13 @@ export default function WorkspaceInvitePage() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       setState({ status: "needs_auth" });
-    } else {
-      acceptInvite();
+      return;
     }
+    if (!canJoinWorkspace) {
+      setState({ status: "error", message: "Workspaces are a Pro feature. Upgrade your plan to join this workspace." });
+      return;
+    }
+    acceptInvite();
   };
 
   const acceptInvite = async () => {

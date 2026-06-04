@@ -32,6 +32,8 @@ import {
 import { Plus, Trash2, Receipt, Users, ChevronDown, ChevronUp, BookUser, CreditCard, X as XIcon } from "lucide-react";
 import { toast } from "sonner";
 import ClientAddressBook, { type SavedClient } from "@/components/studio/ClientAddressBook";
+import { useSubscription } from "@/hooks/use-subscription";
+import { useUpgradeModal } from "@/components/subscription/UpgradeModal";
 
 interface InvoiceItem {
   id?: string;
@@ -103,6 +105,8 @@ const CreateInvoiceDialog = ({
   folderId,
   diraContext,
 }: CreateInvoiceDialogProps) => {
+  const { limits } = useSubscription();
+  const { openUpgradeModal } = useUpgradeModal();
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const createdInvoiceRef = useRef<any>(null);
@@ -824,7 +828,10 @@ const CreateInvoiceDialog = ({
           <div className="space-y-3">
             <button
               type="button"
-              onClick={() => setShowPaymentDetails((v) => !v)}
+              onClick={() => {
+                if (!limits.hasInvoiceCustomization) { openUpgradeModal("Custom Payment Details"); return; }
+                setShowPaymentDetails((v) => !v);
+              }}
               className="w-full flex items-center justify-between gap-2 p-3.5 rounded-xl border border-dashed border-border hover:border-bronze/50 hover:bg-bronze/5 transition-all duration-200 group"
             >
               <div className="flex items-center gap-2.5">
@@ -832,7 +839,10 @@ const CreateInvoiceDialog = ({
                   <CreditCard className="h-4 w-4 text-bronze" />
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-semibold text-foreground leading-tight">Payment Details</p>
+                  <p className="text-sm font-semibold text-foreground leading-tight">
+                    Payment Details
+                    {!limits.hasInvoiceCustomization && <span className="ml-2 text-[10px] font-semibold text-bronze border border-bronze/40 rounded-full px-1.5 py-0.5">Pro</span>}
+                  </p>
                   <p className="text-[11px] text-muted-foreground leading-tight">
                     {showPaymentDetails ? "Shown on invoice" : "Add bank / M-Pesa / PayPal info to your invoice"}
                   </p>

@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Users, Search, UserPlus, X, Loader2, Crown, Link2, Copy, Check, ShieldCheck, ShieldOff, Lock } from "lucide-react";
+import { Users, Search, UserPlus, X, Loader2, Crown, Link2, Copy, Check, Lock } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const getSeatLimit = (plan: string | null): number => {
   if (plan === "enterprise") return 100;
@@ -172,14 +173,17 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
     setRemovingId(null);
   };
 
-  const toggleRole = async (userId: string, currentRole: string) => {
-    const isBusinessPlan = creatorPlan === "business" || creatorPlan === "brand_workspace" || creatorPlan === "enterprise";
+  const WORKSPACE_ROLES = ["admin", "editor", "viewer"] as const;
+  type WorkspaceRole = typeof WORKSPACE_ROLES[number];
+
+  const isBusinessPlan = creatorPlan === "business" || creatorPlan === "brand_workspace" || creatorPlan === "enterprise";
+
+  const setRole = async (userId: string, newRole: WorkspaceRole) => {
     if (!isBusinessPlan) {
-      toast.error("Business feature", { description: "Upgrade to Business to assign admin roles." });
+      toast.error("Business feature", { description: "Upgrade to Business to assign member roles." });
       return;
     }
     setPromotingId(userId);
-    const newRole = currentRole === "admin" ? "member" : "admin";
     const { error } = await supabase
       .from("chat_room_members")
       .update({ role: newRole })
@@ -188,10 +192,8 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
     if (error) {
       toast.error("Failed to update role");
     } else {
-      setMembers((prev) =>
-        prev.map((m) => m.user_id === userId ? { ...m, role: newRole } : m)
-      );
-      toast.success(newRole === "admin" ? "Promoted to admin" : "Demoted to member");
+      setMembers((prev) => prev.map((m) => m.user_id === userId ? { ...m, role: newRole } : m));
+      toast.success(`Role set to ${newRole}`);
     }
     setPromotingId(null);
   };
@@ -390,28 +392,35 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
                       </p>
                     </div>
                     {isCreator && m.user_id !== createdBy && (
-                      <div className="flex items-center gap-0.5 flex-shrink-0">
-                        <button
-                          onClick={() => toggleRole(m.user_id, m.role)}
-                          disabled={promotingId === m.user_id}
-                          className="p-2 h-9 w-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-bronze hover:bg-bronze/10 transition-colors"
-                          aria-label={m.role === "admin" ? "Demote to member" : "Promote to admin"}
-                        >
-                          {promotingId === m.user_id
-                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            : m.role === "admin"
-                            ? <ShieldOff className="w-3.5 h-3.5" />
-                            : <ShieldCheck className="w-3.5 h-3.5" />}
-                        </button>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {promotingId === m.user_id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                        ) : isBusinessPlan ? (
+                          <Select
+                            value={m.role as WorkspaceRole}
+                            onValueChange={(v) => setRole(m.user_id, v as WorkspaceRole)}
+                          >
+                            <SelectTrigger className="h-7 text-[11px] w-[72px] px-2 border-border/50">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="admin" className="text-xs">Admin</SelectItem>
+                              <SelectItem value="editor" className="text-xs">Editor</SelectItem>
+                              <SelectItem value="viewer" className="text-xs">Viewer</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground/60 border border-border/40 rounded px-1.5 py-0.5">{m.role}</span>
+                        )}
                         <button
                           onClick={() => removeMember(m.user_id)}
                           disabled={removingId === m.user_id}
-                          className="p-2 h-9 w-9 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          className="p-1.5 h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                           aria-label="Remove member"
                         >
                           {removingId === m.user_id
-                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            : <X className="w-3.5 h-3.5" />}
+                            ? <Loader2 className="w-3 h-3 animate-spin" />
+                            : <X className="w-3 h-3" />}
                         </button>
                       </div>
                     )}
