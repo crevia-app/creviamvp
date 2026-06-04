@@ -292,7 +292,7 @@ const PublicProfile = () => {
       {bgExtras.overlayStyle && <div className="absolute inset-0" style={bgExtras.overlayStyle} />}
       {bgExtras.className && <div className={`absolute inset-0 ${bgExtras.className}`} />}
       <div className="absolute top-4 left-4 z-20">
-        <BackButton fallback="/crevia-link?tab=appearance" className="text-white/70 hover:text-white drop-shadow" />
+        <BackButton fallback="/crevia-link" className="text-white/70 hover:text-white drop-shadow" />
       </div>
       <div className={`${getPageWidth()} ${layoutClass} ${fadeAnimation ? 'animate-fade-in' : ''} relative z-10`}>
         {/* Profile Header */}
