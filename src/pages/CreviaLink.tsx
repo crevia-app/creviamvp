@@ -124,7 +124,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     // Run both queries in parallel instead of sequentially
     const [{ data: userProfile }, { data: existingLink }] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", session.user.id).single(),
-      supabase.from("link_profiles").select("*").eq("user_id", session.user.id).single(),
+      supabase.from("link_profiles").select("*").eq("user_id", session.user.id).limit(1).maybeSingle(),
     ]);
 
     setProfile(userProfile);
