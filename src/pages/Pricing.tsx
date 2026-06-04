@@ -15,6 +15,13 @@ const fmt = (n: number) => n === 0 ? "$0" : `$${n % 1 === 0 ? n.toLocaleString()
 
 const DEFAULT_BUSINESS_PRICE = 74.99;
 
+type PlanFeature = {
+  product: string;
+  detail: string;
+  note?: string;
+  lockNote?: string;
+};
+
 const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPrice: number, enterprisePrice: number) => {
   const proYearly      = parseFloat((proPrice * 10).toFixed(2));
   const businessYearly = parseFloat((businessPrice * 10).toFixed(2));
@@ -27,16 +34,14 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPri
       priceYearly: "$0",
       period: "",
       seatNote: null,
-      description: "For the independent professional just getting started.",
+      description: "Start building your professional footprint.",
       features: [
-        "1 seat",
-        "Crevia Link — standard profile templates, no analytics",
-        "15 Dira AI prompts per month",
-        "Join 1 workspace (view only, cannot create)",
-        "6 canvas drafts per month · 1 finalized e-signature",
-        "3 invoices per month (Crevia branding)",
-        "Community support",
-      ],
+        { product: "Dira AI", detail: "5 Daily Power Credits", note: "Refreshed daily" },
+        { product: "Crevia Canvas", detail: "Unlimited document drafts", lockNote: "E-Signatures excluded" },
+        { product: "Crevia Invoice", detail: "2 standard invoices / month", lockNote: "Customization excluded" },
+        { product: "Crevia Workspace", detail: "0 Workspaces", lockNote: "Workspaces are a Pro feature" },
+        { product: "Crevia Link", detail: "Core profile engine & basic themes", lockNote: "Analytics excluded" },
+      ] as PlanFeature[],
       cta: "Get Started",
       highlighted: false,
       planKey: null as "pro" | "business" | null,
@@ -44,24 +49,20 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPri
       yearlyAmount: 0,
     },
     {
-      name: "Pro",
+      name: "Pro Verified",
       badge: billingCycle === "yearly" ? "2 Months Free" : "Most Popular",
       priceMonthly: fmt(proPrice),
       priceYearly: fmt(proYearly),
       period: billingCycle === "monthly" ? "/mo" : "/yr",
       seatNote: null,
-      description: "For professionals scaling their independent operations.",
+      description: "Scale your operations with an elite toolkit.",
       features: [
-        "1 seat",
-        "Verified badge on your profile",
-        "500 Dira AI prompts per month",
-        "Crevia Link — premium themes + visitor analytics",
-        "10 collaborative workspaces per month",
-        "Unlimited canvas + unlimited e-signatures",
-        "Unlimited invoices — no watermark",
-        "Client Portal access",
-        "Priority support",
-      ],
+        { product: "Dira AI", detail: "500 Monthly Power Credits" },
+        { product: "Crevia Canvas", detail: "Unlimited canvases + Unlimited E-Signatures" },
+        { product: "Crevia Invoice", detail: "Unlimited customized invoices", note: "Remove branding, add your logo, add brand colors" },
+        { product: "Crevia Workspace", detail: "10 Collaborative Workspaces / month", note: "Invite clients and collaborators natively" },
+        { product: "Crevia Link", detail: "Premium themes, custom brand colors, and advanced visitor analytics" },
+      ] as PlanFeature[],
       cta: "Go Pro",
       highlighted: true,
       planKey: "pro" as const,
@@ -69,23 +70,21 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPri
       yearlyAmount: proYearly,
     },
     {
-      name: "Business",
+      name: "Business Verified",
       badge: billingCycle === "yearly" ? "2 Months Free" : "For Teams",
       priceMonthly: fmt(businessPrice),
       priceYearly: fmt(businessYearly),
       period: billingCycle === "monthly" ? "/mo" : "/yr",
-      seatNote: "+ $19.99 per extra seat",
-      description: "For agencies and brands managing external rosters.",
+      seatNote: "+ $19.99 per additional seat",
+      description: "Centralize your external team and client roster.",
       features: [
-        "3 seats included",
-        "Unlimited Dira AI prompts",
-        "Crevia Link — premium themes + visitor analytics",
-        "Unlimited client/project workspaces",
-        "Advanced RBAC — Admin & Editor permissions",
-        "Unlimited canvas + unlimited e-signatures",
-        "Unlimited invoices — no watermark",
-        "Priority support",
-      ],
+        { product: "Dira AI", detail: "Unlimited priority processing" },
+        { product: "Crevia Canvas", detail: "Unlimited canvases + Unlimited E-Signatures" },
+        { product: "Crevia Invoice", detail: "Unlimited invoices", note: "Removed branding, add your brand colors and logo" },
+        { product: "Crevia Workspace", detail: "Unlimited Client & Project Workspaces with RBAC" },
+        { product: "Crevia Link", detail: "Brand colors, logos, and advanced visitor analytics" },
+        { product: "Support", detail: "Priority support" },
+      ] as PlanFeature[],
       cta: "Get Business",
       highlighted: false,
       planKey: "business" as const,
@@ -98,18 +97,12 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPri
       priceMonthly: enterprisePrice > 0 ? fmt(enterprisePrice) : "Custom",
       priceYearly: enterprisePrice > 0 ? fmt(entYearly) : "Custom",
       period: enterprisePrice > 0 ? (billingCycle === "monthly" ? "/mo" : "/yr") : "",
-      seatNote: "Custom volume",
-      description: "Scalable infrastructure for high-volume corporate operations.",
+      seatNote: "Custom pricing",
+      description: "Custom infrastructure for high-volume corporate networks.",
       features: [
-        "Custom seats",
-        "Unlimited Dira AI — priority processing",
-        "Custom domain mapping & white-labeling",
-        "Direct ERP integrations (SAP, Oracle)",
-        "Concierge Canvas onboarding",
-        "Dedicated account manager",
-        "SLA guarantee + SSO",
-        "Custom API limits",
-      ],
+        { product: "Architecture", detail: "Dedicated white-labeled infrastructure, custom domain mapping, direct API webhooks, and enterprise-grade SLA agreements" },
+        { product: "Onboarding", detail: "Design your custom workspace layout", note: "hi@crevia.app" },
+      ] as PlanFeature[],
       cta: "Contact Sales",
       highlighted: false,
       planKey: null as "pro" | "business" | null,
@@ -293,6 +286,9 @@ const Pricing = () => {
                     )}
                   </div>
 
+                  {plan.name === "Business Verified" && (
+                    <p className="text-xs text-muted-foreground font-poppins mb-0.5">Includes 3 seats</p>
+                  )}
                   {plan.seatNote && (
                     <p className="text-xs text-muted-foreground font-poppins mb-1">{plan.seatNote}</p>
                   )}
@@ -311,16 +307,21 @@ const Pricing = () => {
                   </div>
 
                   <ul className="space-y-3 mb-8 flex-1">
-                    {plan.features.map((feature, fi) => (
+                    {plan.features.map((f, fi) => (
                       <motion.li
-                        key={feature}
+                        key={f.product}
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.3, delay: 0.15 + fi * 0.04 }}
                         className="flex items-start gap-2.5"
                       >
                         <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${plan.highlighted ? "text-bronze" : "text-muted-foreground"}`} />
-                        <span className="text-sm leading-relaxed">{feature}</span>
+                        <span className="text-sm leading-relaxed">
+                          <span className="font-medium text-foreground">{f.product}:</span>{" "}
+                          {f.detail}
+                          {f.note && <span className="text-muted-foreground text-xs"> · {f.note}</span>}
+                          {f.lockNote && <span className="text-muted-foreground/70 text-xs italic"> ({f.lockNote})</span>}
+                        </span>
                       </motion.li>
                     ))}
                   </ul>

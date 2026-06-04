@@ -7,6 +7,7 @@ import TopBar from "./TopBar";
 import ProfileDrawer from "./ProfileDrawer";
 import { BackButton } from "@/components/BackButton";
 import ProUpgradeToast from "@/components/subscription/ProUpgradeToast";
+import UpgradeModalProvider from "@/components/subscription/UpgradeModal";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -72,6 +73,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   );
 
   return (
+    <UpgradeModalProvider>
     <div className="h-dvh bg-background flex flex-col">
       <TopBar
         profile={profile}
@@ -117,6 +119,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         profile={profile}
       />
     </div>
+    </UpgradeModalProvider>
   );
 };
 
