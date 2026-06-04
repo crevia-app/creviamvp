@@ -432,9 +432,11 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkProfile?.theme, linkProfile?.background, linkProfile?.layout]);
 
-  // Full silent save then open live page — ensures every field (profile + appearance) is visible.
+  // Open the tab immediately (preserves user-gesture context so popups aren't blocked),
+  // then save all fields and navigate the tab once the save completes.
   const handleViewLivePage = async () => {
-    if (!linkProfile?.id) return;
+    if (!linkProfile?.id || !linkProfile?.username) return;
+    const win = window.open("", "_blank", "noopener,noreferrer");
     if (autoSaveTimerRef.current) {
       clearTimeout(autoSaveTimerRef.current);
       autoSaveTimerRef.current = null;
@@ -454,7 +456,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
       seo_title:            linkProfile.seo_title,
       seo_description:      linkProfile.seo_description,
     }).eq("id", linkProfile.id);
-    window.open(`/${linkProfile?.username}`, "_blank", "noopener,noreferrer");
+    if (win) win.location.href = `/${linkProfile.username}`;
   };
 
   const handleCopyLink = async () => {
