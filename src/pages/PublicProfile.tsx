@@ -278,6 +278,9 @@ const PublicProfile = () => {
   
   const bgExtras = getBackgroundExtras();
   
+  const customColor = profile?.background?.custom_color as string | undefined;
+  const hasCustomColor = !!customColor && !isCustomImage;
+
   return (
     <div
       className={`min-h-screen ${themeStyles.className} ${getFontSize()} pt-12 px-6 relative`}
@@ -285,7 +288,8 @@ const PublicProfile = () => {
         fontFamily: getFontFamily(),
         scrollBehavior: smoothScroll ? 'smooth' : 'auto',
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 3rem)',
-        ...(isCustomImage ? { backgroundImage: `url(${customBgUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' } : {})
+        ...(isCustomImage ? { backgroundImage: `url(${customBgUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' } : {}),
+        ...(hasCustomColor ? { background: customColor } : {}),
       }}
     >
       {isCustomImage && <div className="absolute inset-0 bg-black/50" />}
