@@ -1226,20 +1226,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
           {/* ===== PROFILE TAB ===== */}
           {currentTab === "profile" && (
             <div className="space-y-8 md:space-y-10">
-              {/* Hero Section */}
-              <div className="text-center">
-                <div className="inline-flex items-center gap-2 mb-4 md:mb-5 text-bronze">
-                  <Link2 className="w-5 h-5 md:w-6 md:h-6" />
-                  <span className="text-sm md:text-base font-poppins font-semibold tracking-wider uppercase">CREVIA LINK</span>
-                </div>
-                <h1 className="font-vollkorn text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-5 leading-tight">
-                  Your premium link-in-bio
-                </h1>
-                <p className="text-base md:text-lg text-muted-foreground font-poppins max-w-xl mx-auto leading-relaxed">
-                  Beautiful, customizable, and powerful. Share everything you create in one elegant page.
-                </p>
-              </div>
-
               {/* Action Buttons */}
               <div className="flex flex-col gap-4">
                 <Button
