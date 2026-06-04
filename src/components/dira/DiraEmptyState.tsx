@@ -84,19 +84,38 @@ const DiraEmptyState = ({
       {/* ── Content layer (aura is rendered by parent — no internal orbs) ──── */}
       <div className="relative z-10 flex flex-col items-center text-center max-w-lg w-full">
 
-        {/* Dira icon badge */}
-        <div
-          className="mb-6 flex items-center justify-center w-14 h-14 rounded-2xl"
-          style={{
-            background: "rgba(240, 120, 47, 0.12)",
-            border: "1px solid rgba(240, 120, 47, 0.25)",
-            boxShadow: "0 0 24px rgba(240, 120, 47, 0.18)",
-          }}
-        >
-          <Sparkles
-            className="w-6 h-6"
-            style={{ color: "#F0782F", filter: "drop-shadow(0 0 8px rgba(240,120,47,0.6))" }}
+        {/* Dira icon badge + premium aura */}
+        <div className="relative mb-6">
+          {/* Massive aura orb — 300px centered on the icon, blur-[72px] creates the
+              "expensive" atmospheric glow. Light mode: 25% opacity (warm peach on white).
+              Dark mode: 45% opacity (vibrant accent on dark canvas). */}
+          <div
+            aria-hidden="true"
+            className="absolute pointer-events-none opacity-25 dark:opacity-[0.45]"
+            style={{
+              width: "300px",
+              height: "300px",
+              background: "radial-gradient(ellipse at center, #F0782F 0%, #d96525 30%, transparent 68%)",
+              borderRadius: "50%",
+              filter: "blur(72px)",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+            }}
           />
+          <div
+            className="relative z-10 flex items-center justify-center w-14 h-14 rounded-2xl"
+            style={{
+              background: "rgba(240, 120, 47, 0.12)",
+              border: "1px solid rgba(240, 120, 47, 0.25)",
+              boxShadow: "0 0 24px rgba(240, 120, 47, 0.18)",
+            }}
+          >
+            <Sparkles
+              className="w-6 h-6"
+              style={{ color: "#F0782F", filter: "drop-shadow(0 0 8px rgba(240,120,47,0.6))" }}
+            />
+          </div>
         </div>
 
         {/* Greeting */}
