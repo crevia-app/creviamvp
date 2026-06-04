@@ -12,7 +12,7 @@ import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check, Globe, Shield, Bell, BarChart3, TrendingUp, MousePointer, ExternalLink, Camera, AlertCircle, Users, Star, ArrowUp, ArrowDown, ChevronUp, ChevronDown, ChevronRight, Image as ImageIcon, User, MousePointerClick, SlidersHorizontal, BarChart2 } from "lucide-react";
+import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check, Globe, Shield, Bell, BarChart3, TrendingUp, MousePointer, ExternalLink, Camera, AlertCircle, Users, Star, ArrowUp, ArrowDown, ChevronUp, ChevronDown, ChevronRight, Image as ImageIcon, User, MousePointerClick, SlidersHorizontal, BarChart2, Trash2, Share2 } from "lucide-react";
 import ThemeSelector from "@/components/crevia-link/ThemeSelector";
 import { PRO_THEME_IDS } from "@/lib/linkThemes";
 import { AdvancedColorSelector } from "@/components/ui/AdvancedColorSelector";
@@ -22,6 +22,7 @@ import { ButtonItem } from "@/components/crevia-link/ButtonItem";
 import LinkSidebarDesktop from "@/components/crevia-link/LinkSidebarDesktop";
 import LinkTabsMobile from "@/components/crevia-link/LinkTabsMobile";
 import LivePreview from "@/components/crevia-link/LivePreview";
+import { SocialBadgeRow, getSocialSvg } from "@/components/crevia-link/SocialBrandIcons";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -48,6 +49,19 @@ const validateUsername = (username: string): string | null => {
 
 const PREMIUM_THEMES = PRO_THEME_IDS;
 
+const SOCIAL_PLATFORMS = [
+  { value: "instagram", label: "Instagram",   placeholder: "https://instagram.com/yourhandle" },
+  { value: "twitter",   label: "Twitter / X", placeholder: "https://x.com/yourhandle" },
+  { value: "tiktok",    label: "TikTok",      placeholder: "https://tiktok.com/@yourhandle" },
+  { value: "youtube",   label: "YouTube",     placeholder: "https://youtube.com/@yourchannel" },
+  { value: "linkedin",  label: "LinkedIn",    placeholder: "https://linkedin.com/in/yourprofile" },
+  { value: "github",    label: "GitHub",      placeholder: "https://github.com/yourusername" },
+  { value: "whatsapp",  label: "WhatsApp",    placeholder: "+1 234 567 8900" },
+  { value: "email",     label: "Email",       placeholder: "you@example.com" },
+  { value: "phone",     label: "Phone",       placeholder: "+1 234 567 8900" },
+  { value: "website",   label: "Website",     placeholder: "https://yourwebsite.com" },
+];
+
 const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -59,6 +73,9 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const [linkProfile, setLinkProfile] = useState<any>(null);
   const [buttons, setButtons] = useState<any[]>([]);
   const [socialIcons, setSocialIcons] = useState<any[]>([]);
+  const [newSocialPlatform, setNewSocialPlatform] = useState("");
+  const [newSocialUrl, setNewSocialUrl] = useState("");
+  const [addingSocial, setAddingSocial] = useState(false);
   const [saving, setSaving] = useState(false);
   const [viewingLive, setViewingLive] = useState(false);
   const [showAddButton, setShowAddButton] = useState(false);
@@ -272,6 +289,35 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
         title: "Button deleted",
         description: "The button has been removed.",
       });
+    }
+  };
+
+  const handleAddSocialIcon = async () => {
+    if (!newSocialPlatform || !newSocialUrl.trim() || !linkProfile?.id) return;
+    setAddingSocial(true);
+    const maxOrder = socialIcons.length > 0 ? Math.max(...socialIcons.map((s) => s.order_index)) : -1;
+    const { data, error } = await supabase
+      .from("link_social_icons")
+      .insert({ profile_id: linkProfile.id, platform: newSocialPlatform, url: newSocialUrl.trim(), order_index: maxOrder + 1 })
+      .select()
+      .single();
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setSocialIcons([...socialIcons, data]);
+      setNewSocialPlatform("");
+      setNewSocialUrl("");
+      toast({ title: "Social link added!" });
+    }
+    setAddingSocial(false);
+  };
+
+  const handleDeleteSocialIcon = async (id: string) => {
+    const { error } = await supabase.from("link_social_icons").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setSocialIcons(socialIcons.filter((s) => s.id !== id));
     }
   };
 
@@ -591,6 +637,90 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     </div>
   );
 
+  const renderSocialLinksCard = (compact = false) => (
+    <Card className={cn("border-border/50", compact ? "min-w-0 p-6" : "p-6 md:p-8")}>
+      <div className="flex items-center gap-3 mb-6">
+        <Share2 className={cn("text-bronze flex-shrink-0", compact ? "w-5 h-5" : "w-6 h-6")} />
+        <h3 className={cn("font-vollkorn font-bold", compact ? "text-xl" : "text-xl md:text-2xl")}>Social Links</h3>
+      </div>
+
+      {/* Live badge preview */}
+      {socialIcons.length > 0 && (
+        <div className="mb-5 p-4 rounded-xl bg-muted/40 flex justify-center">
+          <SocialBadgeRow icons={socialIcons} />
+        </div>
+      )}
+
+      {/* Existing icons list */}
+      {socialIcons.length > 0 ? (
+        <div className="space-y-2 mb-6">
+          {socialIcons.map((icon) => (
+            <div key={icon.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/40">
+              <span className="w-8 h-8 bg-white rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
+                <span className="w-5 h-5 flex items-center justify-center">{getSocialSvg(icon.platform)}</span>
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium capitalize">{icon.platform}</p>
+                <p className="text-xs text-muted-foreground truncate">{icon.url}</p>
+              </div>
+              <button
+                onClick={() => handleDeleteSocialIcon(icon.id)}
+                className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-destructive/10 hover:text-destructive text-muted-foreground transition-colors flex-shrink-0"
+                aria-label={`Remove ${icon.platform}`}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-8 text-muted-foreground mb-6">
+          <Share2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
+          <p className="text-sm">No social links added yet.</p>
+        </div>
+      )}
+
+      {/* Add form */}
+      <div className="space-y-3 pt-2 border-t border-border/30">
+        <p className="text-sm font-medium pt-3">Add a social link</p>
+        <div className="flex gap-2">
+          <Select value={newSocialPlatform} onValueChange={setNewSocialPlatform}>
+            <SelectTrigger className="w-[148px] flex-shrink-0 h-11">
+              <SelectValue placeholder="Platform" />
+            </SelectTrigger>
+            <SelectContent>
+              {SOCIAL_PLATFORMS.map((p) => (
+                <SelectItem key={p.value} value={p.value}>
+                  <span className="flex items-center gap-2">
+                    <span className="w-5 h-5 bg-white rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
+                      <span className="w-3.5 h-3.5 flex items-center justify-center">{getSocialSvg(p.value)}</span>
+                    </span>
+                    {p.label}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Input
+            className="flex-1 h-11 text-sm"
+            value={newSocialUrl}
+            onChange={(e) => setNewSocialUrl(e.target.value)}
+            placeholder={SOCIAL_PLATFORMS.find((p) => p.value === newSocialPlatform)?.placeholder || "URL or handle"}
+            onKeyDown={(e) => { if (e.key === "Enter") handleAddSocialIcon(); }}
+          />
+        </div>
+        <Button
+          onClick={handleAddSocialIcon}
+          disabled={!newSocialPlatform || !newSocialUrl.trim() || addingSocial}
+          className="w-full bg-bronze hover:bg-bronze-dark h-11"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          {addingSocial ? "Adding..." : "Add Social Link"}
+        </Button>
+      </div>
+    </Card>
+  );
+
   // Analytics section shared
   const renderAnalytics = () => (
     <div className="space-y-6">
@@ -796,37 +926,40 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
             )}
 
             {embeddedTab === "buttons" && (
-              <Card className="min-w-0 p-6 border-border/50">
-                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <h3 className="font-vollkorn text-2xl font-bold">Links & Buttons</h3>
-                  <Button onClick={() => setShowAddButton(true)} className="bg-bronze hover:bg-bronze-dark">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Button
-                  </Button>
-                </div>
-                {buttons.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Link2 className="w-10 h-10 mx-auto mb-3 opacity-50" />
-                    <p>No buttons yet. Add one to get started.</p>
+              <div className="space-y-6">
+                <Card className="min-w-0 p-6 border-border/50">
+                  <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <h3 className="font-vollkorn text-2xl font-bold">Links & Buttons</h3>
+                    <Button onClick={() => setShowAddButton(true)} className="bg-bronze hover:bg-bronze-dark">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Button
+                    </Button>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    {buttons.map((button, idx) => (
-                      <ButtonItem
-                        key={button.id}
-                        button={button}
-                        onEdit={handleEditButton}
-                        onDelete={handleDeleteButton}
-                        onToggleVisibility={handleToggleVisibility}
-                        onMoveUp={(id) => handleMoveButton(id, "up")}
-                        onMoveDown={(id) => handleMoveButton(id, "down")}
-                        isFirst={idx === 0}
-                        isLast={idx === buttons.length - 1}
-                      />
-                    ))}
-                  </div>
-                )}
-              </Card>
+                  {buttons.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Link2 className="w-10 h-10 mx-auto mb-3 opacity-50" />
+                      <p>No buttons yet. Add one to get started.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {buttons.map((button, idx) => (
+                        <ButtonItem
+                          key={button.id}
+                          button={button}
+                          onEdit={handleEditButton}
+                          onDelete={handleDeleteButton}
+                          onToggleVisibility={handleToggleVisibility}
+                          onMoveUp={(id) => handleMoveButton(id, "up")}
+                          onMoveDown={(id) => handleMoveButton(id, "down")}
+                          isFirst={idx === 0}
+                          isLast={idx === buttons.length - 1}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </Card>
+                {renderSocialLinksCard(true)}
+              </div>
             )}
 
             {embeddedTab === "appearance" && (
@@ -1393,38 +1526,41 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
           {/* ===== BUTTONS TAB ===== */}
           {currentTab === "buttons" && (
-            <Card className="p-6 md:p-8 border-border/50">
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="font-vollkorn text-xl sm:text-3xl md:text-4xl font-bold text-bronze">Links & Buttons</h3>
-                <Button onClick={() => setShowAddButton(true)} className="bg-bronze hover:bg-bronze-dark">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Button
-                </Button>
-              </div>
-              
-              {buttons.length === 0 ? (
-                <div className="text-center py-16 text-muted-foreground">
-                  <Link2 className="w-14 h-14 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-poppins">No buttons yet. Add one to get started.</p>
+            <div className="space-y-8 md:space-y-10">
+              <Card className="p-6 md:p-8 border-border/50">
+                <div className="flex items-center justify-between mb-8">
+                  <h3 className="font-vollkorn text-xl sm:text-3xl md:text-4xl font-bold text-bronze">Links & Buttons</h3>
+                  <Button onClick={() => setShowAddButton(true)} className="bg-bronze hover:bg-bronze-dark">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Button
+                  </Button>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {buttons.map((button, idx) => (
-                    <ButtonItem
-                      key={button.id}
-                      button={button}
-                      onEdit={handleEditButton}
-                      onDelete={handleDeleteButton}
-                      onToggleVisibility={handleToggleVisibility}
-                      onMoveUp={(id) => handleMoveButton(id, "up")}
-                      onMoveDown={(id) => handleMoveButton(id, "down")}
-                      isFirst={idx === 0}
-                      isLast={idx === buttons.length - 1}
-                    />
-                  ))}
-                </div>
-              )}
-            </Card>
+
+                {buttons.length === 0 ? (
+                  <div className="text-center py-16 text-muted-foreground">
+                    <Link2 className="w-14 h-14 mx-auto mb-4 opacity-50" />
+                    <p className="text-lg font-poppins">No buttons yet. Add one to get started.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {buttons.map((button, idx) => (
+                      <ButtonItem
+                        key={button.id}
+                        button={button}
+                        onEdit={handleEditButton}
+                        onDelete={handleDeleteButton}
+                        onToggleVisibility={handleToggleVisibility}
+                        onMoveUp={(id) => handleMoveButton(id, "up")}
+                        onMoveDown={(id) => handleMoveButton(id, "down")}
+                        isFirst={idx === 0}
+                        isLast={idx === buttons.length - 1}
+                      />
+                    ))}
+                  </div>
+                )}
+              </Card>
+              {renderSocialLinksCard()}
+            </div>
           )}
 
           {/* ===== APPEARANCE TAB ===== */}

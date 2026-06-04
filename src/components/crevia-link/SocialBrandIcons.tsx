@@ -130,7 +130,7 @@ const SOCIAL_SVGS: Record<string, React.ReactElement> = {
   ),
 };
 
-function getSocialSvg(platform: string): React.ReactElement {
+export function getSocialSvg(platform: string): React.ReactElement {
   const key = platform.toLowerCase();
   return SOCIAL_SVGS[key] ?? SOCIAL_SVGS.website;
 }
