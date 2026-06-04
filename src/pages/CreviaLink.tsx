@@ -432,14 +432,28 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkProfile?.theme, linkProfile?.background, linkProfile?.layout]);
 
-  // Save immediately (flushing any pending debounce) then open the live page
-  // in a new tab so the user always sees the latest data.
+  // Full silent save then open live page — ensures every field (profile + appearance) is visible.
   const handleViewLivePage = async () => {
+    if (!linkProfile?.id) return;
     if (autoSaveTimerRef.current) {
       clearTimeout(autoSaveTimerRef.current);
       autoSaveTimerRef.current = null;
     }
-    await silentSave(linkProfile);
+    await supabase.from("link_profiles").update({
+      username:             linkProfile.username,
+      display_name:         linkProfile.display_name,
+      bio:                  linkProfile.bio,
+      theme:                linkProfile.theme,
+      layout:               linkProfile.layout,
+      show_verified_badge:  linkProfile.show_verified_badge,
+      show_crevia_branding: linkProfile.show_crevia_branding,
+      contact_enabled:      linkProfile.contact_enabled,
+      contact_email:        linkProfile.contact_email,
+      background:           linkProfile.background,
+      profile_picture:      linkProfile.profile_picture,
+      seo_title:            linkProfile.seo_title,
+      seo_description:      linkProfile.seo_description,
+    }).eq("id", linkProfile.id);
     window.open(`/${linkProfile?.username}`, "_blank", "noopener,noreferrer");
   };
 
@@ -470,11 +484,14 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
     const refresh = async () => {
       const [{ data: freshProfile }, { data: freshButtons }] = await Promise.all([
-        supabase.from("link_profiles").select("*").eq("id", linkProfile.id).single(),
-        supabase.from("link_buttons").select("*").eq("profile_id", linkProfile.id).order("order_index"),
+        supabase.from("link_profiles").select("total_visits").eq("id", linkProfile.id).single(),
+        supabase.from("link_buttons").select("id, clicks").eq("profile_id", linkProfile.id),
       ]);
-      if (freshProfile) setLinkProfile(freshProfile);
-      if (freshButtons) setButtons(freshButtons);
+      if (freshProfile) setLinkProfile((prev: any) => ({ ...prev, total_visits: freshProfile.total_visits }));
+      if (freshButtons) setButtons((prev: any[]) => prev.map(b => {
+        const fresh = (freshButtons as any[]).find((f: any) => f.id === b.id);
+        return fresh ? { ...b, clicks: fresh.clicks } : b;
+      }));
     };
     refresh();
   }, [currentTab, location.search, linkProfile?.id]);
