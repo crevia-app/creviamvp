@@ -140,7 +140,7 @@ const UpgradeModalDialog = ({ state, onClose }: UpgradeModalDialogProps) => {
 
               {/* Close */}
               <button
-                onClick={onClose}
+                onClick={(e) => { e.stopPropagation(); onClose(); }}
                 className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors z-10"
               >
                 <X className="w-3.5 h-3.5" />
@@ -189,7 +189,7 @@ const UpgradeModalDialog = ({ state, onClose }: UpgradeModalDialogProps) => {
                 {/* CTAs */}
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button
-                    onClick={handleUpgrade}
+                    onClick={(e) => { e.stopPropagation(); handleUpgrade(); }}
                     className="flex-1 bg-bronze hover:bg-bronze/90 text-white gap-2 font-semibold"
                   >
                     <Zap className="w-4 h-4" />
@@ -198,7 +198,7 @@ const UpgradeModalDialog = ({ state, onClose }: UpgradeModalDialogProps) => {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={handleViewPlans}
+                    onClick={(e) => { e.stopPropagation(); handleViewPlans(); }}
                     className="sm:w-auto border-border/60"
                   >
                     View Plans

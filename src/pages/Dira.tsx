@@ -1918,13 +1918,6 @@ const Dira = () => {
                   data-form-type="other"
                 />
 
-                {/* Usage counter — Free only; hidden for Pro/Business per spec */}
-                {showDiraCounter && (
-                  <span className={`text-[10px] font-semibold tabular-nums flex-shrink-0 pr-1 ${isAtDiraLimit ? "text-destructive" : "text-muted-foreground/40"}`}>
-                    {diraActionsToday}/{diraActionsLimit}
-                  </span>
-                )}
-
                 {/* Send button — always visible; disabled when nothing to send */}
                 <Button
                   onClick={() => handleSend()}
