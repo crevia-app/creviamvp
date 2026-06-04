@@ -396,9 +396,18 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const silentSave = useCallback(async (profile: any) => {
     if (!profile?.id) return;
     await supabase.from("link_profiles").update({
-      theme: profile.theme,
-      layout: profile.layout,
-      background: profile.background,
+      display_name:         profile.display_name,
+      bio:                  profile.bio,
+      theme:                profile.theme,
+      layout:               profile.layout,
+      show_verified_badge:  profile.show_verified_badge,
+      show_crevia_branding: profile.show_crevia_branding,
+      contact_enabled:      profile.contact_enabled,
+      contact_email:        profile.contact_email,
+      background:           profile.background,
+      profile_picture:      profile.profile_picture,
+      seo_title:            profile.seo_title,
+      seo_description:      profile.seo_description,
     }).eq("id", profile.id);
     setPreviewNonce(n => n + 1);
   }, []);
@@ -416,9 +425,18 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   useEffect(() => {
     if (!linkProfile) return;
     const key = JSON.stringify({
-      theme: linkProfile.theme,
-      background: linkProfile.background,
-      layout: linkProfile.layout,
+      theme:                linkProfile.theme,
+      background:           linkProfile.background,
+      layout:               linkProfile.layout,
+      display_name:         linkProfile.display_name,
+      bio:                  linkProfile.bio,
+      profile_picture:      linkProfile.profile_picture,
+      show_verified_badge:  linkProfile.show_verified_badge,
+      show_crevia_branding: linkProfile.show_crevia_branding,
+      contact_enabled:      linkProfile.contact_enabled,
+      contact_email:        linkProfile.contact_email,
+      seo_title:            linkProfile.seo_title,
+      seo_description:      linkProfile.seo_description,
     });
     if (!appearanceInitRef.current) {
       appearanceInitRef.current = true;
@@ -429,9 +447,12 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
       lastAppearanceKeyRef.current = key;
       scheduleAutoSave(linkProfile);
     }
-  // linkProfile is an object; stringifying the relevant fields is the correct dep
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [linkProfile?.theme, linkProfile?.background, linkProfile?.layout]);
+  }, [linkProfile?.theme, linkProfile?.background, linkProfile?.layout,
+      linkProfile?.display_name, linkProfile?.bio, linkProfile?.profile_picture,
+      linkProfile?.show_verified_badge, linkProfile?.show_crevia_branding,
+      linkProfile?.contact_enabled, linkProfile?.contact_email,
+      linkProfile?.seo_title, linkProfile?.seo_description]);
 
   const handleViewLivePage = async () => {
     if (!linkProfile?.id || !linkProfile?.username) {
