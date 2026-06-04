@@ -140,18 +140,18 @@ const LivePreview = ({ linkProfile, buttons, isPro = false, socialIcons }: LiveP
                 )}
 
                 <div className="flex items-center justify-center gap-1 mb-1">
-                  <h2 className="font-semibold text-lg" style={{ color: textColor }}>
+                  <h2 className="font-semibold text-lg" style={{ color: textColor, textShadow: lightText ? '0 1px 3px rgba(0,0,0,0.5)' : '0 1px 3px rgba(255,255,255,0.5)' }}>
                     {linkProfile?.display_name || "Your Name"}
                   </h2>
                   {showVerified && <VerifiedBadge size="sm" />}
                 </div>
 
-                <p className="text-xs opacity-70 mb-1.5" style={{ color: textColor }}>
+                <p className="text-xs opacity-70 mb-1.5" style={{ color: textColor, textShadow: lightText ? '0 1px 2px rgba(0,0,0,0.5)' : '0 1px 2px rgba(255,255,255,0.5)' }}>
                   @{linkProfile?.username || "username"}
                 </p>
 
                 {linkProfile?.bio && (
-                  <p className="text-[10px] opacity-80 max-w-[200px] mx-auto leading-relaxed" style={{ color: textColor }}>
+                  <p className="text-[10px] opacity-80 max-w-[200px] mx-auto leading-relaxed" style={{ color: textColor, textShadow: lightText ? '0 1px 2px rgba(0,0,0,0.5)' : '0 1px 2px rgba(255,255,255,0.5)' }}>
                     {linkProfile.bio}
                   </p>
                 )}
