@@ -1,4 +1,3 @@
-import { BadgeCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface VerifiedBadgeProps {
@@ -9,10 +8,19 @@ interface VerifiedBadgeProps {
 export function VerifiedBadge({ className, size = "md" }: VerifiedBadgeProps) {
   const sizeClass = size === "sm" ? "w-3.5 h-3.5" : size === "lg" ? "w-5 h-5" : "w-4 h-4";
   return (
-    <BadgeCheck
-      className={cn("flex-shrink-0", sizeClass, className)}
-      style={{ color: "#0095F6", fill: "#0095F6" }}
-      aria-label="Verified Pro"
-    />
+    <svg
+      viewBox="0 0 24 24"
+      className={cn("inline-block flex-shrink-0", sizeClass, className)}
+      aria-label="Verified"
+    >
+      <path
+        fill="#0095F6"
+        d="M22.5 12.5c0-.92-.61-1.7-1.46-1.93l.36-1.46c.21-.86-.25-1.76-1.07-2.11l-1.36-.57c-.24-.88-.95-1.56-1.84-1.77l-.62-1.33c-.38-.82-1.28-1.22-2.13-.95l-1.42.45c-.68-.62-1.63-.82-2.52-.47l-1.21-.79c-.76-.5-1.75-.41-2.42.23l-1.09 1.05c-.84-.3-1.78-.1-2.43.52l-.93 1.18c-.78-.18 1.36-.85 1.44 1.66l-.16 1.48c-.9.2-1.53.99-1.53 1.93 0 .92.61 1.7 1.46 1.93l-.36 1.46c-.21.86.25 1.76 1.07 2.11l1.36.57c.24.88.95 1.56 1.84 1.77l.62 1.33c.38.82 1.28 1.22 2.13.95l1.42-.45c.68.62 1.63.82 2.52.47l1.21.79c.76.5 1.75.41 2.42-.23l1.09-1.05c.84.3 1.78.1 2.43-.52l.93-1.18c.78-.18 1.36-.85 1.44-1.66l.16-1.48c.9-.2 1.53-.99 1.53-1.93z"
+      />
+      <path
+        fill="#FFFFFF"
+        d="M10.25 16.66L5.6 12l1.4-1.4 3.25 3.25 7.75-7.75 1.4 1.4-9.15 9.16z"
+      />
+    </svg>
   );
 }
