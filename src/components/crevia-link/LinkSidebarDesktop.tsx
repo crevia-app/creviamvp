@@ -20,7 +20,7 @@ const LinkSidebarDesktop = ({ userType, onCollapsedChange }: LinkSidebarDesktopP
   // Same items for both creators and brands for Crevia Link
   const items = [
     { id: "profile", label: "Profile", icon: User },
-    { id: "buttons", label: "Links", icon: Link2 },
+    { id: "buttons", label: "Actions", icon: Link2 },
     { id: "appearance", label: "Appearance", icon: Palette },
     { id: "settings", label: "Settings", icon: Settings },
     { id: "analytics", label: "Analytics", icon: BarChart3 },

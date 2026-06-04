@@ -11,7 +11,7 @@ const LinkTabsMobile = ({ userType }: LinkTabsMobileProps) => {
 
   const tabs = [
     { id: "profile", label: "Profile" },
-    { id: "buttons", label: "Links" },
+    { id: "buttons", label: "Actions" },
     { id: "appearance", label: "Appearance" },
     { id: "settings", label: "Settings" },
     { id: "analytics", label: "Analytics" },

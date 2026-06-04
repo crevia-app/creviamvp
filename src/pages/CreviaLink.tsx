@@ -620,7 +620,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     <Card className={cn("border-border/50", compact ? "min-w-0 p-6" : "p-6 md:p-8")}>
       <div className="flex items-center gap-3 mb-6">
         <Link2 className={cn("text-bronze flex-shrink-0", compact ? "w-5 h-5" : "w-6 h-6")} />
-        <h3 className={cn("font-vollkorn font-bold", compact ? "text-xl" : "text-xl md:text-2xl")}>Links</h3>
+        <h3 className={cn("font-vollkorn font-bold", compact ? "text-xl" : "text-xl md:text-2xl")}>Action Links</h3>
       </div>
 
       {buttons.length > 0 ? (
