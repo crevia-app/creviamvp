@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles } from "lucide-react";
-import { SocialBadgeRow } from "@/components/crevia-link/SocialBrandIcons";
+import { SocialBadgeRow, getSocialSvg } from "@/components/crevia-link/SocialBrandIcons";
 import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 import { BackButton } from "@/components/BackButton";
 
@@ -316,8 +316,35 @@ const PublicProfile = () => {
           )}
         </div>
 
-        {/* Social Icons */}
-        <SocialBadgeRow icons={socialIcons} />
+        {/* Social Icons — marquee when > 7, static flex row when ≤ 7 */}
+        {socialIcons.length > 7 ? (
+          <div className="overflow-hidden w-full mb-6">
+            <div className="flex gap-3 animate-scroll-left" style={{ width: "max-content" }}>
+              {[...socialIcons, ...socialIcons, ...socialIcons].map((icon, idx) => {
+                const platform = icon.platform.toLowerCase();
+                const href =
+                  platform === "email" ? (icon.url.startsWith("mailto:") ? icon.url : `mailto:${icon.url}`)
+                  : platform === "phone" ? (icon.url.startsWith("tel:") ? icon.url : `tel:${icon.url}`)
+                  : icon.url;
+                return (
+                  <a
+                    key={`${icon.id}-${idx}`}
+                    href={href}
+                    target={platform === "email" || platform === "phone" ? "_self" : "_blank"}
+                    rel="noopener noreferrer"
+                    className="w-11 h-11 rounded-full flex items-center justify-center hover:scale-105 transition-transform cursor-pointer overflow-hidden flex-shrink-0"
+                  >
+                    <span className="w-7 h-7 flex items-center justify-center">
+                      {getSocialSvg(icon.platform)}
+                    </span>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <SocialBadgeRow icons={socialIcons} />
+        )}
 
         {/* Buttons */}
         <div className="mb-12" style={{ display: 'flex', flexDirection: 'column', gap: getButtonSpacing() }}>
@@ -351,16 +378,15 @@ const PublicProfile = () => {
         )}
 
         {/* Get Crevia Link CTA */}
-        <div className="text-center mt-10 pb-4">
+        <div className="text-center mt-20 pb-4">
           <a
             href="/crevia-studio"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm transition-all duration-200 hover:scale-105 hover:shadow-lg"
-            style={{ background: "linear-gradient(135deg, #c9a96e, #b8864e)", color: "#fff", boxShadow: "0 2px 12px rgba(201,169,110,0.35)" }}
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-medium text-sm bg-[#F0782F] text-white hover:bg-[#d96525] transition-colors shadow-sm"
           >
             <Sparkles className="w-4 h-4" />
             Get your Crevia Link
           </a>
-          <p className="text-xs mt-2 opacity-40">Built with Crevia</p>
+          <p className="text-xs text-gray-500 mt-3">Built with Crevia</p>
         </div>
 
       </div>
