@@ -1399,9 +1399,10 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
       try {
         const mp4 = await convertVideoToMp4(file);
         setSelectedFile(mp4);
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Video conversion failed. Try a shorter clip.");
-        setSelectedFile(null);
+      } catch {
+        // Conversion failed (likely FFmpeg WASM load timeout on slow connection).
+        // Keep the original file so the user can still send — it will upload as-is.
+        toast.warning("Couldn't optimise video — sending original format.");
       } finally {
         setConvertingVideo(false);
       }
