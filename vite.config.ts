@@ -54,6 +54,8 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
+        // Exclude FFmpeg WASM from precache — it's 32 MB and handled by runtimeCaching below.
+        globIgnores: ['**\/ffmpeg\/**'],
         runtimeCaching: [
           // Navigation (HTML shell) — NetworkFirst with a tight timeout.
           // On every route navigation the browser tries the network first.
