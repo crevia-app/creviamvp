@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Play, Pause, Download, AlertCircle, Maximize2 } from "lucide-react";
+import { Download, AlertCircle, Maximize2 } from "lucide-react";
 
 interface VideoMessagePlayerProps {
   src: string;
@@ -8,40 +8,12 @@ interface VideoMessagePlayerProps {
   onExpand?: () => void;
 }
 
-/**
- * VideoMessagePlayer
- *
- * Self-contained video bubble for chat messages.
- * - No default browser controls — custom play/pause overlay
- * - object-cover fills the rounded container, no letterboxing
- * - <source type> tells the browser the exact codec upfront,
- *   fixing the black screen on iOS when receiving WebM from Android
- * - onError fallback shows a download button when the browser
- *   can't decode the format (e.g. iOS Safari + WebM)
- */
 export function VideoMessagePlayer({ src, fileType, onDownload, onExpand }: VideoMessagePlayerProps) {
-  const videoRef              = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [errored, setErrored] = useState(false);
 
-  // Normalise MIME type — default mp4 for maximum cross-browser compatibility.
-  // This is the critical fix: without an explicit type, iOS Safari cannot
-  // determine the codec and renders a black frame for non-native formats.
   const mimeType = fileType?.startsWith("video/") ? fileType : "video/mp4";
 
-  const togglePlay = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    if (playing) {
-      video.pause();
-      setPlaying(false);
-    } else {
-      video.play().catch(() => setErrored(true));
-      setPlaying(true);
-    }
-  };
-
-  // Format-incompatible fallback (e.g. iOS Safari receiving WebM)
   if (errored) {
     return (
       <div className="w-full max-w-[280px] sm:max-w-sm rounded-xl bg-black/60 flex flex-col items-center justify-center gap-2 py-6">
@@ -59,34 +31,21 @@ export function VideoMessagePlayer({ src, fileType, onDownload, onExpand }: Vide
   }
 
   return (
-    <div
-      className="relative group/video w-full max-w-[280px] sm:max-w-sm rounded-xl overflow-hidden bg-black cursor-pointer min-h-[160px]"
-      onClick={togglePlay}
-    >
-      {/* Video — no controls. w-full + block lets the element size from its
-          own intrinsic dimensions (loaded via preload="metadata"), which is
-          far more reliable than absolute positioning inside an aspect-ratio
-          container that has no explicit height to anchor against. */}
+    <div className="relative group/video w-full max-w-[280px] sm:max-w-sm rounded-xl overflow-hidden bg-black min-h-[160px]">
       <video
         ref={videoRef}
         controls
         playsInline
         preload="metadata"
         className="w-full block"
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onEnded={() => setPlaying(false)}
         onError={() => setErrored(true)}
         onLoadedData={() => {
-          // videoWidth stays 0 when Chrome loads H.265/HEVC — it can't decode
-          // the codec but doesn't fire onError. Treat it as unsupported.
           if (videoRef.current && videoRef.current.videoWidth === 0) setErrored(true);
         }}
       >
         <source src={src} type={mimeType} />
       </video>
 
-      {/* Expand to fullscreen — top-right, always visible on hover */}
       {onExpand && (
         <button
           onPointerDown={(e) => e.stopPropagation()}
@@ -98,25 +57,6 @@ export function VideoMessagePlayer({ src, fileType, onDownload, onExpand }: Vide
         >
           <Maximize2 className="w-4 h-4" />
         </button>
-      )}
-
-      {/* Play overlay — shown when paused. pointer-events-none so the
-          parent div's onClick handles play/pause without competing. */}
-      {!playing && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
-            <Play className="w-6 h-6 text-white fill-white ml-1" />
-          </div>
-        </div>
-      )}
-
-      {/* Pause overlay */}
-      {playing && (
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 active:opacity-100 transition-opacity duration-150 pointer-events-none">
-          <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
-            <Pause className="w-5 h-5 text-white fill-white" />
-          </div>
-        </div>
       )}
     </div>
   );
