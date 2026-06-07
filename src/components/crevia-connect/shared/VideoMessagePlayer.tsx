@@ -69,8 +69,9 @@ export function VideoMessagePlayer({ src, fileType, onDownload, onExpand }: Vide
           container that has no explicit height to anchor against. */}
       <video
         ref={videoRef}
+        controls
         playsInline
-        preload="none"
+        preload="metadata"
         className="w-full block"
         onEnded={() => setPlaying(false)}
         onError={() => setErrored(true)}
