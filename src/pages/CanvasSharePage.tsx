@@ -223,14 +223,14 @@ const CanvasSharePage = () => {
             {/* Saved signature — rendered at the exact position the owner placed it */}
             {canvas.creator_signature && sigStyle && (
               <div
-                className="absolute pointer-events-none"
+                className="absolute pointer-events-none [print-color-adjust:exact] [-webkit-print-color-adjust:exact]"
                 style={{ left: sigStyle.left, top: sigStyle.top, width: sigStyle.w, height: sigStyle.h }}
               >
                 {canvas.creator_signature.startsWith("data:image") ? (
                   <img
                     src={canvas.creator_signature}
                     alt="Signature"
-                    className="w-full h-full object-contain object-left dark:invert"
+                    className="w-full h-full object-contain object-left"
                     draggable={false}
                   />
                 ) : (

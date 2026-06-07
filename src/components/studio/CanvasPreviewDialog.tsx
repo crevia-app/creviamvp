@@ -509,7 +509,7 @@ const CanvasPreviewDialog = ({
         </div>
 
         {/* ── Scrollable body ── */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
           <div className="p-3 sm:p-5 md:p-8">
 
             {/* ────────────── EDIT MODE ────────────── */}
@@ -624,14 +624,14 @@ const CanvasPreviewDialog = ({
                   {/* ── SAVED SIGNATURE: pixel position resolved after mount ── */}
                   {!placementMode && localCanvas.creator_signature && sigStyle && (
                     <div
-                      className="absolute pointer-events-none"
+                      className="absolute pointer-events-none [print-color-adjust:exact] [-webkit-print-color-adjust:exact]"
                       style={{ left: sigStyle.left, top: sigStyle.top, width: sigStyle.w, height: sigStyle.h }}
                     >
                       {localCanvas.creator_signature.startsWith("data:image") ? (
                         <img
                           src={localCanvas.creator_signature}
                           alt="Signature"
-                          className="w-full h-full object-contain object-left dark:invert"
+                          className="w-full h-full object-contain object-left"
                           draggable={false}
                         />
                       ) : (
