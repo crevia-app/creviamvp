@@ -73,6 +73,8 @@ export function VideoMessagePlayer({ src, fileType, onDownload, onExpand }: Vide
         playsInline
         preload="metadata"
         className="w-full block"
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
         onEnded={() => setPlaying(false)}
         onError={() => setErrored(true)}
         onLoadedData={() => {
