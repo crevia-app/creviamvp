@@ -1143,7 +1143,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
         const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
           .from("chat-files")
-          .upload(fileName, selectedFile, { contentType: selectedFile.type || "video/mp4" });
+          .upload(fileName, selectedFile, { contentType: selectedFile.type || "video/mp4", upsert: false });
         if (uploadError) throw uploadError;
         fileData = { url: fileName, name: selectedFile.name, type: selectedFile.type, size: selectedFile.size };
       }
@@ -1216,8 +1216,9 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
         chatTextareaRef.current.style.height = "auto";
       }
     } catch (error) {
-      console.error("Send error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to send message");
+      console.error("Upload error:", error);
+      const msg = error instanceof Error ? error.message : ((error as any)?.message ?? "Failed to send message");
+      toast.error(msg);
     } finally {
       setUploadingFile(false);
     }
