@@ -70,10 +70,15 @@ export function VideoMessagePlayer({ src, fileType, onDownload, onExpand }: Vide
       <video
         ref={videoRef}
         playsInline
-        preload="metadata"
+        preload="none"
         className="w-full block"
         onEnded={() => setPlaying(false)}
         onError={() => setErrored(true)}
+        onLoadedData={() => {
+          // videoWidth stays 0 when Chrome loads H.265/HEVC — it can't decode
+          // the codec but doesn't fire onError. Treat it as unsupported.
+          if (videoRef.current && videoRef.current.videoWidth === 0) setErrored(true);
+        }}
       >
         <source src={src} type={mimeType} />
       </video>
