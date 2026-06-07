@@ -1386,29 +1386,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
       return;
     }
 
-    // Videos are converted to H.264 MP4 for universal playback.
-    // Show the original file as a preview immediately, then silently
-    // swap it with the converted version when ready (~3-8 seconds).
-    if (needsConversion(file)) {
-      if (file.size > VIDEO_CONVERT_MAX_BYTES) {
-        toast.error("Video too large to convert (max 200 MB). Please trim it first.");
-        return;
-      }
-      setSelectedFile(file);
-      setConvertingVideo(true);
-      try {
-        const mp4 = await convertVideoToMp4(file);
-        setSelectedFile(mp4);
-      } catch {
-        // Conversion failed (likely FFmpeg WASM load timeout on slow connection).
-        // Keep the original file so the user can still send — it will upload as-is.
-        toast.warning("Couldn't optimise video — sending original format.");
-      } finally {
-        setConvertingVideo(false);
-      }
-      return;
-    }
-
+    // Upload the raw file directly — no client-side conversion.
     setSelectedFile(file);
   };
 
@@ -2312,12 +2290,15 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                                 </>
                               ) : (
                                 <>
+                                  {(() => { const isMediaOnly = isFile && (isImageType(msg.file_type) || isVideoType(msg.file_type)); return (
                                   <div
-                                    className={`rounded-2xl px-3 md:px-4 py-2.5 ${
-                                      isMine
-                                        ? `bg-bronze text-background ${isLastInSeq ? "rounded-br-sm" : ""}`
-                                        : `bg-muted ${isLastInSeq ? "rounded-bl-sm" : ""}`
-                                    } ${(isInvoice || isContract) ? "border-2 " + (isMine ? "border-background/20" : "border-bronze/20") : ""}`}
+                                    className={isMediaOnly
+                                      ? `overflow-hidden rounded-2xl ${isLastInSeq ? (isMine ? "rounded-br-sm" : "rounded-bl-sm") : ""}`
+                                      : `rounded-2xl px-3 md:px-4 py-2.5 ${
+                                          isMine
+                                            ? `bg-bronze text-background ${isLastInSeq ? "rounded-br-sm" : ""}`
+                                            : `bg-muted ${isLastInSeq ? "rounded-bl-sm" : ""}`
+                                        } ${(isInvoice || isContract) ? "border-2 " + (isMine ? "border-background/20" : "border-bronze/20") : ""}`}
                                   >
                                     {/* Reply context */}
                                     {msg.replyTo && (
@@ -2524,6 +2505,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                                       })()}
                                     </div>
                                   </div>
+                                  ); })()}
 
                                   {/* Reactions display */}
                                   <MessageReactions
