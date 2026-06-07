@@ -456,18 +456,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
         title: "Saved!",
         description: `Changes saved: ${changedFields.join(", ")}.`,
       });
-      const { data: updatedLink } = await supabase
-        .from("link_profiles")
-        .select("*")
-        .eq("id", linkProfile.id)
-        .single();
-
-      if (updatedLink) {
-        setLinkProfile(updatedLink);
-        savedProfileRef.current = updatedLink;
-      } else {
-        savedProfileRef.current = { ...linkProfile };
-      }
+      savedProfileRef.current = { ...linkProfile };
       setPreviewNonce(n => n + 1);
     }
     setSaving(false);

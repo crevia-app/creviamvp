@@ -8,6 +8,7 @@ import { useSubscription } from "@/hooks/use-subscription";
 type State =
   | { status: "loading" }
   | { status: "needs_auth" }
+  | { status: "ready" }
   | { status: "accepting" }
   | { status: "success"; roomId: string; roomName: string }
   | { status: "error"; message: string };
@@ -33,7 +34,7 @@ export default function WorkspaceInvitePage() {
       setState({ status: "error", message: "Workspaces are a Pro feature. Upgrade your plan to join this workspace." });
       return;
     }
-    acceptInvite();
+    setState({ status: "ready" });
   };
 
   const acceptInvite = async () => {
@@ -111,6 +112,25 @@ export default function WorkspaceInvitePage() {
               >
                 <LogIn className="w-4 h-4" />
                 Sign in to accept
+              </Button>
+            </>
+          )}
+
+          {state.status === "ready" && (
+            <>
+              <div className="w-14 h-14 rounded-2xl bg-bronze/10 flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="w-7 h-7 text-bronze" />
+              </div>
+              <h2 className="font-vollkorn text-xl font-bold mb-2">You've been invited</h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Accept this invite to join the workspace and start collaborating.
+              </p>
+              <Button
+                onClick={acceptInvite}
+                className="w-full bg-bronze hover:bg-bronze/90 text-background font-semibold gap-2"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                Accept Invite
               </Button>
             </>
           )}

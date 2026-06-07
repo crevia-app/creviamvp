@@ -276,6 +276,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
   const typingTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const presenceChannelRef = useRef<any>(null);
   const selectedExternalRef = useRef<string>("");
+  const selectedRoomRef = useRef<ChatRoom | null>(null);
 
   // Scroll to the latest message when the iOS keyboard opens so the input
   // is never obscured by unread content. Replaces the removed useIOSKeyboardFit callback.
@@ -905,6 +906,8 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
       .order("created_at", { ascending: true });
 
     if (!data) return;
+    // Abort if the user switched rooms while this fetch was in-flight
+    if (selectedRoomRef.current?.id !== roomId) return;
 
     // ── Batch load sender profiles (1 query instead of N) ──────────────
     const senderIds = [...new Set(data.map((m: any) => m.sender_id as string))];
@@ -963,6 +966,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
 
   const selectRoom = async (room: ChatRoom) => {
     isNearBottomRef.current = true; // always land at the bottom of a freshly opened room
+    selectedRoomRef.current = room;
     setSelectedRoom(room);
     setReplyingTo(null);
     setShowMessageSearch(false);
