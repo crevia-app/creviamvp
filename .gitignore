@@ -26,3 +26,6 @@ dist-ssr
 .env
 .env.local
 .env.*
+
+# FFmpeg WASM — copied from node_modules at build/dev time, not committed
+public/ffmpeg/

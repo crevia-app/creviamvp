@@ -17,20 +17,21 @@ async function loadFFmpeg(): Promise<FFmpeg> {
     // jsDelivr is backed by Cloudflare + Fastly — far more reliable than unpkg
     // for users in Africa and Asia. Single-threaded core needs no SharedArrayBuffer.
     loadPromise = (async () => {
-      const base = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm";
+      // Files are served from our own origin (copied from node_modules at build
+      // time) and cached by the service worker after first load — no CDN dependency.
       await ffmpeg!.load({
-        coreURL: await toBlobURL(`${base}/ffmpeg-core.js`, "text/javascript"),
-        wasmURL: await toBlobURL(`${base}/ffmpeg-core.wasm`, "application/wasm"),
+        coreURL: await toBlobURL(`/ffmpeg/ffmpeg-core.js`, "text/javascript"),
+        wasmURL: await toBlobURL(`/ffmpeg/ffmpeg-core.wasm`, "application/wasm"),
       });
     })();
   }
 
-  // 60 s timeout — sufficient for 4G in East Africa to fetch the ~10 MB WASM.
-  // On a subsequent call the singleton is already loaded and returns instantly.
+  // 120 s timeout — covers the first-ever load on a slow connection.
+  // On every subsequent load the SW cache returns the file instantly.
   await Promise.race([
     loadPromise,
     new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("FFmpeg load timeout — check your connection and try again.")), 60_000)
+      setTimeout(() => reject(new Error("FFmpeg load timeout — check your connection and try again.")), 120_000)
     ),
   ]);
 

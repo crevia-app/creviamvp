@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import fs from "fs";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
@@ -10,6 +11,19 @@ export default defineConfig({
     port: 8080,
   },
   plugins: [
+    // Copy FFmpeg WASM from node_modules to public/ffmpeg/ so the files are
+    // served from the same origin instead of an external CDN.
+    {
+      name: 'copy-ffmpeg-wasm',
+      buildStart() {
+        const src = 'node_modules/@ffmpeg/core/dist/esm';
+        const dest = 'public/ffmpeg';
+        fs.mkdirSync(dest, { recursive: true });
+        for (const file of ['ffmpeg-core.js', 'ffmpeg-core.wasm']) {
+          fs.copyFileSync(`${src}/${file}`, `${dest}/${file}`);
+        }
+      },
+    },
     react(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -72,6 +86,17 @@ export default defineConfig({
             options: {
               cacheName: 'supabase-rest-cache',
               expiration: { maxEntries: 80, maxAgeSeconds: 60 * 60 * 24 },
+            },
+          },
+          {
+            // FFmpeg WASM — CacheFirst with a 1-year TTL. The files are served
+            // from our own origin so the first fetch is reliable, and every
+            // subsequent video conversion on that device is instant (from SW cache).
+            urlPattern: /\/ffmpeg\/.*/,
+            handler: 'CacheFirst' as const,
+            options: {
+              cacheName: 'ffmpeg-wasm-cache',
+              expiration: { maxEntries: 5, maxAgeSeconds: 60 * 60 * 24 * 365 },
             },
           },
           {
