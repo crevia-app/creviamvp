@@ -71,8 +71,11 @@ export default defineConfig({
             },
           },
           {
-            // Auth & storage endpoints — always fresh (security sensitive)
-            urlPattern: /^https:\/\/.*\.supabase\.co\/(auth|storage)\/.*/i,
+            // Auth endpoints only — always fresh (security sensitive).
+            // Storage is intentionally excluded: the SW clones large request
+            // bodies to cache them, which exhausts SW memory on mobile and
+            // causes "Failed to fetch" on file uploads.
+            urlPattern: /^https:\/\/.*\.supabase\.co\/auth\/.*/i,
             handler: 'NetworkFirst' as const,
             options: {
               cacheName: 'supabase-auth-cache',
