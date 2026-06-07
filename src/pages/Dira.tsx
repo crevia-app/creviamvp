@@ -1090,7 +1090,7 @@ const Dira = () => {
     <div ref={chatContainerRef} className="h-full flex bg-background overscroll-none">
       {/* Desktop Sidebar */}
       <div 
-        className={`hidden md:flex flex-col bg-card/50 border-r border-border/50 transition-all duration-300 ${
+        className={`hidden md:flex flex-col bg-card/50 border-r border-bronze/[0.10] transition-all duration-300 ${
           sidebarCollapsed ? 'w-16' : 'w-72'
         }`}
       >

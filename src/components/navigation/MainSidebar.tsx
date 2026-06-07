@@ -65,7 +65,7 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
 
   return (
     <>
-    <aside className="hidden md:flex flex-col bg-background/80 backdrop-blur-md border-r border-border/50 fixed left-0 top-14 bottom-0 z-30 w-[100px] pl-[env(safe-area-inset-left,0px)]">
+    <aside className="hidden md:flex flex-col bg-background/80 backdrop-blur-md border-r border-bronze/[0.12] fixed left-0 top-14 bottom-0 z-30 w-[100px] pl-[env(safe-area-inset-left,0px)]">
       <nav className="flex-1 py-4 space-y-2">
         {navItems.map((item) => {
           const active = isActive(item.path);
@@ -79,7 +79,7 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
             >
               <div className={cn(
                 "flex items-center justify-center w-14 h-10 rounded-2xl transition-all duration-300 ease-out",
-                active ? "bg-bronze/15 scale-100" : "bg-transparent scale-95 hover:scale-100"
+                active ? "bg-bronze/15 shadow-[0_0_14px_rgba(207,129,80,0.22)] scale-100" : "bg-transparent scale-95 hover:scale-100"
               )}>
                 <span className={cn(
                   "transition-all duration-300 ease-out",

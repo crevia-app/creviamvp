@@ -185,7 +185,7 @@ const MobileBottomNav = () => {
     <nav
       className={cn(
         "md:hidden fixed bottom-0 left-0 right-0 z-50",
-        "bg-background/85 backdrop-blur-2xl border-t border-white/[0.06] safe-area-pb",
+        "bg-background/85 backdrop-blur-2xl border-t border-bronze/[0.10] safe-area-pb",
         "transition-transform duration-300 ease-in-out will-change-transform",
         visible ? "translate-y-0" : "translate-y-[150%]"
       )}
