@@ -146,10 +146,6 @@ const LivePreview = ({ linkProfile, buttons, isPro = false, socialIcons }: LiveP
                   {showVerified && <VerifiedBadge size="sm" />}
                 </div>
 
-                <p className="text-xs opacity-70 mb-1.5" style={{ color: textColor, textShadow: lightText ? '0 1px 2px rgba(0,0,0,0.5)' : '0 1px 2px rgba(255,255,255,0.5)' }}>
-                  @{linkProfile?.username || "username"}
-                </p>
-
                 {linkProfile?.bio && (
                   <p className="text-[10px] opacity-80 max-w-[200px] mx-auto leading-relaxed" style={{ color: textColor, textShadow: lightText ? '0 1px 2px rgba(0,0,0,0.5)' : '0 1px 2px rgba(255,255,255,0.5)' }}>
                     {linkProfile.bio}

@@ -377,17 +377,19 @@ const PublicProfile = () => {
           </div>
         )}
 
-        {/* Get Crevia Link CTA */}
-        <div className="text-center mt-20 pb-4">
-          <a
-            href="/crevia-studio"
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-medium text-sm bg-[#F0782F] text-white hover:bg-[#d96525] transition-colors shadow-sm"
-          >
-            <Sparkles className="w-4 h-4" />
-            Get your Crevia Link
-          </a>
-          <p className="text-xs text-gray-500 mt-3">Built with Crevia</p>
-        </div>
+        {/* Get Crevia Link CTA — only for free-tier profile owners */}
+        {!["pro", "enterprise", "business"].includes(profile?.profiles?.subscription_plan) && (
+          <div className="text-center mt-20 pb-4">
+            <a
+              href="/crevia-studio"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-medium text-sm bg-[#F0782F] text-white hover:bg-[#d96525] transition-colors shadow-sm"
+            >
+              <Sparkles className="w-4 h-4" />
+              Get your Crevia Link
+            </a>
+            <p className="text-xs text-gray-500 mt-3">Powered by Crevia</p>
+          </div>
+        )}
 
       </div>
     </div>

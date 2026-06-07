@@ -34,7 +34,7 @@ const Header = () => {
         <Link to="/" className="flex items-center gap-2 group">
           <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 md:w-11 md:h-11 rounded-full ring-1 ring-border transition-transform duration-300 group-hover:scale-110" />
           <span className="font-vollkorn text-xl md:text-2xl font-bold transition-colors duration-300 group-hover:text-bronze">Crevia</span>
-          <span className="text-[8px] font-poppins font-medium text-bronze bg-bronze/10 px-1 py-0.5 rounded-full uppercase tracking-wider">beta</span>
+
         </Link>
         
         <div className="hidden lg:flex items-center gap-10 xl:gap-14">
