@@ -1571,7 +1571,7 @@ const Dira = () => {
             <div
               ref={scrollContainerRef}
               className="absolute inset-0 overflow-y-auto overscroll-y-contain touch-pan-y transform-gpu"
-              style={{ overflowAnchor: "none", contain: "strict", willChange: "transform" }}
+              style={{ overflowAnchor: "none", contain: "strict", willChange: "transform", WebkitOverflowScrolling: "touch" }}
               onScroll={() => {
                 const el = scrollContainerRef.current;
                 if (!el) return;

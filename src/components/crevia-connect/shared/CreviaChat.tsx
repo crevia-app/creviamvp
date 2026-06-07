@@ -152,29 +152,37 @@ interface AttachableContract {
 
 // Proper URL detection without global regex issues
 function linkifyContent(content: string): (string | JSX.Element)[] {
-  const urlPattern = /(https?:\/\/[^\s<]+[^\s<.,;:!?"')\]])/g;
+  const tokenPattern = /(https?:\/\/[^\s<]+[^\s<.,;:!?"')\]])|(@[\w.]+)/g;
   const result: (string | JSX.Element)[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
-  while ((match = urlPattern.exec(content)) !== null) {
+  while ((match = tokenPattern.exec(content)) !== null) {
     if (match.index > lastIndex) {
       result.push(content.slice(lastIndex, match.index));
     }
-    const url = match[0];
-    result.push(
-      <a
-        key={`link-${match.index}`}
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="underline font-medium hover:opacity-80 break-all"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {url}
-      </a>
-    );
-    lastIndex = match.index + url.length;
+    const token = match[0];
+    if (token.startsWith("http")) {
+      result.push(
+        <a
+          key={`link-${match.index}`}
+          href={token}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline font-medium hover:opacity-80 break-all"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {token}
+        </a>
+      );
+    } else {
+      result.push(
+        <span key={`mention-${match.index}`} className="text-bronze font-semibold">
+          {token}
+        </span>
+      );
+    }
+    lastIndex = match.index + token.length;
   }
 
   if (lastIndex < content.length) {
@@ -2711,8 +2719,12 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                           }}
                           onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {
-                              e.preventDefault();
-                              sendMessage();
+                              const isMobileDevice = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+                              if (!isMobileDevice) {
+                                e.preventDefault();
+                                sendMessage();
+                              }
+                              // On mobile: Enter inserts newline naturally; send via Send button only
                             }
                           }}
                           disabled={uploadingFile || convertingVideo}
