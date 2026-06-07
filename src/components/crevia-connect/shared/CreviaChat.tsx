@@ -1143,7 +1143,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
         const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
           .from("chat-files")
-          .upload(fileName, selectedFile);
+          .upload(fileName, selectedFile, { contentType: selectedFile.type || "video/mp4" });
         if (uploadError) throw uploadError;
         fileData = { url: fileName, name: selectedFile.name, type: selectedFile.type, size: selectedFile.size };
       }
@@ -2654,8 +2654,8 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                         mutated on the same element right before .click().
                         Pre-wired refs require zero runtime mutation.
                       */}
-                      <input ref={fileAnyRef}   type="file" accept="*/*"      className="sr-only" onChange={handleFileSelect} />
-                      <input ref={fileVideoRef} type="file" accept="video/*"   className="sr-only" onChange={handleFileSelect} />
+                      <input ref={fileAnyRef}   type="file" accept="video/mp4,video/webm,video/quicktime,image/*" className="sr-only" onChange={handleFileSelect} />
+                      <input ref={fileVideoRef} type="file" accept="video/mp4,video/webm,video/quicktime"         className="sr-only" onChange={handleFileSelect} />
 
                       {/* Auto-resizing pill input bar.
                           items-end keeps + and send pinned to the bottom edge
