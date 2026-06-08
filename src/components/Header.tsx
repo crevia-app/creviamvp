@@ -29,7 +29,7 @@ const Header = () => {
   }, []);
 
   return (
-    <header className="sticky top-0 w-full bg-background/95 backdrop-blur-md z-50 border-b border-border/50 animate-fade-in supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 w-full bg-background/95 backdrop-blur-md z-50 border-b border-border/50 animate-fade-in supports-[backdrop-filter]:bg-background/60 safe-area-pt safe-area-pl safe-area-pr">
       <nav className="container mx-auto px-3 md:px-6 py-3 flex items-center justify-between max-w-7xl">
         <Link to="/" className="flex items-center gap-2 group">
           <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 md:w-11 md:h-11 rounded-full ring-1 ring-border transition-transform duration-300 group-hover:scale-110" />

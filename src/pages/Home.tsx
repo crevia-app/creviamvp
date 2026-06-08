@@ -32,7 +32,7 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-dvh bg-background page-bg-warm overflow-x-hidden safe-area-pt">
+    <div className="min-h-dvh bg-background page-bg-warm overflow-x-clip">
       <SEO url="/" />
       <Header />
 
