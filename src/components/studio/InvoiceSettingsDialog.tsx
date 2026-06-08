@@ -156,6 +156,15 @@ const InvoiceSettingsDialog = ({ open, onOpenChange, onSaved }: Props) => {
     onSaved?.();
   };
 
+  const handleSaveTheme = async () => {
+    if (!settingsId) return;
+    setSavingColor(true);
+    await (supabase as any).from("business_settings").update({ invoice_accent_color: accentColor }).eq("id", settingsId);
+    setSavingColor(false);
+    toast.success("Theme saved");
+    onSaved?.();
+  };
+
   // ── Payment ───────────────────────────────────────────────────
   const handleSavePayment = async () => {
     setSavingPayment(true);
@@ -263,12 +272,18 @@ const InvoiceSettingsDialog = ({ open, onOpenChange, onSaved }: Props) => {
                 <AdvancedColorSelector
                   variant="invoice"
                   value={accentColor}
-                  onChange={(hex) => !savingColor && handleColorSelect(hex)}
+                  onChange={(hex) => !savingColor && setAccentColor(hex)}
                 />
               </div>
-              {savingColor && (
-                <p className="text-xs text-bronze animate-pulse">Saving…</p>
-              )}
+              <Button
+                onClick={handleSaveTheme}
+                disabled={savingColor}
+                className="w-full bg-bronze hover:bg-bronze/90 text-background font-semibold font-poppins h-11"
+              >
+                {savingColor
+                  ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Saving…</>
+                  : "Save Theme"}
+              </Button>
             </div>
           )}
 
