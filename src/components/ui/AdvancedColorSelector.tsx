@@ -163,7 +163,7 @@ export function AdvancedColorSelector({
                 className={cn(
                   "w-full pl-7 pr-4 py-2.5 rounded-xl",
                   "bg-white/[0.04] border border-white/10",
-                  "text-sm font-mono text-white placeholder:text-white/40",
+                  "text-sm font-mono text-white placeholder:text-white/60",
                   "focus:outline-none focus:border-white/20 focus:bg-white/[0.06]",
                   "transition-all duration-150"
                 )}
