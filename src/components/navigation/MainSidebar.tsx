@@ -22,7 +22,7 @@ import { useSubscription } from "@/hooks/use-subscription";
 import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 
 const DiraIcon = ({ active }: { active: boolean }) => (
-  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"
+  <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"
     fill={active ? "currentColor" : "none"}
     stroke={active ? "none" : "currentColor"}
     strokeWidth={1.65} strokeLinejoin="round"
@@ -32,7 +32,7 @@ const DiraIcon = ({ active }: { active: boolean }) => (
 );
 
 const StudioIcon = ({ active }: { active: boolean }) => (
-  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+  <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
     {([[3,3],[13,3],[3,13],[13,13]] as [number,number][]).map(([x,y],i) => (
       <rect key={i} x={x} y={y} width={8} height={8} rx={2.5}
         fill={active ? "currentColor" : "none"}
@@ -78,7 +78,7 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
               className="flex flex-col items-center justify-center gap-1.5 py-2"
             >
               <div className={cn(
-                "flex items-center justify-center w-14 h-10 rounded-2xl transition-all duration-300 ease-out",
+                "flex items-center justify-center w-16 h-12 rounded-2xl transition-all duration-300 ease-out",
                 active ? "bg-bronze/15 shadow-[0_0_14px_rgba(207,129,80,0.22)] scale-100" : "bg-transparent scale-95 hover:scale-100"
               )}>
                 <span className={cn(
@@ -91,7 +91,7 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
                 </span>
               </div>
               <span className={cn(
-                "font-poppins text-[10px] font-medium text-center leading-tight transition-colors duration-300",
+                "font-poppins text-xs font-medium text-center leading-tight transition-colors duration-300",
                 active ? "text-bronze" : "text-muted-foreground"
               )}>
                 {item.label}
@@ -103,9 +103,9 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex flex-col items-center justify-center gap-1.5 py-2 w-full group">
-              <div className="flex items-center justify-center w-14 h-10 rounded-2xl transition-all duration-300 ease-out bg-transparent scale-95 hover:scale-100 group-data-[state=open]:bg-bronze/15">
+              <div className="flex items-center justify-center w-16 h-12 rounded-2xl transition-all duration-300 ease-out bg-transparent scale-95 hover:scale-100 group-data-[state=open]:bg-bronze/15">
                 <span className="text-foreground/42 group-data-[state=open]:text-bronze transition-all duration-300 ease-out">
-                  <MoreHorizontal className="h-[22px] w-[22px]" />
+                  <MoreHorizontal className="h-[26px] w-[26px]" />
                 </span>
               </div>
               <span className="font-poppins text-[10px] font-medium text-center leading-tight text-muted-foreground group-data-[state=open]:text-bronze transition-colors duration-300">
