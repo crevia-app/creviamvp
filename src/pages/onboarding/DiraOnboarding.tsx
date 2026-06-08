@@ -449,7 +449,7 @@ const DiraOnboarding = () => {
   // User type selection screen
   if (!userType && !isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center p-4">
+      <div className="min-h-dvh bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center p-4">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -520,7 +520,7 @@ const DiraOnboarding = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center">
+      <div className="min-h-dvh bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
@@ -533,7 +533,7 @@ const DiraOnboarding = () => {
   const progress = ((currentStep + 1) / steps.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex flex-col safe-area-pt safe-area-pb">
+    <div className="min-h-dvh bg-gradient-to-br from-background via-bronze/5 to-background flex flex-col safe-area-pt safe-area-pb">
       <OnboardingHeader progress={progress} />
       
       {/* Chat Container */}

@@ -89,7 +89,7 @@ const ResetPassword = () => {
 
   if (!isRecovery) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center p-4">
+      <div className="min-h-dvh bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md p-8 text-center">
           <ShieldCheck className="w-12 h-12 text-bronze mx-auto mb-4" />
           <h1 className="font-vollkorn text-2xl font-bold mb-2">Invalid Reset Link</h1>
@@ -105,7 +105,7 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-gradient-to-br from-background via-bronze/5 to-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-6 md:p-8 animate-fade-in">
         <div className="text-center mb-6">
           <ShieldCheck className="w-10 h-10 text-bronze mx-auto mb-3" />

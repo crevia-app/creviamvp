@@ -206,7 +206,7 @@ const PaymentsBilling = () => {
   const methods = buildMethods(targetPlan);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <div className="container mx-auto px-6 py-12 max-w-5xl">
 
         <div className="mb-10">

@@ -35,7 +35,7 @@ const FinanceOverview = () => {
     new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES" }).format(amount);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <div className="max-w-5xl mx-auto px-4 py-8 md:px-6 md:py-12">
 
         {/* Header */}

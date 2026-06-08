@@ -34,7 +34,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background page-bg-warm overflow-x-hidden">
+    <div className="min-h-dvh bg-background page-bg-warm overflow-x-hidden">
       {!isEmbedded && <SEO title="About" description="Learn about Crevia — the infrastructure built for creators to own their story, scale their operations, and build a business that runs as well as it creates." url="/about" />}
       {!isEmbedded && <Header />}
 

@@ -2728,7 +2728,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                             }
                           }}
                           disabled={uploadingFile || convertingVideo}
-                          className="flex-1 min-w-0 resize-none overflow-y-auto border-none outline-none focus:ring-0 focus:outline-none bg-transparent text-sm leading-relaxed py-1.5 px-2 placeholder:text-muted-foreground/60 min-h-[36px] max-h-[120px]"
+                          className="flex-1 min-w-0 resize-none overflow-y-auto border-none outline-none focus:ring-0 focus:outline-none bg-transparent text-base md:text-sm leading-relaxed py-1.5 px-2 placeholder:text-muted-foreground/60 min-h-[36px] max-h-[120px]"
                           style={{ height: "36px" }}
                           autoComplete="off"
                           autoCorrect="off"

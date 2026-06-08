@@ -27,7 +27,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+      <div className="min-h-dvh bg-[#080808] flex items-center justify-center">
         <div className="w-5 h-5 border-2 border-white/10 border-t-white/60 rounded-full animate-spin" />
       </div>
     );
@@ -37,7 +37,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (status === "denied") {
     return (
-      <div className="min-h-screen bg-[#080808] flex flex-col items-center justify-center gap-4 px-4">
+      <div className="min-h-dvh bg-[#080808] flex flex-col items-center justify-center gap-4 px-4">
         <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
           <ShieldOff className="w-6 h-6 text-red-400" />
         </div>

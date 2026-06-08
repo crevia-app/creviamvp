@@ -170,7 +170,7 @@ const Pricing = () => {
   const plans = PLANS(billingCycle, proPrice, businessPrice, enterprisePrice);
 
   return (
-    <div className="min-h-screen bg-background page-bg-warm overflow-x-hidden">
+    <div className="min-h-dvh bg-background page-bg-warm overflow-x-hidden">
       <SEO
         title="Pricing"
         description="Simple, transparent pricing for creators. Start free and upgrade when you're ready. Crevia Pro, Creative Pro, and Business plans available."

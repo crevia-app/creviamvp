@@ -53,7 +53,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-dvh bg-black flex items-center justify-center">
         <div className="text-white/60 font-poppins">Loading...</div>
       </div>
     );
@@ -66,7 +66,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   // Block with an inline intercept instead of redirecting to /signup
   if (!termsAccepted) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-dvh bg-background flex items-center justify-center p-4">
         <div className="w-full max-w-sm bg-card border border-border/50 rounded-2xl p-8 shadow-sm text-center">
           <div className="w-14 h-14 rounded-2xl bg-bronze/10 flex items-center justify-center mx-auto mb-4">
             <img src="/crevia-logo.png" alt="Crevia" className="w-8 h-8 rounded-full" />

@@ -63,7 +63,7 @@ const Help = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <div className="container mx-auto px-6 py-12 max-w-5xl space-y-8">
         <div>
           <div className="flex items-center gap-3 mb-2">

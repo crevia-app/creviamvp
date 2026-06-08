@@ -428,7 +428,7 @@ const CanvasPreviewDialog = ({
     <Dialog open={open} onOpenChange={v => { if (!v) { setIsFullscreen(false); setPlacementMode(null); } onOpenChange(v); }}>
       <DialogContent className={cn(
         "overflow-hidden flex flex-col p-0 gap-0 transition-all duration-300",
-        isFullscreen ? "max-w-[100vw] w-screen h-screen max-h-screen rounded-none" : "w-[calc(100vw-16px)] max-w-4xl max-h-[92dvh] rounded-2xl"
+        isFullscreen ? "max-w-[100vw] w-screen h-dvh max-h-dvh rounded-none" : "w-[calc(100vw-16px)] max-w-4xl max-h-[92dvh] rounded-2xl"
       )}>
 
         {/* ── Top Bar ── */}

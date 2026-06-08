@@ -75,14 +75,14 @@ const ReceivedDocuments = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-dvh bg-background flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-bronze border-t-transparent animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <div className="border-b border-border/30">
         <div className="container mx-auto px-4 sm:px-6 py-8 max-w-4xl">
           <h1 className="font-vollkorn text-2xl sm:text-3xl font-bold mb-1">Received</h1>

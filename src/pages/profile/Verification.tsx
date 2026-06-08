@@ -110,14 +110,14 @@ const Verification = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-dvh bg-background flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-bronze border-t-transparent animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <div className="border-b border-border/30">
         <div className="container mx-auto px-4 sm:px-6 py-10 max-w-2xl">
           <div className="flex items-center gap-3 mb-2">

@@ -56,13 +56,13 @@ const CookiePolicy     = lazy(() => import("./pages/CookiePolicy"));
 const CanvasSharePage  = lazy(() => import("./pages/CanvasSharePage"));
 
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
+  <div className="min-h-dvh flex items-center justify-center bg-background">
     <div className="w-8 h-8 rounded-full border-2 border-bronze border-t-transparent animate-spin" />
   </div>
 );
 
 const MaintenancePage = () => (
-  <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 text-center">
+  <div className="min-h-dvh bg-background flex flex-col items-center justify-center px-4 text-center">
     <img src="/crevia-logo.png" alt="Crevia" className="w-14 h-14 rounded-full ring-1 ring-border mb-8" />
     <h1 className="font-vollkorn text-3xl md:text-4xl font-bold mb-3">Down for maintenance</h1>
     <p className="text-muted-foreground text-sm max-w-sm leading-relaxed">

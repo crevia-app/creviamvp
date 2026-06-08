@@ -68,7 +68,7 @@ const AuthCallback = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center p-6">
+    <div className="min-h-dvh bg-[#0d0d0d] flex items-center justify-center p-6">
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-[0.03]"
         style={{

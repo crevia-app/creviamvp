@@ -76,7 +76,7 @@ const CanvasSharePage = () => {
   // ── Loading state ──────────────────────────────────────────────────────────
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-dvh flex items-center justify-center bg-background">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -85,7 +85,7 @@ const CanvasSharePage = () => {
   // ── Restricted ─────────────────────────────────────────────────────────────
   if (status === "restricted") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="min-h-dvh flex items-center justify-center bg-background px-4">
         <div className="text-center space-y-4 max-w-sm">
           <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
             <Lock className="w-7 h-7 text-muted-foreground" />
@@ -106,7 +106,7 @@ const CanvasSharePage = () => {
   // ── Not found ──────────────────────────────────────────────────────────────
   if (status === "notfound" || !canvas) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="min-h-dvh flex items-center justify-center bg-background px-4">
         <div className="text-center space-y-4 max-w-sm">
           <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
             <FileSignature className="w-7 h-7 text-muted-foreground/50" />
@@ -136,7 +136,7 @@ const CanvasSharePage = () => {
   const st = statusConfig[canvas.status] ?? statusConfig.draft;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       {/* Top bar */}
       <div className="sticky top-0 z-20 border-b border-border/50 bg-background/95 backdrop-blur-sm px-4 py-3 flex items-center gap-3">
         <div className="flex items-center gap-2 flex-1 min-w-0">

@@ -3,7 +3,7 @@ import { SEO } from "@/components/SEO";
 
 const TermsOfService = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <SEO title="Terms of Use" description="Read Crevia's Terms of Use. Understand your rights and responsibilities when using the Crevia platform." url="/terms-of-service" />
 
       <main className="container max-w-4xl px-4 py-8 md:py-16">

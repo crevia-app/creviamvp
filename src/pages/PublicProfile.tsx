@@ -217,7 +217,7 @@ const PublicProfile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <div className="min-h-dvh flex items-center justify-center bg-black text-white">
         <p className="font-poppins">Loading...</p>
       </div>
     );
@@ -225,7 +225,7 @@ const PublicProfile = () => {
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <div className="min-h-dvh flex items-center justify-center bg-black text-white">
         <div className="text-center">
           <h1 className="font-vollkorn text-4xl font-bold mb-4">Page not found</h1>
           <p className="font-poppins text-gray-400">This Crevia Link doesn't exist.</p>
@@ -241,7 +241,7 @@ const PublicProfile = () => {
 
   if (profile?.profiles?.profile_public === false && !isOwnerViewing) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white px-6">
+      <div className="min-h-dvh flex flex-col items-center justify-center bg-black text-white px-6">
         <img src="/crevia-logo.png" alt="Crevia" className="w-14 h-14 rounded-full ring-1 ring-white/10 mb-6" />
         <h1 className="font-vollkorn text-3xl font-bold mb-3">This profile is private</h1>
         <p className="font-poppins text-white/50 text-sm text-center max-w-xs">
@@ -273,7 +273,7 @@ const PublicProfile = () => {
 
   return (
     <div
-      className={`min-h-screen ${themeStyles.className} ${getFontSize()} pt-12 px-6 relative`}
+      className={`min-h-dvh ${themeStyles.className} ${getFontSize()} pt-12 px-6 relative`}
       style={{
         fontFamily: getFontFamily(),
         scrollBehavior: smoothScroll ? 'smooth' : 'auto',

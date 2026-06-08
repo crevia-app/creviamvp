@@ -67,7 +67,7 @@ const Feedback = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       {/* Hero */}
       <div className="border-b border-border/30">
         <div className="container mx-auto px-4 sm:px-6 py-12 md:py-20 max-w-2xl text-center">

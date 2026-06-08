@@ -520,7 +520,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
         <DialogContent className={cn(
           "overflow-hidden p-0 transition-all duration-300 [&>button:last-child]:hidden",
           isFullscreen
-            ? "max-w-[100vw] w-screen h-screen max-h-screen rounded-none"
+            ? "max-w-[100vw] w-screen h-dvh max-h-dvh rounded-none"
             : "w-[calc(100vw-16px)] sm:max-w-2xl lg:max-w-3xl max-h-[95dvh] sm:max-h-[90vh]"
         )}>
 

@@ -75,7 +75,7 @@ export class ErrorBoundary extends React.Component<
     if (this.state.isChunkError) return null;
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
+        <div className="min-h-dvh bg-black flex flex-col items-center justify-center p-6 text-center">
           <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
             <span className="text-2xl">⚠️</span>
           </div>

@@ -2580,14 +2580,14 @@ const Admin = () => {
   }, [authed]);
 
   if (booting) return (
-    <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+    <div className="min-h-dvh bg-[#080808] flex items-center justify-center">
       <Loader2 className="w-5 h-5 text-bronze animate-spin" />
     </div>
   );
   if (!authed) return null;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex font-sans">
+    <div className="min-h-dvh bg-[#0a0a0a] flex font-sans">
 
       {/* Mobile overlay */}
       {sidebarOpen && (
@@ -2666,7 +2666,7 @@ const Admin = () => {
       </aside>
 
       {/* ── Main ── */}
-      <div className="flex-1 lg:ml-[220px] min-h-screen flex flex-col">
+      <div className="flex-1 lg:ml-[220px] min-h-dvh flex flex-col">
         {/* Topbar */}
         <header className="sticky top-0 z-10 h-14 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/[0.05] px-4 md:px-6 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">

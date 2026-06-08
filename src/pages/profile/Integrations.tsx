@@ -53,7 +53,7 @@ const Integrations = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <div className="bg-gradient-to-b from-bronze/10 to-transparent py-12 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="font-vollkorn text-3xl md:text-4xl font-bold text-foreground mb-4">{t("integrations.title")}</h1>

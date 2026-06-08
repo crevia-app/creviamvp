@@ -345,7 +345,7 @@ const Auth = () => {
   // ── OAuth loading ──────────────────────────────────────────────
   if (isProcessingOAuth) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="min-h-dvh bg-background flex items-center justify-center p-4 relative overflow-hidden">
         <PageBg />
         <div className="relative z-10 flex items-center justify-center">
           <Loader2 className="w-10 h-10 animate-spin text-bronze" />
@@ -357,7 +357,7 @@ const Auth = () => {
   // ── Welcome screen (immediate signup — no email confirmation) ──
   if (showWelcomeScreen) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
+      <div className="min-h-dvh bg-background flex items-center justify-center p-6 relative overflow-hidden">
         <PageBg />
         <div className="relative z-10 w-full max-w-sm animate-fade-in">
           <div className="flex items-center justify-center gap-2.5 mb-10">
@@ -393,7 +393,7 @@ const Auth = () => {
   // ── Email confirmation pending ─────────────────────────────────
   if (emailConfirmPending) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
+      <div className="min-h-dvh bg-background flex items-center justify-center p-6 relative overflow-hidden">
         <PageBg />
         <div className="relative z-10 w-full max-w-sm animate-fade-in">
           <div className="flex items-center justify-center gap-2.5 mb-10">
@@ -458,7 +458,7 @@ const Auth = () => {
 
   // ── Main auth form ─────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 md:p-6 relative overflow-hidden safe-area-pt safe-area-pb">
+    <div className="min-h-dvh bg-background flex items-center justify-center p-4 md:p-6 relative overflow-hidden safe-area-pt safe-area-pb">
       <PageBg />
 
       <div className="relative z-10 w-full max-w-md animate-fade-in">
