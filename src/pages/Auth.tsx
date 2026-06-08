@@ -86,26 +86,11 @@ const Auth = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session && !inPasswordResetFlow.current) {
-        // Enforce device session limits
-        const deviceId = getOrCreateDeviceId();
-        const deviceName = getDeviceName();
-        const { data: sessionResult } = await supabase.rpc("register_device_session", {
-          p_device_id: deviceId,
-          p_device_name: deviceName,
-        });
-
-        if (sessionResult?.status === "limit_exceeded") {
-          await supabase.auth.signOut();
-          const planLabel =
-            sessionResult.plan === "free" ? "Free" :
-            sessionResult.plan === "pro" || sessionResult.plan === "creative_pro" ? "Pro" : "Business";
-          toast({
-            title: "Device limit reached",
-            description: `Your ${planLabel} plan allows ${sessionResult.limit} active device${sessionResult.limit > 1 ? "s" : ""}. Sign out from another device to continue.`,
-            variant: "destructive",
-          });
-          return;
-        }
+        // Register device for session tracking (Security tab) — no limit enforced
+        supabase.rpc("register_device_session", {
+          p_device_id: getOrCreateDeviceId(),
+          p_device_name: getDeviceName(),
+        }).catch(() => {});
 
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.user_metadata?.two_fa_enabled) {

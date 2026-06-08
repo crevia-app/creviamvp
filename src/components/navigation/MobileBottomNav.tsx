@@ -153,7 +153,7 @@ const MobileBottomNav = () => {
 
   const handleSignOut = async () => {
     await signOutWithCleanup();
-    navigate("/");
+    navigate("/auth");
     setSheetOpen(false);
   };
 

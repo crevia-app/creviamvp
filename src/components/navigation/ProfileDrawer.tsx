@@ -40,7 +40,7 @@ const ProfileDrawer = ({ isOpen, onClose, profile }: ProfileDrawerProps) => {
 
   const handleSignOut = async () => {
     await signOutWithCleanup();
-    navigate("/");
+    navigate("/auth");
   };
 
   const menuItems = [

@@ -195,7 +195,7 @@ const Settings = () => {
       if (error) throw error;
       await signOutWithCleanup();
       toast({ title: t("settings.deleteAccountSuccess"), description: t("settings.deleteAccountSuccessDesc") });
-      navigate("/");
+      navigate("/auth");
     } catch (err: any) {
       toast({ title: t("settings.deleteAccountError"), description: err.message, variant: "destructive" });
     } finally {
