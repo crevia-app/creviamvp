@@ -272,9 +272,6 @@ const CreviaStudio = () => {
                   <h2 className="font-vollkorn text-xl font-bold text-foreground">
                     Studio
                   </h2>
-                  <p className="text-xs text-muted-foreground font-poppins mt-0.5">
-                    Your creative operations
-                  </p>
                 </div>
                 <button
                   onClick={() => setSidebarOpen(false)}

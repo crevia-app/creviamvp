@@ -1404,7 +1404,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
               </div>
 
               {/* Header */}
-              <div className="flex items-center justify-between px-5 pt-4 pb-3 flex-shrink-0">
+              <div className="flex items-center justify-between px-5 pb-3 flex-shrink-0" style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}>
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-bronze/10 flex items-center justify-center flex-shrink-0">
                     <Eye className="w-4 h-4 text-bronze" />

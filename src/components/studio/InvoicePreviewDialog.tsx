@@ -525,7 +525,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
         )}>
 
           {/* ── Toolbar ─────────────────────────────────────────────────────── */}
-          <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-3 py-2 flex items-center gap-2">
+          <div className={cn("sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-3 py-2 flex items-center gap-2", isFullscreen && "[padding-top:max(8px,env(safe-area-inset-top))]")}>
 
             {viewMode === "main" ? (
               /* ── Main mode toolbar ── */
