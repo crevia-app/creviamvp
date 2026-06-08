@@ -92,6 +92,12 @@ const Auth = () => {
           p_device_name: getDeviceName(),
         }).catch(() => {});
 
+        // Ensure terms flag is set on this device — covers OAuth users who
+        // authenticated on another device and never saw the checkbox here
+        if (!localStorage.getItem("crevia_terms_v1")) {
+          localStorage.setItem("crevia_terms_v1", "1");
+        }
+
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.user_metadata?.two_fa_enabled) {
           sessionStorage.setItem("mfa_pending", "1");
@@ -128,7 +134,6 @@ const Auth = () => {
 
   const handleGoogleSignIn = async () => {
     if (!termsAccepted) {
-      setIsSignup(true);
       toast({
         title: "Please agree first",
         description: "Tick the Terms of Use and Privacy Policy checkbox before continuing.",
