@@ -1,8 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ArrowRight, X, Zap, Check, Loader2 } from "lucide-react";
+import { Sparkles, ArrowRight, Zap, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useSubscription } from "@/hooks/use-subscription";
 
 // ── Context ──────────────────────────────────────────────────────────────────
@@ -113,111 +113,75 @@ const UpgradeModalDialog = ({ state, onClose }: UpgradeModalDialogProps) => {
   };
 
   return (
-    <AnimatePresence>
-      {state.open && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            className="fixed inset-0 z-[900] bg-black/60 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-          />
+    <Dialog open={state.open} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="w-[calc(100vw-16px)] max-w-md p-0 gap-0 overflow-hidden rounded-2xl border-border/60 [&>button]:hidden">
+        <DialogTitle className="sr-only">{planLabel} Feature — {state.feature} is locked</DialogTitle>
 
-          {/* Modal */}
-          <motion.div
-            className="fixed inset-0 z-[901] flex items-end sm:items-center justify-center p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+        {/* Accent bar */}
+        <div className="h-0.5 w-full bg-gradient-to-r from-bronze/60 via-bronze to-bronze/60" />
+
+        <div className="p-6 sm:p-8">
+          {/* Icon + header */}
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-bronze/10 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-5 h-5 text-bronze" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-bronze uppercase tracking-widest">
+                {planLabel} Feature
+              </p>
+              <h3 className="font-vollkorn text-lg font-bold leading-tight">
+                {state.feature} is locked
+              </h3>
+            </div>
+          </div>
+
+          <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
+            Upgrade to <strong className="text-foreground">{planLabel}</strong> to unlock{" "}
+            <strong className="text-foreground">{state.feature}</strong> and the full Crevia toolkit.
+          </p>
+
+          {/* Highlights */}
+          <ul className="space-y-2 mb-6">
+            {highlights.map((h) => (
+              <li key={h} className="flex items-start gap-2.5 text-sm">
+                <Check className="w-4 h-4 text-bronze flex-shrink-0 mt-0.5" />
+                <span className="text-foreground/80">{h}</span>
+              </li>
+            ))}
+          </ul>
+
+          {/* Price */}
+          <div className="flex items-baseline gap-1 mb-6 px-4 py-3 rounded-xl bg-bronze/5 border border-bronze/15">
+            <span className="font-vollkorn text-3xl font-bold text-foreground">{price}</span>
+            <span className="text-muted-foreground text-sm">/month</span>
+            {!isPro && (
+              <span className="ml-auto text-xs text-muted-foreground">Includes 3 seats</span>
+            )}
+          </div>
+
+          {/* CTA */}
+          <Button
+            onClick={handleUpgrade}
+            disabled={isLoading}
+            className="w-full bg-bronze hover:bg-bronze/90 text-white gap-2 font-semibold h-11"
           >
-            <motion.div
-              className="relative w-full max-w-md bg-background rounded-2xl border border-border/60 shadow-2xl overflow-hidden"
-              initial={{ y: 40, scale: 0.96 }}
-              animate={{ y: 0, scale: 1 }}
-              exit={{ y: 40, scale: 0.96 }}
-              transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Accent bar */}
-              <div className="h-0.5 w-full bg-gradient-to-r from-bronze/60 via-bronze to-bronze/60" />
-
-              {/* Close */}
-              <button
-                onClick={(e) => { e.stopPropagation(); onClose(); }}
-                className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors z-10"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-
-              <div className="p-6 sm:p-8">
-                {/* Icon + header */}
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-xl bg-bronze/10 flex items-center justify-center flex-shrink-0">
-                    <Sparkles className="w-5 h-5 text-bronze" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-bronze uppercase tracking-widest">
-                      {planLabel} Feature
-                    </p>
-                    <h3 className="font-vollkorn text-lg font-bold leading-tight">
-                      {state.feature} is locked
-                    </h3>
-                  </div>
-                </div>
-
-                <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
-                  Upgrade to <strong className="text-foreground">{planLabel}</strong> to unlock{" "}
-                  <strong className="text-foreground">{state.feature}</strong> and the full Crevia toolkit.
-                </p>
-
-                {/* Highlights */}
-                <ul className="space-y-2 mb-6">
-                  {highlights.map((h) => (
-                    <li key={h} className="flex items-start gap-2.5 text-sm">
-                      <Check className="w-4 h-4 text-bronze flex-shrink-0 mt-0.5" />
-                      <span className="text-foreground/80">{h}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                {/* Price */}
-                <div className="flex items-baseline gap-1 mb-6 px-4 py-3 rounded-xl bg-bronze/5 border border-bronze/15">
-                  <span className="font-vollkorn text-3xl font-bold text-foreground">{price}</span>
-                  <span className="text-muted-foreground text-sm">/month</span>
-                  {!isPro && (
-                    <span className="ml-auto text-xs text-muted-foreground">Includes 3 seats</span>
-                  )}
-                </div>
-
-                {/* CTAs */}
-                <div className="flex flex-col gap-3">
-                  <Button
-                    onClick={(e) => { e.stopPropagation(); handleUpgrade(); }}
-                    disabled={isLoading}
-                    className="w-full bg-bronze hover:bg-bronze/90 text-white gap-2 font-semibold h-11"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Loading checkout…
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="w-4 h-4" />
-                        Upgrade to Pro
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading checkout…
+              </>
+            ) : (
+              <>
+                <Zap className="w-4 h-4" />
+                Upgrade to Pro
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
