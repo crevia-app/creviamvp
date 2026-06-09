@@ -133,7 +133,9 @@ const Auth = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    if (!termsAccepted) {
+    // Only enforce terms for new signups — returning users logging in
+    // should never be blocked by a missing localStorage flag
+    if (isSignup && !termsAccepted) {
       toast({
         title: "Please agree first",
         description: "Tick the Terms of Use and Privacy Policy checkbox before continuing.",
@@ -263,7 +265,11 @@ const Auth = () => {
       }
     } catch (err) {
       console.error("Auth error:", err);
-      toast({ title: "Connection error", description: "Unable to connect to the server. Please check your internet and try again.", variant: "destructive" });
+      toast({
+        title: "Sign in failed",
+        description: "Something went wrong. Please refresh the page and try again — this is usually caused by a cached version of the app.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
