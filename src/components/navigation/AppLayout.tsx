@@ -74,14 +74,14 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
   return (
     <UpgradeModalProvider>
-    <div className="h-dvh bg-background flex flex-col safe-area-pt safe-area-pl safe-area-pr">
+    <div className="h-dvh bg-background flex flex-col safe-area-pl safe-area-pr">
       <TopBar
         profile={profile}
         onProfileClick={() => setProfileDrawerOpen(true)}
         hideRightElements={isCrevidAI}
       />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden pt-[calc(3.5rem+env(safe-area-inset-top,0px))]">
         <MainSidebar
           profile={profile}
           onProfileClick={() => setProfileDrawerOpen(true)}
