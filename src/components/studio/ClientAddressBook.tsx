@@ -178,15 +178,24 @@ export default function ClientAddressBook({ open, onOpenChange }: ClientAddressB
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent className="w-full sm:max-w-lg overflow-y-auto flex flex-col gap-0 p-0">
           <SheetHeader className="px-6 py-5 border-b border-border sticky top-0 bg-background z-10">
-            <SheetTitle className="flex items-center gap-2 font-vollkorn text-lg">
-              <Users className="h-5 w-5 text-bronze" />
-              Client Address Book
-              {clients.length > 0 && (
-                <Badge variant="secondary" className="ml-1 text-xs font-normal">
-                  {clients.length}
-                </Badge>
-              )}
-            </SheetTitle>
+            <div className="flex items-center justify-between">
+              <SheetTitle className="flex items-center gap-2 font-vollkorn text-lg">
+                <Users className="h-5 w-5 text-bronze" />
+                Client Address Book
+                {clients.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 text-xs font-normal">
+                    {clients.length}
+                  </Badge>
+                )}
+              </SheetTitle>
+              <button
+                onClick={() => onOpenChange(false)}
+                className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </SheetHeader>
 
           <div className="flex-1 px-6 py-5 space-y-4">
