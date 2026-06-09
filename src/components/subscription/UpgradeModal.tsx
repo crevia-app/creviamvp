@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, ArrowRight, Zap, Check, Loader2 } from "lucide-react";
+import { Sparkles, ArrowRight, Zap, Check, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useSubscription } from "@/hooks/use-subscription";
@@ -119,6 +119,14 @@ const UpgradeModalDialog = ({ state, onClose }: UpgradeModalDialogProps) => {
 
         {/* Accent bar */}
         <div className="h-0.5 w-full bg-gradient-to-r from-bronze/60 via-bronze to-bronze/60" />
+
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors z-10"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
 
         <div className="p-6 sm:p-8">
           {/* Icon + header */}
