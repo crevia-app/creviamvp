@@ -155,7 +155,8 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
 
   const currentTab = new URLSearchParams(location.search).get("tab") || "profile";
-  const hasCustomBg = linkProfile?.theme === "custom_image" && !!linkProfile?.background?.custom_bg_url;
+  const hasCustomBg    = linkProfile?.theme === "custom_image" && !!linkProfile?.background?.custom_bg_url;
+  const hasCustomColor = !!linkProfile?.background?.custom_color;
 
   const handleBgImageUpload = async (file: File) => {
     if (!file.type.startsWith("image/")) { toast({ title: "Please upload an image file", variant: "destructive" }); return; }
@@ -1064,14 +1065,19 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                   <div className="space-y-6">
                     <div>
                       <Label className="text-sm font-medium mb-4 block">Color Scheme</Label>
-                      <div className={cn("relative", hasCustomBg && "pointer-events-none select-none")}>
+                      <div className={cn("relative", (hasCustomBg || hasCustomColor) && "pointer-events-none select-none")}>
                         {hasCustomBg && (
                           <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/80 backdrop-blur-sm border border-border/50">
                             <p className="text-xs text-muted-foreground text-center px-3">Remove background image to change colour scheme</p>
                           </div>
                         )}
+                        {!hasCustomBg && hasCustomColor && (
+                          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/80 backdrop-blur-sm border border-border/50">
+                            <p className="text-xs text-muted-foreground text-center px-3">Reset custom color to use a colour scheme</p>
+                          </div>
+                        )}
                         <ThemeSelector
-                          value={linkProfile?.theme || "elite_obsidian"}
+                          value={hasCustomColor ? "" : (linkProfile?.theme || "elite_obsidian")}
                           onChange={(themeId, fontKey) =>
                             setLinkProfile({ ...linkProfile, theme: themeId, background: { ...linkProfile?.background, style: "solid", font_family: fontKey, custom_bg_url: null, custom_color: undefined } })
                           }
@@ -1697,14 +1703,19 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 <div className="space-y-6 md:space-y-10">
                   <div>
                     <Label className="text-sm sm:text-base md:text-lg font-medium mb-3 md:mb-6 block">Color Scheme</Label>
-                    <div className={cn("relative", hasCustomBg && "pointer-events-none select-none")}>
+                    <div className={cn("relative", (hasCustomBg || hasCustomColor) && "pointer-events-none select-none")}>
                       {hasCustomBg && (
                         <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/80 backdrop-blur-sm border border-border/50">
                           <p className="text-xs sm:text-sm text-muted-foreground text-center px-4">Remove background image to change colour scheme</p>
                         </div>
                       )}
+                      {!hasCustomBg && hasCustomColor && (
+                        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/80 backdrop-blur-sm border border-border/50">
+                          <p className="text-xs sm:text-sm text-muted-foreground text-center px-4">Reset custom color to use a colour scheme</p>
+                        </div>
+                      )}
                       <ThemeSelector
-                        value={linkProfile?.theme || "elite_obsidian"}
+                        value={hasCustomColor ? "" : (linkProfile?.theme || "elite_obsidian")}
                         onChange={(themeId, fontKey) =>
                           setLinkProfile({ ...linkProfile, theme: themeId, background: { ...linkProfile?.background, style: "solid", font_family: fontKey, custom_bg_url: null, custom_color: undefined } })
                         }

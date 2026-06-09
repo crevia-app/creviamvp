@@ -1,15 +1,6 @@
 import { useState, useCallback } from "react";
-import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// ─── Premium Solid Presets ────────────────────────────────────────────────────
-const SOLID_PRESETS = [
-  { name: "Obsidian", hex: "#0A0A0A" },
-  { name: "Ivory",    hex: "#F2EDE4" },
-  { name: "Emerald",  hex: "#064E3B" },
-  { name: "Cognac",   hex: "#7C4A2D" },
-  { name: "Sapphire", hex: "#0F2B6E" },
-] as const;
 
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -68,8 +59,6 @@ export function AdvancedColorSelector({
 
   const customGradientValue = buildGradient(gradFrom, gradTo, gradAngle);
 
-  const isLightSolid = (hex: string) => hex === "#F2EDE4";
-
   return (
     <div className={cn("space-y-4", className)}>
 
@@ -96,45 +85,6 @@ export function AdvancedColorSelector({
       {/* ── Solid panel ──────────────────────────────────────────────────────── */}
       {(variant === "invoice" || tab === "solid") && (
         <div className="space-y-4">
-
-          {/* Preset swatches */}
-          <div className="flex gap-2.5">
-            {SOLID_PRESETS.map(({ name, hex }) => {
-              const active = value === hex;
-              return (
-                <button
-                  key={hex}
-                  title={name}
-                  onClick={() => onChange(hex)}
-                  className={cn(
-                    "relative w-11 h-11 rounded-xl border border-white/10 flex-shrink-0",
-                    "transition-all duration-200 focus:outline-none",
-                    "focus-visible:ring-2 focus-visible:ring-white/40",
-                    active
-                      ? "ring-2 ring-offset-2 ring-offset-[#0A0A0A] ring-white/50 scale-110"
-                      : "hover:scale-105 active:scale-[0.97]"
-                  )}
-                  style={{ background: hex }}
-                >
-                  {/* Inner glow on active */}
-                  {active && (
-                    <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/20" />
-                  )}
-                  {active && (
-                    <span className="absolute inset-0 flex items-center justify-center">
-                      <Check
-                        className={cn(
-                          "w-4 h-4 drop-shadow",
-                          isLightSolid(hex) ? "text-black/70" : "text-white"
-                        )}
-                        strokeWidth={2.5}
-                      />
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
 
           {/* Custom HEX input */}
           <div className="flex items-center gap-3">
