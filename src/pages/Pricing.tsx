@@ -36,7 +36,7 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPri
       seatNote: null,
       description: "Start building your professional footprint.",
       features: [
-        { product: "Dira AI", detail: "5 Daily Power Credits", note: "Refreshed daily" },
+        { product: "Dira AI", detail: "5 Daily Credits", note: "Refreshed daily" },
         { product: "Crevia Canvas", detail: "Unlimited document drafts", lockNote: "E-Signatures excluded" },
         { product: "Crevia Invoice", detail: "2 standard invoices / month", lockNote: "Customization excluded" },
         { product: "Crevia Workspace", detail: "0 Workspaces", lockNote: "Workspaces are a Pro feature" },
@@ -57,7 +57,7 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPri
       seatNote: null,
       description: "Scale your operations with an elite toolkit.",
       features: [
-        { product: "Dira AI", detail: "500 Monthly Power Credits" },
+        { product: "Dira AI", detail: "500 Monthly Credits" },
         { product: "Crevia Canvas", detail: "Unlimited canvases + Unlimited E-Signatures" },
         { product: "Crevia Invoice", detail: "Unlimited customized invoices", note: "Remove branding, add your logo, add brand colors" },
         { product: "Crevia Workspace", detail: "10 Collaborative Workspaces / month", note: "Invite clients and collaborators natively" },

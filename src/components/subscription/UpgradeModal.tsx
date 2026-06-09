@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ArrowRight, X, Zap, Check } from "lucide-react";
+import { Sparkles, ArrowRight, X, Zap, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/use-subscription";
 
@@ -97,14 +97,13 @@ const UpgradeModalDialog = ({ state, onClose }: UpgradeModalDialogProps) => {
   const planLabel = isPro ? "Pro Verified" : "Business Verified";
   const price = isPro ? "$14.99" : "$74.99";
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleUpgrade = () => {
+    if (isLoading) return;
+    setIsLoading(true);
     onClose();
     navigate("/profile/payments-billing");
-  };
-
-  const handleViewPlans = () => {
-    onClose();
-    navigate("/pricing");
   };
 
   return (
@@ -126,6 +125,7 @@ const UpgradeModalDialog = ({ state, onClose }: UpgradeModalDialogProps) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
           >
             <motion.div
               className="relative w-full max-w-md bg-background rounded-2xl border border-border/60 shadow-2xl overflow-hidden"
@@ -187,21 +187,24 @@ const UpgradeModalDialog = ({ state, onClose }: UpgradeModalDialogProps) => {
                 </div>
 
                 {/* CTAs */}
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col gap-3">
                   <Button
                     onClick={(e) => { e.stopPropagation(); handleUpgrade(); }}
-                    className="flex-1 bg-bronze hover:bg-bronze/90 text-white gap-2 font-semibold"
+                    disabled={isLoading}
+                    className="w-full bg-bronze hover:bg-bronze/90 text-white gap-2 font-semibold h-11"
                   >
-                    <Zap className="w-4 h-4" />
-                    Upgrade to {planLabel}
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={(e) => { e.stopPropagation(); handleViewPlans(); }}
-                    className="sm:w-auto border-border/60"
-                  >
-                    View Plans
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Loading checkout…
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-4 h-4" />
+                        Upgrade to Pro
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
