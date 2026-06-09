@@ -74,7 +74,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
   return (
     <UpgradeModalProvider>
-    <div className="h-dvh bg-background flex flex-col">
+    <div className="h-dvh bg-background flex flex-col safe-area-pt safe-area-pl safe-area-pr">
       <TopBar
         profile={profile}
         onProfileClick={() => setProfileDrawerOpen(true)}
