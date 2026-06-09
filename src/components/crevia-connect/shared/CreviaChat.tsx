@@ -2248,7 +2248,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                               </div>
                             )}
 
-                            <div className={`max-w-[85%] md:max-w-[70%]`}>
+                            <div className="max-w-[85%] md:max-w-[70%] flex-shrink-0">
                               {/* Sender name in groups — only on first in sequence */}
                               {!isMine && selectedRoom.is_group && isFirstInSeq && (() => {
                                 let h = 0;
@@ -2784,14 +2784,10 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                             <DropdownMenuItem onClick={() => { fetchContracts(); setShowContractPicker(true); }}>
                               <FileSignature className="h-4 w-4 mr-2" />Attach Canvas
                             </DropdownMenuItem>
-                            {isRoomAdmin && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => setShowPollCreator(true)}>
-                                  <BarChart2 className="h-4 w-4 mr-2" />Create Poll
-                                </DropdownMenuItem>
-                              </>
-                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setShowPollCreator(true)}>
+                              <BarChart2 className="h-4 w-4 mr-2" />Create Poll
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
 

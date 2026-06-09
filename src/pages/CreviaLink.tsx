@@ -257,8 +257,8 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
       toast({ title: "Invalid file", description: "Please upload an image file.", variant: "destructive" });
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "File too large", description: "Max 5MB allowed.", variant: "destructive" });
+    if (file.size > 50 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Max 50MB allowed.", variant: "destructive" });
       return;
     }
 
