@@ -266,6 +266,11 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
   const [pollOptions, setPollOptions] = useState(["", ""]);
   const [sendingPoll, setSendingPoll] = useState(false);
 
+  // Mention autocomplete
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionAnchorStart, setMentionAnchorStart] = useState(0);
+  const [mentionIndex, setMentionIndex] = useState(0);
+
   // Three separate file inputs so we never mutate `accept` at click time —
   // iOS Safari blocks the file picker when accept is changed right before .click().
   const fileAnyRef   = useRef<HTMLInputElement>(null);
@@ -1523,6 +1528,39 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
       .join(", ");
   };
 
+  const mentionMembers =
+    mentionQuery !== null
+      ? (selectedRoom?.members ?? [])
+          .filter((m) => m.user_id !== currentUserId)
+          .filter((m) => {
+            const q = mentionQuery.toLowerCase();
+            const name = (m.profile?.display_name ?? "").toLowerCase();
+            const handle = (m.profile?.handle ?? "").toLowerCase();
+            return !q || name.startsWith(q) || handle.startsWith(q) || name.includes(q) || handle.includes(q);
+          })
+          .slice(0, 5)
+      : [];
+
+  const selectMention = (member: RoomMember) => {
+    const handle = member.profile?.handle || member.profile?.display_name || "user";
+    const before = newMessage.slice(0, mentionAnchorStart);
+    const after = newMessage.slice(mentionAnchorStart + 1 + (mentionQuery?.length ?? 0));
+    const inserted = `@${handle} `;
+    const next = before + inserted + after;
+    setNewMessage(next);
+    setMentionQuery(null);
+    setMentionIndex(0);
+    setTimeout(() => {
+      const el = chatTextareaRef.current;
+      if (!el) return;
+      const pos = (before + inserted).length;
+      el.focus();
+      el.setSelectionRange(pos, pos);
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, 120) + "px";
+    }, 0);
+  };
+
   const getMessageReadStatus = (msg: ChatMessage): "read" | "delivered" | "sent" => {
     if (!selectedRoom) return "sent";
     const others = selectedRoom.members?.filter((m) => m.user_id !== currentUserId) ?? [];
@@ -2663,6 +2701,49 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                     </div>
                   )}
 
+                  {/* Mention autocomplete — floats above the input bar */}
+                  {mentionQuery !== null && mentionMembers.length > 0 && (
+                    <div className="mb-1 bg-card border border-border rounded-xl shadow-lg overflow-hidden">
+                      {mentionMembers.map((member, idx) => (
+                        <button
+                          key={member.user_id}
+                          onMouseDown={(e) => { e.preventDefault(); selectMention(member); }}
+                          onTouchEnd={(e) => { e.preventDefault(); selectMention(member); }}
+                          className={`w-full text-left flex items-center gap-2.5 px-3 py-2.5 transition-colors ${
+                            idx === mentionIndex ? "bg-bronze/10" : "[@media(hover:hover)]:hover:bg-muted/50 active:bg-muted/50"
+                          }`}
+                        >
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 overflow-hidden"
+                            style={avatarStyle(member.user_id)}
+                          >
+                            {member.profile?.avatar_url ? (
+                              <img
+                                src={member.profile.avatar_url}
+                                alt=""
+                                className="w-7 h-7 rounded-full object-cover"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                              />
+                            ) : (
+                              member.profile?.display_name?.[0]?.toUpperCase() ||
+                              member.profile?.handle?.[0]?.toUpperCase() ||
+                              "U"
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold truncate">
+                              {member.profile?.display_name || member.profile?.handle || "User"}
+                            </p>
+                            {member.profile?.handle && (
+                              <p className="text-xs text-muted-foreground truncate">@{member.profile.handle}</p>
+                            )}
+                          </div>
+                          <span className="text-xs text-bronze font-medium flex-shrink-0">@</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   {isRecordingVoice ? (
                     <VoiceRecorder
                       onRecordingComplete={sendVoiceNote}
@@ -2726,8 +2807,41 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                             // Auto-resize: reset to auto first so shrinking works correctly
                             e.target.style.height = "auto";
                             e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+                            // Mention detection: scan backwards from cursor for @
+                            const cursor = e.target.selectionStart ?? e.target.value.length;
+                            const before = e.target.value.slice(0, cursor);
+                            const atIdx = before.lastIndexOf("@");
+                            if (atIdx !== -1 && !before.slice(atIdx + 1).includes(" ")) {
+                              setMentionQuery(before.slice(atIdx + 1));
+                              setMentionAnchorStart(atIdx);
+                              setMentionIndex(0);
+                            } else {
+                              setMentionQuery(null);
+                            }
                           }}
                           onKeyDown={(e) => {
+                            // Mention keyboard navigation
+                            if (mentionQuery !== null && mentionMembers.length > 0) {
+                              if (e.key === "ArrowUp") {
+                                e.preventDefault();
+                                setMentionIndex((i) => (i - 1 + mentionMembers.length) % mentionMembers.length);
+                                return;
+                              }
+                              if (e.key === "ArrowDown") {
+                                e.preventDefault();
+                                setMentionIndex((i) => (i + 1) % mentionMembers.length);
+                                return;
+                              }
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                selectMention(mentionMembers[mentionIndex]);
+                                return;
+                              }
+                              if (e.key === "Escape") {
+                                setMentionQuery(null);
+                                return;
+                              }
+                            }
                             if (e.key === "Enter" && !e.shiftKey) {
                               const isMobileDevice = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
                               if (!isMobileDevice) {
