@@ -1,21 +1,23 @@
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile, toBlobURL } from "@ffmpeg/util";
-
 // Max file size we'll attempt to convert client-side.
 // Beyond this, transcoding would take several minutes on a phone.
 export const VIDEO_CONVERT_MAX_BYTES = 200 * 1024 * 1024; // 200 MB
 
 // Singleton — load FFmpeg WASM once, reuse across conversions.
-let ffmpeg: FFmpeg | null = null;
+// FFmpeg type declared loosely to avoid a static import at module level.
+let ffmpeg: any | null = null;
 let loadPromise: Promise<void> | null = null;
 
-async function loadFFmpeg(): Promise<FFmpeg> {
+async function loadFFmpeg(): Promise<any> {
   if (ffmpeg?.loaded) return ffmpeg;
 
   if (!loadPromise) {
+    // Dynamic imports — FFmpeg JS + WASM only enter memory when a video
+    // conversion is actually triggered, not on app startup.
+    const [{ FFmpeg }, { toBlobURL }] = await Promise.all([
+      import("@ffmpeg/ffmpeg"),
+      import("@ffmpeg/util"),
+    ]);
     ffmpeg = new FFmpeg();
-    // jsDelivr is backed by Cloudflare + Fastly — far more reliable than unpkg
-    // for users in Africa and Asia. Single-threaded core needs no SharedArrayBuffer.
     loadPromise = (async () => {
       // Files are served from our own origin (copied from node_modules at build
       // time) and cached by the service worker after first load — no CDN dependency.
@@ -70,6 +72,7 @@ export async function convertVideoToMp4(
   const inputName = `input.${ext}`;
   const outputName = "output.mp4";
 
+  const { fetchFile } = await import("@ffmpeg/util");
   await ff.writeFile(inputName, await fetchFile(file));
 
   await ff.exec([
