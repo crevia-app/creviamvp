@@ -709,16 +709,6 @@ const ContractsTab = ({ workspaceId, initialContractId }: { workspaceId?: string
                             {canvas.title}
                           </h4>
                         )}
-                        <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${status.bg} ${status.color}`}>
-                          {status.icon}
-                          {status.label}
-                        </span>
-                        {bothSigned && (
-                          <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                            <CheckCircle2 className="h-2.5 w-2.5" />
-                            Signed
-                          </span>
-                        )}
                       </div>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
@@ -752,15 +742,11 @@ const ContractsTab = ({ workspaceId, initialContractId }: { workspaceId?: string
                       )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl opacity-100 transition-all md:opacity-0 md:group-hover:opacity-100">
+                          <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl opacity-100 transition-all md:opacity-0 md:group-hover:opacity-100" onClick={(e) => e.stopPropagation()}>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44 rounded-xl">
-                          <DropdownMenuItem onClick={() => setPreviewCanvas(canvas)} className="rounded-lg">
-                            <Eye className="h-4 w-4 mr-2" />
-                            View & Sign
-                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => setEditingCanvas(canvas)} className="rounded-lg">
                             <Edit className="h-4 w-4 mr-2" />
                             Edit

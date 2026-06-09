@@ -514,7 +514,7 @@ const CanvasPreviewDialog = ({
 
             {/* ────────────── EDIT MODE ────────────── */}
             {isEditingDetails ? (
-              <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-border/20 overflow-hidden">
+              <div className="bg-white text-black rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
                 <div className="h-1 bg-gradient-to-r from-primary via-primary/60 to-primary/20" />
                 <div className="p-6 md:p-10 space-y-6">
                   <div className="flex items-center justify-between">
@@ -561,7 +561,7 @@ const CanvasPreviewDialog = ({
                * document content.  The gradient accent bar gets its own small
                * overflow-hidden wrapper to preserve the rounded top corners.
                */
-              <div ref={docRef} className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl dark:shadow-2xl border border-border/20 print:shadow-none print:border-0">
+              <div ref={docRef} className="bg-white text-black rounded-2xl shadow-xl border border-gray-200 print:shadow-none print:border-0">
 
                 {/* Gradient accent — hidden from print capture */}
                 <div className="overflow-hidden rounded-t-2xl" data-print-hide>
@@ -592,23 +592,23 @@ const CanvasPreviewDialog = ({
                     {/* Title — hidden from print/PDF capture via data-print-hide */}
                     <div className="space-y-4" data-print-hide>
                       <div className="flex items-start justify-between gap-4">
-                        <h1 className="text-2xl md:text-3xl font-vollkorn font-bold text-foreground tracking-tight">
+                        <h1 className="text-2xl md:text-3xl font-vollkorn font-bold text-gray-900 tracking-tight">
                           {localCanvas.title}
                         </h1>
                         {localCanvas.creator_signature && (
-                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 flex-shrink-0">
                             <CheckCircle2 className="h-3.5 w-3.5" />
                             <span className="text-xs font-semibold">Signed</span>
                           </div>
                         )}
                       </div>
-                      <div className="h-px bg-border/60" />
+                      <div className="h-px bg-gray-200" />
                     </div>
 
                     {/* Agreement body — no nested box, text flows directly */}
                     <div>
                       {localCanvas.content ? (
-                        <div ref={textDivRef} className="text-sm text-foreground/80 leading-relaxed prose prose-sm dark:prose-invert max-w-none">
+                        <div ref={textDivRef} className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none">
                           <ReactMarkdown>{localCanvas.content}</ReactMarkdown>
                         </div>
                       ) : (
@@ -635,7 +635,7 @@ const CanvasPreviewDialog = ({
                           draggable={false}
                         />
                       ) : (
-                        <span className="font-vollkorn italic text-2xl text-foreground/85 truncate">
+                        <span className="font-vollkorn italic text-2xl text-gray-900 truncate">
                           {localCanvas.creator_signature}
                         </span>
                       )}
