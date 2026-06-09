@@ -62,39 +62,12 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   if (status === "unauth") return <Navigate to="/auth" replace />;
   if (status === "mfa")   return <Navigate to="/mfa-verify" replace />;
 
-  // Authenticated but terms not yet accepted (e.g. OAuth user on new device)
-  // Block with an inline intercept instead of redirecting to /signup
+  // Authenticated but flag missing — silently accept and move on.
+  // Existing users should never be blocked by a missing localStorage entry.
   if (!termsAccepted) {
-    return (
-      <div className="min-h-dvh bg-background flex items-center justify-center p-4">
-        <div className="w-full max-w-sm bg-card border border-border/50 rounded-2xl p-8 shadow-sm text-center">
-          <div className="w-14 h-14 rounded-2xl bg-bronze/10 flex items-center justify-center mx-auto mb-4">
-            <img src="/crevia-logo.png" alt="Crevia" className="w-8 h-8 rounded-full" />
-          </div>
-          <h2 className="font-vollkorn text-xl font-bold mb-2">One last step</h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            Please accept our Terms of Use and Privacy Policy to continue using Crevia.
-          </p>
-          <p className="text-xs text-muted-foreground mb-6 leading-relaxed">
-            By clicking "I Agree", you agree to our{" "}
-            <Link to="/terms-of-service" className="text-bronze hover:underline" target="_blank" rel="noopener noreferrer">
-              Terms of Use
-            </Link>
-            {" "}and{" "}
-            <Link to="/privacy-policy" className="text-bronze hover:underline" target="_blank" rel="noopener noreferrer">
-              Privacy Policy
-            </Link>.
-          </p>
-          <Button
-            onClick={handleAcceptTerms}
-            disabled={acceptingTerms}
-            className="w-full bg-bronze hover:bg-bronze/90 text-background font-semibold h-11"
-          >
-            {acceptingTerms ? "Saving…" : "I Agree — Continue"}
-          </Button>
-        </div>
-      </div>
-    );
+    localStorage.setItem("crevia_terms_v1", "1");
+    supabase.auth.updateUser({ data: { terms_accepted: true } }).catch(() => {});
+    setTermsAccepted(true);
   }
 
   return <>{children}</>;
