@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ArrowRight, X, Zap, Check, Loader2 } from "lucide-react";
@@ -99,6 +99,12 @@ const UpgradeModalDialog = ({ state, onClose }: UpgradeModalDialogProps) => {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  // Reset loading state every time the modal opens — component is always
+  // mounted so useState persists between opens without this guard
+  useEffect(() => {
+    if (state.open) setIsLoading(false);
+  }, [state.open]);
+
   const handleUpgrade = () => {
     if (isLoading) return;
     setIsLoading(true);
@@ -125,7 +131,6 @@ const UpgradeModalDialog = ({ state, onClose }: UpgradeModalDialogProps) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={(e) => e.stopPropagation()}
           >
             <motion.div
               className="relative w-full max-w-md bg-background rounded-2xl border border-border/60 shadow-2xl overflow-hidden"
