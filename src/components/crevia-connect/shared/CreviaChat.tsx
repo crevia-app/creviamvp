@@ -2188,7 +2188,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
 
                             {/* Action buttons - before message for own */}
                             {isMine && !isDeletedForEveryone && (
-                              <div className="flex items-center gap-0.5 mr-1 self-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="flex items-center gap-0.5 mr-1 self-center opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity">
                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleReply(msg)}>
                                   <Reply className="h-3 w-3" />
                                 </Button>
@@ -2212,11 +2212,21 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
 
                             <div className={`max-w-[85%] md:max-w-[70%]`}>
                               {/* Sender name in groups — only on first in sequence */}
-                              {!isMine && selectedRoom.is_group && isFirstInSeq && (
-                                <p className="text-[10px] font-semibold text-muted-foreground mb-0.5 ml-1">
-                                  {msg.sender?.display_name || msg.sender?.handle || "User"}
-                                </p>
-                              )}
+                              {!isMine && selectedRoom.is_group && isFirstInSeq && (() => {
+                                let h = 0;
+                                for (let i = 0; i < msg.sender_id.length; i++) {
+                                  h = msg.sender_id.charCodeAt(i) + ((h << 5) - h);
+                                }
+                                const hue = Math.abs(h) % 360;
+                                return (
+                                  <p
+                                    className="text-xs font-semibold mb-0.5 ml-1"
+                                    style={{ color: `hsl(${hue},60%,48%)` }}
+                                  >
+                                    {msg.sender?.display_name || msg.sender?.handle || "User"}
+                                  </p>
+                                );
+                              })()}
 
                               {/* Pinned indicator */}
                               {isPinned && (
@@ -2533,7 +2543,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
 
                             {/* Action buttons - after message for other's messages */}
                             {!isMine && !isDeletedForEveryone && (
-                              <div className="flex items-center gap-0.5 ml-1 self-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="flex items-center gap-0.5 ml-1 self-center opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity">
                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleReply(msg)}>
                                   <Reply className="h-3 w-3" />
                                 </Button>

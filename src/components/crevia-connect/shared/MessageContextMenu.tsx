@@ -75,7 +75,7 @@ const MessageContextMenu = ({
             <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align={isMine ? "end" : "start"} className="w-48">
+        <DropdownMenuContent align={isMine ? "end" : "start"} side="top" sideOffset={6} className="w-48">
           {content && (
             <DropdownMenuItem onClick={handleCopy}>
               <Copy className="h-4 w-4 mr-2" />
