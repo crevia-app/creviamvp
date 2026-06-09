@@ -76,8 +76,10 @@
     ]
     </script>
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/crevia-logo.png" />
+    <!-- Favicon — multiple declarations so Google, browsers, and PWA all pick it up -->
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/crevia-logo.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/crevia-logo.png" />
     
     <!-- Supabase — preconnect so first auth/data call has no DNS/TLS delay -->
     <link rel="preconnect" href="https://bcbzixdcsigxhqdiveei.supabase.co" crossorigin>
