@@ -225,7 +225,7 @@ export function AdvancedColorSelector({
       )}
 
       {/* ── Active value readout ──────────────────────────────────────────────── */}
-      <p className="text-[10px] font-mono text-white/20 truncate select-all" title={value}>
+      <p className="text-[10px] font-mono text-white/70 truncate select-all" title={value}>
         {value || "—"}
       </p>
     </div>

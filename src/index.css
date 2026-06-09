@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Invoice / Receipt A4 print rules ───────────────────────────────────────
+   Forces exact A4 portrait output with zero margins and full color fidelity
+   when the user triggers Ctrl+P or the browser's native print dialog.
+   html2canvas captures bypass these rules but use windowWidth:794 instead. */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .invoice-print-area {
+    width: 210mm !important;
+    max-width: none !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+}
+
 /* Global baseline — ensures --nav-bottom-offset is always defined.
    The @media block below overwrites it with the real value on mobile. */
 :root {

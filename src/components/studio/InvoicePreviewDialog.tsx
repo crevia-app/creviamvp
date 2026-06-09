@@ -86,7 +86,10 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
 
   const handlePrintPDF = async () => {
     try {
-      const opts = { scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false } as const;
+      // windowWidth: 794 = A4 width in px at 96 dpi (210 mm).
+      // Forces html2canvas to render the desktop layout regardless of the
+      // actual mobile viewport, preventing narrow paginated captures on phones.
+      const opts = { scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false, windowWidth: 794 } as const;
       const M = 12;
       const invoiceNum = invoice?.invoice_number ?? "invoice";
 
@@ -456,7 +459,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
 
   // ── MAIN PREVIEW — single flowing document, no page breaks ─────────────────
   const MainPreview = () => (
-    <div ref={docRef} className="invoice-print-area bg-white text-black rounded-xl shadow-lg print:shadow-none print:rounded-none">
+    <div ref={docRef} className="invoice-print-area bg-white text-black rounded-xl shadow-lg print:shadow-none print:rounded-none print:w-[210mm] print:max-w-none print:m-0">
       <AccentBar />
       <div className="p-4 sm:p-8 print:p-8">
         <InvoiceHeader />
@@ -478,7 +481,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
 
   // ── PRINT PREVIEW — paged layout (PAGE 1 + divider + PAGE 2) ──────────────
   const PrintPreview = () => (
-    <div className="invoice-print-area bg-white text-black rounded-xl shadow-lg print:shadow-none print:rounded-none">
+    <div className="invoice-print-area bg-white text-black rounded-xl shadow-lg print:shadow-none print:rounded-none print:w-[210mm] print:max-w-none print:m-0">
       {/* PAGE 1 */}
       <div ref={page1Ref} className="bg-white">
         <AccentBar />
