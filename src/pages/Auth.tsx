@@ -92,13 +92,27 @@ const Auth = () => {
           p_device_name: getDeviceName(),
         }).catch(() => {});
 
-        // Ensure terms flag is set on this device — covers OAuth users who
-        // authenticated on another device and never saw the checkbox here
-        if (!localStorage.getItem("crevia_terms_v1")) {
-          localStorage.setItem("crevia_terms_v1", "1");
-        }
+        // Ensure terms flag is set in localStorage and the database
+        localStorage.setItem("crevia_terms_v1", "1");
 
         const { data: { user } } = await supabase.auth.getUser();
+
+        // Write terms_accepted_at to profiles if not already recorded
+        if (user) {
+          supabase.from("profiles")
+            .select("terms_accepted_at")
+            .eq("id", user.id)
+            .single()
+            .then(({ data }) => {
+              if (!data?.terms_accepted_at) {
+                supabase.from("profiles")
+                  .update({ terms_accepted_at: new Date().toISOString() })
+                  .eq("id", user.id)
+                  .catch(() => {});
+              }
+            })
+            .catch(() => {});
+        }
         if (user?.user_metadata?.two_fa_enabled) {
           sessionStorage.setItem("mfa_pending", "1");
           navigate("/mfa-verify", { replace: true });
@@ -220,9 +234,17 @@ const Auth = () => {
           setIsSignup(false);
         } else if (signUpData.session) {
           // Immediate sign-in (email confirmation disabled) — show premium welcome screen
+          // Write terms acceptance to the database now that we have a user ID
+          if (signUpData.user?.id) {
+            supabase.from("profiles")
+              .update({ terms_accepted_at: new Date().toISOString() })
+              .eq("id", signUpData.user.id)
+              .catch(() => {});
+          }
           setShowWelcomeScreen(true);
         } else {
-          // Email confirmation required
+          // Email confirmation required — terms_accepted_at will be set on
+          // first SIGNED_IN event after the user confirms their email
           setPendingEmail(email);
           setEmailConfirmPending(true);
         }

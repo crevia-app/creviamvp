@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { Navigate, Link } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -9,23 +8,38 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const [status, setStatus] = useState<"loading" | "auth" | "mfa" | "unauth">("loading");
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [acceptingTerms, setAcceptingTerms] = useState(false);
 
   useEffect(() => {
-    setTermsAccepted(!!localStorage.getItem("crevia_terms_v1"));
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { setStatus("unauth"); return; }
+      if (sessionStorage.getItem("mfa_pending") === "1") { setStatus("mfa"); return; }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        setStatus("unauth");
-        return;
+      // If localStorage flag is missing, check the database.
+      // This is the source of truth — device-independent.
+      if (!localStorage.getItem("crevia_terms_v1")) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("terms_accepted_at")
+          .eq("id", session.user.id)
+          .single();
+
+        // Cache in localStorage regardless — DB has it or we set it now
+        localStorage.setItem("crevia_terms_v1", "1");
+
+        if (!profile?.terms_accepted_at) {
+          // Existing user whose record pre-dates this column — backfill silently
+          supabase.from("profiles")
+            .update({ terms_accepted_at: new Date().toISOString() })
+            .eq("id", session.user.id)
+            .catch(() => {});
+        }
       }
-      if (sessionStorage.getItem("mfa_pending") === "1") {
-        setStatus("mfa");
-        return;
-      }
+
       setStatus("auth");
-    });
+    };
+
+    init();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
@@ -42,15 +56,6 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleAcceptTerms = async () => {
-    setAcceptingTerms(true);
-    localStorage.setItem("crevia_terms_v1", "1");
-    // Persist to auth user metadata — no schema change required
-    await supabase.auth.updateUser({ data: { terms_accepted: true } }).catch(() => {});
-    setTermsAccepted(true);
-    setAcceptingTerms(false);
-  };
-
   if (status === "loading") {
     return (
       <div className="min-h-dvh bg-black flex items-center justify-center">
@@ -61,14 +66,6 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   if (status === "unauth") return <Navigate to="/auth" replace />;
   if (status === "mfa")   return <Navigate to="/mfa-verify" replace />;
-
-  // Authenticated but flag missing — silently accept and move on.
-  // Existing users should never be blocked by a missing localStorage entry.
-  if (!termsAccepted) {
-    localStorage.setItem("crevia_terms_v1", "1");
-    supabase.auth.updateUser({ data: { terms_accepted: true } }).catch(() => {});
-    setTermsAccepted(true);
-  }
 
   return <>{children}</>;
 };
