@@ -34,14 +34,13 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { crypto } from "https://deno.land/std@0.168.0/crypto/mod.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Webhook is server-to-server (Paystack → Supabase Edge).
+// No browser ever calls this endpoint, so CORS headers are intentionally omitted.
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+  // Reject non-POST requests — OPTIONS/GET have no valid use here
+  if (req.method !== 'POST') {
+    return new Response('Method Not Allowed', { status: 405 });
   }
 
   try {
@@ -70,7 +69,7 @@ serve(async (req) => {
     if (expectedSignature !== signature) {
       return new Response(JSON.stringify({ error: 'Invalid signature' }), {
         status: 401,
-        headers: corsHeaders,
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
@@ -193,50 +192,63 @@ serve(async (req) => {
       }
     }
 
-    // ✅ Recurring renewal — extend expiry, store subscription_code for cancellation
+    // ✅ Recurring renewal — resolve user ID first, then update by ID (not email)
     if (event.event === 'subscription.create') {
       const { customer, subscription_code, email_token } = event.data;
-      const expiresAt = new Date();
-      expiresAt.setMonth(expiresAt.getMonth() + 1);
-      await supabase
-        .from('profiles')
-        .update({
-          subscription_status: 'active',
-          subscription_expires_at: expiresAt.toISOString(),
-          subscription_code:        subscription_code ?? null,
-          subscription_email_token: email_token ?? null,
-        })
-        .eq('email', customer.email);
+      const { data: renewProfile } = await supabase
+        .from('profiles').select('id').eq('email', customer.email).single();
+      if (renewProfile) {
+        const expiresAt = new Date();
+        expiresAt.setMonth(expiresAt.getMonth() + 1);
+        await supabase
+          .from('profiles')
+          .update({
+            subscription_status: 'active',
+            subscription_expires_at: expiresAt.toISOString(),
+            subscription_code:        subscription_code ?? null,
+            subscription_email_token: email_token ?? null,
+          })
+          .eq('id', renewProfile.id);
+      }
     }
 
     // ✅ Payment failed — cut off premium access and reset Dira limit to free tier
     if (event.event === 'invoice.payment_failed') {
       const { customer } = event.data;
-      await supabase
-        .from('profiles')
-        .update({ subscription_status: 'expired', dira_actions_limit: 15 })
-        .eq('email', customer.email);
+      const { data: failProfile } = await supabase
+        .from('profiles').select('id').eq('email', customer.email).single();
+      if (failProfile) {
+        await supabase
+          .from('profiles')
+          .update({ subscription_status: 'expired', dira_actions_limit: 15 })
+          .eq('id', failProfile.id);
+      }
     }
 
     // ✅ Subscription cancelled by user — same downgrade treatment
     if (event.event === 'subscription.disable') {
       const { customer } = event.data;
-      await supabase
-        .from('profiles')
-        .update({ subscription_status: 'cancelled', dira_actions_limit: 15 })
-        .eq('email', customer.email);
+      const { data: cancelProfile } = await supabase
+        .from('profiles').select('id').eq('email', customer.email).single();
+      if (cancelProfile) {
+        await supabase
+          .from('profiles')
+          .update({ subscription_status: 'cancelled', dira_actions_limit: 15 })
+          .eq('id', cancelProfile.id);
+      }
     }
-    //we always tell paystack that the webhook has been received if not paystack will keep retrying the webhook
+
     return new Response(JSON.stringify({ received: true }), {
       status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
+    // Log internally but never expose implementation details to the caller
     console.error('Webhook error:', error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
-      headers: corsHeaders,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 });
