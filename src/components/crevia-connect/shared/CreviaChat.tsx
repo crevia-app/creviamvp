@@ -177,7 +177,7 @@ function linkifyContent(content: string): (string | JSX.Element)[] {
       );
     } else {
       result.push(
-        <span key={`mention-${match.index}`} className="text-bronze font-semibold">
+        <span key={`mention-${match.index}`} className="text-bronze font-semibold bg-bronze/10 px-1 py-0.5 rounded-sm">
           {token}
         </span>
       );
@@ -1188,6 +1188,24 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
       // Add reply reference
       if (replyingTo) {
         messageData.reply_to_id = replyingTo.id;
+      }
+
+      // Extract mentioned user IDs from the plaintext content
+      const handlePattern = /@([\w.]+)/g;
+      const mentionedHandles = new Set<string>();
+      let hm: RegExpExecArray | null;
+      while ((hm = handlePattern.exec(plainContent)) !== null) {
+        mentionedHandles.add(hm[1].toLowerCase());
+      }
+      if (mentionedHandles.size > 0) {
+        const mentionedIds = (selectedRoom.members ?? [])
+          .filter((m) => {
+            const h = m.profile?.handle?.toLowerCase();
+            const n = m.profile?.display_name?.toLowerCase().replace(/\s+/g, "");
+            return (h && mentionedHandles.has(h)) || (n && mentionedHandles.has(n));
+          })
+          .map((m) => m.user_id);
+        if (mentionedIds.length > 0) messageData.mentions = mentionedIds;
       }
 
       // Insert and get the row back so we can append it to local state immediately
@@ -2703,7 +2721,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
 
                   {/* Mention autocomplete — floats above the input bar */}
                   {mentionQuery !== null && mentionMembers.length > 0 && (
-                    <div className="mb-1 bg-card border border-border rounded-xl shadow-lg overflow-hidden">
+                    <div className="mb-1 z-50 backdrop-blur-md bg-background/90 border border-border/60 rounded-xl shadow-xl overflow-hidden">
                       {mentionMembers.map((member, idx) => (
                         <button
                           key={member.user_id}
