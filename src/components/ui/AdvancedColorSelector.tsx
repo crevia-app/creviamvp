@@ -39,7 +39,7 @@ export function AdvancedColorSelector({
   className,
 }: AdvancedColorSelectorProps) {
   const [tab, setTab] = useState<"solid" | "gradient">("solid");
-  const [hexInput, setHexInput] = useState("");
+  const [hexInput, setHexInput] = useState(() => (value || "").replace(/^#/, ""));
   const [gradFrom, setGradFrom] = useState("#0A0A0A");
   const [gradTo, setGradTo] = useState("#B07D3A");
   const [gradAngle, setGradAngle] = useState(135);
