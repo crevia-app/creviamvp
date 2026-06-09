@@ -2165,7 +2165,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                   the correct cross-platform primitive for a chat list. */}
               <div
                 ref={scrollContainerRef}
-                className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain touch-pan-y p-3 md:p-4"
+                className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-y-contain touch-pan-y p-3 md:p-4"
                 style={{ overflowAnchor: "none", contain: "strict" }}
                 onScroll={() => {
                   const el = scrollContainerRef.current;
@@ -2266,7 +2266,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                               </div>
                             )}
 
-                            <div className="max-w-[85%] md:max-w-[70%] flex-shrink-0">
+                            <div className="max-w-[85%] md:max-w-[70%] flex-shrink-0 break-words whitespace-pre-wrap min-w-0">
                               {/* Sender name in groups — only on first in sequence */}
                               {!isMine && selectedRoom.is_group && isFirstInSeq && (() => {
                                 let h = 0;

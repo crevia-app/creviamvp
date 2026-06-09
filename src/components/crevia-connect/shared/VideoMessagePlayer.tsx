@@ -38,10 +38,12 @@ export function VideoMessagePlayer({ src, fileType, onDownload, onExpand }: Vide
         controls
         playsInline
         preload="metadata"
-        className="w-full max-w-sm rounded-lg object-cover bg-black"
+        controlsList="download"
+        className="w-full max-w-[280px] md:max-w-sm rounded-xl object-cover bg-black aspect-video shadow-md"
         onError={() => setErrored(true)}
       >
         <source src={src} type={mimeType} />
+        Your browser does not support the video tag.
       </video>
 
       {onExpand && (
