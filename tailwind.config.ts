@@ -175,5 +175,14 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("@tailwindcss/typography"),
+    // standalone: variant — activates when the app is running as an installed PWA
+    // (iOS "Add to Home Screen" / Android TWA). Targets @media (display-mode: standalone).
+    // Usage: standalone:block, standalone:hidden, standalone:pt-safe, etc.
+    ({ addVariant }: { addVariant: (name: string, definition: string) => void }) => {
+      addVariant("standalone", "@media (display-mode: standalone)");
+    },
+  ],
 } satisfies Config;
