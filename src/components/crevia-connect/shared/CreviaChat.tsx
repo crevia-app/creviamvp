@@ -2807,13 +2807,18 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                             // Auto-resize: reset to auto first so shrinking works correctly
                             e.target.style.height = "auto";
                             e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
-                            // Mention detection: scan backwards from cursor for @
-                            const cursor = e.target.selectionStart ?? e.target.value.length;
-                            const before = e.target.value.slice(0, cursor);
-                            const atIdx = before.lastIndexOf("@");
-                            if (atIdx !== -1 && !before.slice(atIdx + 1).includes(" ")) {
-                              setMentionQuery(before.slice(atIdx + 1));
-                              setMentionAnchorStart(atIdx);
+                            // Mention detection — scan full value for last @
+                            // (selectionStart is 0 on Android IME during composition so
+                            // cursor-based slicing always misses the trigger)
+                            const val = e.target.value;
+                            const lastAt = val.lastIndexOf("@");
+                            if (
+                              lastAt !== -1 &&
+                              !val.slice(lastAt + 1).includes(" ") &&
+                              !val.slice(lastAt + 1).includes("\n")
+                            ) {
+                              setMentionQuery(val.slice(lastAt + 1));
+                              setMentionAnchorStart(lastAt);
                               setMentionIndex(0);
                             } else {
                               setMentionQuery(null);
