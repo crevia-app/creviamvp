@@ -430,7 +430,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
         // 1 query to batch-load all member profiles
         const memberIds = (memberRows || []).map((m: any) => m.user_id as string);
         const { data: profileRows } = memberIds.length
-          ? await supabase.from("profiles").select("id, display_name, handle, avatar_url, user_type").in("id", memberIds)
+          ? await supabase.from("profiles_public" as any).select("id, display_name, handle, avatar_url, user_type").in("id", memberIds)
           : { data: [] };
         const pMap = new Map<string, any>((profileRows || []).map((p: any) => [p.id, p]));
 
@@ -751,7 +751,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
 
   const loadSenderProfile = async (msg: ChatMessage): Promise<ChatMessage> => {
     const { data } = await supabase
-      .from("profiles")
+      .from("profiles_public" as any)
       .select("display_name, handle, avatar_url")
       .eq("id", msg.sender_id)
       .single();
@@ -768,7 +768,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
     
     // Get sender name
     const { data: profile } = await supabase
-      .from("profiles")
+      .from("profiles_public" as any)
       .select("display_name, handle")
       .eq("id", data.sender_id)
       .single();
@@ -848,7 +848,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
         if (members) {
           for (const m of members) {
             const { data: profile } = await supabase
-              .from("profiles")
+              .from("profiles_public" as any)
               .select("display_name, handle, avatar_url, user_type")
               .eq("id", m.user_id)
               .single();
@@ -925,7 +925,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
     // ── Batch load sender profiles (1 query instead of N) ──────────────
     const senderIds = [...new Set(data.map((m: any) => m.sender_id as string))];
     const { data: profileRows } = await supabase
-      .from("profiles")
+      .from("profiles_public" as any)
       .select("id, display_name, handle, avatar_url")
       .in("id", senderIds);
     const profileMap = new Map<string, any>((profileRows || []).map((p: any) => [p.id, p]));
@@ -943,7 +943,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
       if (replyMsgs) {
         const replySenderIds = [...new Set(replyMsgs.map((m: any) => m.sender_id as string))];
         const { data: replyProfiles } = await supabase
-          .from("profiles").select("id, display_name, handle").in("id", replySenderIds);
+          .from("profiles_public" as any).select("id, display_name, handle").in("id", replySenderIds);
         const rpMap = new Map<string, any>((replyProfiles || []).map((p: any) => [p.id, p]));
         for (const rm of replyMsgs) {
           let content = rm.content;
@@ -1126,8 +1126,8 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
 
   const fetchAllUsers = async () => {
     const { data } = await supabase
-      .from("profiles")
-      .select("*")
+      .from("profiles_public" as any)
+      .select("id, display_name, handle, avatar_url, user_type")
       .neq("id", currentUserId)
       .limit(100);
     setAllUsers(data || []);
