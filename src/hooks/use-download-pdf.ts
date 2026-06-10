@@ -1,6 +1,39 @@
 import { useRef, useState } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { toast } from "sonner";
+
+// ── Shared canvas capture ──────────────────────────────────────────────────────
+async function captureBlob(
+  el: HTMLDivElement,
+  filename: string,
+  ignoreElements?: (el: Element) => boolean,
+): Promise<{ blob: Blob; pdfName: string }> {
+  const visibleW = el.clientWidth;
+  const virtualW = Math.max(visibleW, 760);
+
+  const canvas = await html2canvas(el, {
+    scale: 2,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: "#ffffff",
+    logging: false,
+    width: visibleW,
+    height: el.scrollHeight,
+    windowWidth: virtualW,
+    ignoreElements,
+  });
+
+  const imgData = canvas.toDataURL("image/png");
+  const pdf = new jsPDF({
+    orientation: "portrait",
+    unit: "px",
+    format: [canvas.width / 2, canvas.height / 2],
+  });
+  pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
+
+  return { blob: pdf.output("blob"), pdfName: `${filename}.pdf` };
+}
 
 export function useDownloadPDF(
   filename: string,
@@ -8,82 +41,84 @@ export function useDownloadPDF(
 ) {
   const ref = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   const download = async () => {
     if (!ref.current) return;
     setDownloading(true);
     try {
-      const el = ref.current;
-
-      // Use clientWidth (visible width) not scrollWidth — scrollWidth includes
-      // hidden overflow from fixed-width table columns on narrow screens, which
-      // would produce a wider canvas than the content and add blank space on
-      // the right side of the PDF.
-      const visibleW = el.clientWidth;
-
-      // Set windowWidth >= 760 so Tailwind's sm: breakpoint (640px) triggers
-      // inside html2canvas. Without this, on mobile/narrow dialogs the
-      // `flex-col sm:flex-row` and `grid-cols-1 sm:grid-cols-3` layouts never
-      // switch to their desktop variants and content piles up on the left.
-      const virtualW = Math.max(visibleW, 760);
-
-      const canvas = await html2canvas(el, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-        width:       visibleW,
-        height:      el.scrollHeight,
-        windowWidth: virtualW,
-        ignoreElements: options?.ignoreElements,
-      });
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "px",
-        format: [canvas.width / 2, canvas.height / 2],
-      });
-      pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
-
-      const blob    = pdf.output("blob");
-      const pdfName = `${filename}.pdf`;
-
-      // ── Mobile: use the native share sheet (iOS share menu / Android intent) ──
-      // navigator.share({ files }) is the only reliable way to get iOS to show
-      // the "Save to Files / AirDrop / …" sheet. The <a download> approach just
-      // opens the blob in the browser tab on iOS Safari without any save option.
-      const isMobile =
-        /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ||
-        // iPadOS reports itself as a Mac but has maxTouchPoints > 1
-        (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
-
-      if (isMobile && typeof navigator.share === "function") {
-        const file = new File([blob], pdfName, { type: "application/pdf" });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: filename });
-          return;
-        }
-      }
-
-      // ── Desktop / fallback: trigger <a download> with blob URL ──
-      // window.open() after an async operation is blocked by iOS popup blockers;
-      // an anchor click with a blob URL works on all modern browsers.
+      const { blob, pdfName } = await captureBlob(ref.current, filename, options?.ignoreElements);
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href     = blobUrl;
+      a.href = blobUrl;
       a.download = pdfName;
       a.style.display = "none";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      // Revoke after a delay to give the browser time to start the download
       setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
     } finally {
       setDownloading(false);
     }
   };
 
-  return { ref, download, downloading };
+  // ── Share: opens the device's native share sheet ──────────────────────────
+  // Priority order:
+  //   1. navigator.share({ files }) — sends the actual PDF to WhatsApp, Email, etc.
+  //   2. navigator.share({ title, text }) — no file but still opens share sheet
+  //   3. Clipboard copy + toast — desktop/legacy fallback
+  const share = async () => {
+    if (!ref.current) return;
+    setSharing(true);
+    try {
+      const { blob, pdfName } = await captureBlob(ref.current, filename, options?.ignoreElements);
+      const pdfFile = new File([blob], pdfName, { type: "application/pdf" });
+
+      // Attempt 1: share the PDF file (iOS 15+, Android Chrome, Samsung)
+      if (typeof navigator.share === "function") {
+        if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+          await navigator.share({
+            files: [pdfFile],
+            title: filename,
+            text: `Here is your invoice from Crevia: ${filename}`,
+          });
+          return;
+        }
+
+        // Attempt 2: share without file — still opens the native share sheet
+        try {
+          await navigator.share({
+            title: filename,
+            text: `Invoice from Crevia — ${filename}. Open Crevia to view.`,
+            url: window.location.href,
+          });
+          return;
+        } catch {
+          // User cancelled or share failed — fall through
+        }
+      }
+
+      // Attempt 3: desktop fallback — download the PDF directly
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = pdfName;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
+      toast.success("Invoice downloaded!");
+    } catch (err: any) {
+      // AbortError = user dismissed share sheet — not an error
+      if (err?.name !== "AbortError") {
+        console.error("Share error:", err);
+        toast.error("Could not share invoice. Try downloading instead.");
+      }
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  return { ref, download, downloading, share, sharing };
 }
