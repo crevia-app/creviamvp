@@ -377,19 +377,30 @@ const PublicProfile = () => {
           </div>
         )}
 
-        {/* Get Crevia Link CTA — only for free-tier profile owners */}
-        {!["pro", "enterprise", "business"].includes(profile?.profiles?.subscription_plan) && (
-          <div className="text-center mt-20 pb-4">
+        {/* ── Growth footer — visible to ALL visitors ───────────────────── */}
+        <div className="text-center mt-20 pb-4 relative z-30">
+          {/* Ambient glow ring — hardware-accelerated pulse behind button */}
+          <div className="relative inline-block">
+            <div className="absolute inset-0 rounded-full bg-white/10 blur-xl animate-pulse pointer-events-none" />
             <a
-              href="/crevia-studio"
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-medium text-sm bg-[#F0782F] text-white hover:bg-[#d96525] transition-colors shadow-sm"
+              href="https://crevia.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative inline-flex items-center justify-center px-6 py-3 rounded-full font-medium text-sm transition-all duration-300 transform active:scale-95 bg-white text-black hover:bg-zinc-100 z-30 font-sans tracking-wide shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_25px_rgba(255,255,255,0.3)]"
             >
-              <Sparkles className="w-4 h-4" />
-              Get your Crevia Link
+              Get Crevia link
             </a>
-            <p className="text-xs text-gray-500 mt-3">Powered by Crevia</p>
           </div>
-        )}
+
+          {/* "powered by crevia" — free tier only */}
+          {!["pro", "creative_pro", "business", "brand_workspace", "enterprise"].includes(
+            profile?.profiles?.subscription_plan
+          ) && (
+            <span className="mt-3 text-xs tracking-widest uppercase font-mono font-medium text-zinc-400/80 hover:text-zinc-200 transition-colors duration-200 block text-center pb-8 z-30 cursor-default">
+              powered by crevia
+            </span>
+          )}
+        </div>
 
       </div>
     </div>
