@@ -11,7 +11,7 @@ import {
 import {
   Printer, Send, CheckCircle2, Clock, AlertCircle,
   Maximize2, Minimize2, Download, X, ArrowLeft, Eye, Trash2,
-  AlignLeft, AlignCenter, AlignRight,
+  AlignLeft, AlignCenter, AlignRight, Share2,
 } from "lucide-react";
 import { useDownloadPDF } from "@/hooks/use-download-pdf";
 import { useSubscription } from "@/hooks/use-subscription";
@@ -63,7 +63,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
   const page2Ref = useRef<HTMLDivElement>(null);
   const hasPage2 = !!(invoice?.notes || invoice?.terms || invoice?.payment_details?.method);
 
-  const { ref: docRef, download, downloading, share, sharing } = useDownloadPDF(
+  const { ref: docRef, download, downloading, share, sharing, preGenerate, pregenerating } = useDownloadPDF(
     invoice ? `Invoice-${invoice.invoice_number}` : "Invoice",
     { ignoreElements: (el: Element) => el.classList.contains("print-page-break") }
   );
@@ -82,6 +82,18 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
     }, 150); // short delay — just one paint after data arrives
     return () => clearTimeout(t);
   }, [autoShare, open, invoice, items]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Pre-generate PDF blob for iOS Share button ────────────────────────────
+  // Fires after the document fully paints so blob is ready the instant the
+  // user taps Share — navigator.share({ files }) must be called within the
+  // iOS gesture window (no async wait after tap).
+  useEffect(() => {
+    if (autoShare || !open || !invoice) return;
+    const dataReady = items.length > 0 || invoice?.subtotal !== undefined;
+    if (!dataReady) return;
+    const t = setTimeout(() => preGenerate(), 400);
+    return () => clearTimeout(t);
+  }, [open, invoice?.id, items.length, logoSize, logoAlign, hideLogo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Print to PDF (used in print-mode toolbar) ──────────────────────────────
   // Trigger a PDF download via <a download> — window.open() after an await is
@@ -473,9 +485,9 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
 
   // ── MAIN PREVIEW — single flowing document, no page breaks ─────────────────
   const MainPreview = () => (
-    <div ref={docRef} className="invoice-print-area crevia-print-capture bg-white text-black rounded-xl shadow-lg print:shadow-none print:rounded-none print:w-[210mm] print:max-w-none print:m-0">
+    <div ref={docRef} className="invoice-print-area bg-white text-black rounded-xl shadow-lg overflow-hidden w-full print:shadow-none print:rounded-none print:w-[210mm] print:max-w-none print:m-0">
       <AccentBar />
-      <div className="p-4 sm:p-8 print:p-8">
+      <div className="p-10 print:p-10">
         <InvoiceHeader />
         <BusinessBlock />
         <BillToSection />
@@ -495,11 +507,11 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
 
   // ── PRINT PREVIEW — paged layout (PAGE 1 + divider + PAGE 2) ──────────────
   const PrintPreview = () => (
-    <div className="invoice-print-area bg-white text-black rounded-xl shadow-lg print:shadow-none print:rounded-none print:w-[210mm] print:max-w-none print:m-0">
+    <div className="invoice-print-area bg-white text-black rounded-xl shadow-lg overflow-hidden w-full print:shadow-none print:rounded-none print:w-[210mm] print:max-w-none print:m-0">
       {/* PAGE 1 */}
       <div ref={page1Ref} className="bg-white">
         <AccentBar />
-        <div className="p-4 sm:p-8 print:p-8">
+        <div className="p-10 print:p-10">
           <InvoiceHeader />
           <BusinessBlock />
           <BillToSection />
@@ -521,7 +533,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
       {/* PAGE 2 */}
       {hasPage2 && (
         <div ref={page2Ref} className="bg-white">
-          <div className="p-4 sm:p-8 pt-6 sm:pt-8">
+          <div className="p-10 print:p-10">
             <NotesTermsSection />
             <PaymentDetailsSection />
             <Footer />
@@ -553,7 +565,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
           "overflow-hidden p-0 transition-all duration-300 [&>button:last-child]:hidden",
           isFullscreen
             ? "max-w-[100vw] w-screen h-dvh max-h-dvh rounded-none"
-            : "w-[calc(100vw-16px)] sm:max-w-2xl lg:max-w-3xl max-h-[95dvh] sm:max-h-[90vh]"
+            : "w-[calc(100vw-16px)] sm:max-w-2xl lg:max-w-[900px] max-h-[95dvh] sm:max-h-[90vh]"
         )}>
 
           {/* ── Toolbar ─────────────────────────────────────────────────────── */}
@@ -576,6 +588,9 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
                   Invoice Preview
                 </DialogTitle>
                 <div className="flex items-center gap-1 flex-shrink-0">
+                  <Button variant="outline" size="sm" onClick={share} disabled={sharing || pregenerating} className="h-8 w-8 p-0" title="Share PDF">
+                    <Share2 className="h-3.5 w-3.5" />
+                  </Button>
                   <Button variant="outline" size="sm" onClick={download} disabled={downloading} className="h-8 w-8 p-0" title="Download PDF">
                     <Download className="h-3.5 w-3.5" />
                   </Button>
@@ -635,8 +650,10 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
 
           {/* ── Document area ───────────────────────────────────────────────── */}
           <div className="overflow-y-auto max-h-[calc(95dvh-52px)] sm:max-h-[calc(90vh-52px)]">
-            <div className="p-3 sm:p-6">
-              {viewMode === "main" ? <MainPreview /> : <PrintPreview />}
+            <div className="bg-zinc-100 dark:bg-zinc-900 min-h-full p-4 sm:p-8">
+              <div className="max-w-[794px] mx-auto">
+                {viewMode === "main" ? <MainPreview /> : <PrintPreview />}
+              </div>
             </div>
           </div>
 

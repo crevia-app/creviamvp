@@ -24,15 +24,17 @@
   }
 }
 
-/* A4 capture container — locks html2canvas to true A4 dimensions regardless
-   of device screen width. Applied during PDF generation only. */
+/* A4 capture container — applied programmatically during html2canvas capture
+   only (added/removed by the hook). On screen the document uses responsive
+   widths; only during PDF generation does this class force true A4 dimensions.
+   Padding is intentionally omitted — the document's own content div owns it. */
 .crevia-print-capture {
   width: 794px !important;
   min-height: 1123px !important;
-  padding: 48px !important;
   background-color: #ffffff !important;
   color: #000000 !important;
   box-sizing: border-box !important;
+  overflow: hidden !important;
 }
 
 /* Global baseline — ensures --nav-bottom-offset is always defined.

@@ -6,7 +6,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Printer, Download, CheckCircle2 } from "lucide-react";
+import { Printer, Download, CheckCircle2, Share2 } from "lucide-react";
 import { format } from "date-fns";
 import { useDownloadPDF } from "@/hooks/use-download-pdf";
 
@@ -32,7 +32,7 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
   const [businessSettings, setBusinessSettings] = useState<any>(null);
   const [accentColor, setAccentColor]           = useState(DEFAULT_COLOR);
 
-  const { ref: docRef, download, downloading } = useDownloadPDF(
+  const { ref: docRef, download, downloading, share, sharing, preGenerate, pregenerating } = useDownloadPDF(
     invoice ? `Receipt-${invoice.invoice_number?.replace("INV", "RCT") ?? ""}` : "Receipt"
   );
 
@@ -44,6 +44,13 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
       fetchBusinessSettings();
     }
   }, [invoice]);
+
+  // Pre-generate PDF blob for instant iOS Share — fires after data loads
+  useEffect(() => {
+    if (!invoice || items.length === 0) return;
+    const t = setTimeout(() => preGenerate(), 400);
+    return () => clearTimeout(t);
+  }, [invoice?.id, items.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchItems = async () => {
     const { data } = await supabase.from("invoice_items").select("*").eq("invoice_id", invoice.id);
@@ -91,12 +98,15 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 [&>button:last-child]:hidden">
+      <DialogContent className="max-w-[900px] w-[calc(100vw-16px)] max-h-[90vh] overflow-y-auto p-0 [&>button:last-child]:hidden">
 
         {/* ── Toolbar ─────────────────────────────────────────────────────── */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-4 sm:px-6 py-3 flex items-center justify-between gap-2">
           <DialogTitle className="font-vollkorn text-base sm:text-lg truncate min-w-0">Payment Receipt</DialogTitle>
           <div className="flex items-center gap-2 flex-shrink-0">
+            <Button variant="outline" size="sm" onClick={share} disabled={sharing || pregenerating} className="h-8 w-8 p-0" title="Share PDF">
+              <Share2 className="h-3.5 w-3.5" />
+            </Button>
             <Button variant="outline" size="sm" onClick={download} disabled={downloading} className="h-8 gap-1.5 px-2.5 text-xs">
               <Download className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Download</span>
@@ -109,13 +119,14 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
         </div>
 
         {/* ── Receipt Document ─────────────────────────────────────────────── */}
-        <div className="p-4 sm:p-6">
-          <div ref={docRef} className="bg-white text-black rounded-xl shadow-lg overflow-hidden print:shadow-none w-full">
+        <div className="bg-zinc-100 dark:bg-zinc-900 p-4 sm:p-8">
+          <div className="max-w-[794px] mx-auto">
+          <div ref={docRef} className="invoice-print-area bg-white text-black rounded-xl shadow-lg overflow-hidden w-full print:shadow-none print:rounded-none print:w-[210mm] print:max-w-none print:m-0">
 
-            {/* Accent bar — uses invoice's accent color (user's customization) */}
+            {/* Accent bar */}
             <div className="h-1.5" style={{ background: accentColor }} />
 
-            <div className="p-6 sm:p-8 md:p-10">
+            <div className="p-10 print:p-10">
 
               {/* ── Header ── */}
               <div className="flex justify-between items-start mb-8 sm:mb-10">
@@ -271,6 +282,7 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
               </div>
 
             </div>
+          </div>
           </div>
         </div>
 
