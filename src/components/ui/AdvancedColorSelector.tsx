@@ -99,7 +99,7 @@ export function AdvancedColorSelector({
 
             {/* Input */}
             <div className="relative flex-1">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 text-sm font-mono select-none pointer-events-none">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-sm font-mono select-none pointer-events-none">
                 #
               </span>
               <input
@@ -112,9 +112,9 @@ export function AdvancedColorSelector({
                 autoComplete="off"
                 className={cn(
                   "w-full pl-7 pr-4 py-2.5 rounded-xl",
-                  "bg-white/[0.04] border border-white/10",
-                  "text-sm font-mono text-white placeholder:text-white/60",
-                  "focus:outline-none focus:border-white/20 focus:bg-white/[0.06]",
+                  "bg-zinc-950 border border-zinc-800",
+                  "text-white font-mono placeholder:text-zinc-500",
+                  "focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500",
                   "transition-all duration-150"
                 )}
               />
@@ -129,7 +129,7 @@ export function AdvancedColorSelector({
 
           {/* Custom gradient builder */}
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-4">
-            <p className="text-[10px] uppercase tracking-[0.12em] text-white/30 font-medium">
+            <p className="text-[10px] uppercase tracking-[0.12em] text-zinc-400 font-medium">
               Custom Gradient
             </p>
 
@@ -138,7 +138,7 @@ export function AdvancedColorSelector({
 
               {/* From */}
               <div className="space-y-2 sm:flex-1">
-                <label className="text-[10px] uppercase tracking-wide text-white/25">From</label>
+                <label className="text-[10px] uppercase tracking-wide text-zinc-400">From</label>
                 <div className="flex items-center gap-2">
                   <div className="relative w-8 h-8 flex-shrink-0">
                     <input
@@ -155,7 +155,7 @@ export function AdvancedColorSelector({
                       style={{ background: gradFrom }}
                     />
                   </div>
-                  <span className="text-[11px] font-mono text-white/40 tabular-nums">
+                  <span className="text-[11px] font-mono text-zinc-300 tabular-nums">
                     {gradFrom.toUpperCase()}
                   </span>
                 </div>
@@ -163,7 +163,7 @@ export function AdvancedColorSelector({
 
               {/* Angle */}
               <div className="space-y-2 sm:flex-shrink-0">
-                <label className="text-[10px] uppercase tracking-wide text-white/25">Angle</label>
+                <label className="text-[10px] uppercase tracking-wide text-zinc-400">Angle</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="range"
@@ -181,7 +181,7 @@ export function AdvancedColorSelector({
 
               {/* To */}
               <div className="space-y-2 sm:flex-1">
-                <label className="text-[10px] uppercase tracking-wide text-white/25">To</label>
+                <label className="text-[10px] uppercase tracking-wide text-zinc-400">To</label>
                 <div className="flex items-center gap-2">
                   <div className="relative w-8 h-8 flex-shrink-0">
                     <input
@@ -195,7 +195,7 @@ export function AdvancedColorSelector({
                       style={{ background: gradTo }}
                     />
                   </div>
-                  <span className="text-[11px] font-mono text-white/40 tabular-nums">
+                  <span className="text-[11px] font-mono text-zinc-300 tabular-nums">
                     {gradTo.toUpperCase()}
                   </span>
                 </div>
@@ -224,10 +224,6 @@ export function AdvancedColorSelector({
         </div>
       )}
 
-      {/* ── Active value readout ──────────────────────────────────────────────── */}
-      <p className="text-[10px] font-mono text-white/70 truncate select-all" title={value}>
-        {value || "—"}
-      </p>
     </div>
   );
 }
