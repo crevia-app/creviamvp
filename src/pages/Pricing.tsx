@@ -37,7 +37,6 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPri
       description: "Start building your professional footprint.",
       features: [
         { product: "Dira AI", detail: "5 Daily Credits", note: "Refreshed daily" },
-        { product: "Crevia Canvas", detail: "Unlimited document drafts", lockNote: "E-Signatures excluded" },
         { product: "Crevia Invoice", detail: "2 standard invoices / month", lockNote: "Customization excluded" },
         { product: "Crevia Workspace", detail: "0 Workspaces", lockNote: "Workspaces are a Pro feature" },
         { product: "Crevia Link", detail: "Core profile engine & basic themes", lockNote: "Analytics excluded" },
@@ -58,7 +57,6 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPri
       description: "Scale your operations with an elite toolkit.",
       features: [
         { product: "Dira AI", detail: "500 Monthly Credits" },
-        { product: "Crevia Canvas", detail: "Unlimited canvases + Unlimited E-Signatures" },
         { product: "Crevia Invoice", detail: "Unlimited customized invoices", note: "Remove branding, add your logo, add brand colors" },
         { product: "Crevia Workspace", detail: "10 Collaborative Workspaces / month", note: "Invite clients and collaborators natively" },
         { product: "Crevia Link", detail: "Premium themes, custom brand colors, and advanced visitor analytics" },
@@ -79,7 +77,6 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPri
       description: "Centralize your external team and client roster.",
       features: [
         { product: "Dira AI", detail: "Unlimited priority processing" },
-        { product: "Crevia Canvas", detail: "Unlimited canvases + Unlimited E-Signatures" },
         { product: "Crevia Invoice", detail: "Unlimited invoices", note: "Removed branding, add your brand colors and logo" },
         { product: "Crevia Workspace", detail: "Unlimited Client & Project Workspaces with RBAC" },
         { product: "Crevia Link", detail: "Brand colors, logos, and advanced visitor analytics" },
@@ -384,7 +381,7 @@ const Pricing = () => {
             {[
               {
                 q: "What's included in the free plan?",
-                a: "Crevia Link with basic templates, 5 Dira AI actions per day, 2 invoices per month, and unlimited Canvas drafts. No credit card required.",
+                a: "Crevia Link with basic templates, 5 Dira AI actions per day, and 2 invoices per month. No credit card required.",
               },
               {
                 q: "Can I switch plans anytime?",
