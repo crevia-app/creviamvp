@@ -75,63 +75,48 @@ export function useDownloadPDF(
     }
   };
 
-  // ── Share: opens the device's native share sheet ─────────────────────────
-  // navigator.share() MUST be called within the browser's user-gesture frame.
-  // Heavy async work (html2canvas + jsPDF) breaks that window on mobile,
-  // causing "Could not share invoice" errors.
-  //
-  // Strategy:
-  //   1. Immediately invoke navigator.share({ url }) — instant, within gesture.
-  //      This opens the share sheet (WhatsApp, Email, etc.) with a link.
-  //   2. In parallel, attempt PDF blob generation. If it succeeds quickly and
-  //      canShare({ files }) is supported, re-invoke with the file instead.
-  //   3. Desktop fallback: clipboard copy.
+  // ── Share: sends the invoice as a PDF file via the native share sheet ────
+  // Primary path: generate PDF blob → navigator.share({ files }) so the user
+  // can send the actual file via WhatsApp, Gmail, etc.
+  // Fallback chain: URL share (if file share unsupported) → PDF download.
   const share = async () => {
     setSharing(true);
-    const shareUrl = window.location.href;
-    const pdfName  = `${filename}.pdf`;
-
     try {
-      if (typeof navigator.share === "function") {
-        // Fire URL share immediately — stays within gesture window
-        await navigator.share({
-          title: filename,
-          text: `Invoice from Crevia — ${filename}`,
-          url: shareUrl,
-        });
+      if (ref.current) {
+        const { blob, pdfName } = await captureBlob(ref.current, filename, options?.ignoreElements);
+        const pdfFile = new File([blob], pdfName, { type: "application/pdf" });
+
+        if (typeof navigator.share === "function" && navigator.canShare?.({ files: [pdfFile] })) {
+          await navigator.share({ files: [pdfFile], title: filename });
+          return;
+        }
+
+        // File sharing unsupported — fall back to URL share
+        if (typeof navigator.share === "function") {
+          await navigator.share({ title: filename, text: `Invoice from Crevia — ${filename}`, url: window.location.href });
+          return;
+        }
+
+        // Desktop (no Web Share API) — download the PDF
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl; a.download = pdfName; a.style.display = "none";
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
+        toast.success("Invoice downloaded as PDF!");
         return;
       }
 
-      // Desktop / no Web Share API — clipboard fallback
-      await navigator.clipboard.writeText(shareUrl);
-      toast.success("Invoice link copied to clipboard!");
+      // No ref — last resort: share URL or copy to clipboard
+      if (typeof navigator.share === "function") {
+        await navigator.share({ title: filename, url: window.location.href });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success("Invoice link copied to clipboard!");
+      }
     } catch (err: any) {
-      if (err?.name === "AbortError") return; // user dismissed — not an error
-
-      // URL share failed: try PDF file share as last resort
-      if (ref.current) {
-        try {
-          const { blob } = await captureBlob(ref.current, filename, options?.ignoreElements);
-          const pdfFile = new File([blob], pdfName, { type: "application/pdf" });
-          if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-            await navigator.share({ files: [pdfFile], title: filename });
-            return;
-          }
-        } catch { /* fall through to download */ }
-      }
-
-      // Final fallback: direct PDF download
-      if (ref.current) {
-        try {
-          const { blob } = await captureBlob(ref.current, filename, options?.ignoreElements);
-          const blobUrl = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = blobUrl; a.download = pdfName; a.style.display = "none";
-          document.body.appendChild(a); a.click(); document.body.removeChild(a);
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
-          toast.success("Invoice downloaded!");
-        } catch { toast.error("Could not share invoice. Try downloading instead."); }
-      }
+      if (err?.name === "AbortError") return;
+      toast.error("Could not share invoice. Try downloading instead.");
     } finally {
       setSharing(false);
     }
