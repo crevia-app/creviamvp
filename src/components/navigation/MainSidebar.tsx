@@ -118,7 +118,7 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
               <>
                 <DropdownMenuItem
                   onClick={() => install()}
-                  className="gap-2 cursor-pointer text-foreground/80 hover:text-bronze focus:text-bronze"
+                  className="gap-2 cursor-pointer text-foreground hover:text-bronze focus:text-bronze hover:bg-bronze/10 focus:bg-bronze/10"
                 >
                   <Download className="h-4 w-4 text-bronze" />
                   Install Crevia
@@ -126,28 +126,28 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
                 <DropdownMenuSeparator />
               </>
             )}
-            <DropdownMenuItem asChild className="hover:bg-transparent focus:bg-transparent">
+            <DropdownMenuItem asChild className="hover:bg-bronze/10 focus:bg-bronze/10">
               <Link to="/app/about" className="text-foreground/80 hover:text-bronze focus:text-bronze">
                 {t("nav.about")}
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className="hover:bg-transparent focus:bg-transparent">
+            <DropdownMenuItem asChild className="hover:bg-bronze/10 focus:bg-bronze/10">
               <Link to="/profile/help" className="text-foreground/80 hover:text-bronze focus:text-bronze">
                 {t("nav.helpSupport")}
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className="hover:bg-transparent focus:bg-transparent">
+            <DropdownMenuItem asChild className="hover:bg-bronze/10 focus:bg-bronze/10">
               <Link to="/profile/feedback" className="text-foreground/80 hover:text-bronze focus:text-bronze">
                 <MessageSquare className="h-4 w-4 mr-2" />
                 {t("nav.feedback")}
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className="hover:bg-transparent focus:bg-transparent">
+            <DropdownMenuItem asChild className="hover:bg-bronze/10 focus:bg-bronze/10">
               <Link to="/privacy-policy" className="text-foreground/80 hover:text-bronze focus:text-bronze">
                 {t("nav.privacyPolicy")}
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild className="hover:bg-transparent focus:bg-transparent">
+            <DropdownMenuItem asChild className="hover:bg-bronze/10 focus:bg-bronze/10">
               <Link to="/terms-of-service" className="text-foreground/80 hover:text-bronze focus:text-bronze">
                 {t("nav.termsOfService")}
               </Link>
