@@ -1,4 +1,5 @@
 import React from "react";
+import { logError } from "@/lib/error-logger";
 
 interface State {
   hasError: boolean;
@@ -45,6 +46,9 @@ export class ErrorBoundary extends React.Component<
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error("[Crevia] Unhandled error:", error, info.componentStack);
+    logError(error.message, error.stack, "react_boundary", {
+      componentStack: info.componentStack?.slice(0, 2000),
+    });
 
     // Stale deployment: browser has old JS chunk URLs that no longer exist on
     // Vercel after a new deploy. Auto-reload once to pick up new index.html.

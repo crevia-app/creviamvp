@@ -32,7 +32,7 @@ const fmt = (n: number) =>
   : n >= 1_000   ? `${(n / 1_000).toFixed(1)}K`
   : String(n);
 
-type Section = "overview" | "users" | "billing" | "documents" | "customization" | "support" | "settings" | "security";
+type Section = "overview" | "users" | "billing" | "documents" | "customization" | "support" | "settings" | "security" | "errors";
 
 const planChip = (plan: string | null) => cn(
   "text-[10px] font-semibold px-2 py-0.5 rounded-full",
@@ -2334,6 +2334,337 @@ const SettingsSection = () => {
   );
 };
 
+// ─── Errors Section ───────────────────────────────────────────────────────────
+
+const SOURCE_LABELS: Record<string, { label: string; color: string }> = {
+  window_error:      { label: "JS Error",        color: "text-red-400"    },
+  unhandled_promise: { label: "Promise",         color: "text-orange-400" },
+  react_boundary:    { label: "React Crash",     color: "text-pink-400"   },
+  manual:            { label: "Manual",          color: "text-blue-400"   },
+  unknown:           { label: "Unknown",         color: "text-white/40"   },
+};
+
+const ErrorsSection = () => {
+  const [errors, setErrors]           = useState<any[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [selected, setSelected]       = useState<any>(null);
+  const [filter, setFilter]           = useState<"all" | "unresolved" | "resolved">("unresolved");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [search, setSearch]           = useState("");
+  const [resolving, setResolving]     = useState<string | null>(null);
+  const [deleting, setDeleting]       = useState<string | null>(null);
+  const [stats, setStats]             = useState({ total: 0, unresolved: 0, today: 0, users: 0 });
+
+  const load = async () => {
+    setLoading(true);
+    const { data } = await (supabase.from("error_logs" as any) as any)
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(500);
+    const rows = data ?? [];
+    setErrors(rows);
+
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const todayCount    = rows.filter((e: any) => new Date(e.created_at) >= today).length;
+    const unresolvedCnt = rows.filter((e: any) => !e.resolved).length;
+    const uniqueUsers   = new Set(rows.filter((e: any) => e.user_id).map((e: any) => e.user_id)).size;
+    setStats({ total: rows.length, unresolved: unresolvedCnt, today: todayCount, users: uniqueUsers });
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const resolve = async (id: string, resolved: boolean) => {
+    setResolving(id);
+    await (supabase.from("error_logs" as any) as any)
+      .update({ resolved, resolved_at: resolved ? new Date().toISOString() : null })
+      .eq("id", id);
+    setErrors(prev => prev.map(e => e.id === id ? { ...e, resolved, resolved_at: resolved ? new Date().toISOString() : null } : e));
+    if (selected?.id === id) setSelected((s: any) => ({ ...s, resolved }));
+    setStats(s => ({ ...s, unresolved: s.unresolved + (resolved ? -1 : 1) }));
+    setResolving(null);
+  };
+
+  const deleteError = async (id: string) => {
+    setDeleting(id);
+    await (supabase.from("error_logs" as any) as any).delete().eq("id", id);
+    setErrors(prev => prev.filter(e => e.id !== id));
+    if (selected?.id === id) setSelected(null);
+    setDeleting(null);
+  };
+
+  const resolveAll = async () => {
+    const ids = filtered.filter(e => !e.resolved).map(e => e.id);
+    if (!ids.length) return;
+    await (supabase.from("error_logs" as any) as any)
+      .update({ resolved: true, resolved_at: new Date().toISOString() })
+      .in("id", ids);
+    setErrors(prev => prev.map(e => ids.includes(e.id) ? { ...e, resolved: true } : e));
+    setStats(s => ({ ...s, unresolved: 0 }));
+  };
+
+  const filtered = errors.filter(e => {
+    if (filter === "unresolved" && e.resolved) return false;
+    if (filter === "resolved" && !e.resolved) return false;
+    if (sourceFilter !== "all" && e.source !== sourceFilter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      return e.message?.toLowerCase().includes(q) ||
+             e.user_email?.toLowerCase().includes(q) ||
+             e.url?.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  const STAT_CARDS = [
+    { label: "Total Errors",   value: stats.total,      color: "text-white"        },
+    { label: "Unresolved",     value: stats.unresolved, color: "text-red-400"      },
+    { label: "Today",          value: stats.today,      color: "text-orange-400"   },
+    { label: "Affected Users", value: stats.users,      color: "text-blue-400"     },
+  ];
+
+  return (
+    <div className="p-4 md:p-6 space-y-6 max-w-full">
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {STAT_CARDS.map(c => (
+          <div key={c.label} className="bg-white/5 rounded-xl p-4 border border-white/10">
+            <p className="text-[11px] text-white/40 uppercase tracking-widest mb-1">{c.label}</p>
+            <p className={`text-2xl font-bold tabular-nums ${c.color}`}>{c.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search message, email, URL…"
+            className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-bronze/50"
+          />
+        </div>
+
+        <div className="flex gap-2 flex-wrap">
+          {(["all","unresolved","resolved"] as const).map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-colors ${
+                filter === f ? "bg-bronze text-white" : "bg-white/5 text-white/50 hover:text-white"
+              }`}>
+              {f}
+            </button>
+          ))}
+          <select
+            value={sourceFilter}
+            onChange={e => setSourceFilter(e.target.value)}
+            className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-bronze/50"
+          >
+            <option value="all">All sources</option>
+            {Object.entries(SOURCE_LABELS).map(([k, v]) => (
+              <option key={k} value={k}>{v.label}</option>
+            ))}
+          </select>
+          {stats.unresolved > 0 && (
+            <button onClick={resolveAll}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
+              Resolve all
+            </button>
+          )}
+          <button onClick={load}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 text-white/50 hover:text-white transition-colors">
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-6 h-6 animate-spin text-bronze" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-20 text-white/30">
+          <Bug className="w-10 h-10 mx-auto mb-3 opacity-20" />
+          <p className="text-sm">No errors found</p>
+        </div>
+      ) : (
+        <div className="flex gap-4 min-h-0" style={{ height: "calc(100vh - 340px)" }}>
+          {/* Error list */}
+          <div className="flex-1 overflow-y-auto space-y-2 min-w-0">
+            {filtered.map(e => {
+              const src = SOURCE_LABELS[e.source] ?? SOURCE_LABELS.unknown;
+              const isSelected = selected?.id === e.id;
+              return (
+                <div
+                  key={e.id}
+                  onClick={() => setSelected(isSelected ? null : e)}
+                  className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                    isSelected
+                      ? "border-bronze/60 bg-bronze/5"
+                      : e.resolved
+                        ? "border-white/5 bg-white/3 opacity-50 hover:opacity-70"
+                        : "border-white/10 bg-white/5 hover:border-white/20"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className={`text-[10px] font-bold uppercase tracking-wider ${src.color}`}>
+                          {src.label}
+                        </span>
+                        {e.resolved && (
+                          <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded font-semibold">
+                            Resolved
+                          </span>
+                        )}
+                        <span className="text-[10px] text-white/25 ml-auto">
+                          {format(new Date(e.created_at), "dd MMM HH:mm")}
+                        </span>
+                      </div>
+                      <p className="text-sm text-white/85 font-medium leading-snug truncate">{e.message}</p>
+                      <div className="flex items-center gap-3 mt-1">
+                        {e.user_email && (
+                          <span className="text-[10px] text-white/35 truncate">{e.user_email}</span>
+                        )}
+                        {e.url && (
+                          <span className="text-[10px] text-white/25 truncate">{
+                            e.url.replace(/^https?:\/\/[^/]+/, "")
+                          }</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5 flex-shrink-0" onClick={ev => ev.stopPropagation()}>
+                      <button
+                        onClick={() => resolve(e.id, !e.resolved)}
+                        disabled={resolving === e.id}
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors text-[10px] font-bold ${
+                          e.resolved
+                            ? "bg-white/5 text-white/30 hover:bg-white/10"
+                            : "bg-green-500/15 text-green-400 hover:bg-green-500/25"
+                        }`}
+                        title={e.resolved ? "Unresolve" : "Resolve"}
+                      >
+                        {resolving === e.id
+                          ? <Loader2 className="w-3 h-3 animate-spin" />
+                          : <CheckCircle className="w-3.5 h-3.5" />}
+                      </button>
+                      <button
+                        onClick={() => deleteError(e.id)}
+                        disabled={deleting === e.id}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center bg-white/5 text-white/30 hover:bg-red-500/20 hover:text-red-400 transition-colors"
+                        title="Delete"
+                      >
+                        {deleting === e.id
+                          ? <Loader2 className="w-3 h-3 animate-spin" />
+                          : <Trash2 className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Detail panel */}
+          {selected && (
+            <div className="w-[380px] flex-shrink-0 bg-white/5 border border-white/10 rounded-xl p-4 overflow-y-auto space-y-4">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-xs font-bold text-white/60 uppercase tracking-widest">Error Detail</p>
+                <button onClick={() => setSelected(null)} className="text-white/30 hover:text-white">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Meta */}
+              <div className="space-y-2">
+                {[
+                  { label: "Time",    value: format(new Date(selected.created_at), "dd MMM yyyy HH:mm:ss") },
+                  { label: "Source",  value: SOURCE_LABELS[selected.source]?.label ?? selected.source },
+                  { label: "Version", value: selected.app_version ?? "—" },
+                  { label: "User",    value: selected.user_email ?? "Anonymous" },
+                  { label: "URL",     value: selected.url ?? "—" },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex gap-2">
+                    <span className="text-[10px] text-white/30 uppercase tracking-wider w-16 flex-shrink-0 pt-0.5">{label}</span>
+                    <span className="text-xs text-white/70 break-all">{value}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Message */}
+              <div>
+                <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1.5">Message</p>
+                <p className="text-sm text-red-300 font-medium break-words">{selected.message}</p>
+              </div>
+
+              {/* Stack trace */}
+              {selected.stack && (
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-[10px] text-white/30 uppercase tracking-wider">Stack Trace</p>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(selected.stack)}
+                      className="text-[10px] text-white/30 hover:text-bronze flex items-center gap-1"
+                    >
+                      <Copy className="w-3 h-3" /> Copy
+                    </button>
+                  </div>
+                  <pre className="text-[10px] text-white/50 bg-black/30 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap break-all leading-relaxed max-h-48">
+                    {selected.stack}
+                  </pre>
+                </div>
+              )}
+
+              {/* Component stack */}
+              {selected.context?.componentStack && (
+                <div>
+                  <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1.5">Component Stack</p>
+                  <pre className="text-[10px] text-white/40 bg-black/30 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap break-all leading-relaxed max-h-32">
+                    {String(selected.context.componentStack)}
+                  </pre>
+                </div>
+              )}
+
+              {/* User Agent */}
+              {selected.user_agent && (
+                <div>
+                  <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">User Agent</p>
+                  <p className="text-[10px] text-white/35 break-all">{selected.user_agent}</p>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => resolve(selected.id, !selected.resolved)}
+                  disabled={resolving === selected.id}
+                  className={`flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${
+                    selected.resolved
+                      ? "bg-white/5 text-white/40 hover:bg-white/10"
+                      : "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                  }`}
+                >
+                  {resolving === selected.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+                  {selected.resolved ? "Unresolve" : "Mark Resolved"}
+                </button>
+                <button
+                  onClick={() => deleteError(selected.id)}
+                  disabled={deleting === selected.id}
+                  className="flex-1 py-2 rounded-lg text-xs font-semibold bg-red-500/15 text-red-400 hover:bg-red-500/25 flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  {deleting === selected.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                  Delete
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Security Section ─────────────────────────────────────────────────────────
 type SecurityFilter = "all" | "signups" | "logins" | "failed";
 
@@ -2499,6 +2830,7 @@ const NAV: { id: Section; label: string; icon: React.ElementType }[] = [
   { id: "support",        label: "Support",      icon: MessageSquare },
   { id: "settings",       label: "Settings",     icon: Settings },
   { id: "security",       label: "Security",     icon: Shield },
+  { id: "errors",         label: "Errors",       icon: Bug },
 ];
 
 const Admin = () => {
@@ -2716,6 +3048,7 @@ const Admin = () => {
           {section === "support"        && <SupportSection onTicketClosed={() => setOpenTicketsCount(c => Math.max(0, c - 1))} onVerificationResolved={() => setPendingCount(c => Math.max(0, c - 1))} />}
           {section === "settings"       && <SettingsSection />}
           {section === "security"       && <SecuritySection />}
+          {section === "errors"         && <ErrorsSection />}
         </main>
       </div>
     </div>
