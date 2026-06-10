@@ -102,8 +102,8 @@ const isChatTab          = activeTab === "chat";
         <div className="mx-auto w-full max-w-7xl">
 
           {/* ── Desktop: main tab bar ─────────────────────────────────────── */}
-          <div className="hidden md:block px-8 pt-1">
-            <div className="flex items-stretch gap-2 -mb-px">
+          <div className="hidden md:block pt-1">
+            <div className="flex items-stretch justify-evenly -mb-px">
               {STUDIO_TABS.map((tab) => {
                 const Icon     = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -112,7 +112,7 @@ const isChatTab          = activeTab === "chat";
                     key={tab.id}
                     onClick={() => handleTabChange(tab.id)}
                     className={cn(
-                      "flex items-center justify-center gap-2.5 px-14 py-3.5 rounded-t-lg font-poppins",
+                      "flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-t-lg font-poppins",
                       "transition-all duration-200 active:scale-[0.97] select-none whitespace-nowrap",
                       isActive
                         ? "text-bronze bg-bronze/10 border-b-2 border-bronze font-semibold"
