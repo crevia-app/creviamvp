@@ -48,7 +48,7 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
   // Pre-generate PDF blob for instant iOS Share — fires after data loads
   useEffect(() => {
     if (!invoice || items.length === 0) return;
-    const t = setTimeout(() => preGenerate(), 400);
+    const t = setTimeout(() => preGenerate(), 100);
     return () => clearTimeout(t);
   }, [invoice?.id, items.length]); // eslint-disable-line react-hooks/exhaustive-deps
 

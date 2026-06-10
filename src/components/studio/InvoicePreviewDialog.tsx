@@ -91,7 +91,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
     if (autoShare || !open || !invoice) return;
     const dataReady = items.length > 0 || invoice?.subtotal !== undefined;
     if (!dataReady) return;
-    const t = setTimeout(() => preGenerate(), 400);
+    const t = setTimeout(() => preGenerate(), 100);
     return () => clearTimeout(t);
   }, [open, invoice?.id, items.length, logoSize, logoAlign, hideLogo]); // eslint-disable-line react-hooks/exhaustive-deps
 

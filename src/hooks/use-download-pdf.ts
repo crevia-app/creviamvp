@@ -22,7 +22,7 @@ async function captureBlob(
   let canvas;
   try {
     canvas = await html2canvas(el, {
-      scale: 2,
+      scale: 1.5,
       useCORS: true,
       allowTaint: true,
       backgroundColor: "#ffffff",
