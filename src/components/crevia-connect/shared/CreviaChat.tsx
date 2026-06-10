@@ -151,7 +151,7 @@ interface AttachableContract {
 }
 
 // Proper URL detection without global regex issues
-function linkifyContent(content: string): (string | JSX.Element)[] {
+function linkifyContent(content: string, isMine = false): (string | JSX.Element)[] {
   const tokenPattern = /(https?:\/\/[^\s<]+[^\s<.,;:!?"')\]])|(@[\w.]+)/g;
   const result: (string | JSX.Element)[] = [];
   let lastIndex = 0;
@@ -176,8 +176,12 @@ function linkifyContent(content: string): (string | JSX.Element)[] {
         </a>
       );
     } else {
+      // On sender (orange) bubbles use white — on receiver (dark) bubbles use orange
+      const mentionClass = isMine
+        ? "inline-block bg-white/25 text-white font-semibold px-1.5 py-0.5 rounded-md text-sm mx-0.5 align-baseline"
+        : "inline-block bg-orange-500/10 text-orange-500 font-semibold px-1.5 py-0.5 rounded-md text-sm mx-0.5 align-baseline";
       result.push(
-        <span key={`mention-${match.index}`} className="inline-block bg-orange-500/10 text-orange-500 font-semibold px-1.5 py-0.5 rounded-md text-sm mx-0.5 align-baseline">
+        <span key={`mention-${match.index}`} className={mentionClass}>
           {token}
         </span>
       );
@@ -2607,7 +2611,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                                         )
                                       ) : (
                                         <p className="text-xs md:text-sm whitespace-pre-wrap break-words">
-                                          {linkifyContent(msg.content)}
+                                          {linkifyContent(msg.content, isMine)}
                                         </p>
                                       )
                                     )}
