@@ -2398,7 +2398,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                                       ? `overflow-hidden rounded-2xl ${isLastInSeq ? (isMine ? "rounded-br-sm" : "rounded-bl-sm") : ""}`
                                       : `rounded-2xl px-3 md:px-4 py-2.5 ${
                                           isMine
-                                            ? `bg-bronze text-background ${isLastInSeq ? "rounded-br-sm" : ""}`
+                                            ? `bg-bronze text-white ${isLastInSeq ? "rounded-br-sm" : ""}`
                                             : `bg-muted ${isLastInSeq ? "rounded-bl-sm" : ""}`
                                         } ${(isInvoice || isContract) ? "border-2 " + (isMine ? "border-background/20" : "border-bronze/20") : ""}`}
                                   >
@@ -2412,12 +2412,12 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                                             : "bg-foreground/5 border-bronze/40"
                                         }`}
                                       >
-                                        <p className={`text-[10px] font-semibold ${isMine ? "text-background/70" : "text-bronze"}`}>
+                                        <p className={`text-[10px] font-semibold ${isMine ? "text-white/70" : "text-bronze"}`}>
                                           {msg.replyTo.sender_id === currentUserId
                                             ? "You"
                                             : msg.replyTo.sender?.display_name || msg.replyTo.sender?.handle || "User"}
                                         </p>
-                                        <p className={`text-[11px] truncate ${isMine ? "text-background/60" : "text-muted-foreground"}`}>
+                                        <p className={`text-[11px] truncate ${isMine ? "text-white/60" : "text-muted-foreground"}`}>
                                           {msg.replyTo.content || "Message"}
                                         </p>
                                       </button>
@@ -2601,7 +2601,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                                       </p>
                                       {isMine && (() => {
                                         const status = getMessageReadStatus(msg);
-                                        if (status === "read") return <CheckCheck className="h-3 w-3 text-bronze ml-0.5" />;
+                                        if (status === "read") return <CheckCheck className="h-3 w-3 text-white ml-0.5" />;
                                         if (status === "delivered") return <CheckCheck className="h-3 w-3 opacity-50 ml-0.5" />;
                                         return <Check className="h-3 w-3 opacity-40 ml-0.5" />;
                                       })()}
