@@ -114,10 +114,10 @@ const WorkspacePage = () => {
   const activeIndex = DEAL_STAGES.findIndex(s => s.id === activeStage);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="relative flex flex-col h-full w-full max-w-full overflow-hidden bg-background overscroll-none">
 
       {/* Deal Tracker */}
-      <div className="flex-shrink-0 border-b border-border/50 bg-card/50 px-4 py-3">
+      <div className="w-full flex-shrink-0 bg-background border-b border-border/50 px-4 py-3 z-40">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">

@@ -1083,7 +1083,7 @@ const Dira = () => {
   // };
 
   return (
-    <div ref={chatContainerRef} className="h-full flex bg-background overscroll-none">
+    <div ref={chatContainerRef} className="relative flex h-full w-full max-w-full overflow-hidden bg-background overscroll-none">
       {/* Desktop Sidebar */}
       <div 
         className={`hidden md:flex flex-col bg-card/50 border-r border-bronze/[0.10] transition-all duration-300 ${
@@ -1459,7 +1459,7 @@ const Dira = () => {
       </Sheet>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 w-full max-w-full overflow-hidden overscroll-none">
 
         {viewMode === "projects" ? (
           <ProjectsView
@@ -1779,7 +1779,7 @@ const Dira = () => {
               with the bottom nav sliding away. On desktop the variable is 0px
               (set in :root) so md:p-6 wins via the inline-style guard below. */}
           <div
-            className={`flex-shrink-0 pt-3 px-4 relative z-10 transition-[padding-bottom,background-color] duration-300 ease-in-out md:p-6 ${messages.length === 0 ? 'bg-transparent' : 'bg-background'}`}
+            className={`w-full flex-shrink-0 pt-3 px-4 relative z-10 transition-[padding-bottom,background-color] duration-300 ease-in-out md:p-6 ${messages.length === 0 ? 'bg-transparent' : 'bg-background'}`}
             style={
               // Only apply the dynamic padding on mobile — on desktop let md:p-6
               // handle it so the inline style doesn't override the 24 px desktop value.

@@ -1826,7 +1826,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
     type?.startsWith("image/") || false;
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-background">
+    <div className="relative flex h-full w-full max-w-full flex-col overflow-hidden bg-background overscroll-none">
       {/* Header — hidden when embedded in the hub (hideRoomList=true) */}
       {!hideRoomList && (
         <div className="flex items-center justify-between p-3 md:p-4 border-b bg-background flex-shrink-0">
@@ -1879,7 +1879,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
       )}
 
       {/* Main Content */}
-      <div className={`flex-1 flex flex-col md:flex-row overflow-hidden min-h-0 ${hideRoomList && externalRoomNotFound ? "hidden" : ""}`}>
+      <div className={`flex-1 flex flex-col md:flex-row overflow-hidden min-h-0 w-full overscroll-none ${hideRoomList && externalRoomNotFound ? "hidden" : ""}`}>
         {/* Sidebar / Room List */}
         <div
           className={`${hideRoomList ? "hidden" : selectedRoom ? "hidden md:flex" : "flex"} min-w-0 border-b bg-muted/20 md:w-[18rem] md:border-b-0 md:border-r xl:w-[22rem] 2xl:w-96 flex-col flex-shrink-0`}
@@ -2007,7 +2007,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
           {selectedRoom ? (
             <>
               {/* Chat Header */}
-              <div className="p-3 md:p-4 border-b bg-background/95 backdrop-blur flex-shrink-0">
+              <div className="w-full flex-shrink-0 bg-background border-b border-border z-40 p-3 md:p-4">
                 <div className="flex min-w-0 items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
                     {/* Back button — show in non-embedded mode OR embedded mobile (replaces the removed "All messages" bar) */}
@@ -2188,7 +2188,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                   the correct cross-platform primitive for a chat list. */}
               <div
                 ref={scrollContainerRef}
-                className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-y-contain touch-pan-y p-3 md:p-4"
+                className="flex-1 w-full max-w-full min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain touch-pan-y p-3 md:p-4"
                 style={{ overflowAnchor: "none", contain: "strict" }}
                 onScroll={() => {
                   const el = scrollContainerRef.current;
@@ -2675,7 +2675,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
 
               {/* Input Area — dynamic bottom padding like Dira: shrinks when keyboard is up */}
               <div
-                className="border-t bg-background/95 backdrop-blur flex-shrink-0 pt-3 px-3 md:p-4"
+                className="w-full flex-shrink-0 bg-background border-t border-border pt-3 px-3 md:p-4"
                 style={
                   typeof window !== "undefined" && window.innerWidth < 768
                     ? {
