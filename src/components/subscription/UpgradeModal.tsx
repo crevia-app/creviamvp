@@ -119,30 +119,28 @@ const UpgradeModalDialog = ({ state, onClose }: UpgradeModalDialogProps) => {
         {/* Accent bar */}
         <div className="h-0.5 w-full bg-gradient-to-r from-bronze/60 via-bronze to-bronze/60" />
 
-        {/* Close button — wrapped in div to escape [&>button]:hidden on DialogContent */}
-        <div className="absolute top-4 right-4 z-10">
-          <button
-            onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-full bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
         <div className="p-6 sm:p-8">
-          {/* Icon + header */}
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-bronze/10 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-5 h-5 text-bronze" />
+          {/* Icon + header + close */}
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-bronze/10 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-5 h-5 text-bronze" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-bronze uppercase tracking-widest">
+                  {planLabel} Feature
+                </p>
+                <h3 className="font-vollkorn text-lg font-bold leading-tight">
+                  {state.feature} is locked
+                </h3>
+              </div>
             </div>
-            <div>
-              <p className="text-xs font-semibold text-bronze uppercase tracking-widest">
-                {planLabel} Feature
-              </p>
-              <h3 className="font-vollkorn text-lg font-bold leading-tight">
-                {state.feature} is locked
-              </h3>
-            </div>
+            <button
+              onClick={onClose}
+              className="w-7 h-7 flex items-center justify-center rounded-full bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 mt-0.5"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
 
           <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
