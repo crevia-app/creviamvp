@@ -11,7 +11,7 @@ import {
   Settings, Shield, CheckCircle, XCircle, Search, Menu,
   LogOut, Loader2, X, Receipt, FileCheck, ChevronRight,
   TrendingUp, TrendingDown, Minus, ArrowUpRight, Palette,
-  RotateCcw, Trash2, Copy, Mail, Database, Key, Bug,
+  RotateCcw, Trash2, Copy, Mail, Database, Key, Bug, ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -2473,9 +2473,9 @@ const ErrorsSection = () => {
           <p className="text-sm">No errors found</p>
         </div>
       ) : (
-        <div className="flex gap-4 min-h-0" style={{ height: "calc(100vh - 340px)" }}>
+        <div className="flex gap-4 min-h-0" style={{ height: "calc(100dvh - 300px)" }}>
           {/* Error list */}
-          <div className="flex-1 overflow-y-auto space-y-2 min-w-0">
+          <div className={cn("flex-1 overflow-y-auto space-y-2 min-w-0", selected && "hidden md:flex md:flex-col")}>
             {filtered.map(e => {
               const src = SOURCE_LABELS[e.source] ?? SOURCE_LABELS.unknown;
               const isSelected = selected?.id === e.id;
@@ -2552,10 +2552,14 @@ const ErrorsSection = () => {
 
           {/* Detail panel */}
           {selected && (
-            <div className="w-[380px] flex-shrink-0 bg-white/5 border border-white/10 rounded-xl p-4 overflow-y-auto space-y-4">
+            <div className="w-full md:w-[380px] flex-shrink-0 bg-white/5 border border-white/10 rounded-xl p-4 overflow-y-auto space-y-4">
               <div className="flex items-start justify-between gap-2">
+                <button onClick={() => setSelected(null)} className="flex items-center gap-1.5 text-white/30 hover:text-white md:hidden">
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span className="text-xs">Back</span>
+                </button>
                 <p className="text-xs font-bold text-white/60 uppercase tracking-widest">Error Detail</p>
-                <button onClick={() => setSelected(null)} className="text-white/30 hover:text-white">
+                <button onClick={() => setSelected(null)} className="text-white/30 hover:text-white hidden md:block">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -2903,7 +2907,7 @@ const Admin = () => {
   if (!authed) return null;
 
   return (
-    <div className="min-h-dvh bg-[#0a0a0a] flex font-sans">
+    <div className="min-h-dvh bg-[#0a0a0a] flex font-sans overflow-x-hidden">
 
       {/* Mobile overlay */}
       {sidebarOpen && (
@@ -2982,7 +2986,7 @@ const Admin = () => {
       </aside>
 
       {/* ── Main ── */}
-      <div className="flex-1 lg:ml-[220px] min-h-dvh flex flex-col">
+      <div className="flex-1 lg:ml-[220px] min-h-dvh flex flex-col min-w-0">
         {/* Topbar */}
         <header className="sticky top-0 z-10 h-14 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/[0.05] px-4 md:px-6 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
