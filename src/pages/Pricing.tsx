@@ -173,7 +173,7 @@ const Pricing = () => {
     <div className="min-h-dvh bg-background page-bg-warm overflow-x-clip">
       <SEO
         title="Pricing"
-        description="Simple, transparent pricing for creators. Start free and upgrade when you're ready. Crevia Pro, Creative Pro, and Business plans available."
+        description="Simple, transparent pricing for businesses and creatives. Start free and upgrade when you're ready. Crevia Pro, Business, and Enterprise plans available."
         url="/pricing"
       />
       <Header />

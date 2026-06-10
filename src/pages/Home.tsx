@@ -49,9 +49,9 @@ const Home = () => {
             </ScrollReveal>
             {/* variant="hero" — larger 40px travel, no blur, clean typographic entrance */}
             <ScrollReveal delay={0.12} variant="hero" duration={0.8}>
-              <h1 className="font-vollkorn text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] font-bold leading-[1.08]">
+              <h1 className="font-vollkorn text-4xl sm:text-5xl md:text-5xl lg:text-[4.5rem] font-bold leading-[1.08]">
                 The infrastructure to scale your{" "}
-                <span className="text-gradient-h1">creative operations.</span>
+                <span className="text-gradient-h1">business operations.</span>
               </h1>
             </ScrollReveal>
             <ScrollReveal delay={0.26}>
@@ -172,8 +172,8 @@ const Home = () => {
                   <span className="text-gradient-bronze">Your AI Chief of Staff.</span>
                 </h3>
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  Whether you're a creative building your business or a brand scaling
-                  your operations — Dira is the intelligent partner in your corner.
+                  Whether you're a brand scaling your operations or a creative building
+                  your business — Dira is the intelligent partner in your corner.
                   Strategy, scoping, and guidance, exactly when you need it.
                 </p>
               </div>
@@ -239,10 +239,10 @@ const Home = () => {
                   <span className="text-gradient-bronze">a foundation.</span>
                 </h3>
                 <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
-                  Creatives use Crevia to show up like the business they are — structured proposals,
-                  sharp invoices, and a client experience that commands respect. Brands use it to
-                  brief, align, and deliver without the back-and-forth that kills momentum.
-                  One platform. Both sides. No chaos.
+                  Brands use Crevia to brief, align, and deliver at scale — structured workflows,
+                  clean invoices, and a vendor experience that kills the back-and-forth that costs
+                  momentum. Creatives use it to show up like the business they are, with proposals
+                  and invoices that command respect. One platform. Both sides. No chaos.
                 </p>
               </div>
             </div>

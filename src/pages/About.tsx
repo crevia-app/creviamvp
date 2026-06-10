@@ -60,7 +60,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
           </ScrollReveal>
           <ScrollReveal delay={0.2}>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Creatives and businesses deserve infrastructure that works as hard as they do.
+              Businesses and creatives deserve infrastructure that works as hard as they do.
               We are building it.
             </p>
           </ScrollReveal>
@@ -243,7 +243,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                   Our Mission
                 </p>
                 <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">
-                  Give creatives and businesses the infrastructure to operate, close deals, and scale — without the chaos.
+                  Give businesses and creatives the infrastructure to operate, close deals, and scale — without the chaos.
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
                   Dira handles the intelligence. Crevia Studio handles the operations.
