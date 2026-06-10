@@ -1,6 +1,6 @@
 # Crevia — Developer Documentation
 
-> **Own Your Story.** Crevia is a Freemium-to-B2B SaaS platform that gives independent creatives and brands the infrastructure to scale their operations — from link-in-bio to legally binding contracts, invoicing, encrypted workspaces, and AI-assisted deal structuring.
+> **Own Your Story.** Crevia is a Freemium-to-B2B SaaS platform that gives businesses and creatives the infrastructure to scale their operations — from link-in-bio to invoicing, encrypted workspaces, and AI-assisted deal structuring.
 
 **Production URL:** [crevia.app](https://crevia.app)  
 **Stack:** React 18 · Vite 5 · TypeScript 5 · Supabase · Vercel  
@@ -39,7 +39,6 @@ Crevia is a unified portal serving two user types — **Independent Creatives** 
 |---|---|---|
 | **Dira AI** | `/dira` | Conversational AI hub for deal structuring, project management, and proactive suggestions |
 | **Crevia Link** | `/crevia-link` | Customisable link-in-bio with live preview, themed public profiles, and analytics |
-| **Crevia Canvas** | `/crevia-studio` | Document drafting, e-signature collection, and shareable canvas tokens |
 | **Crevia Invoice** | `/crevia-invoice` | Tiered PDF invoice generation with manual eTIMS compliance fields |
 | **Crevia Workspace** | `/crevia-workspace` | End-to-end encrypted project hubs with real-time messaging and RBAC |
 
@@ -52,7 +51,7 @@ Browser (React SPA + PWA)
 │
 ├── Supabase (Postgres + Auth + Realtime + Storage)
 │   ├── RLS enforces all data isolation
-│   ├── 14 Deno Edge Functions
+│   ├── 12 Deno Edge Functions
 │   └── Realtime channels → useRealtimeSync hook
 │
 ├── OpenAI API (GPT — via Edge Functions only, never from browser)
@@ -129,8 +128,7 @@ creviamvp/
 │   │   │   ├── workspaces/   # WorkspaceActionVault
 │   │   │   ├── SmartInvoicesTab.tsx
 │   │   │   ├── InvoicePreviewDialog.tsx
-│   │   │   ├── CreateInvoiceDialog.tsx
-│   │   │   └── CreateCanvasDialog.tsx
+│   │   │   └── CreateInvoiceDialog.tsx
 │   │   ├── subscription/     # UpgradeModal, UpgradePrompt, UsageLimitBanner
 │   │   └── ui/               # shadcn/ui base components (Button, Dialog, etc.)
 │   ├── data/                 # Static data / seed constants
@@ -171,11 +169,9 @@ creviamvp/
 │   │   ├── CreviaLink.tsx
 │   │   ├── CreviaStudio.tsx
 │   │   ├── CreviaInvoice.tsx
-│   │   ├── CreviaContracts.tsx
 │   │   ├── WorkspacesList.tsx
 │   │   ├── WorkspacePage.tsx
 │   │   ├── PublicProfile.tsx # Public Crevia Link (/:username)
-│   │   ├── CanvasSharePage.tsx
 │   │   ├── Admin.tsx
 │   │   └── ...
 │   └── App.tsx               # Root: providers, routing, E2EE init
@@ -266,7 +262,7 @@ These are server-side only and are never exposed to the browser:
 | Secret | Used by |
 |---|---|
 | `OPENAI_API_KEY` | `dira-gpt`, `dira-suggestions`, `ai-match-score` |
-| `RESEND_API_KEY` | `feedback-notify`, `invoice-reminders`, `invoice-send`, `login-alert`, `verification-notify`, `canvas-send` |
+| `RESEND_API_KEY` | `feedback-notify`, `invoice-reminders`, `invoice-send`, `login-alert`, `verification-notify` |
 | `PAYSTACK_SECRET_KEY` | `paystack-webhook`, `cancel-subscription` |
 | `SUPABASE_SERVICE_ROLE_KEY` | All edge functions (admin DB access) |
 | `SUPABASE_URL` | All edge functions |
@@ -291,7 +287,6 @@ All routing is handled client-side by React Router v6. The Vercel config rewrite
 | `/terms-of-service` | `TermsOfService` | Legal |
 | `/cookie-policy` | `CookiePolicy` | Legal |
 | `/:username` | `PublicProfile` | Public Crevia Link profile |
-| `/canvas/view/:token` | `CanvasSharePage` | Shareable signed document view |
 | `/invite/:token` | `WorkspaceInvitePage` | Workspace invite acceptance |
 
 ### Protected Routes (require auth)
@@ -302,9 +297,8 @@ Wrapped in `<ProtectedRoute>` — unauthenticated users are redirected to `/auth
 |---|---|---|
 | `/dira` | `Dira` | Dira AI dashboard (default post-login) |
 | `/crevia-link` | `CreviaLink` | Crevia Link editor |
-| `/crevia-studio` | `CreviaStudio` | Studio hub (invoices, canvases) |
+| `/crevia-studio` | `CreviaStudio` | Studio hub (Link, Workspace, Invoice) |
 | `/crevia-invoice` | `CreviaInvoice` | Invoice manager |
-| `/crevia-contracts` | `CreviaContracts` | Canvas / contract manager |
 | `/crevia-workspace` | `WorkspacesList` | All workspaces |
 | `/crevia-workspace/:id` | `WorkspacePage` | Individual workspace (chat + files) |
 | `/received` | `ReceivedDocuments` | Documents received from others |
@@ -427,7 +421,7 @@ Enforced at the Vercel edge (see `vercel.json`). Notable directives:
 Dira is the primary conversational interface and project management hub.
 
 **Features:**
-- Chat-based deal structuring and contract clause generation
+- Chat-based deal structuring and business strategy guidance
 - Project creation and milestone tracking (`dira_projects`, `dira_conversations`, `dira_messages` tables)
 - Proactive AI suggestions (`dira-suggestions` Edge Function)
 - Action approval flow — Dira proposes actions (`ApproveActionDialog`), user approves, `approve-action` Edge Function executes
@@ -468,32 +462,7 @@ A fully customisable link-in-bio with a live phone-frame preview that updates in
 
 ---
 
-### 8.3 Crevia Canvas
-
-**Entry:** `src/pages/CreviaContracts.tsx`  
-**Components:** `src/components/studio/CreateCanvasDialog.tsx`
-
-The document drafting and e-signature engine.
-
-**Features:**
-- Draft MSAs, contracts, and proposals in a rich editor
-- Send for e-signature via `canvas-send` Edge Function (email delivery via Resend)
-- Shareable public view at `/canvas/view/:token` — no auth required
-- Cryptographic signature hashing: document state is hashed and recorded post-signing to detect tampering
-- Received documents inbox at `/received`
-
-**Data tables:** `contracts`
-
-**Credit limits:**
-
-| Plan | Canvases/month | E-signatures |
-|---|---|---|
-| Free | Unlimited drafts | 0 (hard-locked) |
-| Pro / Business | Unlimited | Unlimited |
-
----
-
-### 8.4 Crevia Invoice
+### 8.3 Crevia Invoice
 
 **Entry:** `src/pages/CreviaInvoice.tsx` → `SmartInvoicesTab`  
 **Components:** `src/components/studio/SmartInvoicesTab.tsx`, `InvoicePreviewDialog.tsx`
@@ -523,7 +492,7 @@ PDF invoice generation with tiered output quality.
 
 ---
 
-### 8.5 Crevia Workspace
+### 8.4 Crevia Workspace
 
 **Entry:** `src/pages/WorkspacesList.tsx`, `src/pages/WorkspacePage.tsx`  
 **Components:** `src/components/studio/workspaces/`, `src/components/crevia-connect/shared/CreviaChat.tsx`
@@ -581,12 +550,6 @@ Tables are grouped by domain below. All use UUID primary keys and `created_at`/`
 |---|---|
 | `invoices` | Invoice header — client info, status, totals, eTIMS fields |
 | `invoice_items` | Line items belonging to an invoice |
-
-#### Crevia Canvas
-
-| Table | Description |
-|---|---|
-| `contracts` | Canvas documents — content, signature hash, share token, sent status |
 
 #### Crevia Workspace (Chat)
 
@@ -653,8 +616,6 @@ All functions are written in Deno and deployed via Supabase. Each enforces an or
 | `dira-suggestions` | HTTP (authenticated) | Generates proactive AI suggestions for the current user context |
 | `ai-match-score` | HTTP (authenticated) | Semantic similarity scoring between creator and brand profiles using `text-embedding-3-small` embeddings |
 | `approve-action` | HTTP (authenticated) | Executes a Dira-proposed action after user approval (RBAC-validated) |
-| `canvas-create` | HTTP (authenticated) | Creates a Canvas document record and generates a share token |
-| `canvas-send` | HTTP (authenticated) | Emails a signed Canvas document to the recipient via Resend |
 | `invoices-create` | HTTP (authenticated) | Creates an invoice record with tier limit validation |
 | `invoice-send` | HTTP (authenticated) | Emails an invoice PDF to the client via Resend |
 | `invoice-reminders` | Scheduled (cron) | Sends overdue invoice reminder emails via Resend |
@@ -746,9 +707,6 @@ const {
 | `diraActionsPerMonth` | ∞ (daily cap applies) | 500 | ∞ |
 | `isDailyCredit` | `true` | `false` | `false` |
 | `invoicesPerMonth` | 2 | ∞ | ∞ |
-| `canvasesPerMonth` | ∞ | ∞ | ∞ |
-| `esignaturesPerMonth` | 0 | ∞ | ∞ |
-| `hasESignature` | `false` | `true` | `true` |
 | `hasInvoiceCustomization` | `false` | `true` | `true` |
 | `hasInvoiceWatermark` | `true` | `false` | `false` |
 | `hasPremiumThemes` | `false` | `true` | `true` |
@@ -763,7 +721,6 @@ const {
 | `hasRBAC` | `false` | `false` | `true` |
 | `hasVerifiedBadge` | `false` | `true` | `true` |
 | `hasMultiSeat` | `false` | `false` | `true` |
-| `hasClauseLibrary` | `false` | `false` | `true` |
 | `baseSeats` | 1 | 1 | 3 |
 | `showDiraCounter` | `true` | `false` | `false` |
 
@@ -773,7 +730,7 @@ const {
 const { isFree, limits } = useSubscription();
 
 // Hard gate — block the feature entirely
-if (!limits.hasESignature) return <UpgradePrompt feature="e-signatures" />;
+if (!limits.hasInvoiceCustomization) return <UpgradePrompt feature="invoice customization" />;
 
 // Soft gate — show degraded version
 {!isFree && <AnalyticsDashboard />}

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import { Plus, MessageSquare, FileSignature, Receipt, ArrowRight, Sparkles, Users } from "lucide-react";
+import { Plus, MessageSquare, Receipt, ArrowRight, Sparkles, Users } from "lucide-react";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useFeatureGate } from "@/components/subscription/UpgradeModal";
 
@@ -131,10 +131,6 @@ const WorkspacesList = () => {
                     <div className="flex items-center gap-1.5 text-muted-foreground">
                       <Users className="w-3.5 h-3.5" />
                       <span className="text-xs">{workspace.chat_room_members?.length || 1} members</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <FileSignature className="w-3.5 h-3.5" />
-                      <span className="text-xs">Canvas</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-muted-foreground">
                       <Receipt className="w-3.5 h-3.5" />

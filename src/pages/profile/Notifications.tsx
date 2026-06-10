@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotifications } from "@/hooks/use-notifications";
-import { Bell, MessageSquare, FileText, Sparkles, Shield, BellOff, CheckCheck, Loader2, MessageCircle, FileSignature, Receipt } from "lucide-react";
+import { Bell, MessageSquare, FileText, Sparkles, Shield, BellOff, CheckCheck, Loader2, MessageCircle, Receipt } from "lucide-react";
 import { cn } from "@/lib/utils";
 const SETTINGS_KEY = "crevia_notif_settings";
 
@@ -15,7 +15,7 @@ const notificationGroups = [
     title: "Crevia Studio",
     items: [
       { id: "chat",     icon: MessageSquare, label: "Chat Messages",        desc: "New messages in Crevia Chat" },
-      { id: "invoices", icon: FileText,      label: "Invoices & Canvas", desc: "Status updates on invoices and Canvas" },
+      { id: "invoices", icon: FileText,      label: "Invoices", desc: "Status updates on invoices" },
     ],
   },
   {
@@ -35,7 +35,6 @@ const notificationGroups = [
 
 const TYPE_CONFIG: Record<string, { icon: React.ElementType; nav: string }> = {
   message:  { icon: MessageCircle, nav: "/crevia-studio?tab=chat" },
-  contract: { icon: FileSignature, nav: "/crevia-studio?tab=contracts" },
   invoice:  { icon: Receipt,       nav: "/crevia-studio?tab=invoices" },
   campaign: { icon: Sparkles,      nav: "/crevia-studio" },
   billing:  { icon: Bell,          nav: "/profile/payments-billing" },

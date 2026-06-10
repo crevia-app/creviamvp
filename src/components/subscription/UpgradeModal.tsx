@@ -72,7 +72,6 @@ export const useFeatureGate = (feature: string, requiredPlan: "pro" | "business"
 
 const PRO_HIGHLIGHTS = [
   "500 Monthly Power Credits for Dira AI",
-  "Unlimited E-Signatures on Canvas",
   "Unlimited customized invoices — no Crevia branding",
   "10 Collaborative Workspaces",
   "Premium themes, custom brand colors & analytics",

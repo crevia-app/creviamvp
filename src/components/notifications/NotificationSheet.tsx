@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bell, MessageSquare, FileSignature, Receipt, Sparkles, CreditCard, CheckCheck, Loader2, Trash2, AlertTriangle } from "lucide-react";
+import { Bell, MessageSquare, Receipt, Sparkles, CreditCard, CheckCheck, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AppNotification } from "@/hooks/use-notifications";
 import { useToast } from "@/hooks/use-toast";
@@ -41,7 +41,6 @@ function timeAgo(dateStr: string): string {
 
 const TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string }> = {
   message:  { icon: MessageSquare,  color: "text-blue-500"            },
-  contract: { icon: FileSignature,  color: "text-bronze"              },
   invoice:  { icon: Receipt,        color: "text-green-500"           },
   campaign: { icon: Sparkles,       color: "text-purple-500"          },
   billing:  { icon: CreditCard,     color: "text-orange-500"          },
@@ -55,10 +54,6 @@ function buildNavUrl(n: AppNotification): string {
       return n.data?.room_id
         ? `/crevia-studio?tab=chat&roomId=${n.data.room_id}`
         : "/crevia-studio?tab=chat";
-    case "contract":
-      return n.data?.contract_id
-        ? `/crevia-studio?tab=canvas&contractId=${n.data.contract_id}`
-        : "/crevia-studio?tab=canvas";
     case "invoice":
       return n.data?.invoice_id
         ? `/crevia-studio?tab=invoices&invoiceId=${n.data.invoice_id}`

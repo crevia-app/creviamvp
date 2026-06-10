@@ -177,7 +177,6 @@ const PaymentsBilling = () => {
     "10 Dira AI actions per day",
     "Crevia Link — basic templates",
     "1 active workspace",
-    "5 Canvas per month (basic editing)",
     "3 invoices per month (Crevia watermark)",
   ];
 
@@ -186,7 +185,6 @@ const PaymentsBilling = () => {
     "40 Dira AI actions per day",
     "Crevia Link — all premium themes & analytics",
     "Unlimited workspaces",
-    "Unlimited Canvas with full E-Signatures",
     "Unlimited invoices — no watermark",
     "Client Portal access",
     "Priority support",
@@ -197,9 +195,7 @@ const PaymentsBilling = () => {
     "200 Dira AI actions/day",
     "Multi-workspace Dira context",
     "Team roles & permissions (RBAC)",
-    "Unlimited Canvas + clause library",
     "Unlimited invoices — no watermark",
-    "E-Signatures inside the app",
     "Priority support",
   ];
 

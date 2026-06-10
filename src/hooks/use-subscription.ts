@@ -10,9 +10,6 @@ export interface SubscriptionLimits {
   isDailyCredit: boolean;           // true = free daily model; false = monthly pool
   // Content
   invoicesPerMonth: number;
-  canvasesPerMonth: number;
-  esignaturesPerMonth: number;      // 0 for free (hard-locked), Infinity for paid
-  hasESignature: boolean;           // false for free
   hasInvoiceCustomization: boolean; // false for free (no logo/color/method)
   // Themes / appearance
   hasPremiumThemes: boolean;
@@ -29,13 +26,10 @@ export interface SubscriptionLimits {
   // Invoice
   hasUnlimitedInvoices: boolean;
   hasInvoiceWatermark: boolean;
-  // Canvas
-  hasUnlimitedCanvases: boolean;
   // Account
   hasClientPortal: boolean;
   hasVerifiedBadge: boolean;
   hasMultiSeat: boolean;
-  hasClauseLibrary: boolean;
   prioritySupport: boolean;
   // UI
   showDiraCounter: boolean;         // true only for free; hidden for Pro/Business per spec
@@ -56,8 +50,6 @@ export interface SubscriptionState {
   diraDailyUsed: number;            // free tier: actions used today
   diraDailyResetAt: string | null;  // free tier: ISO timestamp of last daily reset
   invoicesUsedThisMonth: number;
-  canvasesUsedThisMonth: number;
-  esignaturesUsedThisMonth: number;
   showDiraCounter: boolean;
   canCreateWorkspace: boolean;
   canJoinWorkspace: boolean;
@@ -70,9 +62,6 @@ const PRO_LIMITS: SubscriptionLimits = {
   diraActionsPerDay: Infinity,
   isDailyCredit: false,
   invoicesPerMonth: Infinity,
-  canvasesPerMonth: Infinity,
-  esignaturesPerMonth: Infinity,
-  hasESignature: true,
   hasInvoiceCustomization: true,
   hasPremiumThemes: true,
   freeThemesOnly: false,
@@ -86,11 +75,9 @@ const PRO_LIMITS: SubscriptionLimits = {
   hasRBAC: false,
   hasUnlimitedInvoices: true,
   hasInvoiceWatermark: false,
-  hasUnlimitedCanvases: true,
   hasClientPortal: true,
   hasVerifiedBadge: true,
   hasMultiSeat: false,
-  hasClauseLibrary: false,
   prioritySupport: true,
   showDiraCounter: false,
   baseSeats: 1,
@@ -101,9 +88,6 @@ const BUSINESS_LIMITS: SubscriptionLimits = {
   diraActionsPerDay: Infinity,
   isDailyCredit: false,
   invoicesPerMonth: Infinity,
-  canvasesPerMonth: Infinity,
-  esignaturesPerMonth: Infinity,
-  hasESignature: true,
   hasInvoiceCustomization: true,
   hasPremiumThemes: true,
   freeThemesOnly: false,
@@ -117,11 +101,9 @@ const BUSINESS_LIMITS: SubscriptionLimits = {
   hasRBAC: true,
   hasUnlimitedInvoices: true,
   hasInvoiceWatermark: false,
-  hasUnlimitedCanvases: true,
   hasClientPortal: true,
   hasVerifiedBadge: true,
   hasMultiSeat: true,
-  hasClauseLibrary: true,
   prioritySupport: true,
   showDiraCounter: false,
   baseSeats: 3,
@@ -138,11 +120,6 @@ const PLAN_LIMITS: Record<SubscriptionPlan, SubscriptionLimits> = {
     hasUnlimitedInvoices: false,
     hasInvoiceWatermark: true,
     hasInvoiceCustomization: false,
-    // Canvas — unlimited drafts, E-sigs hard-locked
-    canvasesPerMonth: Infinity,
-    esignaturesPerMonth: 0,
-    hasESignature: false,
-    hasUnlimitedCanvases: true,
     // Workspace — cannot create OR join
     maxWorkspaces: 0,
     canCreateWorkspace: false,
@@ -159,7 +136,6 @@ const PLAN_LIMITS: Record<SubscriptionPlan, SubscriptionLimits> = {
     hasClientPortal: false,
     hasVerifiedBadge: false,
     hasMultiSeat: false,
-    hasClauseLibrary: false,
     prioritySupport: false,
     showDiraCounter: true,
     baseSeats: 1,
@@ -181,8 +157,6 @@ export const useSubscription = (): SubscriptionState => {
   const [diraDailyUsed, setDiraDailyUsed] = useState(0);
   const [diraDailyResetAt, setDiraDailyResetAt] = useState<string | null>(null);
   const [invoicesUsedThisMonth, setInvoicesUsedThisMonth] = useState(0);
-  const [canvasesUsedThisMonth, setCanvasesUsedThisMonth] = useState(0);
-  const [esignaturesUsedThisMonth, setEsignaturesUsedThisMonth] = useState(0);
 
   const applyProfile = (profile: Record<string, unknown>) => {
     setPlan((profile.subscription_plan as SubscriptionPlan) || "free");
@@ -195,8 +169,6 @@ export const useSubscription = (): SubscriptionState => {
     setDiraDailyUsed((profile.dira_daily_used as number) || 0);
     setDiraDailyResetAt((profile.dira_daily_reset_at as string) || null);
     setInvoicesUsedThisMonth((profile.invoices_used_this_month as number) || 0);
-    setCanvasesUsedThisMonth((profile.canvases_used_this_month as number) || 0);
-    setEsignaturesUsedThisMonth((profile.esignatures_used_this_month as number) || 0);
   };
 
   useEffect(() => {
@@ -213,7 +185,7 @@ export const useSubscription = (): SubscriptionState => {
         .from("profiles")
         .select(
           "subscription_plan, subscription_status, dira_actions_used, dira_actions_limit, " +
-          "invoices_used_this_month, canvases_used_this_month, esignatures_used_this_month, " +
+          "invoices_used_this_month, " +
           "dira_daily_used, dira_daily_reset_at"
         )
         .eq("id", user.id)
@@ -267,8 +239,6 @@ export const useSubscription = (): SubscriptionState => {
     diraDailyUsed,
     diraDailyResetAt,
     invoicesUsedThisMonth,
-    canvasesUsedThisMonth,
-    esignaturesUsedThisMonth,
     showDiraCounter: isFree,
     canCreateWorkspace: limits.canCreateWorkspace,
     canJoinWorkspace: limits.canJoinWorkspace,
