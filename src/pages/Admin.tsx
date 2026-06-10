@@ -122,7 +122,7 @@ const StatCard = ({
 const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) => {
   const [data, setData] = useState<{
     total: number; free: number; pro: number; business: number; enterprise: number;
-    invoices: number; contracts: number;
+    invoices: number;
     mrr: number; arr: number;
     userTrend: number | null; mrrTrend: number | null;
     mrrChart: { month: string; mrr: number }[];
@@ -134,12 +134,11 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    const [{ data: profiles }, { count: inv }, { count: con }] = await Promise.all([
+    const [{ data: profiles }, { count: inv }] = await Promise.all([
       supabase.from("profiles")
         .select("id, display_name, handle, subscription_plan, subscription_expires_at, created_at, avatar_url")
         .order("created_at", { ascending: false }),
       supabase.from("invoices").select("id", { count: "exact", head: true }),
-      supabase.from("canvases").select("id", { count: "exact", head: true }),
     ]);
 
     const p = profiles ?? [];
@@ -203,12 +202,12 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
       { plan: "Enterprise", count: ent,  pct: p.length ? Math.round((ent  / p.length) * 100) : 0 },
     ];
 
-    setData({ total: p.length, free, pro, business: bus, enterprise: ent, invoices: inv ?? 0, contracts: con ?? 0, mrr, arr, userTrend, mrrTrend, mrrChart, userChart, planChart, recent: p.slice(0, 6) });
+    setData({ total: p.length, free, pro, business: bus, enterprise: ent, invoices: inv ?? 0, mrr, arr, userTrend, mrrTrend, mrrChart, userChart, planChart, recent: p.slice(0, 6) });
   };
 
   if (!data) return <Spin />;
 
-  const { total, pro, business, enterprise, free, invoices, contracts, mrr, arr, userTrend, mrrTrend, mrrChart, userChart, planChart, recent } = data;
+  const { total, pro, business, enterprise, free, invoices, mrr, arr, userTrend, mrrTrend, mrrChart, userChart, planChart, recent } = data;
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
@@ -228,7 +227,7 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
           icon={TrendingUp} accent="bg-emerald-500" onClick={() => onNavigate("billing")}
         />
         <StatCard
-          label="Documents" value={fmt(invoices + contracts)} sub={`${invoices} invoices · ${contracts} Canvas`}
+          label="Invoices" value={fmt(invoices)} sub={`${invoices} total invoices`}
           icon={FileText} accent="bg-violet-500" onClick={() => onNavigate("documents")}
         />
       </div>
@@ -404,7 +403,7 @@ const UsersSection = () => {
   const [search, setSearch]         = useState("");
   const [filter, setFilter]         = useState<"all" | "free" | "pro" | "enterprise">("all");
   const [selected, setSelected]     = useState<any>(null);
-  const [selStats, setSelStats]     = useState<{ invoices: number; contracts: number; invoiceTotal: number } | null>(null);
+  const [selStats, setSelStats]     = useState<{ invoices: number; invoiceTotal: number } | null>(null);
   const [selTxns, setSelTxns]       = useState<any[]>([]);
   const [loading, setLoading]       = useState(true);
   const [detailLoad, setDetailLoad] = useState(false);
@@ -415,7 +414,7 @@ const UsersSection = () => {
   const load = async () => {
     const { data } = await supabase
       .from("profiles")
-      .select("id, display_name, handle, email, avatar_url, subscription_plan, subscription_status, subscription_expires_at, created_at, is_verified, is_admin, user_type, dira_actions_used, dira_actions_limit, invoices_used_this_month, canvases_used_this_month, esignatures_used_this_month, workspaces_created_this_month")
+      .select("id, display_name, handle, email, avatar_url, subscription_plan, subscription_status, subscription_expires_at, created_at, is_verified, is_admin, user_type, dira_actions_used, dira_actions_limit, invoices_used_this_month, workspaces_created_this_month")
       .order("created_at", { ascending: false });
     setUsers(data ?? []);
     setLoading(false);
@@ -426,13 +425,12 @@ const UsersSection = () => {
     setSelStats(null);
     setSelTxns([]);
     setDetailLoad(true);
-    const [{ count: inv }, { count: con }, { data: invData }] = await Promise.all([
+    const [{ count: inv }, { data: invData }] = await Promise.all([
       supabase.from("invoices").select("id", { count: "exact", head: true }).eq("user_id", u.id),
-      supabase.from("canvases").select("id", { count: "exact", head: true }).eq("user_id", u.id),
       supabase.from("invoices").select("total").eq("user_id", u.id),
     ]);
     const total = (invData ?? []).reduce((s: number, r: any) => s + (r.total ?? 0), 0);
-    setSelStats({ invoices: inv ?? 0, contracts: con ?? 0, invoiceTotal: total });
+    setSelStats({ invoices: inv ?? 0, invoiceTotal: total });
     setDetailLoad(false);
   };
 
@@ -621,20 +619,6 @@ const UsersSection = () => {
                   limit: ["pro","business","creative_pro","brand_workspace","enterprise"].includes(selected.subscription_plan) ? "∞" : "3",
                   pct: ["pro","business","creative_pro","brand_workspace","enterprise"].includes(selected.subscription_plan) ? 0
                     : Math.min(100, Math.round(((selected.invoices_used_this_month ?? 0) / 3) * 100)),
-                },
-                {
-                  label: "Canvas drafts",
-                  used: selected.canvases_used_this_month ?? 0,
-                  limit: ["pro","business","creative_pro","brand_workspace","enterprise"].includes(selected.subscription_plan) ? "∞" : "6",
-                  pct: ["pro","business","creative_pro","brand_workspace","enterprise"].includes(selected.subscription_plan) ? 0
-                    : Math.min(100, Math.round(((selected.canvases_used_this_month ?? 0) / 6) * 100)),
-                },
-                {
-                  label: "E-signatures",
-                  used: selected.esignatures_used_this_month ?? 0,
-                  limit: ["pro","business","creative_pro","brand_workspace","enterprise"].includes(selected.subscription_plan) ? "∞" : "1",
-                  pct: ["pro","business","creative_pro","brand_workspace","enterprise"].includes(selected.subscription_plan) ? 0
-                    : Math.min(100, Math.round(((selected.esignatures_used_this_month ?? 0) / 1) * 100)),
                 },
                 {
                   label: "Workspaces created",
