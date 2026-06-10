@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bell, MessageSquare, Receipt, Sparkles, CreditCard, CheckCheck, Loader2, Trash2, AlertTriangle } from "lucide-react";
+import { Bell, MessageSquare, Receipt, Sparkles, CreditCard, CheckCheck, Loader2, Trash2, AlertTriangle, CheckCircle2, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AppNotification } from "@/hooks/use-notifications";
 import { useToast } from "@/hooks/use-toast";
@@ -81,6 +82,27 @@ export default function NotificationSheet({
   const { toast } = useToast();
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [deletingSelected, setDeletingSelected] = useState(false);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const handleDeleteSelected = async () => {
+    if (!selectedIds.length) return;
+    setDeletingSelected(true);
+    try {
+      await supabase.from("notifications").delete().in("id", selectedIds);
+      setSelectedIds([]);
+      setIsEditing(false);
+    } catch (err: any) {
+      toast({ title: "Failed to delete", description: err.message, variant: "destructive" });
+    } finally {
+      setDeletingSelected(false);
+    }
+  };
 
   const handleClearAll = async () => {
     setClearing(true);
@@ -109,17 +131,29 @@ export default function NotificationSheet({
         <SheetHeader className="px-4 pt-4 pb-3 border-b border-border flex-shrink-0">
           <div className="flex items-center justify-between">
             <SheetTitle className="font-vollkorn text-lg">Notifications</SheetTitle>
-            {unreadCount > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs text-bronze hover:text-bronze/80 gap-1.5"
-                onClick={onMarkAllRead}
-              >
-                <CheckCheck className="w-3.5 h-3.5" />
-                Mark all read
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {!isEditing && unreadCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs text-bronze hover:text-bronze/80 gap-1.5"
+                  onClick={onMarkAllRead}
+                >
+                  <CheckCheck className="w-3.5 h-3.5" />
+                  Mark all read
+                </Button>
+              )}
+              {notifications.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                  onClick={() => { setIsEditing(e => !e); setSelectedIds([]); }}
+                >
+                  {isEditing ? "Cancel" : "Edit"}
+                </Button>
+              )}
+            </div>
           </div>
         </SheetHeader>
 
@@ -145,15 +179,22 @@ export default function NotificationSheet({
                 return (
                   <button
                     key={n.id}
-                    onClick={() => handleClick(n)}
+                    onClick={() => isEditing ? toggleSelect(n.id) : handleClick(n)}
                     className={cn(
                       "w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors",
-                      nav ? "cursor-pointer hover:bg-muted/50" : "cursor-default",
-                      !n.read && "bg-bronze/5"
+                      isEditing ? "cursor-pointer hover:bg-muted/50" : nav ? "cursor-pointer hover:bg-muted/50" : "cursor-default",
+                      !n.read && "bg-bronze/5",
+                      isEditing && selectedIds.includes(n.id) && "bg-muted/60"
                     )}
                   >
-                    <div className={cn("mt-0.5 p-2 rounded-lg flex-shrink-0", !n.read ? "bg-bronze/10" : "bg-muted")}>
-                      <Icon className={cn("w-3.5 h-3.5", !n.read ? cfg.color : "text-muted-foreground")} />
+                    <div className={cn("transition-all duration-200 ease-in-out flex-shrink-0 mt-0.5", isEditing ? "w-5 flex items-center justify-center" : "p-2 rounded-lg", !isEditing && (!n.read ? "bg-bronze/10" : "bg-muted"))}>
+                      {isEditing ? (
+                        selectedIds.includes(n.id)
+                          ? <CheckCircle2 className="w-5 h-5 text-bronze" />
+                          : <Circle className="w-5 h-5 text-muted-foreground/40" />
+                      ) : (
+                        <Icon className={cn("w-3.5 h-3.5", !n.read ? cfg.color : "text-muted-foreground")} />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
@@ -190,15 +231,37 @@ export default function NotificationSheet({
             </Button>
           )}
           {notifications.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1.5"
-              onClick={() => setClearDialogOpen(true)}
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              Clear All Notifications
-            </Button>
+            isEditing ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "w-full text-xs gap-1.5 transition-colors",
+                  selectedIds.length > 0
+                    ? "text-red-500 hover:bg-red-500/10 font-semibold"
+                    : "text-muted-foreground"
+                )}
+                onClick={selectedIds.length > 0 ? handleDeleteSelected : undefined}
+                disabled={deletingSelected}
+              >
+                {deletingSelected
+                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  : <Trash2 className="w-3.5 h-3.5" />}
+                {selectedIds.length > 0
+                  ? `Delete Selected (${selectedIds.length})`
+                  : "Select items to delete"}
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1.5"
+                onClick={() => setClearDialogOpen(true)}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Clear All Notifications
+              </Button>
+            )
           )}
         </div>
       </SheetContent>

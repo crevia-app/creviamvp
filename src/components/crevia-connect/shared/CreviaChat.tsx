@@ -177,7 +177,7 @@ function linkifyContent(content: string): (string | JSX.Element)[] {
       );
     } else {
       result.push(
-        <span key={`mention-${match.index}`} className="text-bronze font-semibold bg-bronze/10 px-1 py-0.5 rounded-sm">
+        <span key={`mention-${match.index}`} className="inline-block bg-orange-500/10 text-orange-500 font-semibold px-1.5 py-0.5 rounded-md text-sm mx-0.5 align-baseline">
           {token}
         </span>
       );
@@ -1197,6 +1197,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
       while ((hm = handlePattern.exec(plainContent)) !== null) {
         mentionedHandles.add(hm[1].toLowerCase());
       }
+      let mentionedUserIds: string[] = [];
       if (mentionedHandles.size > 0) {
         const mentionedIds = (selectedRoom.members ?? [])
           .filter((m) => {
@@ -1205,7 +1206,10 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
             return (h && mentionedHandles.has(h)) || (n && mentionedHandles.has(n));
           })
           .map((m) => m.user_id);
-        if (mentionedIds.length > 0) messageData.mentions = mentionedIds;
+        if (mentionedIds.length > 0) {
+          messageData.mentions = mentionedIds;
+          mentionedUserIds = mentionedIds;
+        }
       }
 
       // Insert and get the row back so we can append it to local state immediately
@@ -1229,6 +1233,25 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
         },
         replyTo: replyingTo ?? null,
       } as ChatMessage]);
+
+      // Fire mention notifications — one per mentioned user, non-blocking
+      if (mentionedUserIds.length > 0) {
+        const myProfile = selectedRoom.members?.find(m => m.user_id === currentUserId)?.profile;
+        const senderName = myProfile?.display_name || myProfile?.handle || "Someone";
+        const notifRows = mentionedUserIds
+          .filter(id => id !== currentUserId)
+          .map(uid => ({
+            user_id: uid,
+            type: "mention",
+            title: `${senderName} mentioned you in Workspace`,
+            body: plainContent.slice(0, 120),
+            data: { room_id: selectedRoom.id, workspace_name: selectedRoom.name ?? "Workspace" },
+            read: false,
+          }));
+        if (notifRows.length > 0) {
+          supabase.from("notifications").insert(notifRows).then(() => {});
+        }
+      }
 
       // Patch the notification body the trigger just created with the real plaintext preview.
       supabase.rpc("update_message_notification_preview", {
@@ -2799,9 +2822,6 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                             <DropdownMenuItem onClick={() => { fetchInvoices(); setShowInvoicePicker(true); }}>
                               <Receipt className="h-4 w-4 mr-2" />Attach Invoice
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => { fetchContracts(); setShowContractPicker(true); }}>
-                              <FileSignature className="h-4 w-4 mr-2" />Attach Canvas
-                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => setShowPollCreator(true)}>
                               <BarChart2 className="h-4 w-4 mr-2" />Create Poll
@@ -3146,43 +3166,6 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                           {inv.status}
                         </Badge>
                       </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
-
-      {/* Contract Picker */}
-      <Dialog open={showContractPicker} onOpenChange={setShowContractPicker}>
-        <DialogContent className="sm:max-w-[450px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileSignature className="h-5 w-5 text-bronze" />
-              Attach Canvas
-            </DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="h-[350px]">
-            {contracts.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">No Canvas found</div>
-            ) : (
-              <div className="space-y-2">
-                {contracts.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => sendContractAttachment(c)}
-                    className="w-full p-4 rounded-xl border hover:border-bronze/30 hover:bg-muted/50 transition-all text-left"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold text-sm">{c.title}</p>
-                        <p className="text-xs text-muted-foreground">{c.client_name}</p>
-                      </div>
-                      <Badge variant="outline" className="text-[9px] capitalize">
-                        {c.status}
-                      </Badge>
                     </div>
                   </button>
                 ))}
