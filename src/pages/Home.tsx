@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { SEO } from "@/components/SEO";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Brain, FileText, Link2, MessageCircle, Receipt, Shield } from "lucide-react";
+import { ArrowRight, Brain, FileText, Link2, MessageCircle, Receipt } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HeroPattern from "@/components/HeroPattern";
@@ -13,7 +13,6 @@ const OPS_CARDS = [
   { icon: Link2,         label: "Crevia Link",         path: "/crevia-studio" },
   { icon: MessageCircle, label: "Crevia Chat",          path: "/crevia-studio" },
   { icon: Receipt,       label: "Invoices & Receipts",  path: "/crevia-invoice" },
-  { icon: Shield,        label: "Canvas",               path: "/crevia-contracts" },
 ];
 
 const Home = () => {
@@ -195,9 +194,8 @@ const Home = () => {
                   <span className="text-gradient-bronze">The complete operations layer.</span>
                 </h3>
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  Crevia Canvas seals the deal. Crevia Invoice closes the books.
-                  Crevia Workspace keeps teams aligned. Crevia Link puts your brand
-                  in front of clients. Every workflow. One system.
+                  Crevia Invoice closes the books. Crevia Workspace keeps teams aligned.
+                  Crevia Link puts your brand in front of clients. Every workflow. One system.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-md">
                   {OPS_CARDS.map(({ icon: Icon, label, path }, i) => (

@@ -424,8 +424,6 @@ const WorkspaceInboxList = ({
                                     ? "📊 Poll"
                                     : room.lastMessage.message_type === "invoice"
                                     ? "🧾 Invoice"
-                                    : room.lastMessage.message_type === "contract"
-                                    ? "📄 Canvas"
                                     : room.lastMessage.is_encrypted
                                     ? "New message"
                                     : (room.lastMessage.content || "").slice(0, 45)}

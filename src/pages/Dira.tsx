@@ -66,7 +66,6 @@ import {
 import { CreateProjectDialog } from "@/components/dira/CreateProjectDialog";
 import { ProjectDetailSheet } from "@/components/dira/ProjectDetailSheet";
 import { ProjectsView } from "@/components/dira/ProjectsView";
-import CreateCanvasDialog from "@/components/studio/CreateCanvasDialog";
 import CreateInvoiceDialog from "@/components/studio/CreateInvoiceDialog";
 import { ApproveActionDialog } from "@/components/dira/ApproveActionDialog";
 import { DiraSettingsPanel } from "@/components/dira/DiraSettingsPanel";
@@ -366,11 +365,9 @@ const Dira = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [projectDetailOpen, setProjectDetailOpen] = useState(false);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
-  const [contractDialogOpen, setContractDialogOpen] = useState(false);
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
-  const [diraContractContext, setDiraContractContext] = useState<Record<string, unknown> | null>(null);
   const [diraInvoiceContext, setDiraInvoiceContext] = useState<Record<string, unknown> | null>(null);
 
   const [chatToDelete, setChatToDelete] = useState<string | null>(null);
@@ -799,7 +796,6 @@ const Dira = () => {
     setSelectedFileContent(null);
     setSelectedFileType(null);
     setPendingAction(null);
-    setDiraContractContext(null);
     setDiraInvoiceContext(null);
     setIsLoading(true);
 
@@ -1722,7 +1718,7 @@ const Dira = () => {
                               {pendingAction === 'open_approve' && (
                                 <button onClick={() => setApproveDialogOpen(true)} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-bronze/40 bg-bronze/5 hover:bg-bronze/10 hover:border-bronze/60 transition-all text-left w-fit">
                                   <div className="p-1.5 rounded-lg bg-bronze/15 text-bronze"><FileSignature className="w-4 h-4" /></div>
-                                  <div><p className="text-sm font-medium">Approve / Update Document</p><p className="text-xs text-muted-foreground">Move a Canvas or invoice to the next stage</p></div>
+                                  <div><p className="text-sm font-medium">Approve / Update Document</p><p className="text-xs text-muted-foreground">Move an invoice to the next stage</p></div>
                                   <ArrowRight className="w-4 h-4 text-bronze ml-2" />
                                 </button>
                               )}
@@ -1951,13 +1947,6 @@ const Dira = () => {
         onProjectDeleted={handleProjectDeleted}
         onConversationSelect={handleConversationSelect}
         onNewChat={(projectId) => handleNewChat(projectId)}
-      />
-
-      <CreateCanvasDialog
-        open={contractDialogOpen}
-        onOpenChange={setContractDialogOpen}
-        onSuccess={() => setContractDialogOpen(false)}
-        diraContext={diraContractContext}
       />
 
       <CreateInvoiceDialog

@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Receipt, FileSignature, ExternalLink, Loader2, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import InvoicePreviewDialog from "@/components/studio/InvoicePreviewDialog";
-import ContractPreviewDialog from "@/components/studio/CanvasPreviewDialog";
 
 interface AttachmentBubbleProps {
   type: "invoice" | "contract";
@@ -165,13 +164,6 @@ export default function AttachmentBubble({ type, attachmentId, isMine }: Attachm
           open={previewOpen}
           onOpenChange={setPreviewOpen}
           invoice={data}
-        />
-      )}
-      {data && type === "contract" && (
-        <ContractPreviewDialog
-          open={previewOpen}
-          onOpenChange={setPreviewOpen}
-          canvas={data}
         />
       )}
     </>

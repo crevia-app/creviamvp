@@ -7,61 +7,22 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { motion } from "framer-motion";
 import CreviaChat from "@/components/crevia-connect/shared/CreviaChat";
 import WorkspaceMembersDialog from "@/components/studio/workspaces/WorkspaceMembersDialog";
-import { ArrowLeft, CheckCircle2, Clock, FileSignature, Receipt, Sparkles, ArrowRight, Users } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, Receipt, Sparkles, ArrowRight, Users } from "lucide-react";
 
 const DEAL_STAGES = [
   { id: "negotiating", label: "Negotiating" },
-  { id: "contract_signed", label: "Canvas Signed" },
   { id: "invoice_paid", label: "Invoice Paid" },
   { id: "complete", label: "Complete" },
 ];
 
 interface VaultProps {
-  contracts: any[];
   invoices: any[];
   loading: boolean;
   onNavigate: (path: string) => void;
 }
 
-const ActionVaultContent = ({ contracts, invoices, loading, onNavigate }: VaultProps) => (
+const ActionVaultContent = ({ invoices, loading, onNavigate }: VaultProps) => (
   <div className="flex-1 overflow-y-auto p-4 space-y-4">
-    {/* Contract */}
-    <div>
-      <div className="flex items-center gap-2 mb-2">
-        <FileSignature className="w-3.5 h-3.5 text-bronze" />
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Canvas</span>
-      </div>
-      {loading ? (
-        <div className="space-y-2">
-          <div className="h-16 rounded-xl bg-muted/50 animate-pulse" />
-        </div>
-      ) : contracts.length === 0 ? (
-        <div className="p-4 rounded-xl border border-dashed border-border text-center">
-          <FileSignature className="w-6 h-6 text-muted-foreground/40 mx-auto mb-1" />
-          <p className="text-xs text-muted-foreground">No Canvas yet</p>
-        </div>
-      ) : contracts.slice(0, 2).map((c) => (
-        <motion.div key={c.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-          className="p-3 rounded-xl border border-border/50 bg-background hover:border-bronze/30 transition-all mb-2">
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <p className="text-xs font-semibold truncate flex-1">{c.title}</p>
-            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">{c.status}</span>
-          </div>
-          <p className="text-[10px] text-muted-foreground truncate mb-2">{c.client_name}</p>
-          {c.status !== "signed" ? (
-            <Button size="sm" className="w-full h-7 text-[10px] bg-bronze hover:bg-bronze/90 text-background">
-              <FileSignature className="w-3 h-3 mr-1" /> Sign Canvas
-            </Button>
-          ) : (
-            <div className="flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3 text-green-500" />
-              <span className="text-[10px] text-green-500 font-medium">Signed</span>
-            </div>
-          )}
-        </motion.div>
-      ))}
-    </div>
-
     {/* Invoice */}
     <div>
       <div className="flex items-center gap-2 mb-2">
@@ -107,10 +68,6 @@ const ActionVaultContent = ({ contracts, invoices, loading, onNavigate }: VaultP
       <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Quick Actions</p>
       <div className="space-y-1.5">
         <Button variant="ghost" size="sm" className="w-full justify-start h-8 text-xs gap-2 text-muted-foreground hover:text-foreground"
-          onClick={() => onNavigate("/crevia-studio?tab=contracts")}>
-          <FileSignature className="w-3.5 h-3.5" /> All Canvas <ArrowRight className="w-3 h-3 ml-auto" />
-        </Button>
-        <Button variant="ghost" size="sm" className="w-full justify-start h-8 text-xs gap-2 text-muted-foreground hover:text-foreground"
           onClick={() => onNavigate("/crevia-studio?tab=invoices")}>
           <Receipt className="w-3.5 h-3.5" /> All invoices <ArrowRight className="w-3 h-3 ml-auto" />
         </Button>
@@ -123,7 +80,6 @@ const WorkspacePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [workspace, setWorkspace] = useState<any>(null);
-  const [contracts, setContracts] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [membersOpen, setMembersOpen] = useState(false);
@@ -138,21 +94,18 @@ const WorkspacePage = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) setCurrentUserId(user.id);
 
-    const [{ data: room }, { data: contractsData }, { data: invoicesData }, { count }] = await Promise.all([
+    const [{ data: room }, { data: invoicesData }, { count }] = await Promise.all([
       supabase.from("chat_rooms").select("*").eq("id", id).single(),
-      supabase.from("canvases").select("*").order("created_at", { ascending: false }).limit(3),
       supabase.from("invoices").select("*").order("created_at", { ascending: false }).limit(3),
       supabase.from("chat_room_members").select("*", { count: "exact", head: true }).eq("room_id", id),
     ]);
     setMemberCount(count ?? null);
 
     setWorkspace(room);
-    setContracts(contractsData || []);
     setInvoices(invoicesData || []);
 
     if (invoicesData?.some((inv: any) => inv.status === "paid")) setActiveStage("complete");
     else if (invoicesData && invoicesData.length > 0) setActiveStage("invoice_paid");
-    else if (contractsData?.some((c: any) => c.status === "signed")) setActiveStage("contract_signed");
     else setActiveStage("negotiating");
 
     setLoading(false);
@@ -256,7 +209,7 @@ const WorkspacePage = () => {
               </div>
             </div>
           </div>
-          <ActionVaultContent contracts={contracts} invoices={invoices} loading={loading} onNavigate={navigate} />
+          <ActionVaultContent invoices={invoices} loading={loading} onNavigate={navigate} />
         </div>
       </div>
 
@@ -271,7 +224,7 @@ const WorkspacePage = () => {
               Action Vault
             </SheetTitle>
           </SheetHeader>
-          <ActionVaultContent contracts={contracts} invoices={invoices} loading={loading} onNavigate={(path) => { navigate(path); setVaultOpen(false); }} />
+          <ActionVaultContent invoices={invoices} loading={loading} onNavigate={(path) => { navigate(path); setVaultOpen(false); }} />
         </SheetContent>
       </Sheet>
 

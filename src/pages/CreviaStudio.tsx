@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
-  Link2, MessageSquare, Receipt, FileSignature,
+  Link2, MessageSquare, Receipt,
   User, MousePointerClick, Palette, BarChart2,
   X,
 } from "lucide-react";
@@ -11,7 +11,6 @@ import { useLanguage } from "@/i18n/LanguageContext";
 // Tab content
 import CreviaLink         from "./CreviaLink";
 import SmartInvoicesTab   from "@/components/studio/SmartInvoicesTab";
-import ContractsTab       from "@/components/studio/CanvasTab";
 import StudioWorkspacesHub from "@/components/studio/workspaces/StudioWorkspacesHub";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -45,15 +44,6 @@ const STUDIO_TABS = [
     icon:        Receipt,
     color:       "#2BA577",   // emerald accent
   },
-  {
-    id:          "canvas",
-    shortLabel:  "Canvas",
-    fullLabel:   "Crevia Canvas",
-    description: "Contracts & e-signatures",
-    labelKey:    "studio.tab.canvas",
-    icon:        FileSignature,
-    color:       "#E8834A",   // warm orange accent
-  },
 ] as const;
 
 const LINK_SECTIONS = [
@@ -76,8 +66,7 @@ const CreviaStudio = () => {
   const activeWorkspace    = searchParams.get("workspace") || undefined;
   const activeRoomId       = searchParams.get("roomId")    || undefined;
   const activeInvoiceId    = searchParams.get("invoiceId") || undefined;
-  const activeContractId   = searchParams.get("contractId") || undefined;
-  const isChatTab          = activeTab === "chat";
+const isChatTab          = activeTab === "chat";
 
   const activeTabDef = STUDIO_TABS.find(t => t.id === activeTab) ?? STUDIO_TABS[0];
 
@@ -224,7 +213,6 @@ const CreviaStudio = () => {
             >
               {activeTab === "link"     && <CreviaLink isEmbedded />}
               {activeTab === "invoices" && <SmartInvoicesTab workspaceId={activeWorkspace} initialInvoiceId={activeInvoiceId} />}
-              {activeTab === "canvas"   && <ContractsTab workspaceId={activeWorkspace} initialContractId={activeContractId} />}
             </motion.div>
           </AnimatePresence>
         </div>

@@ -6,7 +6,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion } from "framer-motion";
 import {
   CheckCircle2,
-  FileSignature,
   Receipt,
   Sparkles,
   Clock,
@@ -37,18 +36,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import ContractPreviewDialog from "@/components/studio/CanvasPreviewDialog";
 import InvoicePreviewDialog from "@/components/studio/InvoicePreviewDialog";
-import CreateCanvasDialog from "@/components/studio/CreateCanvasDialog";
 import CreateInvoiceDialog from "@/components/studio/CreateInvoiceDialog";
-
-interface Contract {
-  id: string;
-  title: string;
-  client_name: string;
-  status: string;
-  [key: string]: any;
-}
 
 interface Invoice {
   id: string;
@@ -61,7 +50,6 @@ interface Invoice {
 }
 
 interface WorkspaceActionVaultProps {
-  contracts: Contract[];
   invoices: Invoice[];
   userId: string;
   roomId: string;
@@ -69,7 +57,6 @@ interface WorkspaceActionVaultProps {
 }
 
 const WorkspaceActionVault = ({
-  contracts,
   invoices,
   userId,
   roomId,
@@ -78,14 +65,11 @@ const WorkspaceActionVault = ({
   const navigate = useNavigate();
   const { invoicesUsedThisMonth, limits } = useSubscription();
   const { openUpgradeModal } = useUpgradeModal();
-  const [contractDialog, setContractDialog] = useState<Contract | null>(null);
   const [invoiceDialog, setInvoiceDialog] = useState<Invoice | null>(null);
-  const [confirmDeleteContract, setConfirmDeleteContract] = useState<Contract | null>(null);
   const [confirmDeleteInvoice, setConfirmDeleteInvoice] = useState<Invoice | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   // Create dialogs
-  const [createContractOpen, setCreateContractOpen] = useState(false);
   const [createInvoiceOpen, setCreateInvoiceOpen] = useState(false);
 
   // Add member state
@@ -133,18 +117,6 @@ const WorkspaceActionVault = ({
     setAddingMember(null);
   };
 
-  const handleContractCreated = async (contractId: string) => {
-    await supabase.from("chat_messages").insert({
-      room_id: roomId,
-      sender_id: userId,
-      message_type: "contract",
-      content: "Canvas attached",
-      contract_id: contractId,
-      is_encrypted: false,
-    });
-    onRefresh?.();
-  };
-
   const handleInvoiceCreated = async (invoiceId: string) => {
     await supabase.from("chat_messages").insert({
       room_id: roomId,
@@ -164,16 +136,6 @@ const WorkspaceActionVault = ({
       .eq("id", invoiceId);
     if (error) toast.error("Failed to update invoice");
     else onRefresh?.();
-  };
-
-  const deleteContract = async () => {
-    if (!confirmDeleteContract) return;
-    setDeleting(true);
-    await supabase.from("chat_messages").delete().eq("room_id", roomId).eq("contract_id", confirmDeleteContract.id);
-    const { error } = await supabase.from("canvases").delete().eq("id", confirmDeleteContract.id);
-    if (error) toast.error("Failed to delete Canvas");
-    else { toast.success("Canvas deleted"); setConfirmDeleteContract(null); onRefresh?.(); }
-    setDeleting(false);
   };
 
   const deleteInvoice = async () => {
@@ -204,7 +166,7 @@ const WorkspaceActionVault = ({
               </div>
               <div>
                 <h3 className="font-semibold text-[12px] tracking-tight">Action Vault</h3>
-                <p className="text-[10px] text-muted-foreground/70">Canvas & invoices</p>
+                <p className="text-[10px] text-muted-foreground/70">Invoices</p>
               </div>
             </div>
             <Button
@@ -221,72 +183,6 @@ const WorkspaceActionVault = ({
 
         <ScrollArea className="flex-1">
           <div className="p-3 space-y-4">
-
-            {/* Contract Section */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-1.5">
-                  <FileSignature className="w-3 h-3 text-bronze/80" />
-                  <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider">Canvas</span>
-                </div>
-                <button
-                  onClick={() => setCreateContractOpen(true)}
-                  className="w-5 h-5 rounded-md flex items-center justify-center text-muted-foreground/50 hover:text-bronze hover:bg-bronze/8 transition-colors"
-                >
-                  <Plus className="w-3 h-3" />
-                </button>
-              </div>
-              {contracts.length === 0 ? (
-                <div className="p-3.5 rounded-xl border border-dashed border-gray-200 dark:border-border/50 text-center">
-                  <FileSignature className="w-5 h-5 text-muted-foreground/20 mx-auto mb-1.5" />
-                  <p className="text-[10px] text-muted-foreground/60">No Canvas yet</p>
-                  <button
-                    onClick={() => setCreateContractOpen(true)}
-                    className="mt-1.5 text-[10px] text-bronze/70 hover:text-bronze font-medium transition-colors"
-                  >
-                    + Add Canvas
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {contracts.map((c) => (
-                    <motion.div
-                      key={c.id}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="p-3 rounded-xl border border-gray-100 dark:border-border/40 bg-white dark:bg-card hover:border-bronze/30 hover:shadow-sm transition-all duration-200 group"
-                    >
-                      <div className="flex items-start justify-between gap-1.5 mb-1">
-                        <p className="text-[11px] font-semibold truncate flex-1 leading-snug">{c.title}</p>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-muted text-muted-foreground capitalize">{c.status}</span>
-                          <button
-                            onClick={() => setConfirmDeleteContract(c)}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground/70 truncate mb-2.5">{c.client_name}</p>
-                      {c.status !== "signed" ? (
-                        <Button size="sm" onClick={() => setContractDialog(c)}
-                          className="w-full h-7 text-[10px] bg-bronze hover:bg-bronze/90 text-background font-semibold gap-1.5 shadow-sm">
-                          <FileSignature className="w-3 h-3" />
-                          Sign Canvas
-                        </Button>
-                      ) : (
-                        <div className="flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                          <span className="text-[10px] text-emerald-600 font-semibold">Signed</span>
-                        </div>
-                      )}
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </div>
 
             {/* Invoice Section */}
             <div>
@@ -404,12 +300,6 @@ const WorkspaceActionVault = ({
             <div className="pt-1 border-t border-gray-100 dark:border-border/40">
               <p className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest mb-2 px-1">Quick Actions</p>
               <div className="space-y-0.5">
-                <Button variant="ghost" size="sm" onClick={() => navigate(`/crevia-studio?tab=contracts&workspace=${roomId}`)}
-                  className="w-full justify-start h-8 text-[11px] gap-2 text-muted-foreground hover:text-foreground px-2 font-medium">
-                  <FileSignature className="w-3.5 h-3.5 text-muted-foreground/60" />
-                  All Canvas
-                  <ArrowRight className="w-3 h-3 ml-auto text-muted-foreground/40" />
-                </Button>
                 <Button variant="ghost" size="sm" onClick={() => navigate(`/crevia-studio?tab=invoices&workspace=${roomId}`)}
                   className="w-full justify-start h-8 text-[11px] gap-2 text-muted-foreground hover:text-foreground px-2 font-medium">
                   <Receipt className="w-3.5 h-3.5 text-muted-foreground/60" />
@@ -485,14 +375,6 @@ const WorkspaceActionVault = ({
         </DialogContent>
       </Dialog>
 
-      {/* Create Contract Dialog */}
-      <CreateCanvasDialog
-        open={createContractOpen}
-        onOpenChange={setCreateContractOpen}
-        onSuccess={() => onRefresh?.()}
-        onCreated={handleContractCreated}
-      />
-
       {/* Create Invoice Dialog */}
       <CreateInvoiceDialog
         open={createInvoiceOpen}
@@ -500,16 +382,6 @@ const WorkspaceActionVault = ({
         onSuccess={() => onRefresh?.()}
         onCreated={handleInvoiceCreated}
       />
-
-      {/* Contract signing dialog */}
-      {contractDialog && (
-        <ContractPreviewDialog
-          open={!!contractDialog}
-          onOpenChange={(open) => { if (!open) setContractDialog(null); }}
-          canvas={contractDialog}
-          onCanvasUpdate={() => { onRefresh?.(); }}
-        />
-      )}
 
       {/* Invoice preview / generate dialog */}
       {invoiceDialog && (
@@ -519,25 +391,6 @@ const WorkspaceActionVault = ({
           invoice={invoiceDialog}
         />
       )}
-
-      {/* Delete Contract Confirmation */}
-      <AlertDialog open={!!confirmDeleteContract} onOpenChange={(o) => { if (!o) setConfirmDeleteContract(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-sm font-semibold">Delete Canvas</AlertDialogTitle>
-            <AlertDialogDescription className="text-xs">
-              Permanently delete <strong>{confirmDeleteContract?.title}</strong>? This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="text-xs h-8" disabled={deleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={deleteContract} disabled={deleting}
-              className="text-xs h-8 bg-destructive hover:bg-destructive/90 text-destructive-foreground">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Delete Invoice Confirmation */}
       <AlertDialog open={!!confirmDeleteInvoice} onOpenChange={(o) => { if (!o) setConfirmDeleteInvoice(null); }}>
