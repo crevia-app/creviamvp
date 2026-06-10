@@ -4,25 +4,38 @@ import jsPDF from "jspdf";
 import { toast } from "sonner";
 
 // ── Shared canvas capture ──────────────────────────────────────────────────────
+// Minimum capture width — ensures the full A4 invoice layout (incl. amounts
+// column) is captured even when the dialog is narrow on mobile screens.
+const MIN_CAPTURE_W = 794; // A4 at 96 dpi
+
 async function captureBlob(
   el: HTMLDivElement,
   filename: string,
   ignoreElements?: (el: Element) => boolean,
 ): Promise<{ blob: Blob; pdfName: string }> {
-  const visibleW = el.clientWidth;
-  const virtualW = Math.max(visibleW, 760);
+  // Force the element to render at full invoice width before capturing.
+  // Store + restore the original style so the UI is unaffected.
+  const prevMinWidth = el.style.minWidth;
+  el.style.minWidth = `${MIN_CAPTURE_W}px`;
 
-  const canvas = await html2canvas(el, {
-    scale: 2,
-    useCORS: true,
-    allowTaint: true,
-    backgroundColor: "#ffffff",
-    logging: false,
-    width: visibleW,
-    height: el.scrollHeight,
-    windowWidth: virtualW,
-    ignoreElements,
-  });
+  const captureW = Math.max(el.scrollWidth, MIN_CAPTURE_W);
+
+  let canvas;
+  try {
+    canvas = await html2canvas(el, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#ffffff",
+      logging: false,
+      width: captureW,
+      height: el.scrollHeight,
+      windowWidth: captureW,
+      ignoreElements,
+    });
+  } finally {
+    el.style.minWidth = prevMinWidth;
+  }
 
   const imgData = canvas.toDataURL("image/png");
   const pdf = new jsPDF({
