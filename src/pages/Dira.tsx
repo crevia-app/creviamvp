@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
+import type { Components } from "react-markdown";
 import { useVisualViewport } from "@/hooks/use-visual-viewport";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -323,6 +324,28 @@ const isMobileDevice =
   typeof window !== "undefined" &&
   (window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0);
 
+// ── Shared typography for streaming + completed assistant bubbles ─────────────
+// Defined outside the component so the object reference is stable across renders
+// and ReactMarkdown never re-mounts its renderer tree during streaming.
+const ASSISTANT_PROSE_CLASS =
+  "font-sans antialiased leading-relaxed space-y-4 text-[15px] md:text-[16px]";
+
+const markdownComponents: Components = {
+  p:      ({ children }) => <p      className="font-sans leading-relaxed my-2 w-full">{children}</p>,
+  strong: ({ children }) => <strong className="font-sans font-bold text-white">{children}</strong>,
+  em:     ({ children }) => <em     className="font-sans italic opacity-90">{children}</em>,
+  h1:     ({ children }) => <h1     className="font-sans font-semibold text-xl text-orange-500 mt-4 mb-2 tracking-tight">{children}</h1>,
+  h2:     ({ children }) => <h2     className="font-sans font-semibold text-lg text-orange-500 mt-4 mb-2 tracking-tight">{children}</h2>,
+  h3:     ({ children }) => <h3     className="font-sans font-semibold text-lg text-orange-500 mt-4 mb-2 tracking-tight">{children}</h3>,
+  ul:     ({ children }) => <ul     className="list-disc pl-5 space-y-1.5 my-2 font-sans">{children}</ul>,
+  ol:     ({ children }) => <ol     className="list-decimal pl-5 space-y-1.5 my-2 font-sans">{children}</ol>,
+  li:     ({ children }) => <li     className="font-sans marker:text-orange-500">{children}</li>,
+  code:   ({ children }) => <code   className="font-mono text-[13px] bg-white/10 px-1.5 py-0.5 rounded">{children}</code>,
+  pre:    ({ children }) => <pre    className="font-mono text-[13px] bg-white/5 border border-white/10 rounded-xl p-3 overflow-x-auto my-3">{children}</pre>,
+  a:      ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-orange-400 underline underline-offset-2 hover:opacity-80">{children}</a>,
+  hr:     () => <hr className="border-white/10 my-4" />,
+};
+
 const Dira = () => {
   const { toast } = useToast();
   const { diraActionsToday, diraActionsLimit, showDiraCounter, isFree } = useSubscription();
@@ -519,16 +542,18 @@ const Dira = () => {
     });
   }, [messages, isStreaming]);
 
-  // ── Scroll path 2: active streaming (50fps) ───────────────────────────────
-  // Direct synchronous scrollTop — no rAF. At 50fps the 16ms rAF delay creates
-  // a visible lag between the DOM mutation and scroll position update, which is
-  // exactly what causes the "dancing" jitter on iOS. Synchronous assignment
-  // keeps scroll flush with each rendered token.
+  // ── Scroll path 2: active streaming — rAF-throttled ─────────────────────
+  // One rAF per tick max: avoids forcing layout recalc on every 20ms token
+  // update while still keeping scroll visually flush with new content.
   useEffect(() => {
     if (!isStreaming) return;
     const el = scrollContainerRef.current;
     if (!el || !isNearBottomRef.current) return;
-    el.scrollTop = el.scrollHeight;
+    if (scrollRafRef.current !== null) return; // already queued
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollContainerRef.current?.scrollTo({ top: scrollContainerRef.current.scrollHeight });
+      scrollRafRef.current = null;
+    });
   }, [streamingDisplay, isStreaming]);
 
   // Reset textarea height whenever input is cleared (after send or new chat).
@@ -1649,8 +1674,8 @@ const Dira = () => {
                                     )}
                                   >
                                     {msg.role === 'assistant' ? (
-                                      <div className="prose prose-base dark:prose-invert max-w-none text-left leading-relaxed [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-                                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                      <div className={`${ASSISTANT_PROSE_CLASS} max-w-none text-left [&>*:first-child]:mt-0 [&>*:last-child]:mb-0`}>
+                                        <ReactMarkdown components={markdownComponents}>{msg.content}</ReactMarkdown>
                                       </div>
                                     ) : (
                                       <p className="text-base whitespace-pre-wrap text-left">
@@ -1745,7 +1770,7 @@ const Dira = () => {
                             <div className="flex gap-3">
                               <div className="flex-1">
                                 <div className="block w-full bg-muted rounded-2xl rounded-tl-md px-4 py-3">
-                                  <div className="text-base leading-relaxed text-foreground text-left">
+                                  <div className={`${ASSISTANT_PROSE_CLASS} max-w-none text-left [&>*:first-child]:mt-0 [&>*:last-child]:mb-0`}>
                                     <span className="whitespace-pre-wrap">{streamingDisplay}</span>
                                     <StreamingCursor />
                                   </div>
