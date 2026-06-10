@@ -1682,6 +1682,23 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
     return () => { supabase.removeChannel(channel); };
   }, [selectedRoom, fetchMessageMeta]);
 
+  // Re-fetch messages when the app returns to foreground — covers the gap
+  // where the WebSocket was disconnected while the app was backgrounded
+  // (switching apps on iOS/Android, locking the screen, switching tabs).
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && selectedRoomRef.current?.id) {
+        fetchMessages(selectedRoomRef.current.id);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleVisibility);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleDeleteForMe = async (messageId: string) => {
     await supabase.from("deleted_messages").insert({ message_id: messageId, user_id: currentUserId });
     setDeletedForMeIds((prev) => new Set([...prev, messageId]));
