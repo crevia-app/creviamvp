@@ -90,59 +90,116 @@ export function useDownloadPDF(
     }
   };
 
-  // ── Share: PDF file via native share sheet ────────────────────────────────
-  // Uses pre-generated blob (instant on iOS) → falls back to on-demand capture
-  // → falls back to URL share → falls back to clipboard copy.
-  const share = async () => {
-    setSharing(true);
-    try {
-      const captured =
-        blobCache.current ??
-        (ref.current ? await captureBlob(ref.current, filename, options?.ignoreElements) : null);
+  // ── shareSync — non-async, iOS-safe share entry point ────────────────────
+  // iOS Safari (especially iOS ≤14) does NOT propagate the user-gesture context
+  // into async functions. navigator.share() called after even one `await`
+  // may be blocked with "NotAllowedError: requires user activation."
+  //
+  // This function is intentionally NOT async. navigator.share() is called
+  // synchronously within the click event frame. The returned Promise is handled
+  // via .then()/.catch() chains — no `await` is used before the share call.
+  //
+  // Requires blobCache to be pre-populated by preGenerate(). If the cache is
+  // empty (pre-gen failed or dialog was just opened), falls back to URL share
+  // which always works on iOS regardless of the async constraint.
+  const shareSync = () => {
+    const cached = blobCache.current;
 
-      if (captured) {
-        const { blob, pdfName } = captured;
-        const pdfFile = new File([blob], pdfName, { type: "application/pdf" });
+    if (cached) {
+      const { blob, pdfName } = cached;
+      const pdfFile = new File([blob], pdfName, { type: "application/pdf" });
 
-        if (typeof navigator.share === "function" && navigator.canShare?.({ files: [pdfFile] })) {
-          await navigator.share({ files: [pdfFile], title: filename });
-          return;
-        }
-
-        // File share unsupported — fall back to URL share
-        if (typeof navigator.share === "function") {
-          await navigator.share({
-            title: filename,
-            text: `Document from Crevia — ${filename}`,
-            url: window.location.href,
-          });
-          return;
-        }
-
-        // Desktop (no Web Share API) — download the PDF directly
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = blobUrl; a.download = pdfName; a.style.display = "none";
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
-        toast.success("Downloaded as PDF!");
+      // File share — WhatsApp, Gmail, AirDrop, etc.
+      if (typeof navigator.share === "function" && navigator.canShare?.({ files: [pdfFile] })) {
+        setSharing(true);
+        navigator.share({ files: [pdfFile], title: filename })
+          .catch((err: any) => {
+            if (err?.name === "AbortError") return;
+            // File share rejected — try URL share as fallback
+            navigator.share({ title: filename, url: window.location.href }).catch(() => {});
+          })
+          .finally(() => setSharing(false));
         return;
       }
 
-      // No ref — share current URL or copy to clipboard
+      // No file share support — URL share
+      if (typeof navigator.share === "function") {
+        setSharing(true);
+        navigator.share({ title: filename, url: window.location.href })
+          .catch((err: any) => {
+            if (err?.name !== "AbortError") {
+              navigator.clipboard?.writeText(window.location.href);
+              toast.success("Link copied to clipboard!");
+            }
+          })
+          .finally(() => setSharing(false));
+        return;
+      }
+
+      // Desktop (no Web Share API) — download directly
+      setSharing(true);
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl; a.download = pdfName; a.style.display = "none";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
+      toast.success("Downloaded as PDF!");
+      setSharing(false);
+      return;
+    }
+
+    // Blob not ready — URL share as safe fallback (always within gesture on iOS)
+    if (typeof navigator.share === "function") {
+      setSharing(true);
+      navigator.share({ title: filename, url: window.location.href })
+        .catch((err: any) => {
+          if (err?.name !== "AbortError") {
+            navigator.clipboard?.writeText(window.location.href);
+            toast.success("Link copied to clipboard!");
+          }
+        })
+        .finally(() => setSharing(false));
+      return;
+    }
+
+    // Desktop, no blob — copy URL
+    navigator.clipboard?.writeText(window.location.href);
+    toast.success("Link copied to clipboard!");
+  };
+
+  // ── share — async version used by the autoShare (off-screen) path ────────
+  const share = async () => {
+    const captured =
+      blobCache.current ??
+      (ref.current ? await captureBlob(ref.current, filename, options?.ignoreElements) : null);
+
+    if (captured) {
+      const { blob, pdfName } = captured;
+      const pdfFile = new File([blob], pdfName, { type: "application/pdf" });
+
+      if (typeof navigator.share === "function" && navigator.canShare?.({ files: [pdfFile] })) {
+        await navigator.share({ files: [pdfFile], title: filename });
+        return;
+      }
       if (typeof navigator.share === "function") {
         await navigator.share({ title: filename, url: window.location.href });
-      } else {
-        await navigator.clipboard.writeText(window.location.href);
-        toast.success("Link copied to clipboard!");
+        return;
       }
-    } catch (err: any) {
-      if (err?.name === "AbortError") return;
-      toast.error("Could not share. Try downloading instead.");
-    } finally {
-      setSharing(false);
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl; a.download = pdfName; a.style.display = "none";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
+      return;
+    }
+
+    if (typeof navigator.share === "function") {
+      await navigator.share({ title: filename, url: window.location.href });
+    } else {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copied to clipboard!");
     }
   };
 
-  return { ref, download, downloading, share, sharing, preGenerate, pregenerating };
+  return { ref, download, downloading, shareSync, share, sharing, preGenerate, pregenerating };
 }

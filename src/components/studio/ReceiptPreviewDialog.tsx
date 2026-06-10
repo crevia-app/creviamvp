@@ -32,7 +32,7 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
   const [businessSettings, setBusinessSettings] = useState<any>(null);
   const [accentColor, setAccentColor]           = useState(DEFAULT_COLOR);
 
-  const { ref: docRef, download, downloading, share, sharing, preGenerate, pregenerating } = useDownloadPDF(
+  const { ref: docRef, download, downloading, shareSync, sharing, preGenerate, pregenerating } = useDownloadPDF(
     invoice ? `Receipt-${invoice.invoice_number?.replace("INV", "RCT") ?? ""}` : "Receipt"
   );
 
@@ -104,7 +104,7 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-4 sm:px-6 py-3 flex items-center justify-between gap-2">
           <DialogTitle className="font-vollkorn text-base sm:text-lg truncate min-w-0">Payment Receipt</DialogTitle>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <Button variant="outline" size="sm" onClick={share} disabled={sharing || pregenerating} className="h-8 w-8 p-0" title="Share PDF">
+            <Button variant="outline" size="sm" onClick={shareSync} disabled={sharing || pregenerating} className="h-8 w-8 p-0" title="Share PDF">
               <Share2 className="h-3.5 w-3.5" />
             </Button>
             <Button variant="outline" size="sm" onClick={download} disabled={downloading} className="h-8 gap-1.5 px-2.5 text-xs">

@@ -63,7 +63,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
   const page2Ref = useRef<HTMLDivElement>(null);
   const hasPage2 = !!(invoice?.notes || invoice?.terms || invoice?.payment_details?.method);
 
-  const { ref: docRef, download, downloading, share, sharing, preGenerate, pregenerating } = useDownloadPDF(
+  const { ref: docRef, download, downloading, shareSync, share, sharing, preGenerate, pregenerating } = useDownloadPDF(
     invoice ? `Invoice-${invoice.invoice_number}` : "Invoice",
     { ignoreElements: (el: Element) => el.classList.contains("print-page-break") }
   );
@@ -588,7 +588,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
                   Invoice Preview
                 </DialogTitle>
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  <Button variant="outline" size="sm" onClick={share} disabled={sharing || pregenerating} className="h-8 w-8 p-0" title="Share PDF">
+                  <Button variant="outline" size="sm" onClick={shareSync} disabled={sharing || pregenerating} className="h-8 w-8 p-0" title="Share PDF">
                     <Share2 className="h-3.5 w-3.5" />
                   </Button>
                   <Button variant="outline" size="sm" onClick={download} disabled={downloading} className="h-8 w-8 p-0" title="Download PDF">
