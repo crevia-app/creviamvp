@@ -434,6 +434,7 @@ const CreateInvoiceDialog = ({
           setSaveToBook(false);
         }
 
+        onSuccess();        // refresh list immediately — don't wait for overlay
         onOpenChange(false);
         setShowSuccess(true);
       }

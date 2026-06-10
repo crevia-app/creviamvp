@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Printer, Share2, CheckCircle2, Clock, AlertCircle,
+  Printer, Share2, Send, CheckCircle2, Clock, AlertCircle,
   Maximize2, Minimize2, Download, X, ArrowLeft, Eye, Trash2,
   AlignLeft, AlignCenter, AlignRight,
 } from "lucide-react";
