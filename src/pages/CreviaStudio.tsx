@@ -129,7 +129,7 @@ const isChatTab          = activeTab === "chat";
 
           {/* ── Desktop: Link sub-sections (shown below main tabs when Link active) ── */}
           {activeTab === "link" && (
-            <div className="hidden md:flex items-center gap-4 px-6 py-2 border-t border-border/40">
+            <div className="hidden md:flex items-center py-2 border-t border-border/40">
               {LINK_SECTIONS.map((section) => {
                 const Icon     = section.icon;
                 const isActive = activeLinkSection === section.id;
@@ -138,7 +138,7 @@ const isChatTab          = activeTab === "chat";
                     key={section.id}
                     onClick={() => handleLinkSectionChange(section.id)}
                     className={cn(
-                      "flex items-center gap-2 px-6 py-1.5 rounded-lg text-sm font-poppins font-medium",
+                      "flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg text-sm font-poppins font-medium",
                       "transition-all duration-150 select-none",
                       isActive
                         ? "bg-bronze/10 text-bronze"
