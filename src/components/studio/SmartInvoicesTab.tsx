@@ -8,6 +8,7 @@ import {
   Search,
   FileText,
   Send,
+  Share2,
   Eye,
   MoreHorizontal,
   Edit,
@@ -37,7 +38,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { SendDocumentDialog } from "@/components/studio/SendDocumentDialog";
 import { toast } from "sonner";
 import { format, isAfter } from "date-fns";
 import {
@@ -96,7 +96,6 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
   const [receiptInvoice, setReceiptInvoice] = useState<Invoice | null>(null);
-  const [sendInvoice, setSendInvoice] = useState<Invoice | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Folder navigation state
@@ -781,9 +780,9 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setSendInvoice(invoice)}>
-                          <Send className="h-4 w-4 mr-2" />
-                          Send
+                        <DropdownMenuItem onClick={() => setPreviewInvoice(invoice)}>
+                          <Share2 className="h-4 w-4 mr-2" />
+                          Share
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleDuplicate(invoice)}>
                           <Copy className="h-4 w-4 mr-2" />
@@ -851,17 +850,6 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
         onSaved={fetchBusinessSettings}
       />
 
-      {sendInvoice && (
-        <SendDocumentDialog
-          open={!!sendInvoice}
-          onOpenChange={(open) => !open && setSendInvoice(null)}
-          type="invoice"
-          documentId={sendInvoice.id}
-          defaultEmail={sendInvoice.client_email || ""}
-          documentLabel={`Invoice ${sendInvoice.invoice_number} · ${sendInvoice.client_name}`}
-          onSent={() => setSendInvoice(null)}
-        />
-      )}
 
       {/* Create Folder dialog */}
       <Dialog open={createFolderOpen} onOpenChange={(o) => { if (!o) setCreateFolderOpen(false); }}>

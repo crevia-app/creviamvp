@@ -9,13 +9,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Printer, Send, CheckCircle2, Clock, AlertCircle,
+  Printer, Share2, CheckCircle2, Clock, AlertCircle,
   Maximize2, Minimize2, Download, X, ArrowLeft, Eye, Trash2,
   AlignLeft, AlignCenter, AlignRight,
 } from "lucide-react";
 import { useDownloadPDF } from "@/hooks/use-download-pdf";
 import { useSubscription } from "@/hooks/use-subscription";
-import { SendDocumentDialog } from "@/components/studio/SendDocumentDialog";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -49,7 +48,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
   const [profile, setProfile]                   = useState<any>(null);
   const [businessSettings, setBusinessSettings] = useState<any>(null);
   const [isFullscreen, setIsFullscreen]         = useState(false);
-  const [showSendDialog, setShowSendDialog]     = useState(false);
+  const [sharing, setSharing]                   = useState(false);
   const [accentColor, setAccentColor]           = useState(DEFAULT_COLOR);
   // "main" = new single-flow preview  |  "print" = paged print-layout
   const [viewMode, setViewMode]                 = useState<"main" | "print">("main");
@@ -68,6 +67,49 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
     invoice ? `Invoice-${invoice.invoice_number}` : "Invoice",
     { ignoreElements: (el: Element) => el.classList.contains("print-page-break") }
   );
+
+  // ── Native PDF Share — captures invoice-print-area, builds PDF blob, pushes to OS share sheet
+  const handleNativePDFShare = async () => {
+    const element = docRef.current;
+    if (!element) return;
+    setSharing(true);
+    try {
+      const canvas = await html2canvas(element as HTMLElement, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
+      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+      const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const imgH  = (canvas.height * pageW) / canvas.width;
+      let y = 0;
+      while (y < imgH) {
+        if (y > 0) pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, -y, pageW, imgH);
+        y += pageH;
+      }
+      const fileName = `Invoice-${invoice?.invoice_number || 'Crevia'}.pdf`;
+      const pdfBlob = pdf.output('blob');
+      const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+        await navigator.share({
+          files: [pdfFile],
+          title: 'Crevia Invoice',
+          text: 'Please find attached invoice from Crevia.',
+        });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success("Link copied to clipboard!");
+      }
+    } catch (err) {
+      console.error('PDF Share error:', err);
+    } finally {
+      setSharing(false);
+    }
+  };
 
   // ── Print to PDF (used in print-mode toolbar) ──────────────────────────────
   // Trigger a PDF download via <a download> — window.open() after an await is
@@ -547,16 +589,8 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
                   Invoice Preview
                 </DialogTitle>
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  <Button variant="outline" size="sm" title="Share" className="h-8 w-8 p-0" onClick={async () => {
-                    if (navigator.share) {
-                      try { await navigator.share({ title: `Invoice ${invoice?.invoice_number || ""}`, text: "Check out this invoice from Crevia", url: window.location.href }); }
-                      catch {}
-                    } else {
-                      navigator.clipboard.writeText(window.location.href);
-                      toast.success("Link copied to clipboard!");
-                    }
-                  }}>
-                    <Send className="h-3.5 w-3.5" />
+                  <Button variant="outline" size="sm" title="Share Invoice" className="h-8 w-8 p-0" onClick={handleNativePDFShare} disabled={sharing}>
+                    <Share2 className="h-3.5 w-3.5" />
                   </Button>
                   <Button variant="outline" size="sm" onClick={download} disabled={downloading} className="h-8 w-8 p-0" title="Download PDF">
                     <Download className="h-3.5 w-3.5" />
@@ -625,17 +659,6 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
         </DialogContent>
       </Dialog>
 
-      {invoice && (
-        <SendDocumentDialog
-          open={showSendDialog}
-          onOpenChange={setShowSendDialog}
-          type="invoice"
-          documentId={invoice.id}
-          defaultEmail={invoice.client_email || ""}
-          documentLabel={`Invoice ${invoice.invoice_number} · ${invoice.client_name}`}
-          onSent={() => onOpenChange(false)}
-        />
-      )}
     </>
   );
 };
