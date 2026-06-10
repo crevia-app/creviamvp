@@ -11,14 +11,17 @@ interface SEOProps {
   type?: "website" | "article";
 }
 
+const DEFAULT_TITLE       = "Crevia - Infrastructure to scale your business operations";
+const DEFAULT_DESCRIPTION = "Create premium invoices, chat with teams and clients, share links-in-bio, and unlock Dira AI intelligence.";
+
 export const SEO = ({
-  title = "Crevia - Own Your Story",
-  description = "The infrastructure to scale your creative operations. Dira brings the intelligence. Crevia Studio handles the operations.",
+  title = DEFAULT_TITLE,
+  description = DEFAULT_DESCRIPTION,
   image = DEFAULT_IMAGE,
   url,
   type = "website",
 }: SEOProps) => {
-  const fullTitle = title === "Crevia - Own Your Story" ? title : `${title} | Crevia`;
+  const fullTitle = title === DEFAULT_TITLE ? title : `${title} | Crevia`;
   const canonical = url ? `${BASE_URL}${url}` : BASE_URL;
 
   return (
