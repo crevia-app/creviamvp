@@ -119,13 +119,15 @@ const UpgradeModalDialog = ({ state, onClose }: UpgradeModalDialogProps) => {
         {/* Accent bar */}
         <div className="h-0.5 w-full bg-gradient-to-r from-bronze/60 via-bronze to-bronze/60" />
 
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center rounded-full bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors z-10"
-        >
-          <X className="w-3.5 h-3.5" />
-        </button>
+        {/* Close button — wrapped in div to escape [&>button]:hidden on DialogContent */}
+        <div className="absolute top-4 right-4 z-10">
+          <button
+            onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
 
         <div className="p-6 sm:p-8">
           {/* Icon + header */}
