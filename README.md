@@ -1,6 +1,6 @@
 # Crevia — Developer Documentation
 
-> **Own Your Story.** Crevia is a Freemium-to-B2B SaaS platform that gives businesses and creatives the infrastructure to scale their operations — from link-in-bio to invoicing, encrypted workspaces, and AI-assisted deal structuring.
+> Crevia is solving the chaotic fragmentation businesses and creatives experience by building a unified, AI-powered infrastructure where both businesses and creatives can scale their business operations.
 
 **Production URL:** [crevia.app](https://crevia.app)  
 **Stack:** React 18 · Vite 5 · TypeScript 5 · Supabase · Vercel  
