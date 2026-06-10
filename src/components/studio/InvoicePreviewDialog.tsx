@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Printer, Share2, Send, CheckCircle2, Clock, AlertCircle,
+  Printer, Send, CheckCircle2, Clock, AlertCircle,
   Maximize2, Minimize2, Download, X, ArrowLeft, Eye, Trash2,
   AlignLeft, AlignCenter, AlignRight,
 } from "lucide-react";
@@ -558,9 +558,6 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
                   Invoice Preview
                 </DialogTitle>
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  <Button variant="outline" size="sm" title="Share Invoice" className="h-8 w-8 p-0" onClick={share} disabled={sharing}>
-                    <Share2 className="h-3.5 w-3.5" />
-                  </Button>
                   <Button variant="outline" size="sm" onClick={download} disabled={downloading} className="h-8 w-8 p-0" title="Download PDF">
                     <Download className="h-3.5 w-3.5" />
                   </Button>
