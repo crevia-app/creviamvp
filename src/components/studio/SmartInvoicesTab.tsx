@@ -95,6 +95,7 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
+  const [shareInvoice, setShareInvoice]     = useState<Invoice | null>(null);
   const [receiptInvoice, setReceiptInvoice] = useState<Invoice | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -780,7 +781,7 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setPreviewInvoice(invoice)}>
+                        <DropdownMenuItem onClick={() => setShareInvoice(invoice)}>
                           <Share2 className="h-4 w-4 mr-2" />
                           Share
                         </DropdownMenuItem>
@@ -837,6 +838,14 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
         open={!!previewInvoice}
         onOpenChange={(open) => !open && setPreviewInvoice(null)}
         invoice={previewInvoice}
+      />
+
+      {/* Hidden share dialog — renders invoice off-screen, fires share sheet, then closes */}
+      <InvoicePreviewDialog
+        open={!!shareInvoice}
+        onOpenChange={(open) => !open && setShareInvoice(null)}
+        invoice={shareInvoice}
+        autoShare
       />
 
       <ReceiptPreviewDialog

@@ -33,6 +33,7 @@ interface InvoicePreviewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   invoice: any;
+  autoShare?: boolean;
 }
 
 /**
@@ -43,7 +44,7 @@ interface InvoicePreviewDialogProps {
  *
  * In print mode the toolbar swaps to a Back button + Print-to-PDF action.
  */
-const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDialogProps) => {
+const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }: InvoicePreviewDialogProps) => {
   const [items, setItems]                       = useState<InvoiceItem[]>([]);
   const [profile, setProfile]                   = useState<any>(null);
   const [businessSettings, setBusinessSettings] = useState<any>(null);
@@ -66,6 +67,18 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
     invoice ? `Invoice-${invoice.invoice_number}` : "Invoice",
     { ignoreElements: (el: Element) => el.classList.contains("print-page-break") }
   );
+
+  // ── Auto-share: fires when dialog opens via the grid "Share" button ──────────
+  // Give the dialog one paint cycle to render the invoice-print-area before
+  // html2canvas tries to capture it, then fire share() and close on completion.
+  useEffect(() => {
+    if (!autoShare || !open || !invoice) return;
+    const t = setTimeout(async () => {
+      await share();
+      onOpenChange(false);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [autoShare, open, invoice]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Print to PDF (used in print-mode toolbar) ──────────────────────────────
   // Trigger a PDF download via <a download> — window.open() after an await is
