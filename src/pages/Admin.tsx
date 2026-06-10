@@ -9,7 +9,7 @@ import {
 import {
   LayoutDashboard, Users, CreditCard, FileText, MessageSquare,
   Settings, Shield, CheckCircle, XCircle, Search, Menu,
-  LogOut, Loader2, X, Receipt, FileCheck, ChevronRight,
+  LogOut, Loader2, X, Receipt, ChevronRight,
   TrendingUp, TrendingDown, Minus, ArrowUpRight, Palette,
   RotateCcw, Trash2, Copy, Mail, Database, Key, Bug, ArrowLeft,
 } from "lucide-react";
@@ -656,10 +656,9 @@ const UsersSection = () => {
               {detailLoad ? (
                 <div className="flex items-center justify-center py-6"><Loader2 className="w-4 h-4 text-bronze animate-spin" /></div>
               ) : selStats && (
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {[
                     { icon: Receipt,    label: "Invoices",  value: String(selStats.invoices), color: "text-blue-400" },
-                    { icon: FileCheck,  label: "Canvas", value: String(selStats.contracts), color: "text-violet-400" },
                     { icon: CreditCard, label: "Billed",    value: KES(selStats.invoiceTotal), color: "text-bronze" },
                   ].map(({ icon: Icon, label, value, color }) => (
                     <div key={label} className="bg-[#111] border border-white/[0.06] rounded-xl p-3 text-center">
@@ -1128,7 +1127,7 @@ const BillingSection = () => {
             <div className="rounded-xl p-3 bg-white/[0.03]">
               <p className="text-[10px] text-white/30 uppercase tracking-wider font-semibold mb-2">Included features</p>
               <ul className="space-y-1.5">
-                {["5 invoices / month", "3 Canvas / month", "Basic CreviaLink profile", "Standard messaging"].map(f => (
+                {["5 invoices / month", "Basic CreviaLink profile", "Standard messaging"].map(f => (
                   <li key={f} className="flex items-center gap-2 text-xs text-white/35">
                     <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-white/20" />
                     {f}
@@ -1146,7 +1145,7 @@ const BillingSection = () => {
               border: "border-emerald-500/20",
               bg: "bg-emerald-500/5",
               accent: "bg-emerald-500/10",
-              features: ["Unlimited invoices & Canvas", "CreviaLink profile", "CreviaStudio access", "E2E encrypted messaging", "Escrow payments"],
+              features: ["Unlimited invoices", "CreviaLink profile", "CreviaStudio access", "E2E encrypted messaging", "Escrow payments"],
             },
             {
               key: "business" as const,
@@ -1214,51 +1213,42 @@ const BillingSection = () => {
 
 // ─── Documents ────────────────────────────────────────────────────────────────
 const DocumentsSection = () => {
-  const [view, setView]             = useState<"invoices" | "canvases" | "analytics" | "trash">("invoices");
+  const [view, setView]             = useState<"invoices" | "analytics" | "trash">("invoices");
   const [invoices, setInvoices]     = useState<any[]>([]);
-  const [contracts, setContracts]   = useState<any[]>([]);
   const [trashInv, setTrashInv]     = useState<any[]>([]);
-  const [trashCon, setTrashCon]     = useState<any[]>([]);
   const [search, setSearch]         = useState("");
   const [loading, setLoading]       = useState(true);
 
   useEffect(() => { load(); }, []);
 
   const SEL_INV = "id, invoice_number, client_name, total, status, currency, created_at, deleted_at";
-  const SEL_CON = "id, title, client_name, value, status, currency, created_at, contract_type, deleted_at";
 
   const load = async () => {
-    const [{ data: allInv }, { data: allCon }] = await Promise.all([
-      (supabase.from("invoices") as any).select(SEL_INV).order("created_at", { ascending: false }).limit(300),
-      (supabase.from("canvases") as any).select(SEL_CON).order("created_at", { ascending: false }).limit(300),
-    ]);
+    const { data: allInv } = await (supabase.from("invoices") as any).select(SEL_INV).order("created_at", { ascending: false }).limit(300);
     const inv = (allInv ?? []);
-    const con = (allCon ?? []);
     setInvoices(inv.filter((d: any) => !d.deleted_at));
-    setContracts(con.filter((d: any) => !d.deleted_at));
     setTrashInv(inv.filter((d: any) => d.deleted_at));
-    setTrashCon(con.filter((d: any) => d.deleted_at));
     setLoading(false);
   };
 
-  const softDelete = async (table: "invoices" | "canvases", id: string) => {
+  const softDelete = async (id: string) => {
     if (!confirm(`Move to trash? You can restore it later.`)) return;
-    const { error } = await (supabase.from(table) as any).update({ deleted_at: new Date().toISOString() }).eq("id", id);
+    const { error } = await (supabase.from("invoices") as any).update({ deleted_at: new Date().toISOString() }).eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success("Moved to trash");
     load();
   };
 
-  const restore = async (table: "invoices" | "canvases", id: string) => {
-    const { error } = await (supabase.from(table) as any).update({ deleted_at: null }).eq("id", id);
+  const restore = async (id: string) => {
+    const { error } = await (supabase.from("invoices") as any).update({ deleted_at: null }).eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success("Restored");
     load();
   };
 
-  const permanentDelete = async (table: "invoices" | "canvases", id: string) => {
+  const permanentDelete = async (id: string) => {
     if (!confirm("Permanently delete? This cannot be undone.")) return;
-    const { error } = await supabase.from(table).delete().eq("id", id);
+    const { error } = await supabase.from("invoices").delete().eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success("Permanently deleted");
     load();
@@ -1267,8 +1257,7 @@ const DocumentsSection = () => {
   // ── Derived stats ──
   const paid    = invoices.filter(i => i.status === "paid").length;
   const pending = invoices.filter(i => i.status === "draft" || i.status === "sent").length;
-  const signed  = contracts.filter(c => c.status === "signed").length;
-  const trashCount = trashInv.length + trashCon.length;
+  const trashCount = trashInv.length;
 
   // ── Analytics ──
   const now = new Date();
@@ -1280,22 +1269,20 @@ const DocumentsSection = () => {
     const start = startOfMonth(d).toISOString();
     const end   = endOfMonth(d).toISOString();
     return {
-      month:     format(d, "MMM"),
-      invoices:  invoices.filter((r: any) => r.created_at >= start && r.created_at <= end).length,
-      contracts: contracts.filter((r: any) => r.created_at >= start && r.created_at <= end).length,
+      month:    format(d, "MMM"),
+      invoices: invoices.filter((r: any) => r.created_at >= start && r.created_at <= end).length,
     };
   });
   const clientMap: Record<string, number> = {};
-  [...invoices, ...contracts].forEach((d: any) => {
+  invoices.forEach((d: any) => {
     if (d.client_name) clientMap[d.client_name] = (clientMap[d.client_name] || 0) + 1;
   });
   const topClients = Object.entries(clientMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
   const maxClient  = Math.max(1, ...topClients.map(([, c]) => c));
 
-  const filtered = (view === "invoices" ? invoices : contracts).filter((d: any) => {
+  const filtered = invoices.filter((d: any) => {
     const q = search.toLowerCase();
-    return !q || d.client_name?.toLowerCase().includes(q)
-      || (view === "invoices" ? d.invoice_number?.toLowerCase().includes(q) : d.title?.toLowerCase().includes(q));
+    return !q || d.client_name?.toLowerCase().includes(q) || d.invoice_number?.toLowerCase().includes(q);
   });
 
   if (loading) return <Spin />;
@@ -1304,15 +1291,14 @@ const DocumentsSection = () => {
     <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-4xl">
       <div>
         <h2 className="text-lg font-bold text-white">Documents</h2>
-        <p className="text-sm text-white/30">{invoices.length} invoices · {contracts.length} Canvas</p>
+        <p className="text-sm text-white/30">{invoices.length} invoices</p>
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {[
           { label: "Paid invoices",    value: String(paid),    color: "text-emerald-400", accent: "bg-emerald-500" },
           { label: "Pending invoices", value: String(pending), color: "text-amber-400",   accent: "bg-amber-500" },
-          { label: "Signed Canvas",    value: String(signed),  color: "text-violet-400",  accent: "bg-violet-500" },
         ].map(c => (
           <div key={c.label} className="relative bg-[#111] border border-white/[0.06] rounded-2xl p-4 overflow-hidden">
             <div className={cn("absolute -top-4 -right-4 w-12 h-12 rounded-full blur-xl opacity-20", c.accent)} />
@@ -1326,7 +1312,6 @@ const DocumentsSection = () => {
       <div className="flex gap-1 p-1 bg-[#111] rounded-xl border border-white/[0.06] w-fit flex-wrap">
         {([
           { id: "invoices"   as const, label: "Invoices" },
-          { id: "canvases"  as const, label: "Canvas" },
           { id: "analytics"  as const, label: "Analytics" },
           { id: "trash"      as const, label: "Trash", badge: trashCount },
         ]).map(t => (
@@ -1342,34 +1327,30 @@ const DocumentsSection = () => {
         ))}
       </div>
 
-      {/* ── Invoices / Contracts list ── */}
-      {(view === "invoices" || view === "canvases") && (
+      {/* ── Invoices list ── */}
+      {view === "invoices" && (
         <>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
-            <Input placeholder={`Search ${view}...`} value={search} onChange={e => setSearch(e.target.value)}
+            <Input placeholder="Search invoices..." value={search} onChange={e => setSearch(e.target.value)}
               className="pl-9 bg-[#111] border-white/[0.06] text-white placeholder:text-white/25 rounded-xl h-9 focus-visible:ring-bronze/30" />
           </div>
-          <p className="text-xs text-white/25">{filtered.length} {view}</p>
+          <p className="text-xs text-white/25">{filtered.length} invoices</p>
           <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
             <div className="divide-y divide-white/[0.04]">
-              {filtered.length === 0 && <div className="text-center py-16 text-white/20 text-sm">No {view} found</div>}
+              {filtered.length === 0 && <div className="text-center py-16 text-white/20 text-sm">No invoices found</div>}
               {filtered.map((d: any) => (
                 <div key={d.id} className="px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors group">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white/75 font-medium truncate">
-                      {view === "invoices" ? `#${d.invoice_number} · ${d.client_name}` : d.title}
-                    </p>
-                    <p className="text-xs text-white/25 truncate mt-0.5">
-                      {view === "canvases" ? `${d.client_name} · ${d.contract_type} · ` : ""}{format(new Date(d.created_at), "dd MMM yyyy")}
-                    </p>
+                    <p className="text-sm text-white/75 font-medium truncate">#{d.invoice_number} · {d.client_name}</p>
+                    <p className="text-xs text-white/25 truncate mt-0.5">{format(new Date(d.created_at), "dd MMM yyyy")}</p>
                   </div>
                   <div className="flex items-center gap-2.5 flex-shrink-0">
                     <span className={statusChip(d.status)}>{d.status}</span>
                     <p className="text-sm font-bold text-white/70 tabular-nums">
-                      {d.currency || "KES"} {((d.total ?? d.value) || 0).toLocaleString()}
+                      {d.currency || "KES"} {(d.total || 0).toLocaleString()}
                     </p>
-                    <button onClick={() => softDelete(view === "invoices" ? "invoices" : "canvases", d.id)}
+                    <button onClick={() => softDelete(d.id)}
                       className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400/60 hover:text-red-400 p-1 rounded-lg hover:bg-red-500/10" title="Move to trash">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -1402,24 +1383,15 @@ const DocumentsSection = () => {
 
           {/* Docs per month chart */}
           <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
-            <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-1">Documents Created</p>
-            <p className="text-xs text-white/25 mb-4">Invoices and Canvas per month (last 6 months)</p>
-            <div className="flex items-center gap-4 mb-4">
-              {[{ color: "#6366f1", label: "Invoices" }, { color: "#8b5cf6", label: "Canvas" }].map(l => (
-                <div key={l.label} className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: l.color }} />
-                  <span className="text-[11px] text-white/40">{l.label}</span>
-                </div>
-              ))}
-            </div>
+            <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-1">Invoices Created</p>
+            <p className="text-xs text-white/25 mb-4">Per month (last 6 months)</p>
             <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={docsPerMonth} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barGap={3}>
+              <BarChart data={docsPerMonth} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
                 <XAxis dataKey="month" tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip contentStyle={{ background: "#1c1c1c", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12 }} labelStyle={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }} itemStyle={{ color: "#fff", fontSize: 12 }} />
-                <Bar dataKey="invoices"  fill="#6366f1" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="contracts" fill="#8b5cf6" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="invoices" fill="#6366f1" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -1451,33 +1423,28 @@ const DocumentsSection = () => {
           {trashCount === 0 && (
             <div className="text-center py-20 text-white/20 text-sm">Trash is empty</div>
           )}
-          {[
-            { label: "Invoices",  items: trashInv, table: "invoices"  as const },
-            { label: "Canvas", items: trashCon, table: "canvases" as const },
-          ].filter(g => g.items.length > 0).map(group => (
-            <div key={group.label} className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
+          {trashInv.length > 0 && (
+            <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
               <div className="px-5 py-3.5 border-b border-white/[0.04] flex items-center justify-between">
-                <p className="text-sm font-semibold text-white/50">{group.label}</p>
-                <span className="text-xs text-amber-400">{group.items.length} in trash</span>
+                <p className="text-sm font-semibold text-white/50">Invoices</p>
+                <span className="text-xs text-amber-400">{trashInv.length} in trash</span>
               </div>
               <div className="divide-y divide-white/[0.04]">
-                {group.items.map((d: any) => (
+                {trashInv.map((d: any) => (
                   <div key={d.id} className="px-5 py-3.5 flex items-center gap-3 hover:bg-white/[0.02] transition-colors group">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white/50 font-medium truncate">
-                        {group.table === "invoices" ? `#${d.invoice_number} · ${d.client_name}` : d.title}
-                      </p>
+                      <p className="text-sm text-white/50 font-medium truncate">#{d.invoice_number} · {d.client_name}</p>
                       <p className="text-xs text-white/20 mt-0.5 truncate">
                         Deleted {format(new Date(d.deleted_at), "dd MMM yyyy")} · originally created {format(new Date(d.created_at), "dd MMM yyyy")}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className={statusChip(d.status)}>{d.status}</span>
-                      <button onClick={() => restore(group.table, d.id)}
+                      <button onClick={() => restore(d.id)}
                         className="flex items-center gap-1 text-[11px] text-emerald-400/70 hover:text-emerald-400 px-2 py-1 rounded-lg hover:bg-emerald-500/10 transition-all border border-transparent hover:border-emerald-500/20">
                         <RotateCcw className="w-3 h-3" /> Restore
                       </button>
-                      <button onClick={() => permanentDelete(group.table, d.id)}
+                      <button onClick={() => permanentDelete(d.id)}
                         className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400/60 hover:text-red-400 p-1 rounded-lg hover:bg-red-500/10" title="Delete permanently">
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -1486,7 +1453,7 @@ const DocumentsSection = () => {
                 ))}
               </div>
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>
@@ -1774,16 +1741,6 @@ const SupportSection = ({ onTicketClosed, onVerificationResolved }: { onTicketCl
 };
 
 // ─── Templates & Customization ───────────────────────────────────────────────
-const CONTRACT_TYPES: Record<string, { label: string; icon: string }> = {
-  sponsorship:      { label: "Sponsorship",    icon: "💎" },
-  content_creation: { label: "Content",        icon: "🎬" },
-  brand_ambassador: { label: "Ambassador",     icon: "🤝" },
-  ugc:              { label: "UGC",            icon: "📱" },
-  affiliate:        { label: "Affiliate",      icon: "🔗" },
-  custom:           { label: "Custom",         icon: "📄" },
-  uploaded:         { label: "Uploaded",       icon: "📎" },
-};
-
 const FONTS: Record<string, string> = {
   poppins:  "Poppins",
   vollkorn: "Vollkorn",
@@ -1795,7 +1752,6 @@ const PLAN_FEATURES = [
   { label: "Seats",                  free: "1",    pro: "1",         biz: "3+",        ent: "Custom"    },
   { label: "Dira AI actions / day",  free: "10",   pro: "40",        biz: "200",       ent: "Unlimited" },
   { label: "Invoices / month",       free: "2",    pro: "Unlimited", biz: "Unlimited", ent: "Unlimited" },
-  { label: "Canvas / month",         free: "2",    pro: "Unlimited", biz: "Unlimited", ent: "Unlimited" },
   { label: "Workspaces",             free: "1",    pro: "Unlimited", biz: "Unlimited", ent: "Custom"    },
   { label: "No invoice watermark",   free: false,  pro: true,        biz: true,        ent: true        },
   { label: "E-Signature",            free: false,  pro: true,        biz: true,        ent: true        },
@@ -1818,16 +1774,14 @@ const TemplatesSection = () => {
   const [tab, setTab] = useState<"templates" | "themes" | "features">("templates");
   const [loading, setLoading] = useState(true);
   const [invoiceColors, setInvoiceColors] = useState<{ color: string; count: number }[]>([]);
-  const [contractTypes, setContractTypes] = useState<{ type: string; count: number }[]>([]);
   const [themes, setThemes]               = useState<{ theme: string; count: number }[]>([]);
   const [fonts, setFonts]                 = useState<{ font: string; count: number }[]>([]);
 
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    const [{ data: invData }, { data: conData }, { data: lpData }] = await Promise.all([
+    const [{ data: invData }, { data: lpData }] = await Promise.all([
       supabase.from("invoices").select("accent_color"),
-      supabase.from("canvases").select("contract_type"),
       supabase.from("link_profiles").select("theme, background"),
     ]);
 
@@ -1838,14 +1792,6 @@ const TemplatesSection = () => {
       colorMap[c] = (colorMap[c] || 0) + 1;
     });
     setInvoiceColors(Object.entries(colorMap).sort((a, b) => b[1] - a[1]).map(([color, count]) => ({ color, count })));
-
-    // Contract types
-    const typeMap: Record<string, number> = {};
-    (conData ?? []).forEach((r: any) => {
-      const t = r.contract_type || "custom";
-      typeMap[t] = (typeMap[t] || 0) + 1;
-    });
-    setContractTypes(Object.entries(typeMap).sort((a, b) => b[1] - a[1]).map(([type, count]) => ({ type, count })));
 
     // CreviaLink themes
     const themeMap: Record<string, number> = {};
@@ -1864,7 +1810,6 @@ const TemplatesSection = () => {
 
   if (loading) return <Spin />;
 
-  const maxCon   = Math.max(1, ...contractTypes.map(r => r.count));
   const maxColor = Math.max(1, ...invoiceColors.map(r => r.count));
   const maxTheme = Math.max(1, ...themes.map(r => r.count));
   const maxFont  = Math.max(1, ...fonts.map(r => r.count));
@@ -1892,46 +1837,21 @@ const TemplatesSection = () => {
 
       {/* ── Templates ── */}
       {tab === "templates" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-          {/* Contract type usage */}
-          <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
-            <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-5">Canvas Templates Used</p>
-            {contractTypes.length === 0
-              ? <p className="text-sm text-white/20 text-center py-8">No Canvas yet</p>
-              : <div className="space-y-3">
-                  {contractTypes.map(({ type, count }) => {
-                    const info = CONTRACT_TYPES[type] || { label: type, icon: "📄" };
-                    return (
-                      <div key={type} className="flex items-center gap-3">
-                        <span className="text-base w-5 flex-shrink-0">{info.icon}</span>
-                        <span className="text-sm text-white/60 w-24 flex-shrink-0 truncate">{info.label}</span>
-                        <UsageBar pct={Math.round((count / maxCon) * 100)} color="bg-violet-500" />
-                        <span className="text-xs text-white/30 tabular-nums w-6 text-right flex-shrink-0">{count}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-            }
-          </div>
-
-          {/* Invoice accent colors */}
-          <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
-            <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-5">Invoice Accent Colors</p>
-            {invoiceColors.length === 0
-              ? <p className="text-sm text-white/20 text-center py-8">No invoices yet</p>
-              : <div className="space-y-3">
-                  {invoiceColors.slice(0, 8).map(({ color, count }) => (
-                    <div key={color} className="flex items-center gap-3">
-                      <div className="w-5 h-5 rounded-md flex-shrink-0 ring-1 ring-white/10" style={{ backgroundColor: color }} />
-                      <span className="text-xs text-white/40 font-mono w-20 flex-shrink-0">{color}</span>
-                      <UsageBar pct={Math.round((count / maxColor) * 100)} color="bg-bronze" />
-                      <span className="text-xs text-white/30 tabular-nums w-6 text-right flex-shrink-0">{count}</span>
-                    </div>
-                  ))}
-                </div>
-            }
-          </div>
+        <div className="bg-[#111] border border-white/[0.06] rounded-2xl p-5">
+          <p className="text-xs text-white/40 uppercase tracking-wider font-semibold mb-5">Invoice Accent Colors</p>
+          {invoiceColors.length === 0
+            ? <p className="text-sm text-white/20 text-center py-8">No invoices yet</p>
+            : <div className="space-y-3">
+                {invoiceColors.slice(0, 8).map(({ color, count }) => (
+                  <div key={color} className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-md flex-shrink-0 ring-1 ring-white/10" style={{ backgroundColor: color }} />
+                    <span className="text-xs text-white/40 font-mono w-20 flex-shrink-0">{color}</span>
+                    <UsageBar pct={Math.round((count / maxColor) * 100)} color="bg-bronze" />
+                    <span className="text-xs text-white/30 tabular-nums w-6 text-right flex-shrink-0">{count}</span>
+                  </div>
+                ))}
+              </div>
+          }
         </div>
       )}
 
@@ -2018,7 +1938,7 @@ const TemplatesSection = () => {
 // ─── Settings ─────────────────────────────────────────────────────────────────
 const SettingsSection = () => {
   const [settingsTab, setSettingsTab]   = useState<"general" | "email" | "storage" | "apikeys">("general");
-  const [counts, setCounts]             = useState({ users: 0, invoices: 0, contracts: 0 });
+  const [counts, setCounts]             = useState({ users: 0, invoices: 0 });
   const [maintenance, setMaintenance]   = useState(false);
   const [maintenanceSaving, setMaintenanceSaving] = useState(false);
   const [emailFromName, setEmailFromName] = useState("Crevia");
@@ -2030,10 +1950,9 @@ const SettingsSection = () => {
     Promise.all([
       supabase.from("profiles").select("id", { count: "exact", head: true }),
       supabase.from("invoices").select("id", { count: "exact", head: true }),
-      supabase.from("canvases").select("id", { count: "exact", head: true }),
       (supabase.from("app_settings") as any).select("key, value").in("key", ["maintenance_mode", "email_from_name", "email_reply_to"]),
-    ]).then(([{ count: u }, { count: i }, { count: c }, { data: settings }]) => {
-      setCounts({ users: u ?? 0, invoices: i ?? 0, contracts: c ?? 0 });
+    ]).then(([{ count: u }, { count: i }, { data: settings }]) => {
+      setCounts({ users: u ?? 0, invoices: i ?? 0 });
       const s: any[] = settings ?? [];
       setMaintenance(s.find(r => r.key === "maintenance_mode")?.value === "true");
       setEmailFromName(s.find(r => r.key === "email_from_name")?.value || "Crevia");
@@ -2122,7 +2041,6 @@ const SettingsSection = () => {
                 { label: "Auth",            value: "Supabase Auth + MFA" },
                 { label: "Total Users",     value: String(counts.users) },
                 { label: "Total Invoices",  value: String(counts.invoices) },
-                { label: "Total Canvas", value: String(counts.contracts) },
                 { label: "Admin gating",    value: "is_admin = true on profiles" },
               ].map(r => (
                 <div key={r.label} className="flex items-center justify-between px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
