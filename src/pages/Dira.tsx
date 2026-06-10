@@ -332,7 +332,7 @@ const ASSISTANT_PROSE_CLASS =
 
 const markdownComponents: Components = {
   p:      ({ children }) => <p      className="font-sans leading-relaxed my-2 w-full">{children}</p>,
-  strong: ({ children }) => <strong className="font-sans font-bold text-white">{children}</strong>,
+  strong: ({ children }) => <strong className="font-sans font-bold text-foreground">{children}</strong>,
   em:     ({ children }) => <em     className="font-sans italic opacity-90">{children}</em>,
   h1:     ({ children }) => <h1     className="font-sans font-semibold text-xl text-orange-500 mt-4 mb-2 tracking-tight">{children}</h1>,
   h2:     ({ children }) => <h2     className="font-sans font-semibold text-lg text-orange-500 mt-4 mb-2 tracking-tight">{children}</h2>,
@@ -340,10 +340,10 @@ const markdownComponents: Components = {
   ul:     ({ children }) => <ul     className="list-disc pl-5 space-y-1.5 my-2 font-sans">{children}</ul>,
   ol:     ({ children }) => <ol     className="list-decimal pl-5 space-y-1.5 my-2 font-sans">{children}</ol>,
   li:     ({ children }) => <li     className="font-sans marker:text-orange-500">{children}</li>,
-  code:   ({ children }) => <code   className="font-mono text-[13px] bg-white/10 px-1.5 py-0.5 rounded">{children}</code>,
-  pre:    ({ children }) => <pre    className="font-mono text-[13px] bg-white/5 border border-white/10 rounded-xl p-3 overflow-x-auto my-3">{children}</pre>,
+  code:   ({ children }) => <code   className="font-mono text-[13px] bg-muted px-1.5 py-0.5 rounded text-foreground">{children}</code>,
+  pre:    ({ children }) => <pre    className="font-mono text-[13px] bg-muted border border-border rounded-xl p-3 overflow-x-auto my-3 text-foreground">{children}</pre>,
   a:      ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-orange-400 underline underline-offset-2 hover:opacity-80">{children}</a>,
-  hr:     () => <hr className="border-white/10 my-4" />,
+  hr:     () => <hr className="border-border my-4" />,
 };
 
 const Dira = () => {
