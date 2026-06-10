@@ -86,11 +86,11 @@ const Auth = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session && !inPasswordResetFlow.current) {
-        // Register device for session tracking (Security tab) — no limit enforced
+        // Register device for session tracking (Security tab) — fire-and-forget
         supabase.rpc("register_device_session", {
           p_device_id: getOrCreateDeviceId(),
           p_device_name: getDeviceName(),
-        }).catch(() => {});
+        }).then(null, () => {});
 
         // Ensure terms flag is set in localStorage and the database
         localStorage.setItem("crevia_terms_v1", "1");
@@ -99,19 +99,19 @@ const Auth = () => {
 
         // Write terms_accepted_at to profiles if not already recorded
         if (user) {
-          supabase.from("profiles")
-            .select("terms_accepted_at")
-            .eq("id", user.id)
-            .single()
-            .then(({ data }) => {
+          (async () => {
+            try {
+              const { data } = await supabase.from("profiles")
+                .select("terms_accepted_at")
+                .eq("id", user.id)
+                .single();
               if (!data?.terms_accepted_at) {
-                supabase.from("profiles")
+                await supabase.from("profiles")
                   .update({ terms_accepted_at: new Date().toISOString() })
-                  .eq("id", user.id)
-                  .catch(() => {});
+                  .eq("id", user.id);
               }
-            })
-            .catch(() => {});
+            } catch {}
+          })();
         }
         if (user?.user_metadata?.two_fa_enabled) {
           sessionStorage.setItem("mfa_pending", "1");
@@ -239,7 +239,7 @@ const Auth = () => {
             supabase.from("profiles")
               .update({ terms_accepted_at: new Date().toISOString() })
               .eq("id", signUpData.user.id)
-              .catch(() => {});
+              .then(null, () => {});
           }
           setShowWelcomeScreen(true);
         } else {
