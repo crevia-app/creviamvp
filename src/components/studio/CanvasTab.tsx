@@ -673,7 +673,7 @@ const ContractsTab = ({ workspaceId, initialContractId }: { workspaceId?: string
                   transition={{ delay: index * 0.03 }}
                 >
                   <div
-                    className="group relative flex flex-col gap-3 rounded-2xl border border-border/50 bg-card p-4 transition-all duration-300 hover:border-primary/20 hover:shadow-md hover:shadow-primary/5 cursor-pointer md:flex-row md:items-center"
+                    className="group relative flex flex-col gap-3 rounded-2xl border border-border/50 bg-card p-4 transition-all duration-300 hover:border-primary/20 hover:shadow-md hover:shadow-primary/5 cursor-pointer md:flex-row md:items-center touch-manipulation"
                     onClick={() => setPreviewCanvas(canvas)}
                   >
                     {/* Type Icon */}
@@ -742,7 +742,7 @@ const ContractsTab = ({ workspaceId, initialContractId }: { workspaceId?: string
                       )}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl opacity-100 transition-all md:opacity-0 md:group-hover:opacity-100" onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl opacity-100 transition-all md:opacity-0 md:group-hover:opacity-100" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>

@@ -547,7 +547,15 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice }: InvoicePreviewDia
                   Invoice Preview
                 </DialogTitle>
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  <Button variant="outline" size="sm" onClick={() => setShowSendDialog(true)} className="h-8 w-8 p-0" title="Send">
+                  <Button variant="outline" size="sm" title="Share" className="h-8 w-8 p-0" onClick={async () => {
+                    if (navigator.share) {
+                      try { await navigator.share({ title: `Invoice ${invoice?.invoice_number || ""}`, text: "Check out this invoice from Crevia", url: window.location.href }); }
+                      catch {}
+                    } else {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast.success("Link copied to clipboard!");
+                    }
+                  }}>
                     <Send className="h-3.5 w-3.5" />
                   </Button>
                   <Button variant="outline" size="sm" onClick={download} disabled={downloading} className="h-8 w-8 p-0" title="Download PDF">

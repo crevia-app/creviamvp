@@ -455,22 +455,21 @@ const CanvasPreviewDialog = ({
                 <Edit3 className="h-3.5 w-3.5" />
               </Button>
             )}
-            {!isEditingDetails && !placementMode && !localCanvas.creator_signature && (
-              <Button variant="ghost" size="sm" title="Sign"
-                onClick={() => {
-                  if (!limits.hasESignature) { triggerESignUpgrade(); return; }
-                  setShowSignatureDialog(true);
-                }}
-                className="h-8 w-8 p-0 rounded-lg text-primary hover:bg-primary/10"
-              >
-                <PenTool className="h-3.5 w-3.5" />
-              </Button>
-            )}
-
             {!placementMode && (
               <>
-                {/* Desktop: individual Send / Download / Print buttons */}
-                <Button variant="ghost" size="sm" title="Send" onClick={() => setShowSendDialog(true)} className="hidden sm:flex h-8 w-8 p-0 rounded-lg">
+                {/* Desktop: Share / Download / Print */}
+                <Button variant="ghost" size="sm" title="Share" onClick={async () => {
+                  const shareUrl = localCanvas.share_token
+                    ? `${window.location.origin}/canvas/view/${localCanvas.share_token}`
+                    : window.location.href;
+                  if (navigator.share) {
+                    try { await navigator.share({ title: localCanvas.title || "Crevia Canvas", text: "Check out this document from Crevia", url: shareUrl }); }
+                    catch {}
+                  } else {
+                    navigator.clipboard.writeText(shareUrl);
+                    toast.success("Link copied to clipboard!");
+                  }
+                }} className="hidden sm:flex h-8 w-8 p-0 rounded-lg">
                   <Send className="h-3.5 w-3.5" />
                 </Button>
                 <Button variant="ghost" size="sm" title="Download" onClick={download} disabled={downloading} className="hidden sm:flex h-8 w-8 p-0 rounded-lg">
@@ -480,7 +479,7 @@ const CanvasPreviewDialog = ({
                   <Printer className="h-3.5 w-3.5" />
                 </Button>
 
-                {/* Mobile: collapse into a single overflow menu */}
+                {/* Mobile: collapse into overflow menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="sm:hidden h-8 w-8 p-0 rounded-lg">
@@ -488,8 +487,19 @@ const CanvasPreviewDialog = ({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-44 rounded-xl">
-                    <DropdownMenuItem onClick={() => setShowSendDialog(true)} className="rounded-lg gap-2 text-sm">
-                      <Send className="h-3.5 w-3.5" /> Send
+                    <DropdownMenuItem onClick={async () => {
+                      const shareUrl = localCanvas.share_token
+                        ? `${window.location.origin}/canvas/view/${localCanvas.share_token}`
+                        : window.location.href;
+                      if (navigator.share) {
+                        try { await navigator.share({ title: localCanvas.title || "Crevia Canvas", text: "Check out this document from Crevia", url: shareUrl }); }
+                        catch {}
+                      } else {
+                        navigator.clipboard.writeText(shareUrl);
+                        toast.success("Link copied to clipboard!");
+                      }
+                    }} className="rounded-lg gap-2 text-sm">
+                      <Send className="h-3.5 w-3.5" /> Share
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={download} disabled={downloading} className="rounded-lg gap-2 text-sm">
                       <Download className="h-3.5 w-3.5" /> Download
@@ -500,6 +510,19 @@ const CanvasPreviewDialog = ({
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
+            )}
+
+            {/* Sign — after Share group (Task 5) */}
+            {!isEditingDetails && !placementMode && !localCanvas.creator_signature && (
+              <Button variant="ghost" size="sm" title="Sign"
+                onClick={() => {
+                  if (!limits.hasESignature) { triggerESignUpgrade(); return; }
+                  setShowSignatureDialog(true);
+                }}
+                className="h-8 w-8 p-0 rounded-lg text-primary hover:bg-primary/10"
+              >
+                <PenTool className="h-3.5 w-3.5" />
+              </Button>
             )}
 
             <Button variant="ghost" size="sm" title={isFullscreen ? "Exit fullscreen" : "Fullscreen"} onClick={() => setIsFullscreen(f => !f)} className="h-8 w-8 p-0 rounded-lg">

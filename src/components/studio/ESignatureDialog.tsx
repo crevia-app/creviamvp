@@ -87,7 +87,7 @@ const ESignatureDialog = ({
 
   /** Apply ink style to context — called after every scale() so settings survive resets. */
   const applyInkStyle = useCallback((ctx: CanvasRenderingContext2D) => {
-    ctx.strokeStyle = isDarkMode() ? "#e8e8e8" : "#1a1a1a";
+    ctx.strokeStyle = "#1a1a1a";
     ctx.lineWidth = 2.5;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -243,30 +243,12 @@ const ESignatureDialog = ({
   const onMouseLeave = () => { isDrawingRef.current = false; };
 
   // ── Export ────────────────────────────────────────────────────────────────
-  // Always exports dark ink on transparent background regardless of colour
-  // scheme, so the PNG integrates cleanly with any document theme.
+  // Signature pad is always light mode (bg-white, black ink) so export
+  // is always correct dark-ink-on-transparent regardless of app colour scheme.
   const exportSignature = (): string => {
     const canvas = canvasRef.current;
     if (!canvas) return "";
-    if (!isDarkMode()) return canvas.toDataURL("image/png");
-
-    // Dark mode: light ink on canvas → invert to dark ink for storage
-    const tmp = document.createElement("canvas");
-    tmp.width  = canvas.width;
-    tmp.height = canvas.height;
-    const ctx2 = tmp.getContext("2d")!;
-    ctx2.drawImage(canvas, 0, 0);
-    const imgData = ctx2.getImageData(0, 0, tmp.width, tmp.height);
-    const d = imgData.data;
-    for (let i = 0; i < d.length; i += 4) {
-      if (d[i + 3] > 0) {
-        d[i]     = 255 - d[i];
-        d[i + 1] = 255 - d[i + 1];
-        d[i + 2] = 255 - d[i + 2];
-      }
-    }
-    ctx2.putImageData(imgData, 0, 0);
-    return tmp.toDataURL("image/png");
+    return canvas.toDataURL("image/png");
   };
 
   const clearCanvas = () => initCanvas(false);
@@ -365,7 +347,7 @@ const ESignatureDialog = ({
           {/* Saved Signature Tab */}
           {activeTab === "saved" && savedSignature && (
             <div className="space-y-4">
-              <div className="p-5 bg-white dark:bg-zinc-900 border border-border/30 rounded-xl">
+              <div className="p-5 bg-white border border-border/30 rounded-xl">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Your Saved Signature</p>
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-[10px] font-semibold">
@@ -402,7 +384,7 @@ const ESignatureDialog = ({
               <div className="relative">
                 <canvas
                   ref={canvasRef}
-                  className="w-full h-44 border-2 border-dashed border-border rounded-xl cursor-crosshair bg-white dark:bg-zinc-900 touch-none select-none"
+                  className="w-full h-44 border-2 border-dashed border-border rounded-xl cursor-crosshair bg-white touch-none select-none"
                   // Touch events handled via native listeners (passive:false) — see useEffect above
                   onMouseDown={onMouseDown}
                   onMouseMove={onMouseMove}
@@ -469,7 +451,7 @@ const ESignatureDialog = ({
                 </div>
               </div>
 
-              <div className="p-5 bg-white dark:bg-zinc-900 border border-border/30 rounded-xl">
+              <div className="p-5 bg-white border border-border/30 rounded-xl">
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-3">Preview</p>
                 <div className="h-16 flex items-center justify-center border-b-2 border-border/40">
                   <span className={cn("text-3xl text-foreground/70", fonts.find(f => f.id === selectedFont)?.className)}>
