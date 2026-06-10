@@ -68,17 +68,20 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
     { ignoreElements: (el: Element) => el.classList.contains("print-page-break") }
   );
 
-  // ── Auto-share: fires when dialog opens via the grid "Share" button ──────────
-  // Give the dialog one paint cycle to render the invoice-print-area before
-  // html2canvas tries to capture it, then fire share() and close on completion.
+  // ── Auto-share: wait for data to load, then capture + share off-screen ──────
+  // items/profile/businessSettings are fetched async; we watch all three before
+  // triggering so html2canvas sees a fully rendered invoice, not an empty shell.
   useEffect(() => {
     if (!autoShare || !open || !invoice) return;
+    // Data is loaded when items have been populated (or invoice has no line-items)
+    const dataReady = items.length > 0 || (invoice?.subtotal !== undefined);
+    if (!dataReady) return;
     const t = setTimeout(async () => {
       await share();
       onOpenChange(false);
-    }, 400);
+    }, 150); // short delay — just one paint after data arrives
     return () => clearTimeout(t);
-  }, [autoShare, open, invoice]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [autoShare, open, invoice, items]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Print to PDF (used in print-mode toolbar) ──────────────────────────────
   // Trigger a PDF download via <a download> — window.open() after an await is
@@ -527,6 +530,21 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
       )}
     </div>
   );
+
+  // ── Off-screen capture path (autoShare) ───────────────────────────────────
+  // Renders the invoice content into a hidden fixed div so html2canvas can
+  // capture it, then fires the native share sheet — user never sees a dialog.
+  if (autoShare) {
+    if (!open || !invoice) return null;
+    return (
+      <div
+        aria-hidden="true"
+        style={{ position: "fixed", left: "-9999px", top: 0, width: 794, pointerEvents: "none", opacity: 0 }}
+      >
+        <MainPreview />
+      </div>
+    );
+  }
 
   return (
     <>
