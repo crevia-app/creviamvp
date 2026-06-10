@@ -473,7 +473,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
 
   // ── MAIN PREVIEW — single flowing document, no page breaks ─────────────────
   const MainPreview = () => (
-    <div ref={docRef} className="invoice-print-area bg-white text-black rounded-xl shadow-lg print:shadow-none print:rounded-none print:w-[210mm] print:max-w-none print:m-0">
+    <div ref={docRef} className="invoice-print-area crevia-print-capture bg-white text-black rounded-xl shadow-lg print:shadow-none print:rounded-none print:w-[210mm] print:max-w-none print:m-0">
       <AccentBar />
       <div className="p-4 sm:p-8 print:p-8">
         <InvoiceHeader />
