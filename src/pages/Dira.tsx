@@ -529,6 +529,13 @@ const Dira = () => {
     return () => window.removeEventListener("dira:toggle-sidebar", handler);
   }, []);
 
+  // TopBar "Dira" wordmark fires this — resets to the new-chat landing state
+  useEffect(() => {
+    const handler = () => handleNewChat(null);
+    window.addEventListener("dira:new-chat", handler);
+    return () => window.removeEventListener("dira:new-chat", handler);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Scroll path 1: non-streaming message updates ─────────────────────────
   // Cancelable rAF so React state batches don't queue multiple scroll ops.
   useEffect(() => {
@@ -647,6 +654,12 @@ const Dira = () => {
       if (animFrameRef.current !== null) clearTimeout(animFrameRef.current);
     };
   }, [isStreaming]);
+
+  // Broadcast streaming state so the bottom nav visibility hook can lock
+  // itself and stop evaluating scroll deltas during AI response generation.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("dira:streaming", { detail: { active: isStreaming || isLoading } }));
+  }, [isStreaming, isLoading]);
 
   const streamDiraResponse = useCallback(async (
     userMessages: Message[],
@@ -992,6 +1005,23 @@ const Dira = () => {
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith("image/") || item.type.startsWith("video/") || item.type === "application/pdf") {
+        const file = item.getAsFile();
+        if (!file) continue;
+        // Route through the existing attachment flow via a synthetic ChangeEvent
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        handleFileSelect({ target: { files: dt.files, value: "" } } as unknown as React.ChangeEvent<HTMLInputElement>);
+        e.preventDefault();
+        break;
+      }
+    }
+  };
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -1324,9 +1354,14 @@ const Dira = () => {
       {/* Mobile Sidebar */}
       <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
         <SheetContent side="left" className="w-80 p-0 bg-card">
-          <SheetHeader className="h-14 flex items-center px-4 border-b border-border/50">
-            <SheetTitle className="font-vollkorn text-2xl font-bold text-foreground tracking-tight">
-              Dira
+          <SheetHeader className="flex items-center px-4 border-b border-border/50 pb-3 pt-[env(safe-area-inset-top,16px)] min-h-14">
+            <SheetTitle>
+              <button
+                onClick={() => { handleNewChat(null); setMobileSidebarOpen(false); }}
+                className="font-vollkorn text-2xl font-bold text-foreground tracking-tight cursor-pointer hover:opacity-70 transition-opacity"
+              >
+                Dira
+              </button>
             </SheetTitle>
           </SheetHeader>
           
@@ -1930,6 +1965,7 @@ const Dira = () => {
                           ? `Ask Dira about ${activeProject.name}...`
                           : "Ask Dira anything..."
                   }
+                  onPaste={handlePaste}
                   className="border-none outline-none ring-0 focus:ring-0 focus:outline-none bg-transparent text-base px-2 flex-1 min-w-0 resize-none overflow-hidden leading-relaxed py-1.5 min-h-[36px] max-h-[120px] placeholder:text-muted-foreground/60"
                   disabled={isAtDiraLimit}
                   autoComplete="off"

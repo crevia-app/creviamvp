@@ -87,7 +87,7 @@ export const CreateProjectDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl">
-        <DialogHeader>
+        <DialogHeader className="pt-[env(safe-area-inset-top,0px)]">
           <DialogTitle className="font-vollkorn text-2xl">
             Create a personal project
           </DialogTitle>
@@ -156,7 +156,7 @@ export const CreateProjectDialog = ({
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3">
+          <div className="flex justify-end gap-3 p-4 pb-[env(safe-area-inset-bottom,20px)]">
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}

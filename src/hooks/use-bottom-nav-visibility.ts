@@ -52,28 +52,35 @@ export function useBottomNavVisibility() {
   // Guards show() — true while a keyboard-triggering input is focused.
   // Prevents the Android keyboard reflow scroll from re-showing the nav.
   const inputFocusedRef = useRef(false);
+  // Guards ALL scroll signals while Dira is streaming — prevents the
+  // programmatic scrollTop updates in the AI response loop from triggering
+  // the hide/show logic and causing rapid nav thrashing.
+  const streamingRef    = useRef(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.innerWidth >= 768) return;
 
     const show = () => {
-      // ── KEYBOARD GUARD ──────────────────────────────────────────────────────
-      // If any text input is focused, the keyboard is (likely) open.
-      // Any scroll signal that would call show() here is caused by the
-      // keyboard-open page reflow, NOT a real upward scroll by the user.
       if (inputFocusedRef.current) return;
+      if (streamingRef.current) return; // locked during AI streaming
       if (!visibleRef.current) {
         visibleRef.current = true;
         setVisible(true);
       }
     };
     const hide = () => {
+      if (streamingRef.current) return; // locked during AI streaming
       if (visibleRef.current) {
         visibleRef.current = false;
         setVisible(false);
       }
     };
+
+    const onStreamingChange = (e: Event) => {
+      streamingRef.current = (e as CustomEvent<{ active: boolean }>).detail.active;
+    };
+    window.addEventListener("dira:streaming", onStreamingChange);
 
     // ── 1. touchmove — hysteresis ────────────────────────────────────────────
     let lastTouchY  = 0;
@@ -185,6 +192,7 @@ export function useBottomNavVisibility() {
       document.removeEventListener("focusin",     onFocusIn,  true);
       document.removeEventListener("focusout",    onFocusOut, true);
       vv?.removeEventListener(    "resize",       onViewportResize);
+      window.removeEventListener("dira:streaming", onStreamingChange);
     };
   }, []);
 

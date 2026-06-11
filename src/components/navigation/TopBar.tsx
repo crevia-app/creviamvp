@@ -111,7 +111,11 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
               >
                 <PanelLeft className="w-5 h-5" />
               </button>
-              <span className="font-vollkorn text-xl font-bold text-foreground tracking-tight">Dira</span>
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent("dira:new-chat"))}
+                className="font-vollkorn text-xl font-bold text-foreground tracking-tight hover:opacity-70 transition-opacity cursor-pointer"
+                aria-label="New Dira chat"
+              >Dira</button>
             </div>
           ) : isStudio ? (
             /* Studio: premium sidebar toggle + breadcrumb */
