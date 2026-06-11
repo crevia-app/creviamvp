@@ -53,7 +53,7 @@ const Home = () => {
             </ScrollReveal>
             {/* variant="hero" — larger 40px travel, no blur, clean typographic entrance */}
             <ScrollReveal delay={0.12} variant="hero" duration={0.8}>
-              <h1 className="font-vollkorn text-4xl sm:text-5xl md:text-5xl lg:text-[4.5rem] font-bold leading-[1.08]">
+              <h1 className="font-vollkorn text-[2rem] sm:text-[2.5rem] md:text-[2.75rem] lg:text-[4rem] font-bold leading-[1.08]">
                 The infrastructure to scale your{" "}
                 <span className="text-gradient-h1">business operations.</span>
               </h1>
