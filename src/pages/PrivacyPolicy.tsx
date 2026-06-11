@@ -4,7 +4,7 @@ import { SEO } from "@/components/SEO";
 const PrivacyPolicy = () => {
   return (
     <div className="min-h-dvh bg-background">
-      <SEO title="Privacy Policy" description="Read Crevia's Privacy Policy. Learn how we collect, use, and protect your personal data." url="/privacy-policy" />
+      <SEO title="Privacy Policy" description="Read Crevia's Privacy Policy. Learn how we collect, use, and protect your personal data in compliance with applicable privacy laws." keywords="Crevia privacy policy, data protection, GDPR, personal data" url="/privacy-policy" />
 
       <main className="container max-w-4xl px-4 py-8 md:py-16">
         <div className="mb-8 md:mb-12">

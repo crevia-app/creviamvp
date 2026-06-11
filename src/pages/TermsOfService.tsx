@@ -4,7 +4,7 @@ import { SEO } from "@/components/SEO";
 const TermsOfService = () => {
   return (
     <div className="min-h-dvh bg-background">
-      <SEO title="Terms of Use" description="Read Crevia's Terms of Use. Understand your rights and responsibilities when using the Crevia platform." url="/terms-of-service" />
+      <SEO title="Terms of Use" description="Read Crevia's Terms of Use. Understand your rights and responsibilities when using the Crevia platform, including invoicing, workspaces, and AI features." keywords="Crevia terms of use, terms of service, user agreement, platform terms" url="/terms-of-service" />
 
       <main className="container max-w-4xl px-4 py-8 md:py-16">
         <div className="mb-8 md:mb-12">

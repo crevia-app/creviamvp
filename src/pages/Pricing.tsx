@@ -170,8 +170,55 @@ const Pricing = () => {
     <div className="min-h-dvh bg-background page-bg-warm overflow-x-clip">
       <SEO
         title="Pricing"
-        description="Simple, transparent pricing for businesses and creatives. Start free and upgrade when you're ready. Crevia Pro, Business, and Enterprise plans available."
+        description="Simple, transparent pricing for creatives and brands. Free plan forever. Crevia Pro from $14.99/month — unlimited invoices, 500 Dira AI credits, premium analytics. Business from $74.99/month."
+        keywords="Crevia pricing, invoicing software price, AI business tool cost, Crevia Pro plan, Crevia Business plan, affordable invoicing Kenya"
         url="/pricing"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Is Crevia free to use?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. Crevia has a permanent Free plan that includes 5 Dira AI credits per day, 2 invoices per month, and a basic CreviaLink profile — no credit card required."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How much does Crevia Pro cost?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Crevia Pro starts at $14.99 per month. It includes 500 Dira AI credits per month, unlimited invoices, premium CreviaLink analytics, and up to 10 workspaces."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What is the Business plan?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "The Business plan is $74.99 per month and includes 3 seats, unlimited Dira AI, unlimited invoices, RBAC permissions, and unlimited workspaces. Additional seats are $19.99 each."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can I cancel my subscription anytime?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. You can cancel your Crevia subscription at any time. Your plan remains active until the end of the billing period."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What is Dira AI?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Dira is Crevia's built-in AI business intelligence assistant. It helps with invoice drafting, deal structuring, business strategy, and operational advice — directly inside your Crevia workspace."
+              }
+            }
+          ]
+        }}
       />
       <Header />
 

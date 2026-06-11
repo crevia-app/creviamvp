@@ -32,7 +32,12 @@ const Home = () => {
 
   return (
     <div className="min-h-dvh bg-background page-bg-warm overflow-x-clip">
-      <SEO url="/" />
+      <SEO
+        url="/"
+        title="Crevia — Invoice, Collaborate & Grow Your Business with AI"
+        description="Crevia is the all-in-one business platform for creatives and brands. Send professional invoices, manage client workspaces, build your link-in-bio page, and unlock Dira AI — your always-on business intelligence. Free to start."
+        keywords="invoicing software Kenya, online invoice generator, freelance invoice maker, business management platform, AI business assistant, Dira AI, link in bio tool, client workspace, creative business operations, Crevia app"
+      />
       <Header />
 
       {/* ═══════════════ HERO ═══════════════ */}

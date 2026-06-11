@@ -35,7 +35,33 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
   return (
     <div className="min-h-dvh bg-background page-bg-warm overflow-x-clip">
-      {!isEmbedded && <SEO title="About" description="Learn about Crevia — the infrastructure built for creators to own their story, scale their operations, and build a business that runs as well as it creates." url="/about" />}
+      {!isEmbedded && (
+        <SEO
+          title="About Crevia"
+          description="Learn about Crevia — the business operations platform built for creatives and brands to own their story, scale their operations, and build a business that runs as well as it creates."
+          keywords="about Crevia, Crevia company, business operations platform, creative business infrastructure, who is Crevia"
+          url="/about"
+          jsonLd={{
+            "@context": "https://schema.org",
+            "@type": "AboutPage",
+            "name": "About Crevia",
+            "url": "https://www.crevia.app/about",
+            "description": "Learn about Crevia — the business operations platform for creatives and brands.",
+            "about": {
+              "@type": "Organization",
+              "name": "Crevia",
+              "url": "https://www.crevia.app",
+              "foundingDate": "2024",
+              "sameAs": [
+                "https://www.instagram.com/creviahq",
+                "https://www.youtube.com/@crevia-hq",
+                "https://www.tiktok.com/@crevia.app",
+                "https://www.linkedin.com/company/creviaapp/"
+              ]
+            }
+          }}
+        />
+      )}
       {!isEmbedded && <Header />}
 
       {/* ═══════════════ HERO ═══════════════ */}
