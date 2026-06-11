@@ -4,13 +4,13 @@ import { SEO } from "@/components/SEO";
 const PrivacyPolicy = () => {
   return (
     <div className="min-h-dvh bg-background">
-      <SEO title="Privacy Policy" description="Read Crevia's Privacy Policy. Learn how we collect, use, and protect your personal data in compliance with applicable privacy laws." keywords="Crevia privacy policy, data protection, GDPR, personal data" url="/privacy-policy" />
+      <SEO title="Privacy Policy" description="Read Crevia's Privacy Policy. Learn how we collect, use, and protect your personal data in compliance with the Kenya Data Protection Act, 2019." keywords="Crevia privacy policy, data protection, Kenya Data Protection Act, personal data" url="/privacy-policy" />
 
       <main className="container max-w-4xl px-4 py-8 md:py-16">
         <div className="mb-8 md:mb-12">
           <h1 className="font-vollkorn text-3xl md:text-5xl font-bold mb-4">Privacy Policy</h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Last Updated: May 26, 2026
+            Last Updated: June 2, 2026 &nbsp;·&nbsp; Effective Date: June 2, 2026
           </p>
         </div>
 
@@ -30,8 +30,8 @@ const PrivacyPolicy = () => {
               <ul className="list-disc pl-6 space-y-2">
                 <li><strong>Account Data:</strong> Name, email address, phone number, and billing information.</li>
                 <li><strong>Business Data:</strong> Client rosters, brand assets, and organizational hierarchies for workspace management.</li>
-                <li><strong>Document Data:</strong> Information inputted into Crevia Canvas (documents, clauses, MSAs) and Crevia Invoice (line items, pricing, counterparty details).</li>
-                <li><strong>AI Interaction Data:</strong> Prompts, queries, and contextual data submitted to our AI assistant (Dira) to improve deal structuring and platform functionality.</li>
+                <li><strong>Operational &amp; Financial Data:</strong> Information inputted into Crevia Studio and Crevia Invoice (line items, pricing, counterparty details).</li>
+                <li><strong>AI Interaction Data:</strong> Prompts, queries, and contextual data submitted to our AI assistant (Dira) to improve business structuring and platform functionality.</li>
                 <li><strong>Usage Data:</strong> Analytics regarding your interaction with Crevia Link pages, including visitor tracking.</li>
               </ul>
             </div>
@@ -42,7 +42,7 @@ const PrivacyPolicy = () => {
             <div className="text-muted-foreground leading-relaxed space-y-3">
               <p>We use your data strictly to operate and improve the platform:</p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>To facilitate document generation, e-signatures, and invoice routing.</li>
+                <li>To facilitate platform operations, workspace communication, and invoice routing.</li>
                 <li>To provide contextual intelligence across your workspaces via Dira.</li>
                 <li>To manage subscription billing and enforce Role-Based Access Control.</li>
                 <li>To track usage metrics for Pro and Business tier analytics.</li>
@@ -57,7 +57,7 @@ const PrivacyPolicy = () => {
               <ul className="list-disc pl-6 space-y-2">
                 <li><strong>Service Providers:</strong> With trusted cloud hosting providers and payment gateways necessary to run our infrastructure.</li>
                 <li><strong>Legal Compliance:</strong> If required by law, subpoena, or government request (e.g., KRA audits), we will disclose data as legally mandated.</li>
-                <li><strong>Counterparties:</strong> When you send an invoice or a Canvas document to a client, the necessary data on that document is shared with the recipient.</li>
+                <li><strong>Counterparties:</strong> When you send an invoice or a workspace link to a client, the strictly necessary data on that document is shared with the recipient.</li>
               </ul>
             </div>
           </section>
@@ -65,14 +65,14 @@ const PrivacyPolicy = () => {
           <section>
             <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">5. Artificial Intelligence and Data Privacy</h2>
             <p className="text-muted-foreground leading-relaxed">
-              When you interact with Dira, your prompts and uploaded workspace context are processed to generate immediate responses. We implement strict siloing for Business tiers to ensure that one brand's proprietary MSA data or financial information is never used to train the AI models answering queries for a different brand.
+              When you interact with Dira, your prompts and uploaded workspace context are processed to generate immediate responses. We implement strict siloing for Business tiers to ensure that one brand's proprietary business data, operational structures, or financial information is never used to train the AI models answering queries for a different brand.
             </p>
           </section>
 
           <section>
             <h2 className="font-vollkorn text-2xl md:text-3xl font-bold mb-4">6. Data Security</h2>
             <p className="text-muted-foreground leading-relaxed">
-              We implement enterprise-grade security measures to protect your documents and financial routing information. However, no digital infrastructure is 100% secure. You are responsible for securing your account credentials and managing access for your team members.
+              We implement enterprise-grade security measures to protect your operational data and financial routing information. However, no digital infrastructure is 100% secure. You are responsible for securing your account credentials and managing access for your team members.
             </p>
           </section>
 
