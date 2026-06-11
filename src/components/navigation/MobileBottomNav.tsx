@@ -275,15 +275,19 @@ const MobileBottomNav = () => {
               )}
 
               <div className="space-y-4 pb-8">
-                {/* Upgrade CTA */}
-                <Link
-                  to="/pricing"
-                  onClick={() => setSheetOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-gradient-to-r from-bronze to-bronze-dark text-white hover:opacity-90 transition-all w-full"
-                >
-                  <Crown className="h-5 w-5 flex-shrink-0" />
-                  <span className="font-poppins text-sm font-semibold">Upgrade to Pro</span>
-                </Link>
+                {/* Upgrade CTA — hidden for Business (top tier) */}
+                {!subscription.isBusiness && (
+                  <Link
+                    to="/pricing"
+                    onClick={() => setSheetOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-gradient-to-r from-bronze to-bronze-dark text-white hover:opacity-90 transition-all w-full"
+                  >
+                    <Crown className="h-5 w-5 flex-shrink-0" />
+                    <span className="font-poppins text-sm font-semibold">
+                      {subscription.isPro ? "Upgrade to Business" : "Upgrade to Pro"}
+                    </span>
+                  </Link>
+                )}
 
                 {/* Install Crevia — hidden once app is installed or prompt unavailable */}
                 {canInstall && (

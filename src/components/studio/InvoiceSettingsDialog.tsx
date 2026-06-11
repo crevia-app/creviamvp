@@ -122,7 +122,7 @@ const InvoiceSettingsDialog = ({ open, onOpenChange, onSaved }: Props) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) { toast.error("Please upload an image file"); return; }
-    if (file.size > 10 * 1024 * 1024) { toast.error("Max 10 MB"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Max 5 MB — please compress or resize your logo"); return; }
     setUploading(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { setUploading(false); return; }
@@ -229,7 +229,7 @@ const InvoiceSettingsDialog = ({ open, onOpenChange, onSaved }: Props) => {
                 <div className="space-y-1.5 flex-1 min-w-0">
                   <p className="text-sm font-semibold text-foreground">Company Logo</p>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Appears in the top-right corner of your invoices. PNG, JPG or SVG — max 10 MB.
+                    Appears in the top-right corner of your invoices. PNG, JPG or SVG — High resolution, max 5 MB.
                   </p>
                   <div className="flex flex-wrap gap-2 pt-1">
                     <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />

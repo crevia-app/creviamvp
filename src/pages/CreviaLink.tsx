@@ -1227,7 +1227,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                           { value: "rounded", label: "Rounded", class: "rounded-full" },
                           { value: "sharp", label: "Sharp", class: "" },
                           { value: "soft", label: "Soft", class: "rounded-lg" },
-                          { value: "pill", label: "Pill", class: "rounded-full bg-bronze" },
                         ].map((style) => {
                           const isLockedStyle = limits.layoutLocked === "sharp" && style.value !== "sharp";
                           return (
@@ -1238,7 +1237,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                                 onClick={isLockedStyle ? (e) => { e.preventDefault(); openUpgradeModal("Custom Layout Styles"); } : undefined}
                                 className={cn("flex flex-col items-center p-4 rounded-xl border-2 border-muted peer-data-[state=checked]:border-bronze cursor-pointer", isLockedStyle && "opacity-50")}
                               >
-                                <div className={cn("w-full h-10 mb-2", style.value === "pill" ? style.class : `${style.class} bg-bronze/20 border-2 border-bronze`)} />
+                                <div className={cn("w-full h-10 mb-2", `${style.class} bg-bronze/20 border-2 border-bronze`)} />
                                 <span className="text-sm font-medium">{style.label}</span>
                                 {isLockedStyle && <span className="text-[10px] text-bronze font-semibold mt-0.5">Pro</span>}
                               </Label>
@@ -1833,7 +1832,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                         { value: "rounded", label: "Rounded", class: "rounded-full" },
                         { value: "sharp", label: "Sharp", class: "" },
                         { value: "soft", label: "Soft", class: "rounded-lg" },
-                        { value: "pill", label: "Pill", class: "rounded-full bg-bronze" },
                       ].map((style) => (
                         <div key={style.value} className="relative">
                           <RadioGroupItem value={style.value} id={`standalone-btn-${style.value}`} className="peer sr-only" />
@@ -1843,7 +1841,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                           >
                             <div className={cn(
                               "w-full h-10 sm:h-12 md:h-16 mb-2 sm:mb-2.5 md:mb-3 shadow-sm",
-                              style.value === "pill" ? style.class : `${style.class} bg-bronze/20 border-2 border-bronze`
+                              `${style.class} bg-bronze/20 border-2 border-bronze`
                             )}></div>
                             <span className="text-xs sm:text-sm md:text-base font-medium">{style.label}</span>
                           </Label>

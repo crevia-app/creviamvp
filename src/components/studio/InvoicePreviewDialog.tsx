@@ -63,7 +63,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
   const page2Ref = useRef<HTMLDivElement>(null);
   const hasPage2 = !!(invoice?.notes || invoice?.terms || invoice?.payment_details?.method);
 
-  const { ref: docRef, download, downloading, shareSync, share, sharing, preGenerate, pregenerating } = useDownloadPDF(
+  const { ref: docRef, download, downloading, share } = useDownloadPDF(
     invoice ? `Invoice-${invoice.invoice_number}` : "Invoice",
     { ignoreElements: (el: Element) => el.classList.contains("print-page-break") }
   );
@@ -82,18 +82,6 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
     }, 150); // short delay — just one paint after data arrives
     return () => clearTimeout(t);
   }, [autoShare, open, invoice, items]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Pre-generate PDF blob for iOS Share button ────────────────────────────
-  // Fires after the document fully paints so blob is ready the instant the
-  // user taps Share — navigator.share({ files }) must be called within the
-  // iOS gesture window (no async wait after tap).
-  useEffect(() => {
-    if (autoShare || !open || !invoice) return;
-    const dataReady = items.length > 0 || invoice?.subtotal !== undefined;
-    if (!dataReady) return;
-    const t = setTimeout(() => preGenerate(), 100);
-    return () => clearTimeout(t);
-  }, [open, invoice?.id, items.length, logoSize, logoAlign, hideLogo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Print to PDF (used in print-mode toolbar) ──────────────────────────────
   // Trigger a PDF download via <a download> — window.open() after an await is
@@ -588,7 +576,27 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
                   Invoice Preview
                 </DialogTitle>
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  <Button variant="outline" size="sm" onClick={shareSync} disabled={sharing || pregenerating} className="h-8 w-8 p-0" title="Share PDF">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    title="Share invoice link"
+                    onClick={() => {
+                      const publicUrl = `${window.location.origin}/invoice/public/${invoice.id}`;
+                      if (typeof navigator.share === "function") {
+                        navigator.share({ title: `Invoice ${invoice.invoice_number}`, text: "View your invoice from Crevia securely online:", url: publicUrl })
+                          .catch((err: any) => {
+                            if (err?.name !== "AbortError") {
+                              navigator.clipboard?.writeText(publicUrl);
+                              toast.success("Link copied to clipboard!");
+                            }
+                          });
+                      } else {
+                        navigator.clipboard?.writeText(publicUrl);
+                        toast.success("Link copied to clipboard!");
+                      }
+                    }}
+                  >
                     <Share2 className="h-3.5 w-3.5" />
                   </Button>
                   <Button variant="outline" size="sm" onClick={download} disabled={downloading} className="h-8 w-8 p-0" title="Download PDF">

@@ -185,7 +185,6 @@ const PublicProfile = () => {
       rounded: "rounded-full",
       sharp: "rounded-none",
       soft: "rounded-lg",
-      pill: "rounded-full",
     };
     return styleMap[style] || "rounded-full";
   };

@@ -487,7 +487,7 @@ const CreateInvoiceDialog = ({
       }}
     />
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-16px)] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100vw-16px)] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-vollkorn text-xl">
             <Receipt className="h-5 w-5 text-bronze" />
@@ -495,7 +495,7 @@ const CreateInvoiceDialog = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 w-full min-w-0">
           {/* Invoice Details */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>

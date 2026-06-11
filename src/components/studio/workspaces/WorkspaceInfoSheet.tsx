@@ -181,31 +181,38 @@ const WorkspaceInfoSheet = ({
       return;
     }
     setUploadingAvatar(true);
-    const ext = file.name.split(".").pop() ?? "jpg";
-    const path = `workspace-avatars/${roomId}-${Date.now()}.${ext}`;
-    const { error: uploadErr } = await supabase.storage
-      .from("chat-files")
-      .upload(path, file, { upsert: true, contentType: file.type });
-    if (uploadErr) {
-      toast.error("Failed to upload image");
-      setUploadingAvatar(false);
-      return;
-    }
-    const { data: urlData } = supabase.storage.from("chat-files").getPublicUrl(path);
-    const publicUrl = urlData.publicUrl;
-    const { error: dbErr } = await supabase
-      .from("chat_rooms")
-      .update({ avatar_url: publicUrl })
-      .eq("id", roomId);
-    if (dbErr) {
-      toast.error("Failed to save avatar");
-    } else {
+    // Optimistic UI — show the new image immediately without waiting for the DB round-trip
+    const localPreview = URL.createObjectURL(file);
+    setAvatarUrl(localPreview);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+      // file.type can be empty on some Android browsers — fall back to a safe MIME
+      const mimeType = file.type || `image/${ext === "jpg" ? "jpeg" : ext}`;
+      const path = `workspace-avatars/${roomId}-${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage
+        .from("chat-files")
+        .upload(path, file, { upsert: true, contentType: mimeType });
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from("chat-files").getPublicUrl(path);
+      const publicUrl = urlData.publicUrl;
+      const { error: dbErr } = await supabase
+        .from("chat_rooms")
+        .update({ avatar_url: publicUrl })
+        .eq("id", roomId);
+      if (dbErr) throw dbErr;
+      // Replace the local blob URL with the durable CDN URL
+      URL.revokeObjectURL(localPreview);
       setAvatarUrl(publicUrl);
       toast.success("Workspace photo updated");
+    } catch {
+      // Roll back optimistic update on any failure
+      URL.revokeObjectURL(localPreview);
+      setAvatarUrl(null);
+      toast.error("Failed to upload image — please try again");
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
     }
-    setUploadingAvatar(false);
-    // Reset input so same file can be re-selected
-    if (avatarInputRef.current) avatarInputRef.current.value = "";
   };
 
   // ── Member management ──────────────────────────────────────────────────────
@@ -349,7 +356,7 @@ const WorkspaceInfoSheet = ({
         <div className="flex flex-col items-center pt-6 pb-4 px-5 border-b border-border/50 flex-shrink-0 gap-3 bg-card/30">
           <SheetTitle className="sr-only">Workspace Info</SheetTitle>
 
-          {/* Group avatar — owner can change by clicking */}
+          {/* Group avatar — owner and admins can change by clicking */}
           <div className="relative group/avatar">
             <div
               className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold shadow-sm flex-shrink-0 overflow-hidden"
@@ -366,20 +373,35 @@ const WorkspaceInfoSheet = ({
                 <Sparkles className="w-9 h-9" />
               )}
             </div>
-            {/* Camera overlay — owner only */}
-            {isCreator && (
+
+            {/* Camera overlay — visible to admins and owner */}
+            {isAdminOrCreator && (
               <>
+                {/* Desktop hover overlay */}
                 <button
                   onClick={() => avatarInputRef.current?.click()}
                   disabled={uploadingAvatar}
-                  className="absolute inset-0 rounded-2xl bg-black/50 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity cursor-pointer"
+                  className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-200 cursor-pointer"
                   title="Change workspace photo"
                 >
                   {uploadingAvatar
-                    ? <Loader2 className="w-5 h-5 text-white animate-spin" />
-                    : <Camera className="w-5 h-5 text-white" />
+                    ? <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    : <Camera className="w-6 h-6 text-white drop-shadow-md" />
                   }
                 </button>
+
+                {/* Mobile badge — permanently visible since hover doesn't exist on touch */}
+                {!uploadingAvatar && (
+                  <div className="absolute -bottom-1.5 -right-1.5 sm:hidden bg-zinc-800 border-2 border-background rounded-full p-1.5 pointer-events-none">
+                    <Camera className="w-3 h-3 text-white" />
+                  </div>
+                )}
+                {uploadingAvatar && (
+                  <div className="absolute -bottom-1.5 -right-1.5 sm:hidden bg-zinc-800 border-2 border-background rounded-full p-1.5 pointer-events-none">
+                    <Loader2 className="w-3 h-3 text-white animate-spin" />
+                  </div>
+                )}
+
                 <input
                   ref={avatarInputRef}
                   type="file"

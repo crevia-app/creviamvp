@@ -66,7 +66,6 @@ const LivePreview = ({ linkProfile, buttons, isPro = false, socialIcons }: LiveP
     rounded: "rounded-full",
     sharp: "rounded-none",
     soft: "rounded-lg",
-    pill: "rounded-full",
   };
   const btnRadius = btnRadiusMap[buttonStyle] || "rounded-full";
 
@@ -179,9 +178,9 @@ const LivePreview = ({ linkProfile, buttons, isPro = false, socialIcons }: LiveP
                   ))
                 ) : (
                   <>
-                    <div className={getButtonClasses("filled")} style={getButtonStyle("filled")}>My Portfolio</div>
-                    <div className={getButtonClasses("filled")} style={getButtonStyle("filled")}>Book Me</div>
-                    <div className={getButtonClasses("filled")} style={getButtonStyle("filled")}>Latest Work</div>
+                    <div className={getButtonClasses("filled")} style={getButtonStyle("filled")}>Instagram</div>
+                    <div className={getButtonClasses("filled")} style={getButtonStyle("filled")}>TikTok</div>
+                    <div className={getButtonClasses("filled")} style={getButtonStyle("filled")}>Website</div>
                   </>
                 )}
               </div>

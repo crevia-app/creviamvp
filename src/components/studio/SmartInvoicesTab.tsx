@@ -95,7 +95,8 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
-  const [shareInvoice, setShareInvoice]     = useState<Invoice | null>(null);
+  const [pendingDeleteInvoiceId, setPendingDeleteInvoiceId] = useState<string | null>(null);
+  const [pendingDeleteFolder, setPendingDeleteFolder]       = useState<InvoiceFolder | null>(null);
   const [receiptInvoice, setReceiptInvoice] = useState<Invoice | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -343,6 +344,23 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
 
     toast.success("Invoice duplicated as draft");
     fetchInvoices(currentFolderId);
+  };
+
+  const handleShare = async (invoice: Invoice) => {
+    const publicUrl = `${window.location.origin}/invoice/public/${invoice.id}`;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: `Invoice ${invoice.invoice_number}`, text: "View your invoice from Crevia securely online:", url: publicUrl });
+      } catch (err: any) {
+        if (err?.name !== "AbortError") {
+          await navigator.clipboard.writeText(publicUrl);
+          toast.success("Link copied to clipboard!");
+        }
+      }
+    } else {
+      await navigator.clipboard.writeText(publicUrl);
+      toast.success("Link copied to clipboard!");
+    }
   };
 
   const handleStatusChange = async (id: string, status: string) => {
@@ -694,7 +712,7 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => deleteFolder(folder)}
+                        onClick={() => setPendingDeleteFolder(folder)}
                         className="rounded-lg gap-2 text-xs text-destructive focus:text-destructive"
                       >
                         <Trash2 className="h-3.5 w-3.5" /> Delete
@@ -781,7 +799,7 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setShareInvoice(invoice)}>
+                        <DropdownMenuItem onClick={() => handleShare(invoice)}>
                           <Share2 className="h-4 w-4 mr-2" />
                           Share
                         </DropdownMenuItem>
@@ -805,7 +823,7 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
-                          onClick={() => handleDelete(invoice.id)}
+                          onClick={() => setPendingDeleteInvoiceId(invoice.id)}
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete
@@ -840,14 +858,6 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
         invoice={previewInvoice}
       />
 
-      {/* Hidden share dialog — renders invoice off-screen, fires share sheet, then closes */}
-      <InvoicePreviewDialog
-        open={!!shareInvoice}
-        onOpenChange={(open) => !open && setShareInvoice(null)}
-        invoice={shareInvoice}
-        autoShare
-      />
-
       <ReceiptPreviewDialog
         open={!!receiptInvoice}
         onOpenChange={(open) => !open && setReceiptInvoice(null)}
@@ -859,6 +869,80 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
         onSaved={fetchBusinessSettings}
       />
 
+
+      {/* Delete Invoice Confirmation */}
+      <Dialog open={pendingDeleteInvoiceId !== null} onOpenChange={(open) => { if (!open) setPendingDeleteInvoiceId(null); }}>
+        <DialogContent className="max-w-sm w-[92vw] rounded-2xl border border-border/60 bg-card p-0 overflow-hidden shadow-2xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Delete Invoice</DialogTitle>
+          </DialogHeader>
+          <div className="p-6 space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="h-10 w-10 rounded-xl bg-red-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Trash2 className="h-5 w-5 text-red-500" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm text-foreground">Delete Invoice</p>
+                <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                  Are you sure you want to delete this invoice? This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40">
+              <Button variant="ghost" size="sm" onClick={() => setPendingDeleteInvoiceId(null)} className="rounded-xl">
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  if (pendingDeleteInvoiceId) handleDelete(pendingDeleteInvoiceId);
+                  setPendingDeleteInvoiceId(null);
+                }}
+                className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
+              >
+                Delete Invoice
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Folder Confirmation */}
+      <Dialog open={pendingDeleteFolder !== null} onOpenChange={(open) => { if (!open) setPendingDeleteFolder(null); }}>
+        <DialogContent className="max-w-sm w-[92vw] rounded-2xl border border-border/60 bg-card p-0 overflow-hidden shadow-2xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Delete Folder</DialogTitle>
+          </DialogHeader>
+          <div className="p-6 space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="h-10 w-10 rounded-xl bg-red-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Trash2 className="h-5 w-5 text-red-500" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm text-foreground">Delete Folder</p>
+                <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                  Delete <span className="font-medium">"{pendingDeleteFolder?.name}"</span>? All invoices inside will be moved to the root. This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40">
+              <Button variant="ghost" size="sm" onClick={() => setPendingDeleteFolder(null)} className="rounded-xl">
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  if (pendingDeleteFolder) deleteFolder(pendingDeleteFolder);
+                  setPendingDeleteFolder(null);
+                }}
+                className="rounded-xl bg-red-500 hover:bg-red-600 text-white"
+              >
+                Delete Folder
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Folder dialog */}
       <Dialog open={createFolderOpen} onOpenChange={(o) => { if (!o) setCreateFolderOpen(false); }}>

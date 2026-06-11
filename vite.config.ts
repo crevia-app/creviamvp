@@ -27,7 +27,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['crevia-logo.png', 'robots.txt'],
+      includeAssets: ['crevia-logo.png', 'apple-touch-icon.png', 'icon-192x192.png', 'icon-512x512.png', 'robots.txt'],
       manifest: {
         name: 'Crevia - Own Your Story',
         short_name: 'Crevia',
@@ -36,14 +36,17 @@ export default defineConfig({
         background_color: '#09090b',
         display: 'standalone',
         display_override: ['window-controls-overlay', 'standalone'],
-        start_url: '/',
+        // ?mode=standalone signals the SW to skip cache on the very first
+        // paint, preventing the iOS hydration freeze on a fresh install.
+        start_url: '/?mode=standalone',
         scope: '/',
         launch_handler: { client_mode: 'navigate-existing' },
         icons: [
-          { src: '/crevia-logo.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-          { src: '/crevia-logo.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
-          { src: '/crevia-logo.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-          { src: '/crevia-logo.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          // "any" — standard icon used on Android home screen and in the browser UI
+          { src: '/icon-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          // "maskable" — safe-zone padded icon: Android scales the padding,
+          // keeping the actual logo centred and correctly sized on the splash screen
+          { src: '/icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ]
       },
       workbox: {
