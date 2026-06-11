@@ -129,28 +129,32 @@ export default function NotificationSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:w-[380px] p-0 flex flex-col bg-background border-border">
         <SheetHeader className="px-4 pt-4 pb-3 border-b border-border flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="font-vollkorn text-lg">Notifications</SheetTitle>
-            <div className="flex items-center gap-2">
-              {!isEditing && unreadCount > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs text-bronze hover:text-bronze/80 gap-1.5"
-                  onClick={onMarkAllRead}
-                >
-                  <CheckCheck className="w-3.5 h-3.5" />
-                  Mark all read
-                </Button>
-              )}
+          <div className="flex items-center justify-between w-full gap-2">
+            {/* Edit on the far left */}
+            <div className="w-16 flex-shrink-0">
               {notifications.length > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                  className="h-7 text-xs font-semibold text-muted-foreground hover:text-foreground px-2"
                   onClick={() => { setIsEditing(e => !e); setSelectedIds([]); }}
                 >
                   {isEditing ? "Cancel" : "Edit"}
+                </Button>
+              )}
+            </div>
+            {/* Title centred */}
+            <SheetTitle className="font-vollkorn text-lg flex-1 text-center">Notifications</SheetTitle>
+            {/* Mark all read on the far right — width matches Edit to keep title centred */}
+            <div className="w-16 flex-shrink-0 flex justify-end">
+              {!isEditing && unreadCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs text-bronze hover:text-bronze/80 gap-1 px-2"
+                  onClick={onMarkAllRead}
+                >
+                  <CheckCheck className="w-3.5 h-3.5" />
                 </Button>
               )}
             </div>

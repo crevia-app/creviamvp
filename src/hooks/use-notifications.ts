@@ -109,7 +109,8 @@ export function useNotifications(userId: string | undefined, dnd = false) {
 
   const markAllRead = useCallback(async () => {
     if (!userId) return;
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    // Instantly clear the panel — rewards user with clean slate immediately.
+    setNotifications([]);
     const { error } = await supabase
       .from("notifications")
       .update({ read: true })

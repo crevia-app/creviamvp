@@ -68,6 +68,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format, isToday, isYesterday } from "date-fns";
 import ChatMediaPanel from "./ChatMediaPanel";
@@ -294,6 +295,8 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
   const presenceChannelRef = useRef<any>(null);
   const selectedExternalRef = useRef<string>("");
   const selectedRoomRef = useRef<ChatRoom | null>(null);
+  const [longPressMsg, setLongPressMsg] = useState<ChatMessage | null>(null);
+  const msgPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Scroll to the latest message when the iOS keyboard opens so the input
   // is never obscured by unread content. Replaces the removed useIOSKeyboardFit callback.
@@ -1436,6 +1439,17 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith("image/") || item.type.startsWith("video/")) {
+        const file = item.getAsFile();
+        if (file) { setSelectedFile(file); e.preventDefault(); }
+      }
+    }
+  };
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -2210,7 +2224,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
               <div
                 ref={scrollContainerRef}
                 className="flex-1 w-full max-w-full min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain touch-pan-y p-3 md:p-4"
-                style={{ overflowAnchor: "none", contain: "strict" }}
+                style={{ overflowAnchor: "none", contain: "strict", maxHeight: "var(--vp-height, unset)" }}
                 onScroll={() => {
                   const el = scrollContainerRef.current;
                   if (!el) return;
@@ -2262,6 +2276,13 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                             className={`flex ${isMine ? "justify-end" : "justify-start"} ${isLastInSeq ? "mb-3" : "mb-0.5"} group transition-colors duration-500 ${
                               isHighlighted ? "bg-bronze/10 rounded-xl -mx-2 px-2 py-1" : ""
                             }`}
+                            onPointerDown={(e) => {
+                              if (e.pointerType === "mouse") return;
+                              msgPressTimerRef.current = setTimeout(() => setLongPressMsg(msg), 500);
+                            }}
+                            onPointerUp={() => { if (msgPressTimerRef.current) { clearTimeout(msgPressTimerRef.current); msgPressTimerRef.current = null; } }}
+                            onPointerLeave={() => { if (msgPressTimerRef.current) { clearTimeout(msgPressTimerRef.current); msgPressTimerRef.current = null; } }}
+                            onPointerCancel={() => { if (msgPressTimerRef.current) { clearTimeout(msgPressTimerRef.current); msgPressTimerRef.current = null; } }}
                           >
                             {/* Avatar for group chats — only show on last in sequence */}
                             {!isMine && selectedRoom.is_group && (
@@ -2288,7 +2309,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
 
                             {/* Action buttons - before message for own */}
                             {isMine && !isDeletedForEveryone && (
-                              <div className="flex items-center gap-0.5 mr-1 self-center opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity">
+                              <div className="hidden md:flex items-center gap-0.5 mr-1 self-center opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleReply(msg)}>
                                   <Reply className="h-3 w-3" />
                                 </Button>
@@ -2643,7 +2664,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
 
                             {/* Action buttons - after message for other's messages */}
                             {!isMine && !isDeletedForEveryone && (
-                              <div className="flex items-center gap-0.5 ml-1 self-center opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity">
+                              <div className="hidden md:flex items-center gap-0.5 ml-1 self-center opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleReply(msg)}>
                                   <Reply className="h-3 w-3" />
                                 </Button>
@@ -2911,6 +2932,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                               // On mobile: Enter inserts newline naturally; send via Send button only
                             }
                           }}
+                          onPaste={handlePaste}
                           disabled={uploadingFile || convertingVideo}
                           className="flex-1 min-w-0 resize-none overflow-y-auto border-none outline-none focus:ring-0 focus:outline-none bg-transparent text-base md:text-sm leading-relaxed py-1.5 px-2 placeholder:text-muted-foreground/60 min-h-[36px] max-h-[120px]"
                           style={{ height: "36px" }}
@@ -3515,6 +3537,51 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
           </div>
         </DialogContent>
       </Dialog>
+
+    {/* ── Long-press message context sheet (mobile only) ─────────────────── */}
+    <Sheet open={!!longPressMsg} onOpenChange={(open) => { if (!open) setLongPressMsg(null); }}>
+      <SheetContent side="bottom" className="rounded-t-2xl pb-safe bg-background border-border">
+        <SheetHeader className="pb-3">
+          <SheetTitle className="text-sm font-medium text-muted-foreground truncate text-left">
+            {longPressMsg?.content?.slice(0, 48) || "Message"}
+          </SheetTitle>
+        </SheetHeader>
+        <div className="space-y-1">
+          <button
+            onClick={() => { if (longPressMsg) handleReply(longPressMsg); setLongPressMsg(null); }}
+            className="w-full flex items-center gap-3 px-3 py-3.5 min-h-[48px] rounded-xl hover:bg-muted active:bg-muted/80 transition-colors text-left"
+          >
+            <Reply className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Reply</span>
+          </button>
+          <button
+            onClick={() => { if (longPressMsg) handleReaction(longPressMsg.id, "👍"); setLongPressMsg(null); }}
+            className="w-full flex items-center gap-3 px-3 py-3.5 min-h-[48px] rounded-xl hover:bg-muted active:bg-muted/80 transition-colors text-left"
+          >
+            <span className="text-base">👍</span>
+            <span className="text-sm font-medium">React</span>
+          </button>
+          {longPressMsg?.content && (
+            <button
+              onClick={() => { if (longPressMsg?.content) { navigator.clipboard.writeText(longPressMsg.content!); toast.success("Copied"); } setLongPressMsg(null); }}
+              className="w-full flex items-center gap-3 px-3 py-3.5 min-h-[48px] rounded-xl hover:bg-muted active:bg-muted/80 transition-colors text-left"
+            >
+              <Pin className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Copy text</span>
+            </button>
+          )}
+          {longPressMsg && longPressMsg.sender_id === currentUserId && (
+            <button
+              onClick={() => { if (longPressMsg) handleDeleteForEveryone(longPressMsg.id); setLongPressMsg(null); }}
+              className="w-full flex items-center gap-3 px-3 py-3.5 min-h-[48px] rounded-xl hover:bg-red-500/10 active:bg-red-500/15 transition-colors text-left"
+            >
+              <Trash2 className="w-4 h-4 text-red-500" />
+              <span className="text-sm font-medium text-red-500">Delete</span>
+            </button>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
 
     </div>
   );
