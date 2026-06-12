@@ -189,12 +189,12 @@ const WorkspaceInfoSheet = ({
       const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
       // file.type can be empty on some Android/iOS browsers — fall back to a safe MIME
       const mimeType = file.type || `image/${ext === "jpg" ? "jpeg" : ext}`;
-      const path = `workspace-avatars/${roomId}-${Date.now()}.${ext}`;
+      const path = `${roomId}-${Date.now()}.${ext}`;
       const { error: uploadErr } = await supabase.storage
-        .from("chat-files")
+        .from("workspace-avatars")
         .upload(path, file, { upsert: true, contentType: mimeType });
       if (uploadErr) throw uploadErr;
-      const { data: urlData } = supabase.storage.from("chat-files").getPublicUrl(path);
+      const { data: urlData } = supabase.storage.from("workspace-avatars").getPublicUrl(path);
       const publicUrl = urlData.publicUrl;
       const { error: dbErr } = await supabase
         .from("chat_rooms")
