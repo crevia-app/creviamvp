@@ -7,6 +7,7 @@ import { Sparkles } from "lucide-react";
 import { SocialBadgeRow, getSocialSvg } from "@/components/crevia-link/SocialBrandIcons";
 import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 import { BackButton } from "@/components/BackButton";
+import { SEO } from "@/components/SEO";
 
 const PublicProfile = () => {
   const { username } = useParams();
@@ -270,7 +271,21 @@ const PublicProfile = () => {
   const customColor = profile?.background?.custom_color as string | undefined;
   const hasCustomColor = !!customColor && !isCustomImage;
 
+  const profileName = profile?.display_name || profile?.username || username || "Profile";
+  const profileDesc = profile?.bio || `Check out ${profileName}'s links on Crevia.`;
+  const profileAvatar = profile?.profile_picture || "https://www.crevia.app/crevia-logo.png";
+
   return (
+    <>
+    <SEO
+      title={`${profileName} | crevia.app`}
+      description={profileDesc}
+      image={profileAvatar}
+      imageWidth={800}
+      imageHeight={800}
+      url={`/${username}`}
+      type="website"
+    />
     <div
       className={`min-h-dvh ${themeStyles.className} ${getFontSize()} pt-12 px-6 relative`}
       style={{
@@ -403,6 +418,7 @@ const PublicProfile = () => {
 
       </div>
     </div>
+    </>
   );
 };
 

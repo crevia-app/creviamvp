@@ -9,6 +9,17 @@
   ],
   "rewrites": [
     { "source": "/favicon.ico", "destination": "/crevia-logo.png" },
+    {
+      "source": "/:username([a-zA-Z0-9_.-]+)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(whatsapp|facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|discordbot|googlebot|bingbot|duckduckbot|applebot|iMessagebot|Iframely|pinterest|vkShare|W3C_Validator).*"
+        }
+      ],
+      "destination": "/api/og-profile?username=:username"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
