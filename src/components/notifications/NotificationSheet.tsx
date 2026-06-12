@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bell, MessageSquare, Receipt, Sparkles, CreditCard, CheckCheck, Loader2, Trash2, AlertTriangle, CheckCircle2, Circle } from "lucide-react";
+import { Bell, MessageSquare, Receipt, Sparkles, CreditCard, CheckCheck, Loader2, Trash2, AlertTriangle, CheckCircle2, Circle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AppNotification } from "@/hooks/use-notifications";
 import { useToast } from "@/hooks/use-toast";
@@ -127,7 +127,7 @@ export default function NotificationSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:w-[380px] p-0 flex flex-col bg-background border-border">
+      <SheetContent side="right" className="w-full sm:w-[380px] p-0 flex flex-col bg-background border-border [&>button:last-child]:hidden">
         <SheetHeader className="px-4 pt-4 pb-3 border-b border-border flex-shrink-0">
           <div className="flex items-center justify-between w-full gap-2">
             {/* Edit on the far left */}
@@ -145,8 +145,8 @@ export default function NotificationSheet({
             </div>
             {/* Title centred */}
             <SheetTitle className="font-vollkorn text-lg flex-1 text-center">Notifications</SheetTitle>
-            {/* Mark all read on the far right — width matches Edit to keep title centred */}
-            <div className="w-16 flex-shrink-0 flex justify-end">
+            {/* Mark all read + close on the far right */}
+            <div className="flex-shrink-0 flex items-center gap-1">
               {!isEditing && unreadCount > 0 && (
                 <Button
                   variant="ghost"
@@ -157,6 +157,14 @@ export default function NotificationSheet({
                   <CheckCheck className="w-3.5 h-3.5" />
                 </Button>
               )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                onClick={() => onOpenChange(false)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         </SheetHeader>
