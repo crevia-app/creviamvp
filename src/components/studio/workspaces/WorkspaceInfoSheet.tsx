@@ -358,8 +358,11 @@ const WorkspaceInfoSheet = ({
         <div className="flex flex-col items-center pt-6 pb-4 px-5 border-b border-border/50 flex-shrink-0 gap-3 bg-card/30">
           <SheetTitle className="sr-only">Workspace Info</SheetTitle>
 
-          {/* Group avatar — owner and admins can change by clicking */}
-          <div className="relative group/avatar">
+          {/* Group avatar — owner and admins can change by clicking/tapping */}
+          <div
+            className={`relative group/avatar${isAdminOrCreator ? " cursor-pointer" : ""}`}
+            onClick={isAdminOrCreator && !uploadingAvatar ? () => avatarInputRef.current?.click() : undefined}
+          >
             <div
               className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold shadow-sm flex-shrink-0 overflow-hidden"
               style={avatarUrl ? {} : groupAvatar}
@@ -376,33 +379,23 @@ const WorkspaceInfoSheet = ({
               )}
             </div>
 
-            {/* Camera overlay — visible to admins and owner */}
+            {/* Camera overlay — desktop hover */}
             {isAdminOrCreator && (
               <>
-                {/* Desktop hover overlay */}
-                <button
-                  onClick={() => avatarInputRef.current?.click()}
-                  disabled={uploadingAvatar}
-                  className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-200 cursor-pointer"
-                  title="Change workspace photo"
-                >
+                <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-200 pointer-events-none">
                   {uploadingAvatar
                     ? <Loader2 className="w-6 h-6 text-white animate-spin" />
                     : <Camera className="w-6 h-6 text-white drop-shadow-md" />
                   }
-                </button>
+                </div>
 
-                {/* Mobile badge — permanently visible since hover doesn't exist on touch */}
-                {!uploadingAvatar && (
-                  <div className="absolute -bottom-1.5 -right-1.5 sm:hidden bg-zinc-800 border-2 border-background rounded-full p-1.5 pointer-events-none">
-                    <Camera className="w-3 h-3 text-white" />
-                  </div>
-                )}
-                {uploadingAvatar && (
-                  <div className="absolute -bottom-1.5 -right-1.5 sm:hidden bg-zinc-800 border-2 border-background rounded-full p-1.5 pointer-events-none">
-                    <Loader2 className="w-3 h-3 text-white animate-spin" />
-                  </div>
-                )}
+                {/* Mobile badge — always visible on touch screens */}
+                <div className="absolute -bottom-1.5 -right-1.5 sm:hidden bg-zinc-800 border-2 border-background rounded-full p-1.5 pointer-events-none">
+                  {uploadingAvatar
+                    ? <Loader2 className="w-3 h-3 text-white animate-spin" />
+                    : <Camera className="w-3 h-3 text-white" />
+                  }
+                </div>
 
                 <input
                   ref={avatarInputRef}
