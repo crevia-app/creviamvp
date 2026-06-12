@@ -216,7 +216,7 @@ const avatarStyle = (seed: string): React.CSSProperties => {
 
 const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: CreiaChatProps = {}) => {
   const navigate = useNavigate();
-  const { keyboardOpen } = useVisualViewport();
+  const { keyboardOpen, vpHeight } = useVisualViewport();
   const { canCreateWorkspace } = useSubscription();
   const [currentUserId, setCurrentUserId] = useState("");
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
@@ -1891,7 +1891,14 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
     type?.startsWith("image/") || false;
 
   return (
-    <div className="relative flex h-full w-full max-w-full flex-col overflow-hidden bg-background overscroll-none">
+    <div
+      className="relative flex w-full max-w-full flex-col overflow-hidden bg-background overscroll-none"
+      style={{
+        height: vpHeight && typeof window !== "undefined" && window.innerWidth < 768
+          ? `${vpHeight}px`
+          : "100%",
+      }}
+    >
       {/* Header — hidden when embedded in the hub (hideRoomList=true) */}
       {!hideRoomList && (
         <div className="flex items-center justify-between p-3 md:p-4 border-b bg-background flex-shrink-0">
