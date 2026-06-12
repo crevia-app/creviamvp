@@ -6,7 +6,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Printer, Download, CheckCircle2, Share2 } from "lucide-react";
+import { Printer, Download, CheckCircle2, Share2, ArrowLeft, X } from "lucide-react";
 import { format } from "date-fns";
 import { useDownloadPDF } from "@/hooks/use-download-pdf";
 
@@ -98,27 +98,38 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[900px] w-[calc(100vw-16px)] max-h-[90vh] overflow-y-auto p-0 [&>button:last-child]:hidden">
+      <DialogContent className="w-[calc(100vw-16px)] sm:max-w-2xl lg:max-w-[900px] max-h-[95dvh] sm:max-h-[90vh] overflow-hidden p-0 [&>button:last-child]:hidden">
 
         {/* ── Toolbar ─────────────────────────────────────────────────────── */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-4 sm:px-6 py-3 flex items-center justify-between gap-2">
-          <DialogTitle className="font-vollkorn text-base sm:text-lg truncate min-w-0">Payment Receipt</DialogTitle>
-          <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-3 py-2 flex items-center gap-2 [padding-top:max(8px,env(safe-area-inset-top))]">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onOpenChange(false)}
+            className="h-8 px-2 gap-1.5 text-xs font-medium flex-shrink-0"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back
+          </Button>
+          <DialogTitle className="font-vollkorn text-sm sm:text-base truncate min-w-0 flex-1">Payment Receipt</DialogTitle>
+          <div className="flex items-center gap-1 flex-shrink-0">
             <Button variant="outline" size="sm" onClick={shareSync} disabled={sharing || pregenerating} className="h-8 w-8 p-0" title="Share PDF">
               <Share2 className="h-3.5 w-3.5" />
             </Button>
-            <Button variant="outline" size="sm" onClick={download} disabled={downloading} className="h-8 gap-1.5 px-2.5 text-xs">
+            <Button variant="outline" size="sm" onClick={download} disabled={downloading} className="h-8 w-8 p-0" title="Download PDF">
               <Download className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Download</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={handlePrint} className="h-8 gap-1.5 px-2.5 text-xs">
+            <Button variant="outline" size="sm" onClick={handlePrint} className="h-8 w-8 p-0" title="Print">
               <Printer className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Print</span>
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="h-8 w-8 p-0" title="Close">
+              <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
         {/* ── Receipt Document ─────────────────────────────────────────────── */}
+        <div className="overflow-y-auto max-h-[calc(95dvh-52px)] sm:max-h-[calc(90vh-52px)]">
         <div className="bg-zinc-100 dark:bg-zinc-900 p-4 sm:p-8">
           <div className="max-w-[794px] mx-auto">
           <div ref={docRef} className="invoice-print-area bg-white text-black rounded-xl shadow-lg overflow-hidden w-full print:shadow-none print:rounded-none print:w-[210mm] print:max-w-none print:m-0">
@@ -284,6 +295,7 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
             </div>
           </div>
           </div>
+        </div>
         </div>
 
       </DialogContent>
