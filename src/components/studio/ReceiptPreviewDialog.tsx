@@ -98,19 +98,10 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-16px)] sm:max-w-2xl lg:max-w-[900px] max-h-[95dvh] sm:max-h-[90vh] overflow-hidden p-0 [&>button:last-child]:hidden">
+      <DialogContent className="w-[calc(100vw-16px)] sm:max-w-2xl lg:max-w-[900px] max-h-[95dvh] sm:max-h-[90vh] overflow-hidden p-0 transition-opacity duration-200 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 [&>button:last-child]:hidden">
 
         {/* ── Toolbar ─────────────────────────────────────────────────────── */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-3 py-2 flex items-center gap-2 [padding-top:max(8px,env(safe-area-inset-top))]">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onOpenChange(false)}
-            className="h-8 px-2 gap-1.5 text-xs font-medium flex-shrink-0"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back
-          </Button>
           <DialogTitle className="font-vollkorn text-sm sm:text-base truncate min-w-0 flex-1">Payment Receipt</DialogTitle>
           <div className="flex items-center gap-1 flex-shrink-0">
             <Button variant="outline" size="sm" onClick={shareSync} disabled={sharing || pregenerating} className="h-8 w-8 p-0" title="Share PDF">

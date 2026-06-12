@@ -98,6 +98,7 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
   const [pendingDeleteInvoiceId, setPendingDeleteInvoiceId] = useState<string | null>(null);
   const [pendingDeleteFolder, setPendingDeleteFolder]       = useState<InvoiceFolder | null>(null);
   const [receiptInvoice, setReceiptInvoice] = useState<Invoice | null>(null);
+  const [autoShareInvoice, setAutoShareInvoice] = useState<Invoice | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Folder navigation state
@@ -742,15 +743,15 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
             return (
               <Card
                 key={invoice.id}
-                className={`group p-4 md:p-5 hover:shadow-lg transition-all duration-300 border cursor-pointer ${
-                  isOverdue ? "border-red-200 dark:border-red-900/50 hover:border-red-300" : "hover:border-bronze/30"
+                className={`group p-4 md:p-5 [@media(hover:hover)]:hover:shadow-lg transition-all duration-300 border cursor-pointer active:opacity-80 ${
+                  isOverdue ? "border-red-200 dark:border-red-900/50 [@media(hover:hover)]:hover:border-red-300" : "[@media(hover:hover)]:hover:border-bronze/30"
                 }`}
                 onClick={() => setPreviewInvoice(invoice)}
               >
                 <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <div className={`p-3 rounded-2xl flex-shrink-0 transition-colors ${
-                      isOverdue ? "bg-red-100 dark:bg-red-900/20" : "bg-bronze/10 group-hover:bg-bronze/15"
+                      isOverdue ? "bg-red-100 dark:bg-red-900/20" : "bg-bronze/10 [@media(hover:hover)]:group-hover:bg-bronze/15"
                     }`}>
                       {isOverdue ? (
                         <AlertCircle className="h-5 w-5 text-red-500" />
@@ -799,7 +800,7 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleShare(invoice)}>
+                        <DropdownMenuItem onClick={() => setAutoShareInvoice(invoice)}>
                           <Share2 className="h-4 w-4 mr-2" />
                           Share
                         </DropdownMenuItem>
@@ -862,6 +863,12 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
         open={!!receiptInvoice}
         onOpenChange={(open) => !open && setReceiptInvoice(null)}
         invoice={receiptInvoice}
+      />
+      <InvoicePreviewDialog
+        open={!!autoShareInvoice}
+        onOpenChange={(open) => { if (!open) setAutoShareInvoice(null); }}
+        invoice={autoShareInvoice}
+        autoShare={true}
       />
       <InvoiceSettingsDialog
         open={settingsOpen}

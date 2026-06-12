@@ -234,6 +234,8 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
             <img
               src={businessSettings.logo_url}
               alt="Business Logo"
+              width={logoSize === "sm" ? 40 : logoSize === "md" ? 64 : 96}
+              height={logoSize === "sm" ? 40 : logoSize === "md" ? 64 : 96}
               className={`${logoSizeClass} object-contain rounded-lg transition-all duration-200`}
             />
             {viewMode === "main" && (
@@ -557,7 +559,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
     <>
       <Dialog open={open} onOpenChange={(v) => { if (!v) { setIsFullscreen(false); setViewMode("main"); } onOpenChange(v); }}>
         <DialogContent className={cn(
-          "overflow-hidden p-0 transition-all duration-300 [&>button:last-child]:hidden",
+          "overflow-hidden p-0 transition-opacity duration-200 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 [&>button:last-child]:hidden",
           isFullscreen
             ? "max-w-[100vw] w-screen h-dvh max-h-dvh rounded-none"
             : "w-[calc(100vw-16px)] sm:max-w-2xl lg:max-w-[900px] max-h-[95dvh] sm:max-h-[90vh]"
@@ -569,16 +571,6 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
             {viewMode === "main" ? (
               /* ── Main mode toolbar ── */
               <>
-                {/* Mobile-only back button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onOpenChange(false)}
-                  className="h-8 px-2 gap-1.5 text-xs font-medium flex-shrink-0 flex md:hidden"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  Back
-                </Button>
                 <DialogTitle className="font-vollkorn text-sm sm:text-base truncate min-w-0 flex-1">
                   Invoice Preview
                 </DialogTitle>
