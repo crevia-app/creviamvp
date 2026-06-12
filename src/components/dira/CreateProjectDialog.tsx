@@ -86,18 +86,20 @@ export const CreateProjectDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl">
-        <DialogHeader className="pt-[env(safe-area-inset-top,0px)]">
-          <DialogTitle className="font-vollkorn text-2xl">
+      <DialogContent className="w-[calc(100vw-16px)] sm:max-w-xl max-h-[90dvh] flex flex-col gap-0 p-0 overflow-hidden">
+        {/* Header */}
+        <DialogHeader className="px-5 pt-5 pb-4 flex-shrink-0 border-b border-border/50">
+          <DialogTitle className="font-vollkorn text-xl sm:text-2xl">
             Create a personal project
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
           {/* Info Box */}
           <div className="rounded-xl bg-muted/50 border border-border/50 p-4 space-y-2">
             <div className="flex items-center gap-2 text-sm font-semibold">
-              <Info className="w-4 h-4 text-bronze" />
+              <Info className="w-4 h-4 text-bronze flex-shrink-0" />
               How to use projects
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -121,7 +123,7 @@ export const CreateProjectDialog = ({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Name your project"
-                className="h-11"
+                className="h-11 text-base"
                 autoFocus
               />
             </div>
@@ -134,7 +136,7 @@ export const CreateProjectDialog = ({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Describe your project, goals, subject, etc..."
-                className="min-h-[80px] resize-none"
+                className="min-h-[90px] resize-none text-base"
               />
             </div>
 
@@ -147,38 +149,42 @@ export const CreateProjectDialog = ({
                 value={customInstructions}
                 onChange={(e) => setCustomInstructions(e.target.value)}
                 placeholder="How should Dira respond in this project? (e.g. tone, format, expertise level)"
-                className="min-h-[80px] resize-none"
+                className="min-h-[90px] resize-none text-base"
               />
               <p className="text-xs text-muted-foreground">
                 Dira will follow these in every conversation within this project.
               </p>
             </div>
           </div>
+        </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 p-4 pb-[env(safe-area-inset-bottom,20px)]">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isCreating}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCreate}
-              disabled={isCreating || !name.trim()}
-              className="bg-bronze hover:bg-bronze-dark text-background"
-            >
-              {isCreating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                "Create project"
-              )}
-            </Button>
-          </div>
+        {/* Actions — sticky footer, never clipped */}
+        <div
+          className="flex-shrink-0 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 px-5 py-4 border-t border-border/50 bg-background"
+          style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+        >
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isCreating}
+            className="w-full sm:w-auto h-11"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCreate}
+            disabled={isCreating || !name.trim()}
+            className="w-full sm:w-auto h-11 bg-bronze hover:bg-bronze-dark text-background"
+          >
+            {isCreating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              "Create project"
+            )}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
