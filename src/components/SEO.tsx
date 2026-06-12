@@ -3,8 +3,8 @@ import { Helmet } from "react-helmet-async";
 const BASE_URL      = "https://www.crevia.app";
 const DEFAULT_IMAGE = `${BASE_URL}/crevia-logo.png`;
 
-const DEFAULT_TITLE       = "Crevia — Invoice, Collaborate & Grow Your Business with AI";
-const DEFAULT_DESCRIPTION = "The all-in-one business platform for creatives and brands. Send professional invoices, manage client workspaces, build your link-in-bio page, and unlock Dira AI — your always-on business intelligence.";
+const DEFAULT_TITLE       = "Crevia — The infrastructure to scale your business operations.";
+const DEFAULT_DESCRIPTION = "Create premium invoices, chat with teams and clients, share links-in-bio, and unlock Dira AI intelligence.";
 const DEFAULT_KEYWORDS    = "invoicing software, invoice generator, business management, AI business assistant, Dira AI, link in bio, client workspace, team collaboration, creative business tools, Crevia";
 
 interface SEOProps {
