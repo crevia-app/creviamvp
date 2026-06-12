@@ -91,8 +91,8 @@ const Settings = () => {
         return;
       }
 
-      if (file.size > 5 * 1024 * 1024) {
-        toast({ title: "File too large", description: "Please upload an image smaller than 5MB", variant: "destructive" });
+      if (file.size > 30 * 1024 * 1024) {
+        toast({ title: "File too large", description: "Please upload an image smaller than 30MB", variant: "destructive" });
         return;
       }
 

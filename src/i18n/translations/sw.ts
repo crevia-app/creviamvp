@@ -60,7 +60,7 @@ const sw = {
   "settings.languageDesc": "Badilisha lugha ya kiolesura",
   "settings.profilePicture": "Bonyeza ikoni ya kamera kubadilisha picha ya wasifu",
   "settings.uploading": "Inapakia...",
-  "settings.maxSize": "Ukubwa wa juu: 5MB • JPG, PNG, GIF",
+  "settings.maxSize": "Ukubwa wa juu: 30MB • JPG, PNG, GIF",
   "settings.profileVisibility": "Uonekano wa Wasifu",
   "settings.profileVisibilityDesc": "Fanya wasifu wako kuwa wa umma",
   "settings.hideEarnings": "Ficha Mapato",
@@ -259,7 +259,7 @@ const sw = {
   "toast.invalidFileType": "Aina batili ya faili",
   "toast.invalidFileTypeDesc": "Tafadhali pakia faili ya picha",
   "toast.fileTooLarge": "Faili kubwa sana",
-  "toast.fileTooLargeDesc": "Tafadhali pakia picha ndogo kuliko 5MB",
+  "toast.fileTooLargeDesc": "Tafadhali pakia picha ndogo kuliko 30MB",
   "toast.languageChanged": "Lugha imebadilishwa",
   "toast.languageChangedDesc": "Lugha ya kiolesura imesasishwa",
 

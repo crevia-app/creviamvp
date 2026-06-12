@@ -60,7 +60,7 @@ const en = {
   "settings.languageDesc": "Change the language of the interface",
   "settings.profilePicture": "Click camera icon to change profile picture",
   "settings.uploading": "Uploading...",
-  "settings.maxSize": "Max size: 5MB • JPG, PNG, GIF",
+  "settings.maxSize": "Max size: 30MB • JPG, PNG, GIF",
   "settings.profileVisibility": "Profile Visibility",
   "settings.profileVisibilityDesc": "Make your profile private",
   "settings.hideEarnings": "Hide Earnings",
@@ -259,7 +259,7 @@ const en = {
   "toast.invalidFileType": "Invalid file type",
   "toast.invalidFileTypeDesc": "Please upload an image file",
   "toast.fileTooLarge": "File too large",
-  "toast.fileTooLargeDesc": "Please upload an image smaller than 5MB",
+  "toast.fileTooLargeDesc": "Please upload an image smaller than 30MB",
   "toast.languageChanged": "Language changed",
   "toast.languageChangedDesc": "Interface language has been updated",
 

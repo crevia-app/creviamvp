@@ -57,7 +57,7 @@ const it = {
   "settings.languageDesc": "Cambia la lingua dell'interfaccia",
   "settings.profilePicture": "Clicca sull'icona della fotocamera per cambiare la foto",
   "settings.uploading": "Caricamento...",
-  "settings.maxSize": "Dimensione max: 5 MB • JPG, PNG, GIF",
+  "settings.maxSize": "Dimensione max: 30 MB • JPG, PNG, GIF",
   "settings.profileVisibility": "Visibilità del profilo",
   "settings.profileVisibilityDesc": "Rendi il tuo profilo pubblico",
   "settings.hideEarnings": "Nascondi guadagni",
@@ -247,7 +247,7 @@ const it = {
   "toast.invalidFileType": "Tipo di file non valido",
   "toast.invalidFileTypeDesc": "Carica un file immagine",
   "toast.fileTooLarge": "File troppo grande",
-  "toast.fileTooLargeDesc": "Carica un'immagine inferiore a 5 MB",
+  "toast.fileTooLargeDesc": "Carica un'immagine inferiore a 30 MB",
   "toast.languageChanged": "Lingua cambiata",
   "toast.languageChangedDesc": "La lingua dell'interfaccia è stata aggiornata",
 

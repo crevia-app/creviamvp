@@ -176,17 +176,18 @@ const WorkspaceInfoSheet = ({
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image too large — max 5 MB");
+    if (file.size > 30 * 1024 * 1024) {
+      toast.error("Image too large — max 30 MB");
       return;
     }
     setUploadingAvatar(true);
     // Optimistic UI — show the new image immediately without waiting for the DB round-trip
+    const prevUrl = avatarUrl;
     const localPreview = URL.createObjectURL(file);
     setAvatarUrl(localPreview);
     try {
       const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-      // file.type can be empty on some Android browsers — fall back to a safe MIME
+      // file.type can be empty on some Android/iOS browsers — fall back to a safe MIME
       const mimeType = file.type || `image/${ext === "jpg" ? "jpeg" : ext}`;
       const path = `workspace-avatars/${roomId}-${Date.now()}.${ext}`;
       const { error: uploadErr } = await supabase.storage
@@ -204,10 +205,11 @@ const WorkspaceInfoSheet = ({
       URL.revokeObjectURL(localPreview);
       setAvatarUrl(publicUrl);
       toast.success("Workspace photo updated");
-    } catch {
-      // Roll back optimistic update on any failure
+    } catch (err) {
+      console.error("Workspace avatar upload failed:", err);
+      // Roll back optimistic update to the previous URL
       URL.revokeObjectURL(localPreview);
-      setAvatarUrl(null);
+      setAvatarUrl(prevUrl);
       toast.error("Failed to upload image — please try again");
     } finally {
       setUploadingAvatar(false);
