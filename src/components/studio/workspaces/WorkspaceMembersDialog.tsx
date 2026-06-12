@@ -14,9 +14,8 @@ import { toast } from "sonner";
 import { Users, Search, UserPlus, X, Loader2, Crown, Link2, Copy, Check, Lock } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const getSeatLimit = (plan: string | null): number => {
-  if (plan === "enterprise") return 100;
-  return 8; // free, pro, creative_pro, business, brand_workspace
+const getSeatLimit = (_plan: string | null): number => {
+  return 8;
 };
 
 interface Member {
@@ -134,9 +133,7 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
     if (members.length >= seatLimit) {
       const planLabel = creatorPlan === "business" || creatorPlan === "brand_workspace" ? "Business" : "Pro";
       toast.error(`Seat limit reached (${seatLimit}/${seatLimit})`, {
-        description: creatorPlan === "enterprise"
-          ? "Contact support to increase your seat limit."
-          : `Upgrade to ${planLabel === "Pro" ? "Business" : "Enterprise"} to add more seats.`,
+        description: `Upgrade to ${planLabel === "Pro" ? "Business" : "Business"} to add more seats.`,
       });
       return;
     }
@@ -176,7 +173,7 @@ const WorkspaceMembersDialog = ({ open, onOpenChange, roomId, createdBy, current
   const WORKSPACE_ROLES = ["admin", "editor", "viewer"] as const;
   type WorkspaceRole = typeof WORKSPACE_ROLES[number];
 
-  const isBusinessPlan = creatorPlan === "business" || creatorPlan === "brand_workspace" || creatorPlan === "enterprise";
+  const isBusinessPlan = creatorPlan === "business" || creatorPlan === "brand_workspace";
 
   const setRole = async (userId: string, newRole: WorkspaceRole) => {
     if (!isBusinessPlan) {

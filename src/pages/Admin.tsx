@@ -37,7 +37,6 @@ type Section = "overview" | "users" | "billing" | "documents" | "customization" 
 const planChip = (plan: string | null) => cn(
   "text-[10px] font-semibold px-2 py-0.5 rounded-full",
   plan === "pro" || plan === "creative_pro" ? "bg-emerald-500/20 text-emerald-400"
-  : plan === "enterprise"                  ? "bg-violet-500/20  text-violet-400"
   : plan === "business" || plan === "brand_workspace" ? "bg-amber-500/20 text-amber-400"
   : "bg-white/[0.07] text-white/30"
 );
@@ -121,7 +120,7 @@ const StatCard = ({
 // ─── Overview ─────────────────────────────────────────────────────────────────
 const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) => {
   const [data, setData] = useState<{
-    total: number; free: number; pro: number; business: number; enterprise: number;
+    total: number; free: number; pro: number; business: number;
     invoices: number;
     mrr: number; arr: number;
     userTrend: number | null; mrrTrend: number | null;
@@ -144,9 +143,8 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
     const p = profiles ?? [];
     const pro = p.filter(u => u.subscription_plan === "pro" || u.subscription_plan === "creative_pro").length;
     const bus = p.filter(u => u.subscription_plan === "business" || u.subscription_plan === "brand_workspace").length;
-    const ent = p.filter(u => u.subscription_plan === "enterprise").length;
-    const free = p.length - pro - bus - ent;
-    const mrr = pro * 1499 + bus * 7900 + ent * 5000;
+    const free = p.length - pro - bus;
+    const mrr = pro * 1499 + bus * 7900;
     const arr = mrr * 12;
 
     // Trends — compare vs last month
@@ -171,8 +169,7 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
 
     const prevPro = p.filter(u => wasActiveInPeriod(u, "pro", lastMonthStart, lastMonthEnd) || wasActiveInPeriod(u, "creative_pro", lastMonthStart, lastMonthEnd)).length;
     const prevBus = p.filter(u => wasActiveInPeriod(u, "business", lastMonthStart, lastMonthEnd) || wasActiveInPeriod(u, "brand_workspace", lastMonthStart, lastMonthEnd)).length;
-    const prevEnt = p.filter(u => wasActiveInPeriod(u, "enterprise", lastMonthStart, lastMonthEnd)).length;
-    const prevMrr = prevPro * 1499 + prevBus * 7900 + prevEnt * 5000;
+    const prevMrr = prevPro * 1499 + prevBus * 7900;
     const mrrTrend = prevMrr > 0 ? Math.round(((mrr - prevMrr) / prevMrr) * 100) : null;
 
     // MRR chart — active paid users per month (accounts for churn via subscription_expires_at)
@@ -182,8 +179,7 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
       const end   = endOfMonth(d).toISOString();
       const mPro  = p.filter(u => wasActiveInPeriod(u, "pro", start, end) || wasActiveInPeriod(u, "creative_pro", start, end)).length;
       const mBus  = p.filter(u => wasActiveInPeriod(u, "business", start, end) || wasActiveInPeriod(u, "brand_workspace", start, end)).length;
-      const mEnt  = p.filter(u => wasActiveInPeriod(u, "enterprise", start, end)).length;
-      return { month: format(d, "MMM"), mrr: mPro * 1499 + mBus * 7900 + mEnt * 5000 };
+      return { month: format(d, "MMM"), mrr: mPro * 1499 + mBus * 7900 };
     });
 
     // User growth chart — new signups per month
@@ -199,15 +195,14 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
       { plan: "Free",       count: free, pct: p.length ? Math.round((free / p.length) * 100) : 0 },
       { plan: "Pro",        count: pro,  pct: p.length ? Math.round((pro  / p.length) * 100) : 0 },
       { plan: "Business",   count: bus,  pct: p.length ? Math.round((bus  / p.length) * 100) : 0 },
-      { plan: "Enterprise", count: ent,  pct: p.length ? Math.round((ent  / p.length) * 100) : 0 },
     ];
 
-    setData({ total: p.length, free, pro, business: bus, enterprise: ent, invoices: inv ?? 0, mrr, arr, userTrend, mrrTrend, mrrChart, userChart, planChart, recent: p.slice(0, 6) });
+    setData({ total: p.length, free, pro, business: bus, invoices: inv ?? 0, mrr, arr, userTrend, mrrTrend, mrrChart, userChart, planChart, recent: p.slice(0, 6) });
   };
 
   if (!data) return <Spin />;
 
-  const { total, pro, business, enterprise, free, invoices, mrr, arr, userTrend, mrrTrend, mrrChart, userChart, planChart, recent } = data;
+  const { total, pro, business, free, invoices, mrr, arr, userTrend, mrrTrend, mrrChart, userChart, planChart, recent } = data;
 
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
@@ -215,7 +210,7 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
       {/* ── Top Stat Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <StatCard
-          label="Total Users" value={fmt(total)} sub={`${free} free · ${pro} pro · ${business} biz · ${enterprise} ent`}
+          label="Total Users" value={fmt(total)} sub={`${free} free · ${pro} pro · ${business} biz`}
           trend={userTrend} icon={Users} accent="bg-blue-500" onClick={() => onNavigate("users")}
         />
         <StatCard
@@ -305,7 +300,6 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
               { label: "Free",       count: free,       pct: total ? Math.round((free     / total) * 100) : 0, color: "bg-white/20",    text: "text-white/50" },
               { label: "Pro",        count: pro,        pct: total ? Math.round((pro      / total) * 100) : 0, color: "bg-emerald-500", text: "text-emerald-400" },
               { label: "Business",   count: business,   pct: total ? Math.round((business / total) * 100) : 0, color: "bg-amber-500",   text: "text-amber-400" },
-              { label: "Enterprise", count: enterprise, pct: total ? Math.round((enterprise / total) * 100) : 0, color: "bg-violet-500", text: "text-violet-400" },
             ].map(row => (
               <div key={row.label}>
                 <div className="flex items-center justify-between mb-2">
@@ -334,7 +328,6 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
             {[
               { label: "Pro",        value: pro * 1499,        color: "text-emerald-400" },
               { label: "Business",   value: business * 7900,   color: "text-amber-400" },
-              { label: "Enterprise", value: enterprise * 5000, color: "text-violet-400" },
             ].map(r => (
               <div key={r.label} className="flex items-center justify-between">
                 <span className="text-sm text-white/40">{r.label}</span>
@@ -401,7 +394,7 @@ const OverviewSection = ({ onNavigate }: { onNavigate: (s: Section) => void }) =
 const UsersSection = () => {
   const [users, setUsers]           = useState<any[]>([]);
   const [search, setSearch]         = useState("");
-  const [filter, setFilter]         = useState<"all" | "free" | "pro" | "enterprise">("all");
+  const [filter, setFilter]         = useState<"all" | "free" | "pro" | "business">("all");
   const [selected, setSelected]     = useState<any>(null);
   const [selStats, setSelStats]     = useState<{ invoices: number; invoiceTotal: number } | null>(null);
   const [selTxns, setSelTxns]       = useState<any[]>([]);
@@ -519,7 +512,7 @@ const UsersSection = () => {
               <option value="all">All plans</option>
               <option value="free">Free</option>
               <option value="pro">Pro</option>
-              <option value="enterprise">Enterprise</option>
+              <option value="business">Business</option>
             </select>
           </div>
 
@@ -616,16 +609,16 @@ const UsersSection = () => {
                 {
                   label: "Invoices",
                   used: selected.invoices_used_this_month ?? 0,
-                  limit: ["pro","business","creative_pro","brand_workspace","enterprise"].includes(selected.subscription_plan) ? "∞" : "3",
-                  pct: ["pro","business","creative_pro","brand_workspace","enterprise"].includes(selected.subscription_plan) ? 0
+                  limit: ["pro","business","creative_pro","brand_workspace"].includes(selected.subscription_plan) ? "∞" : "3",
+                  pct: ["pro","business","creative_pro","brand_workspace"].includes(selected.subscription_plan) ? 0
                     : Math.min(100, Math.round(((selected.invoices_used_this_month ?? 0) / 3) * 100)),
                 },
                 {
                   label: "Workspaces created",
                   used: selected.workspaces_created_this_month ?? 0,
-                  limit: ["business","brand_workspace","enterprise"].includes(selected.subscription_plan) ? "∞"
+                  limit: ["business","brand_workspace"].includes(selected.subscription_plan) ? "∞"
                     : ["pro","creative_pro"].includes(selected.subscription_plan) ? "10" : "0",
-                  pct: ["business","brand_workspace","enterprise"].includes(selected.subscription_plan) ? 0
+                  pct: ["business","brand_workspace"].includes(selected.subscription_plan) ? 0
                     : ["pro","creative_pro"].includes(selected.subscription_plan)
                       ? Math.min(100, Math.round(((selected.workspaces_created_this_month ?? 0) / 10) * 100))
                       : 0,
@@ -684,14 +677,12 @@ const UsersSection = () => {
                       { key: "free",       label: "Free" },
                       { key: "pro",        label: "Pro" },
                       { key: "business",   label: "Business" },
-                      { key: "enterprise", label: "Enterprise" },
                     ].map(({ key, label }) => {
                       const current = selected.subscription_plan || "free";
                       const isActive = current === key;
                       const activeStyle =
-                        key === "pro"        ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-                        : key === "business"   ? "bg-amber-500/20  text-amber-400  border-amber-500/30"
-                        : key === "enterprise" ? "bg-violet-500/20  text-violet-400  border-violet-500/30"
+                        key === "pro"      ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                        : key === "business" ? "bg-amber-500/20  text-amber-400  border-amber-500/30"
                         : "bg-white/10 text-white/50 border-white/10";
                       return (
                         <button
@@ -792,7 +783,7 @@ const BillingSection = () => {
   const [profiles, setProfiles]       = useState<any[]>([]);
   const [tab, setTab]                 = useState<"transactions" | "refunds" | "analytics" | "plans">("transactions");
   const [loading, setLoading]         = useState(true);
-  const [planPrices, setPlanPrices]   = useState({ pro: "14.99", business: "79", enterprise: "0" });
+  const [planPrices, setPlanPrices]   = useState({ pro: "14.99", business: "79" });
   const [planSaving, setPlanSaving]   = useState(false);
 
   useEffect(() => { load(); }, []);
@@ -810,16 +801,15 @@ const BillingSection = () => {
       supabase
         .from("app_settings" as any)
         .select("key, value")
-        .in("key", ["plan_price_pro", "plan_price_business", "plan_price_enterprise"]),
+        .in("key", ["plan_price_pro", "plan_price_business"]),
     ]);
     setTxns(txnData ?? []);
     setProfiles(profData ?? []);
     if (settingsData) {
-      const prices = { pro: "14.99", business: "79", enterprise: "0" };
+      const prices = { pro: "14.99", business: "79" };
       (settingsData as any[]).forEach(s => {
-        if (s.key === "plan_price_pro")        prices.pro        = s.value;
-        if (s.key === "plan_price_business")   prices.business   = s.value;
-        if (s.key === "plan_price_enterprise") prices.enterprise = s.value;
+        if (s.key === "plan_price_pro")      prices.pro      = s.value;
+        if (s.key === "plan_price_business") prices.business = s.value;
       });
       setPlanPrices(prices);
     }
@@ -831,7 +821,6 @@ const BillingSection = () => {
     const rows = [
       { key: "plan_price_pro",        value: planPrices.pro },
       { key: "plan_price_business",   value: planPrices.business },
-      { key: "plan_price_enterprise", value: planPrices.enterprise },
     ];
     const { error } = await (supabase.from("app_settings" as any) as any).upsert(rows, { onConflict: "key" });
     if (error) { toast.error(error.message); }
@@ -860,7 +849,7 @@ const BillingSection = () => {
   const successTxns      = txns.filter(t => t.status === "completed" || t.status === "success");
   const successRevenue   = successTxns.reduce((s, t) => s + (t.amount ?? 0), 0);
   const totalUsers       = profiles.length;
-  const paidUsers        = profiles.filter(p => ["pro", "creative_pro", "business", "brand_workspace", "enterprise"].includes(p.subscription_plan)).length;
+  const paidUsers        = profiles.filter(p => ["pro", "creative_pro", "business", "brand_workspace"].includes(p.subscription_plan)).length;
   const conversionRate   = totalUsers > 0 ? ((paidUsers / totalUsers) * 100).toFixed(1) : "0";
   const arpu             = totalUsers > 0 ? Math.round(successRevenue / totalUsers) : 0;
   const avgTxn           = completed > 0  ? Math.round(successRevenue / completed)  : 0;
@@ -872,7 +861,7 @@ const BillingSection = () => {
   // At risk: still paid but expiry within 7 days
   const sevenDaysOut = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
   const atRisk = profiles.filter(p =>
-    ["pro", "creative_pro", "business", "brand_workspace", "enterprise"].includes(p.subscription_plan) &&
+    ["pro", "creative_pro", "business", "brand_workspace"].includes(p.subscription_plan) &&
     p.subscription_expires_at && p.subscription_expires_at <= sevenDaysOut
   ).length;
   // Revenue by month (last 6)
@@ -1063,7 +1052,6 @@ const BillingSection = () => {
                   { label: "Free",       count: totalUsers - paidUsers,                                                                                                                     color: "bg-white/20",    text: "text-white/50" },
                   { label: "Pro",        count: profiles.filter(p => p.subscription_plan === "pro" || p.subscription_plan === "creative_pro").length,                       color: "bg-emerald-500", text: "text-emerald-400" },
                   { label: "Business",   count: profiles.filter(p => p.subscription_plan === "business" || p.subscription_plan === "brand_workspace").length,               color: "bg-amber-500",   text: "text-amber-400" },
-                  { label: "Enterprise", count: profiles.filter(p => p.subscription_plan === "enterprise").length,                                                          color: "bg-violet-500",  text: "text-violet-400" },
                 ].map(row => (
                   <div key={row.label}>
                     <div className="flex items-center justify-between mb-1.5">
@@ -1156,15 +1144,6 @@ const BillingSection = () => {
               accent: "bg-amber-500/10",
               features: ["Everything in Pro", "3 seats included", "RBAC permissions", "Clause library", "200 Dira msgs/day"],
             },
-            {
-              key: "enterprise" as const,
-              label: "Enterprise",
-              color: "text-violet-400",
-              border: "border-violet-500/20",
-              bg: "bg-violet-500/5",
-              accent: "bg-violet-500/10",
-              features: ["Everything in Business", "Unlimited seats", "Priority support", "Custom branding", "Advanced analytics"],
-            },
           ]).map(plan => (
             <div key={plan.key} className={cn("border rounded-2xl p-5 space-y-4", plan.border, plan.bg)}>
               <div className="flex items-center justify-between flex-wrap gap-3">
@@ -1189,7 +1168,7 @@ const BillingSection = () => {
                 <ul className="space-y-1.5">
                   {plan.features.map(f => (
                     <li key={f} className="flex items-center gap-2 text-xs text-white/50">
-                      <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", plan.key === "pro" ? "bg-emerald-500" : plan.key === "business" ? "bg-amber-500" : "bg-violet-500")} />
+                      <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", plan.key === "pro" ? "bg-emerald-500" : "bg-amber-500")} />
                       {f}
                     </li>
                   ))}
@@ -1749,19 +1728,17 @@ const FONTS: Record<string, string> = {
 };
 
 const PLAN_FEATURES = [
-  { label: "Seats",                  free: "1",    pro: "1",         biz: "3+",        ent: "Custom"    },
-  { label: "Dira AI actions / day",  free: "10",   pro: "40",        biz: "200",       ent: "Unlimited" },
-  { label: "Invoices / month",       free: "2",    pro: "Unlimited", biz: "Unlimited", ent: "Unlimited" },
-  { label: "Workspaces",             free: "1",    pro: "Unlimited", biz: "Unlimited", ent: "Custom"    },
-  { label: "No invoice watermark",   free: false,  pro: true,        biz: true,        ent: true        },
-  { label: "E-Signature",            free: false,  pro: true,        biz: true,        ent: true        },
-  { label: "Verified Badge",         free: false,  pro: true,        biz: true,        ent: true        },
-  { label: "Premium Themes",         free: false,  pro: true,        biz: true,        ent: true        },
-  { label: "Client Portal",          free: false,  pro: true,        biz: true,        ent: true        },
-  { label: "Team RBAC",              free: false,  pro: false,       biz: true,        ent: true        },
-  { label: "Priority Support",       free: false,  pro: true,        biz: true,        ent: true        },
-  { label: "White-labeling",         free: false,  pro: false,       biz: false,       ent: true        },
-  { label: "SLA + SSO",              free: false,  pro: false,       biz: false,       ent: true        },
+  { label: "Seats",                  free: "1",    pro: "1",         biz: "3+"        },
+  { label: "Dira AI actions / day",  free: "10",   pro: "40",        biz: "200"       },
+  { label: "Invoices / month",       free: "2",    pro: "Unlimited", biz: "Unlimited" },
+  { label: "Workspaces",             free: "1",    pro: "Unlimited", biz: "Unlimited" },
+  { label: "No invoice watermark",   free: false,  pro: true,        biz: true        },
+  { label: "E-Signature",            free: false,  pro: true,        biz: true        },
+  { label: "Verified Badge",         free: false,  pro: true,        biz: true        },
+  { label: "Premium Themes",         free: false,  pro: true,        biz: true        },
+  { label: "Client Portal",          free: false,  pro: true,        biz: true        },
+  { label: "Team RBAC",              free: false,  pro: false,       biz: true        },
+  { label: "Priority Support",       free: false,  pro: true,        biz: true        },
 ];
 
 const UsageBar = ({ pct, color = "bg-bronze" }: { pct: number; color?: string }) => (
@@ -1900,20 +1877,20 @@ const TemplatesSection = () => {
       {/* ── Feature Access ── */}
       {tab === "features" && (
         <div className="bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden">
-          <div className="grid grid-cols-5 px-5 py-3 border-b border-white/[0.06] bg-white/[0.02]">
+          <div className="grid grid-cols-4 px-5 py-3 border-b border-white/[0.06] bg-white/[0.02]">
             <span className="text-xs text-white/40 font-semibold uppercase tracking-wider">Feature</span>
-            {(["Free", "Creative Pro", "Brand Workspace", "Enterprise"] as const).map(p => (
+            {(["Free", "Creative Pro", "Brand Workspace"] as const).map(p => (
               <span key={p} className="text-xs font-semibold text-center"
-                style={{ color: p === "Free" ? "rgba(255,255,255,0.3)" : p === "Creative Pro" ? "#10b981" : p === "Brand Workspace" ? "#8b5cf6" : "#f59e0b" }}>
+                style={{ color: p === "Free" ? "rgba(255,255,255,0.3)" : p === "Creative Pro" ? "#10b981" : "#f59e0b" }}>
                 {p}
               </span>
             ))}
           </div>
           <div className="divide-y divide-white/[0.04]">
             {PLAN_FEATURES.map((row, i) => (
-              <div key={i} className="grid grid-cols-5 px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
+              <div key={i} className="grid grid-cols-4 px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
                 <span className="text-sm text-white/55">{row.label}</span>
-                {[row.free, row.pro, row.biz, row.ent].map((val, j) => (
+                {[row.free, row.pro, row.biz].map((val, j) => (
                   <div key={j} className="flex justify-center items-center">
                     {typeof val === "boolean" ? (
                       val

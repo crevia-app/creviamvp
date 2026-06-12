@@ -31,8 +31,7 @@ import {
   Camera,
 } from "lucide-react";
 
-const getSeatLimit = (plan: string | null): number => {
-  if (plan === "enterprise") return 100;
+const getSeatLimit = (_plan: string | null): number => {
   return 8;
 };
 

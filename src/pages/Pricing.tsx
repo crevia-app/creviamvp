@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { SEO } from "@/components/SEO";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Check, ArrowRight, Sparkles, Zap } from "lucide-react";
+import { Check, ArrowRight, Sparkles } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
 import HeroPattern from "@/components/HeroPattern";
 import Header from "@/components/Header";
@@ -22,10 +22,9 @@ type PlanFeature = {
   lockNote?: string;
 };
 
-const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPrice: number, enterprisePrice: number) => {
+const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPrice: number) => {
   const proYearly      = parseFloat((proPrice * 10).toFixed(2));
   const businessYearly = parseFloat((businessPrice * 10).toFixed(2));
-  const entYearly      = parseFloat((enterprisePrice * 10).toFixed(2));
   return [
     {
       name: "Free",
@@ -88,24 +87,6 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPri
       monthlyAmount: businessPrice,
       yearlyAmount: businessYearly,
     },
-    {
-      name: "Enterprise",
-      badge: null,
-      priceMonthly: enterprisePrice > 0 ? fmt(enterprisePrice) : "Custom",
-      priceYearly: enterprisePrice > 0 ? fmt(entYearly) : "Custom",
-      period: enterprisePrice > 0 ? (billingCycle === "monthly" ? "/mo" : "/yr") : "",
-      seatNote: "Custom pricing",
-      description: "Custom infrastructure for high-volume corporate networks.",
-      features: [
-        { product: "Architecture", detail: "Dedicated white-labeled infrastructure, custom domain mapping, direct API webhooks, and enterprise-grade SLA agreements" },
-        { product: "Onboarding", detail: "Design your custom workspace layout", note: "hi@crevia.app" },
-      ] as PlanFeature[],
-      cta: "Contact Sales",
-      highlighted: false,
-      planKey: null as "pro" | "business" | null,
-      monthlyAmount: enterprisePrice,
-      yearlyAmount: entYearly,
-    },
   ];
 };
 
@@ -116,22 +97,18 @@ const Pricing = () => {
   const [isPaystackLoading, setIsPaystackLoading] = useState<string | null>(null);
   const [proPrice, setProPrice]               = useState(14.99);
   const [businessPrice, setBusinessPrice]     = useState(DEFAULT_BUSINESS_PRICE);
-  const [enterprisePrice, setEnterprisePrice] = useState(0);
-
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setIsLoggedIn(!!session));
     (supabase.from("app_settings" as any) as any)
       .select("key, value")
-      .in("key", ["plan_price_pro", "plan_price_business", "plan_price_enterprise"])
+      .in("key", ["plan_price_pro", "plan_price_business"])
       .then(({ data }: { data: any[] | null }) => {
         if (!data) return;
         data.forEach(row => {
           const n = parseFloat(row.value);
-          // Only accept values in a sensible USD range — guards against stale KES values in app_settings
           if (!isNaN(n) && n > 0 && n < 999) {
-            if (row.key === "plan_price_pro")        setProPrice(n);
-            if (row.key === "plan_price_business")   setBusinessPrice(n);
-            if (row.key === "plan_price_enterprise") setEnterprisePrice(n);
+            if (row.key === "plan_price_pro")      setProPrice(n);
+            if (row.key === "plan_price_business") setBusinessPrice(n);
           }
         });
       });
@@ -164,7 +141,7 @@ const Pricing = () => {
     handler.openIframe();
   };
 
-  const plans = PLANS(billingCycle, proPrice, businessPrice, enterprisePrice);
+  const plans = PLANS(billingCycle, proPrice, businessPrice);
 
   return (
     <div className="min-h-dvh bg-background page-bg-warm overflow-x-clip">
@@ -289,7 +266,7 @@ const Pricing = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6"
             >
               {plans.map((plan, i) => (
                 <motion.div
@@ -388,17 +365,6 @@ const Pricing = () => {
                         <>{plan.cta} <ArrowRight className="ml-2 w-4 h-4" /></>
                       )}
                     </Button>
-                  ) : plan.name === "Enterprise" ? (
-                    <a href="mailto:hi@crevia.app">
-                      <Button
-                        variant="outline"
-                        className="w-full font-poppins font-semibold btn-ghost-bronze"
-                        size="lg"
-                      >
-                        <Zap className="mr-2 w-4 h-4" />
-                        {plan.cta}
-                      </Button>
-                    </a>
                   ) : (
                     <Link to={isLoggedIn ? "/dira" : "/auth?mode=signup"}>
                       <Button
@@ -441,10 +407,6 @@ const Pricing = () => {
               {
                 q: "What happens to my data if I downgrade?",
                 a: "Your data is always safe. You retain access to everything you created — new activity is simply limited to your new plan's limits.",
-              },
-              {
-                q: "What is Enterprise?",
-                a: "Enterprise is a custom plan for organisations that need SSO, dedicated support, custom API limits, and an SLA. Reach out and we'll build a plan around your needs.",
               },
             ].map(({ q, a }, i) => (
               <ScrollReveal key={q} delay={i * 0.06}>

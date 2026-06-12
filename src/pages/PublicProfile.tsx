@@ -318,7 +318,7 @@ const PublicProfile = () => {
               {profile?.display_name || profile?.username}
             </h1>
             {profile?.show_verified_badge && profile?.profiles?.is_verified &&
-              ["pro", "enterprise", "business"].includes(profile?.profiles?.subscription_plan) && (
+              ["pro", "business"].includes(profile?.profiles?.subscription_plan) && (
               <VerifiedBadge size="lg" />
             )}
           </div>
@@ -407,7 +407,7 @@ const PublicProfile = () => {
           </div>
 
           {/* "powered by crevia" — free tier only */}
-          {!["pro", "creative_pro", "business", "brand_workspace", "enterprise"].includes(
+          {!["pro", "creative_pro", "business", "brand_workspace"].includes(
             profile?.profiles?.subscription_plan
           ) && (
             <span className="mt-3 text-xs tracking-widest uppercase font-mono font-medium text-zinc-400/80 hover:text-zinc-200 transition-colors duration-200 block text-center pb-8 z-30 cursor-default">
