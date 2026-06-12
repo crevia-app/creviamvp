@@ -163,6 +163,7 @@ const Home = () => {
 
           {/* DIRA */}
           <ScrollReveal variant="fade-up" className="mb-20 md:mb-28">
+            <div className="border-gradient-bronze bg-gradient-to-br from-bronze/8 to-background shadow-lg shadow-bronze/10 rounded-2xl p-8 md:p-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center">
               <div className="space-y-6 lg:col-span-2 max-w-3xl">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-bronze/10 border border-bronze/20">
@@ -182,10 +183,12 @@ const Home = () => {
                 </p>
               </div>
             </div>
+            </div>
           </ScrollReveal>
 
           {/* STUDIO */}
           <ScrollReveal variant="fade-up">
+            <div className="border-gradient-bronze bg-gradient-to-br from-bronze/8 to-background shadow-lg shadow-bronze/10 rounded-2xl p-8 md:p-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center">
               <div className="space-y-6 lg:col-span-2 max-w-3xl">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-bronze/10 border border-bronze/20">
@@ -217,6 +220,7 @@ const Home = () => {
                 </div>
               </div>
             </div>
+            </div>
           </ScrollReveal>
         </div>
       </section>
@@ -232,7 +236,7 @@ const Home = () => {
           </ScrollReveal>
 
           <ScrollReveal delay={0} variant="fade-up">
-            <div className="p-8 sm:p-10 md:p-12 rounded-2xl border border-border bg-card hover:border-bronze/30 card-interactive">
+            <div className="p-8 sm:p-10 md:p-12 rounded-2xl border-gradient-bronze bg-gradient-to-br from-bronze/8 to-background shadow-lg shadow-bronze/10 card-interactive">
               <div className="max-w-3xl space-y-6">
                 <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase">
                   Built for both sides of the table

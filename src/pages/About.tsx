@@ -137,7 +137,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
             <ScrollReveal variant="scale">
               <div className="flex justify-center">
-                <div className="relative bg-card/50 backdrop-blur-sm p-12 md:p-16 rounded-3xl border border-bronze/20 shadow-2xl">
+                <div className="relative p-12 md:p-16 rounded-3xl border-gradient-bronze bg-gradient-to-br from-bronze/8 to-background shadow-xl shadow-bronze/10">
                   <img
                     src={creviaLogo}
                     alt="Crevia Logo"
@@ -264,7 +264,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
         <div className="container mx-auto max-w-4xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             <ScrollReveal variant="fade-left">
-              <div className="p-8 md:p-10 rounded-2xl border border-border bg-card card-interactive space-y-4 h-full">
+              <div className="p-8 md:p-10 rounded-2xl border-gradient-bronze bg-gradient-to-br from-bronze/8 to-background shadow-lg shadow-bronze/10 card-interactive space-y-4 h-full">
                 <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase">
                   Our Mission
                 </p>
@@ -279,7 +279,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
               </div>
             </ScrollReveal>
             <ScrollReveal variant="fade-right" delay={0.1}>
-              <div className="p-8 md:p-10 rounded-2xl border border-border bg-card card-interactive space-y-4 h-full">
+              <div className="p-8 md:p-10 rounded-2xl border-gradient-bronze bg-gradient-to-br from-bronze/8 to-background shadow-lg shadow-bronze/10 card-interactive space-y-4 h-full">
                 <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase">
                   Our Vision
                 </p>
@@ -301,17 +301,19 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
       <section className="py-20 md:py-28 px-4 md:px-6 bg-secondary/30 section-tint-warm">
         <div className="container mx-auto max-w-3xl text-center">
           <ScrollReveal variant="blur">
-            <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase mb-6">
-              Co-Founder's Note
-            </p>
-            <blockquote className="font-vollkorn text-xl md:text-2xl font-bold leading-relaxed text-foreground italic mb-6">
-              "Every room I walked into — undeniable talent, real ambition, zero infrastructure.
-              Deals slipping. Payments missed. Serious businesses running on scattered tools
-              and good intentions. The problem was never the people. It was always the foundation.
-              Crevia is that foundation."
-            </blockquote>
-            <p className="font-poppins font-semibold text-foreground">Amin Hassan Hussein</p>
-            <p className="text-sm text-muted-foreground">Co-Founder & CEO, Crevia</p>
+            <div className="border-gradient-bronze bg-gradient-to-br from-bronze/8 to-background shadow-lg shadow-bronze/10 rounded-2xl p-8 md:p-12">
+              <p className="text-bronze font-poppins font-semibold text-sm tracking-widest uppercase mb-6">
+                Co-Founder's Note
+              </p>
+              <blockquote className="font-vollkorn text-xl md:text-2xl font-bold leading-relaxed text-foreground italic mb-6">
+                "Every room I walked into — undeniable talent, real ambition, zero infrastructure.
+                Deals slipping. Payments missed. Serious businesses running on scattered tools
+                and good intentions. The problem was never the people. It was always the foundation.
+                Crevia is that foundation."
+              </blockquote>
+              <p className="font-poppins font-semibold text-foreground">Amin Hassan Hussein</p>
+              <p className="text-sm text-muted-foreground">Co-Founder & CEO, Crevia</p>
+            </div>
           </ScrollReveal>
         </div>
       </section>
