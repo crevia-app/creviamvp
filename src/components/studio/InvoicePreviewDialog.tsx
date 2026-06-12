@@ -63,7 +63,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
   const page2Ref = useRef<HTMLDivElement>(null);
   const hasPage2 = !!(invoice?.notes || invoice?.terms || invoice?.payment_details?.method);
 
-  const { ref: docRef, download, downloading, share } = useDownloadPDF(
+  const { ref: docRef, download, downloading, share, shareSync, sharing, preGenerate, pregenerating } = useDownloadPDF(
     invoice ? `Invoice-${invoice.invoice_number}` : "Invoice",
     { ignoreElements: (el: Element) => el.classList.contains("print-page-break") }
   );
@@ -150,6 +150,13 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
     fetchProfile();
     fetchBusinessSettings();
   }, [invoice]);
+
+  // Pre-generate PDF blob for instant share — fires after items load
+  useEffect(() => {
+    if (!invoice || items.length === 0) return;
+    const t = setTimeout(() => preGenerate(), 100);
+    return () => clearTimeout(t);
+  }, [invoice?.id, items.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchItems = async () => {
     const { data } = await supabase.from("invoice_items").select("*").eq("invoice_id", invoice.id);
@@ -580,22 +587,9 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
                     variant="outline"
                     size="sm"
                     className="h-8 w-8 p-0"
-                    title="Share invoice link"
-                    onClick={() => {
-                      const publicUrl = `${window.location.origin}/invoice/public/${invoice.id}`;
-                      if (typeof navigator.share === "function") {
-                        navigator.share({ title: `Invoice ${invoice.invoice_number}`, text: "View your invoice from Crevia securely online:", url: publicUrl })
-                          .catch((err: any) => {
-                            if (err?.name !== "AbortError") {
-                              navigator.clipboard?.writeText(publicUrl);
-                              toast.success("Link copied to clipboard!");
-                            }
-                          });
-                      } else {
-                        navigator.clipboard?.writeText(publicUrl);
-                        toast.success("Link copied to clipboard!");
-                      }
-                    }}
+                    title="Share PDF"
+                    disabled={sharing || pregenerating}
+                    onClick={shareSync}
                   >
                     <Share2 className="h-3.5 w-3.5" />
                   </Button>
