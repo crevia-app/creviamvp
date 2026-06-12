@@ -2002,15 +2002,15 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                             className="h-11 w-11 rounded-full flex items-center justify-center text-sm font-bold overflow-hidden"
                             style={room.is_group ? { background: "hsl(36,60%,65%)", color: "hsl(36,60%,22%)" } : avatarStyle(room.members?.find(m => m.user_id !== currentUserId)?.user_id || displayName)}
                           >
-                            {room.is_group ? (
-                              <Users className="h-5 w-5" />
-                            ) : avatar ? (
+                            {avatar ? (
                               <img
                                 src={avatar}
                                 alt=""
                                 className="h-11 w-11 rounded-full object-cover"
                                 onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                               />
+                            ) : room.is_group ? (
+                              <Users className="h-5 w-5" />
                             ) : (
                               initial
                             )}
@@ -2106,15 +2106,15 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                             className="h-10 w-10 rounded-xl flex items-center justify-center text-sm font-bold overflow-hidden"
                             style={selectedRoom.is_group ? { background: "hsl(36,60%,65%)", color: "hsl(36,60%,22%)" } : avatarStyle(avatarSeed)}
                           >
-                            {selectedRoom.is_group ? (
-                              <Sparkles className="h-4 w-4" />
-                            ) : avatarUrl ? (
+                            {avatarUrl ? (
                               <img
                                 src={avatarUrl}
                                 alt=""
-                                className="h-10 w-10 rounded-full object-cover"
+                                className="h-10 w-10 object-cover"
                                 onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                               />
+                            ) : selectedRoom.is_group ? (
+                              <Sparkles className="h-4 w-4" />
                             ) : (
                               getRoomInitial(selectedRoom)
                             )}
