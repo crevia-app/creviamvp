@@ -599,6 +599,36 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
     return () => { supabase.removeChannel(channel); };
   }, [currentUserId]);
 
+  // Sync workspace avatar / name changes for all members in real time
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const channel = supabase
+      .channel(`room-meta-sync:${currentUserId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "chat_rooms" },
+        (payload) => {
+          const updated = payload.new as any;
+          setRooms((prev) =>
+            prev.map((r) =>
+              r.id === updated.id
+                ? { ...r, name: updated.name, avatar_url: updated.avatar_url }
+                : r
+            )
+          );
+          setSelectedRoom((prev) =>
+            prev?.id === updated.id
+              ? { ...prev, name: updated.name, avatar_url: updated.avatar_url }
+              : prev
+          );
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [currentUserId]);
+
   // Typing indicator — uses Broadcast (low-latency fire-and-forget) instead of
   // Presence so the signal appears instantly on the other side, like WhatsApp.
   useEffect(() => {
@@ -1540,7 +1570,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
   };
 
   const getRoomAvatar = (room: ChatRoom) => {
-    if (room.is_group) return null;
+    if (room.is_group) return room.avatar_url ?? null;
     const otherMember = room.members?.find((m) => m.user_id !== currentUserId);
     return otherMember?.profile?.avatar_url;
   };
