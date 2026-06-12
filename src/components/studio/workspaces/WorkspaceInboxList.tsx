@@ -314,18 +314,26 @@ const WorkspaceInboxList = ({
     <>
       <div className="flex flex-col w-full h-full bg-background overflow-hidden">
         {/* Header — single command row */}
-        <div className="flex items-center justify-between w-full gap-3 px-4 py-2 border-b border-gray-100 dark:border-border/50 flex-shrink-0">
-          <h3 className="text-xl font-semibold tracking-tight flex-shrink-0">
+        <div className="flex items-center w-full gap-2.5 px-3 py-2.5 border-b border-gray-100 dark:border-border/50 flex-shrink-0">
+          <h3 className="text-[15px] font-semibold tracking-tight flex-shrink-0 text-foreground">
             Workspaces
           </h3>
-          <div className="flex-1 relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60" />
+          <div className="flex-1 relative min-w-0">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50 pointer-events-none z-10" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search..."
-              className="pl-8 h-10 w-full text-sm bg-gray-50 dark:bg-muted/40 border-gray-100 dark:border-border/50 focus-visible:ring-bronze/30"
+              placeholder="Search workspaces..."
+              className="pl-8 pr-3 h-9 w-full text-[13px] font-normal bg-muted/30 dark:bg-muted/20 border border-border/40 dark:border-border/30 rounded-lg shadow-none focus-visible:ring-1 focus-visible:ring-bronze/50 focus-visible:border-bronze/40 placeholder:text-muted-foreground/40 text-foreground caret-bronze transition-colors duration-150"
             />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center rounded-full bg-muted-foreground/20 hover:bg-muted-foreground/35 transition-colors"
+              >
+                <span className="text-[10px] font-bold text-muted-foreground leading-none">✕</span>
+              </button>
+            )}
           </div>
           <div className="flex-shrink-0">
             <button
