@@ -404,10 +404,6 @@ const Pricing = () => {
                 q: "What payment methods do you accept?",
                 a: "All major credit and debit cards, and M-Pesa for local payments across Africa.",
               },
-              {
-                q: "What happens to my data if I downgrade?",
-                a: "Your data is always safe. You retain access to everything you created — new activity is simply limited to your new plan's limits.",
-              },
             ].map(({ q, a }, i) => (
               <ScrollReveal key={q} delay={i * 0.06}>
                 <div className="p-5 md:p-8 rounded-xl border border-border bg-card">
