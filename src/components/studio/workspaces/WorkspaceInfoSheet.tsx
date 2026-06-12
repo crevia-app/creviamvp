@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   Sheet,
   SheetContent,
+  SheetClose,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -351,7 +352,7 @@ const WorkspaceInfoSheet = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-md p-0 flex flex-col gap-0 overflow-hidden"
+        className="w-full sm:max-w-md p-0 flex flex-col gap-0 overflow-hidden [&>button:first-child]:hidden"
       >
         {/* ── Header ── */}
         <div className="flex flex-col items-center pt-6 pb-4 px-5 border-b border-border/50 flex-shrink-0 gap-3 bg-card/30">
@@ -445,35 +446,47 @@ const WorkspaceInfoSheet = ({
             </p>
           </div>
 
-          {/* Quick actions — visible to creator AND admins */}
-          {isAdminOrCreator && (
-            <div className="flex gap-2 w-full max-w-[280px]">
-              <Button
-                size="sm"
-                onClick={() => { setActiveTab("members"); setShowSearch(true); }}
-                className="flex-1 h-9 gap-1.5 bg-bronze hover:bg-bronze/90 text-background text-xs font-semibold"
-              >
-                <UserPlus className="w-3.5 h-3.5" />
-                Add Member
-              </Button>
+          {/* Quick actions row — always rendered so the close button is always visible */}
+          <div className="flex items-center gap-2 w-full max-w-[280px]">
+            {isAdminOrCreator && (
+              <>
+                <Button
+                  size="sm"
+                  onClick={() => { setActiveTab("members"); setShowSearch(true); }}
+                  className="flex-1 h-9 gap-1.5 bg-bronze hover:bg-bronze/90 text-background text-xs font-semibold"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  Add Member
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={generateInviteLink}
+                  disabled={generatingLink || atSeatLimit}
+                  className="flex-1 h-9 gap-1.5 border-bronze/30 hover:bg-bronze/10 text-xs font-semibold"
+                >
+                  {generatingLink ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : copiedLink ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                  ) : (
+                    <Link2 className="w-3.5 h-3.5" />
+                  )}
+                  {copiedLink ? "Copied!" : "Invite Link"}
+                </Button>
+              </>
+            )}
+            <SheetClose asChild>
               <Button
                 size="sm"
                 variant="outline"
-                onClick={generateInviteLink}
-                disabled={generatingLink || atSeatLimit}
-                className="flex-1 h-9 gap-1.5 border-bronze/30 hover:bg-bronze/10 text-xs font-semibold"
+                className="h-9 w-9 p-0 flex-shrink-0 border-border hover:bg-muted text-foreground"
+                aria-label="Close"
               >
-                {generatingLink ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : copiedLink ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-500" />
-                ) : (
-                  <Link2 className="w-3.5 h-3.5" />
-                )}
-                {copiedLink ? "Copied!" : "Invite Link"}
+                <X className="w-4 h-4" />
               </Button>
-            </div>
-          )}
+            </SheetClose>
+          </div>
         </div>
 
         {/* ── Tab bar — Members + Media only ── */}

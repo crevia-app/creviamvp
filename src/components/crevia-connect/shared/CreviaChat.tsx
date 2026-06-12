@@ -2754,7 +2754,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
 
               {/* Input Area — dynamic bottom padding like Dira: shrinks when keyboard is up */}
               <div
-                className="w-full flex-shrink-0 bg-background border-t border-border pt-3 px-3 md:p-4"
+                className="w-full flex-shrink-0 bg-background border-t border-border pt-3 px-3 md:p-4 transition-[padding-bottom] duration-300 ease-in-out"
                 style={
                   typeof window !== "undefined" && window.innerWidth < 768
                     ? {
