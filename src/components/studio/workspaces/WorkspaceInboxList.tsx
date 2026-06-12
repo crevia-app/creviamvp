@@ -313,17 +313,29 @@ const WorkspaceInboxList = ({
   return (
     <>
       <div className="flex flex-col w-full h-full bg-background overflow-hidden">
-        {/* Header */}
-        <div className="px-3 pt-3 pb-2.5 border-b border-gray-100 dark:border-border/50 flex-shrink-0 space-y-2.5">
-          <h3 className="font-semibold text-sm tracking-tight">Workspaces</h3>
-          <div className="relative">
+        {/* Header — single command row */}
+        <div className="flex items-center justify-between w-full gap-3 px-4 py-2 border-b border-gray-100 dark:border-border/50 flex-shrink-0">
+          <h3 className="text-xl font-semibold tracking-tight flex-shrink-0">
+            Workspaces
+          </h3>
+          <div className="flex-1 relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search..."
-              className="pl-8 h-11 text-base bg-gray-50 dark:bg-muted/40 border-gray-100 dark:border-border/50 focus-visible:ring-bronze/30"
+              className="pl-8 h-10 w-full text-sm bg-gray-50 dark:bg-muted/40 border-gray-100 dark:border-border/50 focus-visible:ring-bronze/30"
             />
+          </div>
+          <div className="flex-shrink-0">
+            <button
+              onClick={() => { setCreateName(""); setCreateDialogOpen(true); }}
+              title="New workspace"
+              className="w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-150 hover:scale-105 active:scale-95"
+              style={{ background: "#F0782F", color: "#ffffff" }}
+            >
+              <Plus className="w-4 h-4" strokeWidth={2.5} />
+            </button>
           </div>
         </div>
 
@@ -331,20 +343,6 @@ const WorkspaceInboxList = ({
           <div className="pb-2">
             {/* Active Workspaces */}
             <div>
-              <div className="flex items-center justify-between px-4 py-2 sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/30">
-                <p className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">
-                  Active Workspaces
-                </p>
-                <button
-                  onClick={() => { setCreateName(""); setCreateDialogOpen(true); }}
-                  title="New workspace"
-                  className="w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-150 hover:scale-105 active:scale-95"
-                  style={{ background: "#F0782F", color: "#ffffff" }}
-                >
-                  <Plus className="w-4 h-4" strokeWidth={2.5} />
-                </button>
-              </div>
-
               {loading ? (
                 <div className="space-y-0.5 px-2 pt-1">
                   {[...Array(3)].map((_, i) => (
@@ -388,13 +386,17 @@ const WorkspaceInboxList = ({
                         >
                           <div className="flex items-center gap-2.5">
                             <div className={cn(
-                              "w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-150",
+                              "w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-150 overflow-hidden",
                               isSelected ? "bg-bronze/20" : "bg-gray-100 dark:bg-muted [@media(hover:hover)]:group-hover:bg-bronze/10"
                             )}>
-                              <Sparkles className={cn(
-                                "w-4 h-4 transition-colors duration-150",
-                                isSelected ? "text-bronze" : "text-muted-foreground/50 [@media(hover:hover)]:group-hover:text-bronze/60"
-                              )} />
+                              {room.avatar_url ? (
+                                <img src={room.avatar_url} alt={room.name ?? ""} className="w-full h-full object-cover" />
+                              ) : (
+                                <Sparkles className={cn(
+                                  "w-4 h-4 transition-colors duration-150",
+                                  isSelected ? "text-bronze" : "text-muted-foreground/50 [@media(hover:hover)]:group-hover:text-bronze/60"
+                                )} />
+                              )}
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center justify-between gap-1 mb-0.5">
