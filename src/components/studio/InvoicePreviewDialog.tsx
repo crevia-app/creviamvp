@@ -482,9 +482,9 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
 
   // ── MAIN PREVIEW — single flowing document, no page breaks ─────────────────
   const MainPreview = () => (
-    <div ref={docRef} className="invoice-print-area bg-white text-black rounded-xl shadow-lg overflow-hidden w-full print:shadow-none print:rounded-none print:w-[210mm] print:max-w-none print:m-0">
+    <div ref={docRef} className="invoice-print-area w-[794px] min-h-[1123px] bg-white text-black overflow-hidden shadow-sm box-border print:shadow-none print:w-[210mm] print:max-w-none print:m-0">
       <AccentBar />
-      <div className="px-8 py-10 print:px-8 print:py-10">
+      <div className="px-12 py-16 print:px-12 print:py-16">
         <InvoiceHeader />
         <BusinessBlock />
         <BillToSection />
@@ -504,11 +504,11 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
 
   // ── PRINT PREVIEW — paged layout (PAGE 1 + divider + PAGE 2) ──────────────
   const PrintPreview = () => (
-    <div className="invoice-print-area bg-white text-black rounded-xl shadow-lg overflow-hidden w-full print:shadow-none print:rounded-none print:w-[210mm] print:max-w-none print:m-0">
+    <div className="invoice-print-area w-[794px] min-h-[1123px] bg-white text-black overflow-hidden shadow-sm box-border print:shadow-none print:w-[210mm] print:max-w-none print:m-0">
       {/* PAGE 1 */}
       <div ref={page1Ref} className="bg-white">
         <AccentBar />
-        <div className="px-8 py-10 print:px-8 print:py-10">
+        <div className="px-12 py-16 print:px-12 print:py-16">
           <InvoiceHeader />
           <BusinessBlock />
           <BillToSection />
@@ -530,7 +530,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
       {/* PAGE 2 */}
       {hasPage2 && (
         <div ref={page2Ref} className="bg-white">
-          <div className="px-8 py-10 print:px-8 print:py-10">
+          <div className="px-12 py-16 print:px-12 print:py-16">
             <NotesTermsSection />
             <PaymentDetailsSection />
             <Footer />
@@ -643,11 +643,9 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
           </div>
 
           {/* ── Document area ───────────────────────────────────────────────── */}
-          <div className="overflow-y-auto overflow-x-hidden max-h-[calc(95dvh-52px)] sm:max-h-[calc(90vh-52px)] flex justify-center bg-zinc-100 dark:bg-zinc-900">
-            <div className="transform origin-top scale-[0.5] xs:scale-[0.6] sm:scale-75 md:scale-90 lg:scale-100 transition-none p-4 sm:p-8">
-              <div className="w-[794px]">
-                {viewMode === "main" ? <MainPreview /> : <PrintPreview />}
-              </div>
+          <div className="w-full overflow-y-auto overflow-x-hidden max-h-[calc(95dvh-52px)] sm:max-h-[calc(90vh-52px)] flex justify-center bg-zinc-900 md:bg-zinc-800/50">
+            <div className="transform origin-top scale-[0.45] sm:scale-[0.6] md:scale-75 lg:scale-100 transition-none pt-20 pb-10">
+              {viewMode === "main" ? <MainPreview /> : <PrintPreview />}
             </div>
           </div>
 

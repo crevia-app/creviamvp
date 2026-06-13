@@ -487,13 +487,16 @@ const CreateInvoiceDialog = ({
       }}
     />
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-16px)] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
-        <DialogHeader>
+      <DialogContent className="w-[calc(100vw-16px)] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto overflow-x-hidden [&>button:last-child]:hidden">
+        <div className="flex items-center justify-between w-full pb-4 border-b border-white/10">
           <DialogTitle className="flex items-center gap-2 font-vollkorn text-xl">
             <Receipt className="h-5 w-5 text-bronze" />
             {editingInvoice ? "Edit Invoice" : "Create New Invoice"}
           </DialogTitle>
-        </DialogHeader>
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 flex-shrink-0" onClick={() => onOpenChange(false)}>
+            <XIcon className="h-4 w-4" />
+          </Button>
+        </div>
 
         <div className="space-y-6 w-full min-w-0">
           {/* Invoice Details */}
@@ -511,7 +514,6 @@ const CreateInvoiceDialog = ({
               <Input
                 type="date"
                 value={issueDate}
-                min={today}
                 onChange={(e) => {
                   const val = e.target.value;
                   setIssueDate(val);
@@ -526,12 +528,9 @@ const CreateInvoiceDialog = ({
               <Input
                 type="date"
                 value={dueDate}
-                min={issueDate > today ? issueDate : today}
                 onChange={(e) => {
                   const val = e.target.value;
                   if (!val) return;
-                  const minDate = issueDate > today ? issueDate : today;
-                  if (val < minDate) return;
                   setDueDate(val);
                 }}
                 className="mt-1 h-11 text-base"

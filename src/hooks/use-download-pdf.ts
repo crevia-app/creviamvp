@@ -90,18 +90,23 @@ export function useDownloadPDF(
     }
   };
 
-  // ── shareSync — non-async, iOS-safe share entry point ────────────────────
-  // iOS Safari (especially iOS ≤14) does NOT propagate the user-gesture context
-  // into async functions. navigator.share() called after even one `await`
-  // may be blocked with "NotAllowedError: requires user activation."
+  // ── triggerDownload — shared helper for blob→file download ─────────────────
+  const triggerDownload = (blob: Blob, pdfName: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = pdfName; a.style.display = "none";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  };
+
+  // ── shareSync — iOS-safe share with loading-toast fallback ────────────────
+  // When blob is pre-cached: navigator.share() fires synchronously within the
+  // gesture window (iOS-safe). Desktop browsers without Web Share API fall back
+  // to a direct download automatically.
   //
-  // This function is intentionally NOT async. navigator.share() is called
-  // synchronously within the click event frame. The returned Promise is handled
-  // via .then()/.catch() chains — no `await` is used before the share call.
-  //
-  // Requires blobCache to be pre-populated by preGenerate(). If the cache is
-  // empty (pre-gen failed or dialog was just opened), falls back to URL share
-  // which always works on iOS regardless of the async constraint.
+  // When blob isn't cached (pre-gen failed/race): an async generation runs with
+  // a loading toast, then downloads the result. On iOS this path loses the
+  // gesture token so we cannot call share() — a download is the cleanest UX.
   const shareSync = () => {
     const cached = blobCache.current;
 
@@ -109,62 +114,39 @@ export function useDownloadPDF(
       const { blob, pdfName } = cached;
       const pdfFile = new File([blob], pdfName, { type: "application/pdf" });
 
-      // File share — WhatsApp, Gmail, AirDrop, etc.
+      // File share — WhatsApp, Gmail, AirDrop, Files, etc.
       if (typeof navigator.share === "function" && navigator.canShare?.({ files: [pdfFile] })) {
         setSharing(true);
         navigator.share({ files: [pdfFile], title: filename })
           .catch((err: any) => {
             if (err?.name === "AbortError") return;
-            // File share rejected — try URL share as fallback
-            navigator.share({ title: filename, url: window.location.href }).catch(() => {});
+            // File share rejected — download as graceful fallback
+            triggerDownload(blob, pdfName);
+            toast.success("Saved as PDF!");
           })
           .finally(() => setSharing(false));
         return;
       }
 
-      // No file share support — URL share
-      if (typeof navigator.share === "function") {
-        setSharing(true);
-        navigator.share({ title: filename, url: window.location.href })
-          .catch((err: any) => {
-            if (err?.name !== "AbortError") {
-              navigator.clipboard?.writeText(window.location.href);
-              toast.success("Link copied to clipboard!");
-            }
-          })
-          .finally(() => setSharing(false));
-        return;
-      }
-
-      // Desktop (no Web Share API) — download directly
-      setSharing(true);
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = blobUrl; a.download = pdfName; a.style.display = "none";
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
+      // Desktop / no Web Share API — download directly
+      triggerDownload(blob, pdfName);
       toast.success("Downloaded as PDF!");
-      setSharing(false);
       return;
     }
 
-    // Blob not ready — URL share as safe fallback (always within gesture on iOS)
-    if (typeof navigator.share === "function") {
-      setSharing(true);
-      navigator.share({ title: filename, url: window.location.href })
-        .catch((err: any) => {
-          if (err?.name !== "AbortError") {
-            navigator.clipboard?.writeText(window.location.href);
-            toast.success("Link copied to clipboard!");
-          }
-        })
-        .finally(() => setSharing(false));
-      return;
-    }
-
-    // Desktop, no blob — copy URL
-    navigator.clipboard?.writeText(window.location.href);
-    toast.success("Link copied to clipboard!");
+    // Blob not ready — generate async then download (gesture context lost, so
+    // download is the only reliable cross-platform action available).
+    if (!ref.current) { toast.error("Document not ready yet."); return; }
+    setSharing(true);
+    const loadId = toast.loading("Preparing PDF…");
+    captureBlob(ref.current, filename, options?.ignoreElements)
+      .then(({ blob, pdfName }) => {
+        blobCache.current = { blob, pdfName };
+        triggerDownload(blob, pdfName);
+        toast.success("PDF ready — downloading!", { id: loadId });
+      })
+      .catch(() => toast.error("Could not generate PDF. Please try again.", { id: loadId }))
+      .finally(() => setSharing(false));
   };
 
   // ── share — async version used by the autoShare (off-screen) path ────────
