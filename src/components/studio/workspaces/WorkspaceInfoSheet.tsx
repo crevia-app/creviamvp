@@ -102,6 +102,7 @@ const WorkspaceInfoSheet = ({
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(roomName ?? "");
   const [savingName, setSavingName] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -127,6 +128,7 @@ const WorkspaceInfoSheet = ({
       setShowSearch(false);
       setEditingName(false);
       setNameValue(roomName ?? "");
+      setClosing(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, roomId]);
@@ -352,23 +354,11 @@ const WorkspaceInfoSheet = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-md p-0 flex flex-col gap-0 overflow-hidden [&>button:first-child]:hidden"
+        className="w-full sm:max-w-md p-0 flex flex-col gap-0 overflow-hidden [&>button:last-child]:hidden"
       >
         {/* ── Header ── */}
-        <div className="flex flex-col items-center pb-4 px-5 border-b border-border/50 flex-shrink-0 gap-3 bg-card/30 [padding-top:max(calc(env(safe-area-inset-top)+16px),32px)]">
+        <div className="flex flex-col items-center pt-6 pb-4 px-5 border-b border-border/50 flex-shrink-0 gap-3 bg-card/30">
           <SheetTitle className="sr-only">Workspace Info</SheetTitle>
-
-          {/* Close button — always visible, below status bar on every device */}
-          <div className="w-full flex justify-end">
-            <SheetClose asChild>
-              <button
-                aria-label="Close"
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all duration-150 touch-manipulation"
-              >
-                <X className="w-4 h-4 text-foreground" />
-              </button>
-            </SheetClose>
-          </div>
 
           {/* Group avatar — owner and admins can change by clicking/tapping */}
           <div
@@ -412,42 +402,57 @@ const WorkspaceInfoSheet = ({
             )}
           </div>
 
-          {/* Name — editable by creator */}
-          <div className="text-center w-full max-w-[280px]">
-            {editingName ? (
-              <div className="flex items-center gap-2">
-                <Input
-                  ref={nameInputRef}
-                  value={nameValue}
-                  onChange={(e) => setNameValue(e.target.value)}
-                  className="h-9 text-center text-sm font-semibold"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") saveName();
-                    if (e.key === "Escape") setEditingName(false);
-                  }}
-                  autoFocus
-                />
-                <Button size="sm" onClick={saveName} disabled={savingName} className="h-9 w-9 p-0 bg-bronze hover:bg-bronze/90 text-background flex-shrink-0">
-                  {savingName ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => setEditingName(false)} className="h-9 w-9 p-0 flex-shrink-0">
-                  <X className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            ) : (
-              <button
-                onClick={() => isCreator && setEditingName(true)}
-                className={`flex items-center gap-1.5 mx-auto ${isCreator ? "group cursor-pointer hover:opacity-75" : "cursor-default"}`}
-              >
-                <span className="text-base font-bold truncate">{roomName ?? "Workspace"}</span>
-                {isCreator && (
-                  <Pencil className="w-3 h-3 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors flex-shrink-0" />
-                )}
-              </button>
-            )}
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {members.length} member{members.length !== 1 ? "s" : ""}
-            </p>
+          {/* Name + close — same row: [spacer] [name+members] [X] */}
+          <div className="flex items-center w-full gap-2">
+            <div className="flex-1" />
+            <div className="flex flex-col items-center">
+              {editingName ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    ref={nameInputRef}
+                    value={nameValue}
+                    onChange={(e) => setNameValue(e.target.value)}
+                    className="h-9 text-center text-sm font-semibold"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") saveName();
+                      if (e.key === "Escape") setEditingName(false);
+                    }}
+                    autoFocus
+                  />
+                  <Button size="sm" onClick={saveName} disabled={savingName} className="h-9 w-9 p-0 bg-bronze hover:bg-bronze/90 text-background flex-shrink-0">
+                    {savingName ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setEditingName(false)} className="h-9 w-9 p-0 flex-shrink-0">
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => isCreator && setEditingName(true)}
+                  className={`flex items-center gap-1.5 mx-auto ${isCreator ? "group cursor-pointer hover:opacity-75" : "cursor-default"}`}
+                >
+                  <span className="text-base font-bold truncate">{roomName ?? "Workspace"}</span>
+                  {isCreator && (
+                    <Pencil className="w-3 h-3 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors flex-shrink-0" />
+                  )}
+                </button>
+              )}
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {members.length} member{members.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+            <div className="flex-1 flex justify-end">
+              <SheetClose asChild>
+                <button
+                  aria-label="Close"
+                  disabled={closing}
+                  onClick={() => setClosing(true)}
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all duration-150 touch-manipulation disabled:pointer-events-none disabled:opacity-50"
+                >
+                  <X className="w-4 h-4 text-foreground" />
+                </button>
+              </SheetClose>
+            </div>
           </div>
 
           {/* Quick actions row — always rendered so the close button is always visible */}
