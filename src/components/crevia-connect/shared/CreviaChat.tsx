@@ -297,6 +297,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
   const selectedRoomRef = useRef<ChatRoom | null>(null);
   const [longPressMsg, setLongPressMsg] = useState<ChatMessage | null>(null);
   const msgPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   // Scroll to the latest message when the iOS keyboard opens so the input
   // is never obscured by unread content. Replaces the removed useIOSKeyboardFit callback.
@@ -2752,17 +2753,17 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                 </div>
               </div>
 
-              {/* Input Area — dynamic bottom padding like Dira: shrinks when keyboard is up */}
+              {/* Input Area — focus-bound bottom padding: strips safe-area the instant the keyboard opens */}
               <div
-                className="w-full flex-shrink-0 bg-background border-t border-border pt-3 px-3 md:p-4 transition-[padding-bottom] duration-300 ease-in-out"
+                className="w-full flex-shrink-0 bg-background border-t border-border pt-3 px-3 md:p-4 transition-[padding-bottom] duration-150 ease-out"
                 style={
                   typeof window !== "undefined" && window.innerWidth < 768
                     ? {
-                        paddingBottom: keyboardOpen
-                          ? "0.75rem"
+                        paddingBottom: isInputFocused
+                          ? "0.5rem"
                           : hideRoomList
                             ? "calc(var(--nav-bottom-offset) + 0.75rem)"
-                            : "calc(0.75rem + env(safe-area-inset-bottom,0px))",
+                            : "max(env(safe-area-inset-bottom, 0px), 0.75rem)",
                       }
                     : undefined
                 }
@@ -2914,6 +2915,8 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
                           placeholder="Type a message..."
                           value={newMessage}
                           rows={1}
+                          onFocus={() => setIsInputFocused(true)}
+                          onBlur={() => setIsInputFocused(false)}
                           onChange={(e) => {
                             setNewMessage(e.target.value);
                             handleTyping();
