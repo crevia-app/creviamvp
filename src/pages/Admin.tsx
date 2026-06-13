@@ -437,20 +437,26 @@ const UsersSection = () => {
     setActionLoad(false);
   };
 
-  const changePlan = (plan: string) => {
+  const changePlan = async (plan: string) => {
     const isFreeDowngrade = !plan || plan === "free";
+    const isPaid = ["pro", "creative_pro", "business", "brand_workspace"].includes(plan);
     const diraLimit =
       plan === "business" || plan === "brand_workspace" ? null
       : plan === "pro" || plan === "creative_pro"       ? 500
       : 15;
     const expires = new Date();
     expires.setFullYear(expires.getFullYear() + 10); // 10-year manual grant
-    applyUpdate(selected.id, {
+    await applyUpdate(selected.id, {
       subscription_plan:       plan || null,
       subscription_status:     isFreeDowngrade ? "inactive" : "active",
       subscription_expires_at: isFreeDowngrade ? null : expires.toISOString(),
       dira_actions_limit:      isFreeDowngrade ? 15 : diraLimit,
     }, `Plan changed to ${plan || "free"}`);
+    // Sync branding visibility on link_profiles — paid users hide "powered by crevia"
+    await supabase
+      .from("link_profiles")
+      .update({ show_crevia_branding: !isPaid })
+      .eq("user_id", selected.id);
   };
 
   const toggleVerified = () =>
