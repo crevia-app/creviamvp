@@ -17,6 +17,7 @@ const PublicProfile = () => {
   const [socialIcons, setSocialIcons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<any>(undefined); // undefined = not yet checked
+  const [ownerIsVerified, setOwnerIsVerified] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -33,6 +34,14 @@ const PublicProfile = () => {
 
     if (linkProfile) {
       setProfile(linkProfile);
+
+      // Fetch is_verified from the anon-accessible profiles_public view
+      const { data: pubProfile } = await supabase
+        .from("profiles_public")
+        .select("is_verified")
+        .eq("id", linkProfile.user_id)
+        .single();
+      setOwnerIsVerified(pubProfile?.is_verified ?? false);
 
       // Only count visits from non-owners (skip self-views)
       const { data: { session } } = await supabase.auth.getSession();
@@ -297,7 +306,7 @@ const PublicProfile = () => {
         ...(hasCustomColor ? { background: customColor } : {}),
       }}
     >
-      {isCustomImage && <div className="absolute inset-0 bg-black/50" />}
+      {isCustomImage && <div className="absolute inset-0 bg-black/60" />}
       {bgExtras.overlayStyle && <div className="absolute inset-0" style={bgExtras.overlayStyle} />}
       {bgExtras.className && <div className={`absolute inset-0 ${bgExtras.className}`} />}
       <div className="absolute top-4 left-4 z-20">
@@ -315,17 +324,16 @@ const PublicProfile = () => {
           )}
           
           <div className="flex items-center justify-center gap-1 mb-2">
-            <h1 className="text-3xl font-bold">
+            <h1 className="text-3xl font-bold [text-shadow:0_2px_10px_rgba(0,0,0,0.75)]">
               {profile?.display_name || profile?.username}
             </h1>
-            {profile?.show_verified_badge && profile?.profiles?.is_verified &&
-              ["pro", "business"].includes(profile?.profiles?.subscription_plan) && (
+            {profile?.show_verified_badge && ownerIsVerified && (
               <VerifiedBadge size="lg" />
             )}
           </div>
 
           {profile?.bio && (
-            <p className="text-muted-foreground max-w-md mx-auto">
+            <p className="opacity-80 max-w-md mx-auto [text-shadow:0_1px_6px_rgba(0,0,0,0.65)]">
               {profile.bio}
             </p>
           )}
@@ -387,8 +395,8 @@ const PublicProfile = () => {
         </div>
 
         {buttons.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            <p className="font-poppins">No links added yet.</p>
+          <div className="text-center py-12 opacity-70">
+            <p className="font-poppins [text-shadow:0_1px_6px_rgba(0,0,0,0.65)]">No links added yet.</p>
           </div>
         )}
 
@@ -398,7 +406,9 @@ const PublicProfile = () => {
           <div className="relative inline-block">
             <div className="absolute inset-0 rounded-full bg-white/10 blur-xl animate-pulse pointer-events-none" />
             <a
-              href={`/auth?redirect=/${username}`}
+              href="https://crevia.app"
+              target="_blank"
+              rel="noopener noreferrer"
               className="relative inline-flex items-center justify-center px-6 py-3 rounded-full font-medium text-sm transition-all duration-300 transform active:scale-95 bg-white text-black hover:bg-zinc-100 z-30 font-sans tracking-wide shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_25px_rgba(255,255,255,0.3)]"
             >
               Get Crevia link
@@ -406,9 +416,7 @@ const PublicProfile = () => {
           </div>
 
           {/* "powered by crevia" — free tier only */}
-          {!["pro", "creative_pro", "business", "brand_workspace"].includes(
-            profile?.profiles?.subscription_plan
-          ) && (
+          {profile?.show_crevia_branding !== false && (
             <span className="mt-3 text-xs tracking-widest uppercase font-mono font-medium text-zinc-400/80 hover:text-zinc-200 transition-colors duration-200 block text-center pb-8 z-30 cursor-default">
               powered by crevia
             </span>
