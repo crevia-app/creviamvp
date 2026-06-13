@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,6 +51,23 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
     const t = setTimeout(() => preGenerate(), 400);
     return () => clearTimeout(t);
   }, [invoice?.id, items.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const scaleWrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = scaleWrapRef.current;
+    if (!el) return;
+    const collapse = () => {
+      const w = window.innerWidth;
+      const s = w >= 1024 ? 1 : w >= 768 ? 0.75 : w >= 640 ? 0.6 : 0.45;
+      el.style.marginBottom = s < 1 ? `${Math.round(el.scrollHeight * (s - 1))}px` : "";
+    };
+    collapse();
+    const ro = new ResizeObserver(collapse);
+    ro.observe(el);
+    window.addEventListener("resize", collapse);
+    return () => { ro.disconnect(); window.removeEventListener("resize", collapse); };
+  }, [items, open]);
 
   const fetchItems = async () => {
     const { data } = await supabase.from("invoice_items").select("*").eq("invoice_id", invoice.id);
@@ -121,7 +138,7 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
 
         {/* ── Receipt Document ─────────────────────────────────────────────── */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden flex justify-center bg-zinc-900 md:bg-zinc-800/50 py-6">
-          <div className="transform origin-top scale-[0.45] sm:scale-[0.6] md:scale-75 lg:scale-100 transition-none">
+          <div ref={scaleWrapRef} className="transform origin-top scale-[0.45] sm:scale-[0.6] md:scale-75 lg:scale-100 transition-none">
           <div ref={docRef} className="invoice-print-area w-[794px] bg-white text-black overflow-hidden shadow-sm box-border print:shadow-none print:w-[210mm] print:max-w-none print:m-0">
 
             {/* Accent bar */}
