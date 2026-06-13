@@ -27,7 +27,7 @@ const PublicProfile = () => {
     const { data: linkProfile } = await supabase
       .from("link_profiles")
       .select("*, profiles(*)")
-      .eq("username", username)
+      .eq("username", username.toLowerCase())
       .single();
 
     if (linkProfile) {
