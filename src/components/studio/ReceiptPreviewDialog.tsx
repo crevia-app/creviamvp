@@ -48,7 +48,7 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
   // Pre-generate PDF blob for instant iOS Share — fires after data loads
   useEffect(() => {
     if (!invoice || items.length === 0) return;
-    const t = setTimeout(() => preGenerate(), 100);
+    const t = setTimeout(() => preGenerate(), 400);
     return () => clearTimeout(t);
   }, [invoice?.id, items.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -98,10 +98,10 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-16px)] sm:max-w-2xl lg:max-w-[900px] max-h-[95dvh] sm:max-h-[90vh] overflow-hidden p-0 transition-opacity duration-200 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 [&>button:last-child]:hidden">
+      <DialogContent className="w-[calc(100vw-16px)] sm:max-w-2xl lg:max-w-[900px] h-[92dvh] sm:h-[88vh] overflow-hidden p-0 transition-opacity duration-200 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 [&>button:last-child]:hidden flex flex-col">
 
         {/* ── Toolbar ─────────────────────────────────────────────────────── */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-3 py-2 flex items-center gap-2 [padding-top:max(20px,env(safe-area-inset-top))]">
+        <div className="flex-shrink-0 z-10 bg-background/95 backdrop-blur-sm border-b px-3 pb-2 flex items-center gap-2 [padding-top:max(12px,env(safe-area-inset-top))]">
           <DialogTitle className="font-vollkorn text-sm sm:text-base truncate min-w-0 flex-1">Payment Receipt</DialogTitle>
           <div className="flex items-center gap-1 flex-shrink-0">
             <Button variant="outline" size="sm" onClick={shareSync} disabled={sharing || pregenerating} className="h-8 w-8 p-0" title="Share PDF">
@@ -120,9 +120,9 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
         </div>
 
         {/* ── Receipt Document ─────────────────────────────────────────────── */}
-        <div className="w-full overflow-y-auto overflow-x-hidden max-h-[calc(95dvh-52px)] sm:max-h-[calc(90vh-52px)] flex justify-center bg-zinc-900 md:bg-zinc-800/50">
-          <div className="transform origin-top scale-[0.45] sm:scale-[0.6] md:scale-75 lg:scale-100 transition-none pt-20 pb-10">
-          <div ref={docRef} className="invoice-print-area w-[794px] min-h-[1123px] bg-white text-black overflow-hidden shadow-sm box-border print:shadow-none print:w-[210mm] print:max-w-none print:m-0">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden flex justify-center bg-zinc-900 md:bg-zinc-800/50 py-6">
+          <div className="transform origin-top scale-[0.45] sm:scale-[0.6] md:scale-75 lg:scale-100 transition-none">
+          <div ref={docRef} className="invoice-print-area w-[794px] bg-white text-black overflow-hidden shadow-sm box-border print:shadow-none print:w-[210mm] print:max-w-none print:m-0">
 
             {/* Accent bar */}
             <div className="h-1.5" style={{ background: accentColor }} />
