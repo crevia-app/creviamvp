@@ -137,14 +137,14 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
         </div>
 
         {/* ── Receipt Document ─────────────────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden flex justify-center bg-zinc-900 md:bg-zinc-800/50 py-6">
-          <div ref={scaleWrapRef} className="transform origin-top scale-[0.45] sm:scale-[0.6] md:scale-75 lg:scale-100 transition-none">
-          <div ref={docRef} className="invoice-print-area w-[794px] bg-white text-black overflow-hidden shadow-sm box-border print:shadow-none print:w-[210mm] print:max-w-none print:m-0">
+        <div className="w-full h-[80vh] overflow-auto flex justify-center bg-zinc-900/50 p-4">
+          <div ref={scaleWrapRef} className="transform origin-top scale-[0.45] sm:scale-[0.6] md:scale-90 lg:scale-100 transition-none h-fit">
+          <div ref={docRef} className="invoice-print-area w-[794px] min-h-[1123px] bg-white text-black overflow-hidden shadow-sm box-border print:shadow-none print:w-[210mm] print:max-w-none print:m-0">
 
             {/* Accent bar */}
             <div className="h-1.5" style={{ background: accentColor }} />
 
-            <div className="px-12 py-16 print:px-12 print:py-16">
+            <div className="px-10 py-12 print:px-10 print:py-12">
 
               {/* ── Header ── */}
               <div className="flex justify-between items-start mb-8 sm:mb-10">

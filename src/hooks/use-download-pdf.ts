@@ -142,8 +142,18 @@ export function useDownloadPDF(
     captureBlob(ref.current, filename, options?.ignoreElements)
       .then(({ blob, pdfName }) => {
         blobCache.current = { blob, pdfName };
+        const pdfFile = new File([blob], pdfName, { type: "application/pdf" });
+        toast.dismiss(loadId);
+        if (typeof navigator.share === "function" && navigator.canShare?.({ files: [pdfFile] })) {
+          return navigator.share({ files: [pdfFile], title: filename, text: `Here is your ${filename}.` })
+            .catch((err: any) => {
+              if (err?.name === "AbortError") return;
+              triggerDownload(blob, pdfName);
+              toast.success("Downloaded as PDF!");
+            });
+        }
         triggerDownload(blob, pdfName);
-        toast.success("PDF ready — downloading!", { id: loadId });
+        toast.success("PDF ready — downloading!");
       })
       .catch(() => toast.error("Could not generate PDF. Please try again.", { id: loadId }))
       .finally(() => setSharing(false));

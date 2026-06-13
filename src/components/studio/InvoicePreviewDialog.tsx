@@ -316,97 +316,72 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
     </div>
   );
 
-  /** Bill To + Issue/Due dates */
+  /** Bill To + Issue/Due dates — single 3-column grid */
   const BillToSection = () => (
-    <div className="mb-6">
-      <div className="mb-4">
+    <div className="grid grid-cols-3 gap-8 mt-12 mb-8">
+      <div>
         <p className="text-[10px] uppercase tracking-widest mb-1 font-bold" style={{ color: accentColor }}>Bill To</p>
-        <p className="font-bold text-gray-900 text-sm sm:text-base">{invoice.client_name}</p>
+        <p className="font-bold text-gray-900 text-sm">{invoice.client_name}</p>
         {invoice.client_email && <p className="text-gray-500 text-xs mt-0.5 break-all">{invoice.client_email}</p>}
         {invoice.client_address && <p className="text-gray-500 text-xs whitespace-pre-line mt-0.5">{invoice.client_address}</p>}
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <p className="text-[10px] uppercase tracking-widest mb-1 font-bold" style={{ color: accentColor }}>Issue Date</p>
-          <p className="font-semibold text-gray-900 text-xs sm:text-sm">{format(new Date(invoice.issue_date), "MMM d, yyyy")}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-[10px] uppercase tracking-widest mb-1 font-bold" style={{ color: accentColor }}>Due Date</p>
-          <p className="font-semibold text-gray-900 text-xs sm:text-sm">{format(new Date(invoice.due_date), "MMM d, yyyy")}</p>
-        </div>
+      <div>
+        <p className="text-[10px] uppercase tracking-widest mb-1 font-bold" style={{ color: accentColor }}>Issue Date</p>
+        <p className="font-semibold text-gray-900 text-sm">{format(new Date(invoice.issue_date), "MMM d, yyyy")}</p>
+      </div>
+      <div>
+        <p className="text-[10px] uppercase tracking-widest mb-1 font-bold" style={{ color: accentColor }}>Due Date</p>
+        <p className="font-semibold text-gray-900 text-sm">{format(new Date(invoice.due_date), "MMM d, yyyy")}</p>
       </div>
     </div>
   );
 
-  /** Line items — mobile cards + desktop table */
+  /** Line items — unified premium table, PDF-accurate */
   const ItemsSection = () => (
-    <div className="mb-6">
-      {/* Mobile */}
-      <div className="sm:hidden print:hidden">
-        <div className="flex justify-between pb-2 mb-2" style={{ borderBottom: `2px solid ${accentColor}` }}>
-          <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: accentColor }}>Description</span>
-          <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: accentColor }}>Amount</span>
-        </div>
-        {items.map((item, idx) => (
-          <div key={item.id} className="py-3" style={{ borderBottom: `1px solid ${idx === items.length - 1 ? "#e5e7eb" : "#f3f4f6"}` }}>
-            <div className="flex justify-between items-start gap-2">
-              <p className="text-gray-900 font-medium text-sm flex-1 min-w-0">{item.description}</p>
-              <p className="text-gray-900 font-semibold text-sm flex-shrink-0">{formatCurrency(item.total)}</p>
-            </div>
-            <p className="text-gray-400 text-xs mt-1">{item.quantity} × {formatCurrency(item.unit_price)}</p>
-          </div>
+    <table className="w-full text-left border-collapse mt-8">
+      <thead>
+        <tr style={{ borderBottom: `2px solid ${accentColor}` }}>
+          <th className="py-4 px-2 text-[10px] uppercase tracking-widest font-bold w-[50%]" style={{ color: accentColor }}>Description</th>
+          <th className="py-4 px-2 text-[10px] uppercase tracking-widest font-bold w-[15%] text-center" style={{ color: accentColor }}>Qty</th>
+          <th className="py-4 px-2 text-[10px] uppercase tracking-widest font-bold w-[15%] text-right" style={{ color: accentColor }}>Price</th>
+          <th className="py-4 px-2 text-[10px] uppercase tracking-widest font-bold w-[20%] text-right" style={{ color: accentColor }}>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {items.map((item) => (
+          <tr key={item.id} className="border-b border-zinc-100 print:break-inside-avoid">
+            <td className="py-4 px-2 text-gray-900 font-medium text-sm">{item.description}</td>
+            <td className="py-4 px-2 text-center text-gray-600 text-sm">{item.quantity}</td>
+            <td className="py-4 px-2 text-right text-gray-600 text-sm">{formatCurrency(item.unit_price)}</td>
+            <td className="py-4 px-2 text-right text-gray-900 font-semibold text-sm">{formatCurrency(item.total)}</td>
+          </tr>
         ))}
-      </div>
-      {/* Desktop */}
-      <div className="hidden sm:block print:block overflow-x-auto print:overflow-visible">
-        <table className="w-full">
-          <thead>
-            <tr style={{ borderBottom: `2px solid ${accentColor}` }}>
-              <th className="text-left py-3 text-xs uppercase tracking-wider font-bold" style={{ color: accentColor, width: "50%" }}>Description</th>
-              <th className="text-center py-3 text-xs uppercase tracking-wider font-bold" style={{ color: accentColor, width: "10%" }}>Qty</th>
-              <th className="text-right py-3 text-xs uppercase tracking-wider font-bold" style={{ color: accentColor, width: "20%" }}>Rate</th>
-              <th className="text-right py-3 text-xs uppercase tracking-wider font-bold" style={{ color: accentColor, width: "20%" }}>Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item, idx) => (
-              <tr key={item.id} className={`print:break-inside-avoid ${idx === items.length - 1 ? "border-b border-gray-200" : "border-b border-gray-100"}`}>
-                <td className="py-3 text-gray-900 font-medium text-sm">{item.description}</td>
-                <td className="py-3 text-center text-gray-600 text-sm">{item.quantity}</td>
-                <td className="py-3 text-right text-gray-600 text-sm">{formatCurrency(item.unit_price)}</td>
-                <td className="py-3 text-right text-gray-900 font-semibold text-sm">{formatCurrency(item.total)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+      </tbody>
+    </table>
   );
 
   /** Subtotal / tax / discount / total */
   const TotalsSection = () => (
-    <div className="flex justify-end mb-6">
-      <div className="w-full sm:w-64 print:w-64 space-y-1.5">
+    <div className="w-1/2 ml-auto flex flex-col gap-2 mt-6">
+      <div className="flex justify-between text-gray-500 text-sm">
+        <span>Subtotal</span>
+        <span className="font-medium">{formatCurrency(Number(invoice.subtotal))}</span>
+      </div>
+      {Number(invoice.tax_rate) > 0 && (
         <div className="flex justify-between text-gray-500 text-sm">
-          <span>Subtotal</span>
-          <span className="font-medium">{formatCurrency(Number(invoice.subtotal))}</span>
+          <span>Tax ({invoice.tax_rate}%)</span>
+          <span className="font-medium">{formatCurrency(Number(invoice.tax_amount))}</span>
         </div>
-        {Number(invoice.tax_rate) > 0 && (
-          <div className="flex justify-between text-gray-500 text-sm">
-            <span>Tax ({invoice.tax_rate}%)</span>
-            <span className="font-medium">{formatCurrency(Number(invoice.tax_amount))}</span>
-          </div>
-        )}
-        {Number(invoice.discount_amount) > 0 && (
-          <div className="flex justify-between text-emerald-600 text-sm">
-            <span>Discount</span>
-            <span className="font-medium">-{formatCurrency(Number(invoice.discount_amount))}</span>
-          </div>
-        )}
-        <div className="flex justify-between pt-2.5" style={{ borderTop: `2px solid ${accentColor}` }}>
-          <span className="text-base font-bold text-gray-900">Total Due</span>
-          <span className="text-base font-bold" style={{ color: accentColor }}>{formatCurrency(Number(invoice.total))}</span>
+      )}
+      {Number(invoice.discount_amount) > 0 && (
+        <div className="flex justify-between text-emerald-600 text-sm">
+          <span>Discount</span>
+          <span className="font-medium">-{formatCurrency(Number(invoice.discount_amount))}</span>
         </div>
+      )}
+      <div className="flex justify-between pt-2.5" style={{ borderTop: `2px solid ${accentColor}` }}>
+        <span className="text-base font-bold text-gray-900">Total Due</span>
+        <span className="text-base font-bold" style={{ color: accentColor }}>{formatCurrency(Number(invoice.total))}</span>
       </div>
     </div>
   );
@@ -500,9 +475,9 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
 
   // ── MAIN PREVIEW — single flowing document, no page breaks ─────────────────
   const MainPreview = () => (
-    <div ref={docRef} className="invoice-print-area w-[794px] bg-white text-black overflow-hidden shadow-sm box-border print:shadow-none print:w-[210mm] print:max-w-none print:m-0">
+    <div ref={docRef} className="invoice-print-area w-[794px] min-h-[1123px] bg-white text-black overflow-hidden shadow-sm box-border print:shadow-none print:w-[210mm] print:max-w-none print:m-0">
       <AccentBar />
-      <div className="px-12 py-16 print:px-12 print:py-16">
+      <div className="px-10 py-12 print:px-10 print:py-12">
         <InvoiceHeader />
         <BusinessBlock />
         <BillToSection />
@@ -522,11 +497,11 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
 
   // ── PRINT PREVIEW — paged layout (PAGE 1 + divider + PAGE 2) ──────────────
   const PrintPreview = () => (
-    <div className="invoice-print-area w-[794px] bg-white text-black overflow-hidden shadow-sm box-border print:shadow-none print:w-[210mm] print:max-w-none print:m-0">
+    <div className="invoice-print-area w-[794px] min-h-[1123px] bg-white text-black overflow-hidden shadow-sm box-border print:shadow-none print:w-[210mm] print:max-w-none print:m-0">
       {/* PAGE 1 */}
       <div ref={page1Ref} className="bg-white">
         <AccentBar />
-        <div className="px-12 py-16 print:px-12 print:py-16">
+        <div className="px-10 py-12 print:px-10 print:py-12">
           <InvoiceHeader />
           <BusinessBlock />
           <BillToSection />
@@ -548,7 +523,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
       {/* PAGE 2 */}
       {hasPage2 && (
         <div ref={page2Ref} className="bg-white">
-          <div className="px-12 py-16 print:px-12 print:py-16">
+          <div className="px-10 py-12 print:px-10 print:py-12">
             <NotesTermsSection />
             <PaymentDetailsSection />
             <Footer />
@@ -661,8 +636,8 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
           </div>
 
           {/* ── Document area ───────────────────────────────────────────────── */}
-          <div className="flex-1 overflow-y-auto overflow-x-hidden flex justify-center bg-zinc-900 md:bg-zinc-800/50 py-6">
-            <div ref={scaleWrapRef} className="transform origin-top scale-[0.45] sm:scale-[0.6] md:scale-75 lg:scale-100 transition-none">
+          <div className="w-full h-[80vh] overflow-auto flex justify-center bg-zinc-900/50 p-4">
+            <div ref={scaleWrapRef} className="transform origin-top scale-[0.45] sm:scale-[0.6] md:scale-90 lg:scale-100 transition-none h-fit">
               {viewMode === "main" ? <MainPreview /> : <PrintPreview />}
             </div>
           </div>
