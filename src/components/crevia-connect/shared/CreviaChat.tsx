@@ -1894,8 +1894,8 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
     <div
       className="relative flex w-full max-w-full flex-col overflow-hidden bg-background overscroll-none"
       style={{
-        height: vpHeight && typeof window !== "undefined" && window.innerWidth < 768
-          ? `${vpHeight}px`
+        height: typeof window !== "undefined" && window.innerWidth < 768
+          ? "var(--vp-height, 100dvh)"
           : "100%",
       }}
     >
