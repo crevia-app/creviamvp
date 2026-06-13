@@ -354,20 +354,21 @@ const WorkspaceInfoSheet = ({
         side="right"
         className="w-full sm:max-w-md p-0 flex flex-col gap-0 overflow-hidden [&>button:first-child]:hidden"
       >
-        {/* ── iOS/Android-safe close button ── */}
-        <SheetClose asChild>
-          <button
-            aria-label="Close"
-            className="absolute right-4 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all duration-150 touch-manipulation"
-            style={{ top: "max(env(safe-area-inset-top), 20px)" }}
-          >
-            <X className="w-4 h-4 text-foreground" />
-          </button>
-        </SheetClose>
-
         {/* ── Header ── */}
-        <div className="flex flex-col items-center pt-6 pb-4 px-5 border-b border-border/50 flex-shrink-0 gap-3 bg-card/30">
+        <div className="flex flex-col items-center pb-4 px-5 border-b border-border/50 flex-shrink-0 gap-3 bg-card/30 [padding-top:max(env(safe-area-inset-top),16px)]">
           <SheetTitle className="sr-only">Workspace Info</SheetTitle>
+
+          {/* Close button — always visible, below status bar on every device */}
+          <div className="w-full flex justify-end">
+            <SheetClose asChild>
+              <button
+                aria-label="Close"
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all duration-150 touch-manipulation"
+              >
+                <X className="w-4 h-4 text-foreground" />
+              </button>
+            </SheetClose>
+          </div>
 
           {/* Group avatar — owner and admins can change by clicking/tapping */}
           <div
