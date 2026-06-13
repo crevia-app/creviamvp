@@ -22,15 +22,26 @@ async function captureBlob(
   let canvas;
   try {
     canvas = await html2canvas(el, {
-      scale: 1.5,
+      scale: 2,
       useCORS: true,
       allowTaint: true,
       backgroundColor: "#ffffff",
       logging: false,
       width: captureW,
       height: el.scrollHeight,
-      windowWidth: captureW,
+      windowWidth: 1024,
       ignoreElements,
+      onclone: (clonedDoc: Document) => {
+        const printArea =
+          clonedDoc.getElementById("invoice-print-area") ||
+          clonedDoc.getElementById("receipt-print-area") ||
+          (clonedDoc.querySelector(".invoice-print-area") as HTMLElement | null);
+        if (printArea instanceof HTMLElement) {
+          printArea.style.width = "794px";
+          printArea.style.minWidth = "794px";
+          printArea.style.transform = "none";
+        }
+      },
     });
   } finally {
     el.style.minWidth = prevMinWidth;

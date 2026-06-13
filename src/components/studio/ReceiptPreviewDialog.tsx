@@ -139,7 +139,7 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
         {/* ── Receipt Document ─────────────────────────────────────────────── */}
         <div className="w-full h-[80vh] overflow-auto flex justify-center bg-zinc-900/50 p-4">
           <div ref={scaleWrapRef} className="transform origin-top scale-[0.45] sm:scale-[0.6] md:scale-90 lg:scale-100 transition-none h-fit">
-          <div ref={docRef} className="invoice-print-area w-[794px] min-h-[1123px] bg-white text-black overflow-hidden shadow-sm box-border print:shadow-none print:w-[210mm] print:max-w-none print:m-0">
+          <div ref={docRef} id="receipt-print-area" className="invoice-print-area bg-white text-black overflow-hidden shadow-sm box-border print:shadow-none" style={{ width: "794px", minWidth: "794px", maxWidth: "794px", minHeight: "1123px", boxSizing: "border-box" }}>
 
             {/* Accent bar */}
             <div className="h-1.5" style={{ background: accentColor }} />
@@ -147,34 +147,38 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
             <div className="px-10 py-12 print:px-10 print:py-12">
 
               {/* ── Header ── */}
-              <div className="flex justify-between items-start mb-8 sm:mb-10">
-                <div>
-                  <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">RECEIPT</h1>
-                  <p className="text-gray-400 mt-1 text-base sm:text-lg font-mono">{receiptNumber}</p>
-                </div>
-                <div className="text-right">
-                  {businessSettings?.logo_url && (
-                    <img
-                      src={businessSettings.logo_url}
-                      alt="Business Logo"
-                      className="w-14 h-14 sm:w-16 sm:h-16 object-contain ml-auto mb-2 rounded-lg"
-                    />
-                  )}
-                  <h2 className="text-lg sm:text-xl font-bold text-gray-900">{businessName}</h2>
-                  {(businessSettings?.business_email || profile?.email) && (
-                    <p className="text-gray-500 text-sm mt-0.5 break-all">{businessSettings?.business_email || profile?.email}</p>
-                  )}
-                  {businessSettings?.business_phone && (
-                    <p className="text-gray-500 text-sm">{businessSettings.business_phone}</p>
-                  )}
-                  {businessSettings?.business_address && (
-                    <p className="text-gray-500 text-sm whitespace-pre-line mt-1">{businessSettings.business_address}</p>
-                  )}
-                  {businessSettings?.tax_id && (
-                    <p className="text-gray-400 text-xs mt-1">Tax ID: {businessSettings.tax_id}</p>
-                  )}
-                </div>
-              </div>
+              <table className="w-full border-collapse mb-8" style={{ width: "100%", tableLayout: "fixed" }}>
+                <tbody>
+                  <tr>
+                    <td className="align-top" style={{ width: "50%" }}>
+                      <h1 className="text-4xl font-bold text-gray-900 tracking-tight">RECEIPT</h1>
+                      <p className="text-gray-400 mt-1 text-base font-mono">{receiptNumber}</p>
+                    </td>
+                    <td className="align-top text-right" style={{ width: "50%" }}>
+                      {businessSettings?.logo_url && (
+                        <img
+                          src={businessSettings.logo_url}
+                          alt="Business Logo"
+                          style={{ width: "64px", height: "64px", objectFit: "contain", marginLeft: "auto", marginBottom: "8px", borderRadius: "8px", display: "block" }}
+                        />
+                      )}
+                      <h2 className="text-lg font-bold text-gray-900">{businessName}</h2>
+                      {(businessSettings?.business_email || profile?.email) && (
+                        <p className="text-gray-500 text-sm mt-0.5 break-all">{businessSettings?.business_email || profile?.email}</p>
+                      )}
+                      {businessSettings?.business_phone && (
+                        <p className="text-gray-500 text-sm">{businessSettings.business_phone}</p>
+                      )}
+                      {businessSettings?.business_address && (
+                        <p className="text-gray-500 text-sm whitespace-pre-line mt-1">{businessSettings.business_address}</p>
+                      )}
+                      {businessSettings?.tax_id && (
+                        <p className="text-gray-400 text-xs mt-1">Tax ID: {businessSettings.tax_id}</p>
+                      )}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
 
               {/* ── PAID Stamp — uses accent color ── */}
               <div className="flex justify-center mb-6 sm:mb-8">
@@ -191,21 +195,25 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
               </div>
 
               {/* ── Receipt meta ── */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
-                <div>
-                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-semibold">Received From</p>
-                  <p className="font-bold text-gray-900 text-base sm:text-lg">{invoice.client_name}</p>
-                  {invoice.client_email && <p className="text-gray-500 text-sm mt-0.5 break-all">{invoice.client_email}</p>}
-                </div>
-                <div className="sm:text-center">
-                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-semibold">Invoice Date</p>
-                  <p className="font-semibold text-gray-900">{format(new Date(invoice.issue_date), "MMMM d, yyyy")}</p>
-                </div>
-                <div className="sm:text-right">
-                  <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-semibold">Payment Date</p>
-                  <p className="font-semibold text-gray-900">{format(new Date(), "MMMM d, yyyy")}</p>
-                </div>
-              </div>
+              <table className="w-full border-collapse mb-10" style={{ width: "100%", tableLayout: "fixed" }}>
+                <tbody>
+                  <tr>
+                    <td className="align-top" style={{ width: "40%", paddingRight: "16px" }}>
+                      <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-semibold">Received From</p>
+                      <p className="font-bold text-gray-900 text-lg">{invoice.client_name}</p>
+                      {invoice.client_email && <p className="text-gray-500 text-sm mt-0.5 break-all">{invoice.client_email}</p>}
+                    </td>
+                    <td className="align-top text-center" style={{ width: "30%", paddingRight: "16px" }}>
+                      <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-semibold">Invoice Date</p>
+                      <p className="font-semibold text-gray-900">{format(new Date(invoice.issue_date), "MMMM d, yyyy")}</p>
+                    </td>
+                    <td className="align-top text-right" style={{ width: "30%" }}>
+                      <p className="text-gray-400 text-xs uppercase tracking-widest mb-2 font-semibold">Payment Date</p>
+                      <p className="font-semibold text-gray-900">{format(new Date(), "MMMM d, yyyy")}</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
 
               {/* ── Items Table ── */}
               <div className="mb-6 sm:mb-8 overflow-x-auto">
@@ -232,30 +240,39 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
               </div>
 
               {/* ── Totals ── */}
-              <div className="flex justify-end mb-6 sm:mb-8">
-                <div className="w-full sm:w-72 space-y-2">
-                  <div className="flex justify-between text-gray-500 text-sm">
-                    <span>Subtotal</span>
-                    <span className="font-medium">{formatCurrency(Number(invoice.subtotal))}</span>
-                  </div>
-                  {Number(invoice.tax_rate) > 0 && (
-                    <div className="flex justify-between text-gray-500 text-sm">
-                      <span>Tax ({invoice.tax_rate}%)</span>
-                      <span className="font-medium">{formatCurrency(Number(invoice.tax_amount))}</span>
-                    </div>
-                  )}
-                  {Number(invoice.discount_amount) > 0 && (
-                    <div className="flex justify-between text-sm" style={{ color: accentColor }}>
-                      <span>Discount</span>
-                      <span className="font-medium">-{formatCurrency(Number(invoice.discount_amount))}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between pt-3" style={{ borderTop: `2px solid ${accentColor}` }}>
-                    <span className="text-lg font-bold text-gray-900">Total Paid</span>
-                    <span className="text-lg font-bold" style={{ color: accentColor }}>{formatCurrency(Number(invoice.total))}</span>
-                  </div>
-                </div>
-              </div>
+              <table className="w-full border-collapse mb-8" style={{ width: "100%", tableLayout: "fixed" }}>
+                <tbody>
+                  <tr>
+                    <td style={{ width: "45%" }} />
+                    <td className="align-top" style={{ width: "55%" }}>
+                      <table className="w-full border-collapse" style={{ width: "100%" }}>
+                        <tbody>
+                          <tr>
+                            <td className="text-gray-500 text-sm pb-2">Subtotal</td>
+                            <td className="text-gray-500 text-sm font-medium pb-2 text-right">{formatCurrency(Number(invoice.subtotal))}</td>
+                          </tr>
+                          {Number(invoice.tax_rate) > 0 && (
+                            <tr>
+                              <td className="text-gray-500 text-sm pb-2">Tax ({invoice.tax_rate}%)</td>
+                              <td className="text-gray-500 text-sm font-medium pb-2 text-right">{formatCurrency(Number(invoice.tax_amount))}</td>
+                            </tr>
+                          )}
+                          {Number(invoice.discount_amount) > 0 && (
+                            <tr>
+                              <td className="text-sm pb-2" style={{ color: accentColor }}>Discount</td>
+                              <td className="text-sm font-medium pb-2 text-right" style={{ color: accentColor }}>-{formatCurrency(Number(invoice.discount_amount))}</td>
+                            </tr>
+                          )}
+                          <tr style={{ borderTop: `2px solid ${accentColor}` }}>
+                            <td className="text-lg font-bold text-gray-900 pt-3">Total Paid</td>
+                            <td className="text-lg font-bold pt-3 text-right" style={{ color: accentColor }}>{formatCurrency(Number(invoice.total))}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
 
               {/* ── Payment Confirmation box — uses accent color ── */}
               <div
@@ -265,24 +282,30 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
                 <p className="text-xs uppercase tracking-widest mb-3 font-semibold" style={{ color: accentColor }}>
                   Payment Confirmation
                 </p>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-500">Reference Invoice</p>
-                    <p className="font-semibold text-gray-900">{invoice.invoice_number}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Amount Received</p>
-                    <p className="font-semibold" style={{ color: accentColor }}>{formatCurrency(Number(invoice.total))}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Currency</p>
-                    <p className="font-semibold text-gray-900">{invoice.currency || "KES"}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Status</p>
-                    <p className="font-semibold" style={{ color: accentColor }}>Payment Complete</p>
-                  </div>
-                </div>
+                <table className="w-full border-collapse text-sm" style={{ width: "100%" }}>
+                  <tbody>
+                    <tr>
+                      <td className="align-top pb-3" style={{ width: "50%", paddingRight: "16px" }}>
+                        <p className="text-gray-500">Reference Invoice</p>
+                        <p className="font-semibold text-gray-900">{invoice.invoice_number}</p>
+                      </td>
+                      <td className="align-top pb-3" style={{ width: "50%" }}>
+                        <p className="text-gray-500">Amount Received</p>
+                        <p className="font-semibold" style={{ color: accentColor }}>{formatCurrency(Number(invoice.total))}</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="align-top" style={{ paddingRight: "16px" }}>
+                        <p className="text-gray-500">Currency</p>
+                        <p className="font-semibold text-gray-900">{invoice.currency || "KES"}</p>
+                      </td>
+                      <td className="align-top">
+                        <p className="text-gray-500">Status</p>
+                        <p className="font-semibold" style={{ color: accentColor }}>Payment Complete</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
 
               {/* ── Notes ── */}

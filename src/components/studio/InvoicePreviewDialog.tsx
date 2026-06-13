@@ -301,39 +301,49 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
 
   /** Invoice number + sender business block */
   const BusinessBlock = () => (
-    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start print:flex-row print:justify-between print:items-start gap-3 mb-6">
-      <p className="text-gray-400 text-xs sm:text-base font-mono">{invoice.invoice_number}</p>
-      <div className="sm:text-right">
-        <h2 className="text-base font-bold text-gray-900">{businessName}</h2>
-        {(businessSettings?.business_email || profile?.email) && (
-          <p className="text-gray-500 text-xs mt-0.5 break-all">{businessSettings?.business_email || profile?.email}</p>
-        )}
-        {businessSettings?.business_phone && <p className="text-gray-500 text-xs">{businessSettings.business_phone}</p>}
-        {businessSettings?.business_address && (
-          <p className="text-gray-500 text-xs whitespace-pre-line mt-0.5">{businessSettings.business_address}</p>
-        )}
-      </div>
-    </div>
+    <table className="w-full border-collapse mb-6" style={{ width: "100%", tableLayout: "fixed" }}>
+      <tbody>
+        <tr>
+          <td className="align-top" style={{ width: "50%" }}>
+            <p className="text-gray-400 text-xs font-mono">{invoice.invoice_number}</p>
+          </td>
+          <td className="align-top text-right" style={{ width: "50%" }}>
+            <h2 className="text-base font-bold text-gray-900">{businessName}</h2>
+            {(businessSettings?.business_email || profile?.email) && (
+              <p className="text-gray-500 text-xs mt-0.5 break-all">{businessSettings?.business_email || profile?.email}</p>
+            )}
+            {businessSettings?.business_phone && <p className="text-gray-500 text-xs">{businessSettings.business_phone}</p>}
+            {businessSettings?.business_address && (
+              <p className="text-gray-500 text-xs whitespace-pre-line mt-0.5">{businessSettings.business_address}</p>
+            )}
+          </td>
+        </tr>
+      </tbody>
+    </table>
   );
 
-  /** Bill To + Issue/Due dates — single 3-column grid */
+  /** Bill To + Issue/Due dates — engine-safe 3-column table */
   const BillToSection = () => (
-    <div className="grid grid-cols-3 gap-8 mt-12 mb-8">
-      <div>
-        <p className="text-[10px] uppercase tracking-widest mb-1 font-bold" style={{ color: accentColor }}>Bill To</p>
-        <p className="font-bold text-gray-900 text-sm">{invoice.client_name}</p>
-        {invoice.client_email && <p className="text-gray-500 text-xs mt-0.5 break-all">{invoice.client_email}</p>}
-        {invoice.client_address && <p className="text-gray-500 text-xs whitespace-pre-line mt-0.5">{invoice.client_address}</p>}
-      </div>
-      <div>
-        <p className="text-[10px] uppercase tracking-widest mb-1 font-bold" style={{ color: accentColor }}>Issue Date</p>
-        <p className="font-semibold text-gray-900 text-sm">{format(new Date(invoice.issue_date), "MMM d, yyyy")}</p>
-      </div>
-      <div>
-        <p className="text-[10px] uppercase tracking-widest mb-1 font-bold" style={{ color: accentColor }}>Due Date</p>
-        <p className="font-semibold text-gray-900 text-sm">{format(new Date(invoice.due_date), "MMM d, yyyy")}</p>
-      </div>
-    </div>
+    <table className="w-full border-collapse mt-12 mb-8" style={{ width: "100%", tableLayout: "fixed" }}>
+      <tbody>
+        <tr>
+          <td className="align-top" style={{ width: "34%", paddingRight: "16px" }}>
+            <p className="text-[10px] uppercase tracking-widest mb-1 font-bold" style={{ color: accentColor }}>Bill To</p>
+            <p className="font-bold text-gray-900 text-sm">{invoice.client_name}</p>
+            {invoice.client_email && <p className="text-gray-500 text-xs mt-0.5 break-all">{invoice.client_email}</p>}
+            {invoice.client_address && <p className="text-gray-500 text-xs whitespace-pre-line mt-0.5">{invoice.client_address}</p>}
+          </td>
+          <td className="align-top" style={{ width: "33%", paddingRight: "16px" }}>
+            <p className="text-[10px] uppercase tracking-widest mb-1 font-bold" style={{ color: accentColor }}>Issue Date</p>
+            <p className="font-semibold text-gray-900 text-sm">{format(new Date(invoice.issue_date), "MMM d, yyyy")}</p>
+          </td>
+          <td className="align-top" style={{ width: "33%" }}>
+            <p className="text-[10px] uppercase tracking-widest mb-1 font-bold" style={{ color: accentColor }}>Due Date</p>
+            <p className="font-semibold text-gray-900 text-sm">{format(new Date(invoice.due_date), "MMM d, yyyy")}</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   );
 
   /** Line items — unified premium table, PDF-accurate */
@@ -360,30 +370,41 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
     </table>
   );
 
-  /** Subtotal / tax / discount / total */
+  /** Subtotal / tax / discount / total — spacer-td anchors right side */
   const TotalsSection = () => (
-    <div className="w-1/2 ml-auto flex flex-col gap-2 mt-6">
-      <div className="flex justify-between text-gray-500 text-sm">
-        <span>Subtotal</span>
-        <span className="font-medium">{formatCurrency(Number(invoice.subtotal))}</span>
-      </div>
-      {Number(invoice.tax_rate) > 0 && (
-        <div className="flex justify-between text-gray-500 text-sm">
-          <span>Tax ({invoice.tax_rate}%)</span>
-          <span className="font-medium">{formatCurrency(Number(invoice.tax_amount))}</span>
-        </div>
-      )}
-      {Number(invoice.discount_amount) > 0 && (
-        <div className="flex justify-between text-emerald-600 text-sm">
-          <span>Discount</span>
-          <span className="font-medium">-{formatCurrency(Number(invoice.discount_amount))}</span>
-        </div>
-      )}
-      <div className="flex justify-between pt-2.5" style={{ borderTop: `2px solid ${accentColor}` }}>
-        <span className="text-base font-bold text-gray-900">Total Due</span>
-        <span className="text-base font-bold" style={{ color: accentColor }}>{formatCurrency(Number(invoice.total))}</span>
-      </div>
-    </div>
+    <table className="w-full border-collapse mt-6" style={{ width: "100%", tableLayout: "fixed" }}>
+      <tbody>
+        <tr>
+          <td style={{ width: "50%" }} />
+          <td className="align-top" style={{ width: "50%" }}>
+            <table className="w-full border-collapse" style={{ width: "100%" }}>
+              <tbody>
+                <tr>
+                  <td className="text-gray-500 text-sm pb-2">Subtotal</td>
+                  <td className="text-gray-500 text-sm font-medium pb-2 text-right">{formatCurrency(Number(invoice.subtotal))}</td>
+                </tr>
+                {Number(invoice.tax_rate) > 0 && (
+                  <tr>
+                    <td className="text-gray-500 text-sm pb-2">Tax ({invoice.tax_rate}%)</td>
+                    <td className="text-gray-500 text-sm font-medium pb-2 text-right">{formatCurrency(Number(invoice.tax_amount))}</td>
+                  </tr>
+                )}
+                {Number(invoice.discount_amount) > 0 && (
+                  <tr>
+                    <td className="text-emerald-600 text-sm pb-2">Discount</td>
+                    <td className="text-emerald-600 text-sm font-medium pb-2 text-right">-{formatCurrency(Number(invoice.discount_amount))}</td>
+                  </tr>
+                )}
+                <tr style={{ borderTop: `2px solid ${accentColor}` }}>
+                  <td className="text-base font-bold text-gray-900 pt-2.5">Total Due</td>
+                  <td className="text-base font-bold pt-2.5 text-right" style={{ color: accentColor }}>{formatCurrency(Number(invoice.total))}</td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   );
 
   /** Status badge (PAID / SENT / etc.) */
@@ -475,7 +496,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
 
   // ── MAIN PREVIEW — single flowing document, no page breaks ─────────────────
   const MainPreview = () => (
-    <div ref={docRef} className="invoice-print-area w-[794px] min-h-[1123px] bg-white text-black overflow-hidden shadow-sm box-border print:shadow-none print:w-[210mm] print:max-w-none print:m-0">
+    <div ref={docRef} id="invoice-print-area" className="invoice-print-area bg-white text-black overflow-hidden shadow-sm box-border print:shadow-none" style={{ width: "794px", minWidth: "794px", maxWidth: "794px", minHeight: "1123px", boxSizing: "border-box" }}>
       <AccentBar />
       <div className="px-10 py-12 print:px-10 print:py-12">
         <InvoiceHeader />
@@ -497,7 +518,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
 
   // ── PRINT PREVIEW — paged layout (PAGE 1 + divider + PAGE 2) ──────────────
   const PrintPreview = () => (
-    <div className="invoice-print-area w-[794px] min-h-[1123px] bg-white text-black overflow-hidden shadow-sm box-border print:shadow-none print:w-[210mm] print:max-w-none print:m-0">
+    <div className="invoice-print-area bg-white text-black overflow-hidden shadow-sm box-border print:shadow-none" style={{ width: "794px", minWidth: "794px", maxWidth: "794px", minHeight: "1123px", boxSizing: "border-box" }}>
       {/* PAGE 1 */}
       <div ref={page1Ref} className="bg-white">
         <AccentBar />
