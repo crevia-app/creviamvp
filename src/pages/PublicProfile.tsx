@@ -257,9 +257,12 @@ const PublicProfile = () => {
   }
 
   // Private profile — only the owner can see it
-  const isOwnerViewing = profile?.user_id &&
-    typeof window !== "undefined" &&
-    sessionStorage.getItem("crevia_uid") === profile.user_id;
+  // sessionStorage throws in IABs (Instagram, LinkedIn) — always safe-guard it
+  const isOwnerViewing = (() => {
+    if (!profile?.user_id) return false;
+    try { return sessionStorage.getItem("crevia_uid") === profile.user_id; }
+    catch { return false; }
+  })();
 
   if (profile?.profile_public === false && !isOwnerViewing) {
     return (
