@@ -476,16 +476,6 @@ const WorkspaceInfoSheet = ({
                 </Button>
               </>
             )}
-            <SheetClose asChild>
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-9 w-9 p-0 flex-shrink-0 border-border hover:bg-muted text-foreground"
-                aria-label="Close"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </SheetClose>
           </div>
         </div>
 
