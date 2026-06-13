@@ -127,7 +127,7 @@ export default function NotificationSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:w-[380px] p-0 flex flex-col bg-background border-border [&>button:last-child]:hidden">
+      <SheetContent side="right" className="w-[80vw] max-w-sm sm:w-[380px] p-0 flex flex-col bg-background border-border [&>button:last-child]:hidden">
         <SheetHeader className="px-4 pt-4 pb-3 border-b border-border flex-shrink-0">
           <div className="flex items-center justify-between w-full gap-2">
             {/* Edit on the far left */}

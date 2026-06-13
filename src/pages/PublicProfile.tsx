@@ -313,7 +313,7 @@ const PublicProfile = () => {
             />
           )}
           
-          <div className="flex items-center justify-center gap-2 mb-2">
+          <div className="flex items-center justify-center gap-1 mb-2">
             <h1 className="text-3xl font-bold">
               {profile?.display_name || profile?.username}
             </h1>

@@ -9,7 +9,7 @@ export const config = {
 
 const WINDOW_MS = 60_000; // 1 minute sliding window
 
-// Limits per IP per window
+// Limits per I P per window
 const LIMITS = {
   auth:    15,   // /auth — strict: login + signup attempts
   default: 200,  // everything else

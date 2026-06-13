@@ -484,7 +484,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
   const MainPreview = () => (
     <div ref={docRef} className="invoice-print-area bg-white text-black rounded-xl shadow-lg overflow-hidden w-full print:shadow-none print:rounded-none print:w-[210mm] print:max-w-none print:m-0">
       <AccentBar />
-      <div className="p-10 print:p-10">
+      <div className="px-8 py-10 print:px-8 print:py-10">
         <InvoiceHeader />
         <BusinessBlock />
         <BillToSection />
@@ -508,7 +508,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
       {/* PAGE 1 */}
       <div ref={page1Ref} className="bg-white">
         <AccentBar />
-        <div className="p-10 print:p-10">
+        <div className="px-8 py-10 print:px-8 print:py-10">
           <InvoiceHeader />
           <BusinessBlock />
           <BillToSection />
@@ -530,7 +530,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
       {/* PAGE 2 */}
       {hasPage2 && (
         <div ref={page2Ref} className="bg-white">
-          <div className="p-10 print:p-10">
+          <div className="px-8 py-10 print:px-8 print:py-10">
             <NotesTermsSection />
             <PaymentDetailsSection />
             <Footer />
@@ -566,7 +566,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
         )}>
 
           {/* ── Toolbar ─────────────────────────────────────────────────────── */}
-          <div className={cn("sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-3 py-2 flex items-center gap-2", isFullscreen && "[padding-top:max(8px,env(safe-area-inset-top))]")}>
+          <div className={cn("sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-3 py-2 flex items-center gap-2", isFullscreen && "[padding-top:max(20px,env(safe-area-inset-top))]")}>
 
             {viewMode === "main" ? (
               /* ── Main mode toolbar ── */
@@ -643,9 +643,9 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
           </div>
 
           {/* ── Document area ───────────────────────────────────────────────── */}
-          <div className="overflow-y-auto max-h-[calc(95dvh-52px)] sm:max-h-[calc(90vh-52px)]">
-            <div className="bg-zinc-100 dark:bg-zinc-900 min-h-full p-4 sm:p-8">
-              <div className="max-w-[794px] mx-auto">
+          <div className="overflow-y-auto overflow-x-hidden max-h-[calc(95dvh-52px)] sm:max-h-[calc(90vh-52px)] flex justify-center bg-zinc-100 dark:bg-zinc-900">
+            <div className="transform origin-top scale-[0.5] xs:scale-[0.6] sm:scale-75 md:scale-90 lg:scale-100 transition-none p-4 sm:p-8">
+              <div className="w-[794px]">
                 {viewMode === "main" ? <MainPreview /> : <PrintPreview />}
               </div>
             </div>
