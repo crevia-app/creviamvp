@@ -26,10 +26,22 @@ const PublicProfile = () => {
   const loadProfile = async () => {
     if (!username) return;
 
+    // Strip tracking junk social IABs inject into path params:
+    // - URL-encoded ?igsh=... (%3F...) that leaks into the slug
+    // - hash fragments, trailing slashes, and any non-username characters
+    const cleanUsername = username
+      .split("%3")[0]   // drop anything from a URL-encoded ? or # onward
+      .split("?")[0]
+      .split("#")[0]
+      .replace(/[^a-zA-Z0-9_.\-]/g, "")
+      .toLowerCase();
+
+    if (!cleanUsername) return;
+
     const { data: linkProfile } = await supabase
       .from("link_profiles")
       .select("*")
-      .eq("username", username.toLowerCase())
+      .eq("username", cleanUsername)
       .single();
 
     if (linkProfile) {

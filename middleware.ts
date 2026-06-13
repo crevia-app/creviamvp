@@ -26,6 +26,14 @@ function getLimit(pathname: string): { limit: number; bucket: string } {
 
 export default function middleware(request: Request): Response | undefined {
   const url = new URL(request.url);
+
+  // Canonicalize www → apex so social media in-app browsers hitting
+  // www.crevia.app resolve identically to crevia.app
+  if (url.hostname === "www.crevia.app") {
+    url.hostname = "crevia.app";
+    return Response.redirect(url.toString(), 301);
+  }
+
   const { limit, bucket } = getLimit(url.pathname);
 
   const ip =
