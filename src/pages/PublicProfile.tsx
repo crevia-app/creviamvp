@@ -16,6 +16,7 @@ const PublicProfile = () => {
   const [buttons, setButtons] = useState<any[]>([]);
   const [socialIcons, setSocialIcons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<any>(undefined); // undefined = not yet checked
 
   useEffect(() => {
     loadProfile();
@@ -26,7 +27,7 @@ const PublicProfile = () => {
 
     const { data: linkProfile } = await supabase
       .from("link_profiles")
-      .select("*, profiles(*)")
+      .select("*")
       .eq("username", username.toLowerCase())
       .single();
 
@@ -235,11 +236,11 @@ const PublicProfile = () => {
   }
 
   // Private profile — only the owner can see it
-  const isOwnerViewing = profile?.profiles?.id &&
+  const isOwnerViewing = profile?.user_id &&
     typeof window !== "undefined" &&
-    sessionStorage.getItem("crevia_uid") === profile.profiles.id;
+    sessionStorage.getItem("crevia_uid") === profile.user_id;
 
-  if (profile?.profiles?.profile_public === false && !isOwnerViewing) {
+  if (profile?.profile_public === false && !isOwnerViewing) {
     return (
       <div className="min-h-dvh flex flex-col items-center justify-center bg-black text-white px-6">
         <img src="/crevia-logo.png" alt="Crevia" className="w-14 h-14 rounded-full ring-1 ring-white/10 mb-6" />
@@ -397,9 +398,7 @@ const PublicProfile = () => {
           <div className="relative inline-block">
             <div className="absolute inset-0 rounded-full bg-white/10 blur-xl animate-pulse pointer-events-none" />
             <a
-              href="https://crevia.app"
-              target="_blank"
-              rel="noopener noreferrer"
+              href={`/auth?redirect=/${username}`}
               className="relative inline-flex items-center justify-center px-6 py-3 rounded-full font-medium text-sm transition-all duration-300 transform active:scale-95 bg-white text-black hover:bg-zinc-100 z-30 font-sans tracking-wide shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_25px_rgba(255,255,255,0.3)]"
             >
               Get Crevia link
