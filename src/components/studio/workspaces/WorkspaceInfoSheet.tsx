@@ -355,7 +355,7 @@ const WorkspaceInfoSheet = ({
         className="w-full sm:max-w-md p-0 flex flex-col gap-0 overflow-hidden [&>button:first-child]:hidden"
       >
         {/* ── Header ── */}
-        <div className="flex flex-col items-center pb-4 px-5 border-b border-border/50 flex-shrink-0 gap-3 bg-card/30 [padding-top:max(env(safe-area-inset-top),16px)]">
+        <div className="flex flex-col items-center pb-4 px-5 border-b border-border/50 flex-shrink-0 gap-3 bg-card/30 [padding-top:max(calc(env(safe-area-inset-top)+16px),32px)]">
           <SheetTitle className="sr-only">Workspace Info</SheetTitle>
 
           {/* Close button — always visible, below status bar on every device */}
@@ -398,14 +398,6 @@ const WorkspaceInfoSheet = ({
                   {uploadingAvatar
                     ? <Loader2 className="w-6 h-6 text-white animate-spin" />
                     : <Camera className="w-6 h-6 text-white drop-shadow-md" />
-                  }
-                </div>
-
-                {/* Mobile badge — always visible on touch screens */}
-                <div className="absolute -bottom-1.5 -right-1.5 sm:hidden bg-zinc-800 border-2 border-background rounded-full p-1.5 pointer-events-none">
-                  {uploadingAvatar
-                    ? <Loader2 className="w-3 h-3 text-white animate-spin" />
-                    : <Camera className="w-3 h-3 text-white" />
                   }
                 </div>
 
