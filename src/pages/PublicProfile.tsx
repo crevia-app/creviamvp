@@ -399,7 +399,7 @@ const PublicProfile = () => {
               }}
               onClick={() => handleButtonClick(button.id, button.url)}
             >
-              <div className="text-left w-full">
+              <div className={`w-full ${button.subtitle ? "text-left" : "text-center"}`}>
                 <div className="font-semibold">{button.title}</div>
                 {button.subtitle && (
                   <div className="text-sm opacity-80">{button.subtitle}</div>
