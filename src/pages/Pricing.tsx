@@ -3,6 +3,7 @@ import { SEO } from "@/components/SEO";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowRight, Sparkles } from "lucide-react";
+import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 import { BackButton } from "@/components/BackButton";
 import HeroPattern from "@/components/HeroPattern";
 import Header from "@/components/Header";
@@ -47,7 +48,7 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPri
       yearlyAmount: 0,
     },
     {
-      name: "Pro Verified",
+      name: "Pro",
       badge: billingCycle === "yearly" ? "2 Months Free" : "Most Popular",
       priceMonthly: fmt(proPrice),
       priceYearly: fmt(proYearly),
@@ -55,6 +56,7 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPri
       seatNote: null,
       description: "Scale your operations with an elite toolkit.",
       features: [
+        { product: "Verified badge", detail: "" },
         { product: "Dira AI", detail: "500 Monthly Credits" },
         { product: "Crevia Invoice", detail: "Unlimited customized invoices", note: "Remove branding, add your logo, add brand colors" },
         { product: "Crevia Workspace", detail: "10 Collaborative Workspaces / month", note: "Invite clients and collaborators natively" },
@@ -67,7 +69,7 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPri
       yearlyAmount: proYearly,
     },
     {
-      name: "Business Verified",
+      name: "Business",
       badge: billingCycle === "yearly" ? "2 Months Free" : "For Teams",
       priceMonthly: fmt(businessPrice),
       priceYearly: fmt(businessYearly),
@@ -75,6 +77,7 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPri
       seatNote: "+ $19.99 per additional seat",
       description: "Centralize your external team and client roster.",
       features: [
+        { product: "Verified badge", detail: "" },
         { product: "Dira AI", detail: "Unlimited priority processing" },
         { product: "Crevia Invoice", detail: "Unlimited invoices", note: "Removed branding, add your brand colors and logo" },
         { product: "Crevia Workspace", detail: "Unlimited Client & Project Workspaces with RBAC" },
@@ -307,7 +310,7 @@ const Pricing = () => {
                     )}
                   </div>
 
-                  {plan.name === "Business Verified" && (
+                  {plan.name === "Business" && (
                     <p className="text-xs text-muted-foreground font-poppins mb-0.5">Includes 3 seats</p>
                   )}
                   {plan.seatNote && (
@@ -334,15 +337,24 @@ const Pricing = () => {
                         initial={{ opacity: 0, x: -8 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.3, delay: 0.15 + fi * 0.04 }}
-                        className="flex items-start gap-2.5"
+                        className="flex items-center gap-2.5"
                       >
-                        <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${plan.highlighted ? "text-bronze" : "text-muted-foreground"}`} />
-                        <span className="text-sm leading-relaxed">
-                          <span className="font-medium text-foreground">{f.product}:</span>{" "}
-                          {f.detail}
-                          {f.note && <span className="text-muted-foreground text-xs"> · {f.note}</span>}
-                          {f.lockNote && <span className="text-muted-foreground/70 text-xs italic"> ({f.lockNote})</span>}
-                        </span>
+                        {f.product === "Verified badge" ? (
+                          <>
+                            <VerifiedBadge size="sm" />
+                            <span className="text-sm font-semibold text-foreground">Verified badge</span>
+                          </>
+                        ) : (
+                          <>
+                            <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${plan.highlighted ? "text-bronze" : "text-muted-foreground"}`} />
+                            <span className="text-sm leading-relaxed">
+                              <span className="font-medium text-foreground">{f.product}{f.detail ? ":" : ""}</span>{" "}
+                              {f.detail}
+                              {f.note && <span className="text-muted-foreground text-xs"> · {f.note}</span>}
+                              {f.lockNote && <span className="text-muted-foreground/70 text-xs italic"> ({f.lockNote})</span>}
+                            </span>
+                          </>
+                        )}
                       </motion.li>
                     ))}
                   </ul>

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
+import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 
 const planLabel = (plan: string) => {
   if (plan === "business" || plan === "brand_workspace") return "Business";
@@ -180,6 +181,7 @@ const PaymentsBilling = () => {
   ];
 
   const proFeatures = [
+    "Verified badge",
     "500 Dira AI credits per month",
     "Unlimited customized invoices — remove branding, add your logo",
     "10 collaborative workspaces per month",
@@ -187,6 +189,7 @@ const PaymentsBilling = () => {
   ];
 
   const businessFeatures = [
+    "Verified badge",
     "3 seats included · +$19.99 per additional seat",
     "Unlimited Dira AI — priority processing",
     "Unlimited workspaces with RBAC",
@@ -305,7 +308,7 @@ const PaymentsBilling = () => {
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
               <Badge className="bg-bronze text-white border-0">Most Popular</Badge>
             </div>
-            <h3 className="font-vollkorn text-xl font-bold mb-1">Pro Verified</h3>
+            <h3 className="font-vollkorn text-xl font-bold mb-1">Pro</h3>
             <div className="flex items-baseline gap-1 mb-1">
               <span className="text-3xl font-bold">$14.99</span>
               <span className="text-muted-foreground text-sm">/month</span>
@@ -313,9 +316,12 @@ const PaymentsBilling = () => {
             <p className="text-xs text-muted-foreground mb-5">≈ KES 1,949 via M-Pesa</p>
             <ul className="space-y-3 mb-6">
               {proFeatures.map((f) => (
-                <li key={f} className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-bronze mt-0.5 shrink-0" />
-                  <span className="text-sm">{f}</span>
+                <li key={f} className="flex items-center gap-2">
+                  {f === "Verified badge" ? (
+                    <><VerifiedBadge size="sm" /><span className="text-sm font-semibold">Verified badge</span></>
+                  ) : (
+                    <><Check className="w-4 h-4 text-bronze shrink-0" /><span className="text-sm">{f}</span></>
+                  )}
                 </li>
               ))}
             </ul>
@@ -333,7 +339,7 @@ const PaymentsBilling = () => {
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
               <Badge className="bg-foreground text-background border-0">For Teams</Badge>
             </div>
-            <h3 className="font-vollkorn text-xl font-bold mb-1">Business Verified</h3>
+            <h3 className="font-vollkorn text-xl font-bold mb-1">Business</h3>
             <div className="flex items-baseline gap-1 mb-1">
               <span className="text-3xl font-bold">$74.99</span>
               <span className="text-muted-foreground text-sm">/month</span>
@@ -341,9 +347,12 @@ const PaymentsBilling = () => {
             <p className="text-xs text-muted-foreground mb-5">3 seats · +$19.99/extra seat</p>
             <ul className="space-y-3 mb-6">
               {businessFeatures.map((f) => (
-                <li key={f} className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-bronze mt-0.5 shrink-0" />
-                  <span className="text-sm">{f}</span>
+                <li key={f} className="flex items-center gap-2">
+                  {f === "Verified badge" ? (
+                    <><VerifiedBadge size="sm" /><span className="text-sm font-semibold">Verified badge</span></>
+                  ) : (
+                    <><Check className="w-4 h-4 text-bronze shrink-0" /><span className="text-sm">{f}</span></>
+                  )}
                 </li>
               ))}
             </ul>

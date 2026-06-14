@@ -93,7 +93,7 @@ const UpgradeModalDialog = ({ state, onClose }: UpgradeModalDialogProps) => {
   const navigate = useNavigate();
   const isPro = state.requiredPlan === "pro";
   const highlights = isPro ? PRO_HIGHLIGHTS : BUSINESS_HIGHLIGHTS;
-  const planLabel = isPro ? "Pro Verified" : "Business Verified";
+  const planLabel = isPro ? "Pro" : "Business";
   const price = isPro ? "$14.99" : "$74.99";
 
   const [isLoading, setIsLoading] = useState(false);
