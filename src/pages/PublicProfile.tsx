@@ -298,7 +298,7 @@ const PublicProfile = () => {
 
   const profileName = profile?.display_name || profile?.username || username || "Profile";
   const profileDesc = profile?.bio || `Check out ${profileName}'s links on Crevia.`;
-  const profileAvatar = profile?.profile_picture || "https://www.crevia.app/crevia-logo.png";
+  const profileAvatar = profile?.profile_picture || "https://crevia.app/crevia-logo.png";
 
   return (
     <>

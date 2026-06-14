@@ -45,12 +45,12 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
             "@context": "https://schema.org",
             "@type": "AboutPage",
             "name": "About Crevia",
-            "url": "https://www.crevia.app/about",
+            "url": "https://crevia.app/about",
             "description": "Learn about Crevia — the business operations platform for creatives and brands.",
             "about": {
               "@type": "Organization",
               "name": "Crevia",
-              "url": "https://www.crevia.app",
+              "url": "https://crevia.app",
               "foundingDate": "2024",
               "sameAs": [
                 "https://www.instagram.com/creviahq",

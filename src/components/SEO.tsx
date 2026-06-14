@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 
-const BASE_URL      = "https://www.crevia.app";
+const BASE_URL      = "https://crevia.app";
 const DEFAULT_IMAGE = `${BASE_URL}/crevia-logo.png`;
 
 const DEFAULT_TITLE       = "Crevia — The infrastructure to scale your business operations.";
