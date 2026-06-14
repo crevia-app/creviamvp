@@ -74,12 +74,10 @@ const PublicProfile = () => {
     setLoading(false);
   };
 
-  const handleButtonClick = async (buttonId: string, url: string) => {
-    // Atomic increment via RPC — works for anonymous visitors, no race condition
-    await supabase.rpc("increment_button_click", { button_id: buttonId });
-    // Update local state so the click is reflected if owner is viewing
+  const trackButtonClick = (buttonId: string) => {
+    // Fire-and-forget — don't block native link navigation
+    supabase.rpc("increment_button_click", { button_id: buttonId });
     setButtons(prev => prev.map(b => b.id === buttonId ? { ...b, clicks: (b.clicks || 0) + 1 } : b));
-    window.open(url, "_blank");
   };
 
   const getThemeStyles = () => {
@@ -387,25 +385,31 @@ const PublicProfile = () => {
         {/* Buttons */}
         <div className="mb-12" style={{ display: 'flex', flexDirection: 'column', gap: getButtonSpacing() }}>
           {buttons.map((button, index) => (
-            <Button
+            <a
               key={button.id}
-              variant={getButtonVariant(button.style) as any}
-              className={`w-full h-auto py-4 ${getButtonStyle()} ${
-                hoverEffects ? 'hover:scale-105 hover:shadow-lg transition-all duration-300' : ''
-              } ${fadeAnimation ? 'animate-fade-in' : ''}`}
-              style={{ 
-                animationDelay: fadeAnimation ? `${index * 100}ms` : '0ms',
-                border: '2px solid hsl(var(--bronze))',
-              }}
-              onClick={() => handleButtonClick(button.id, button.url)}
+              href={button.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackButtonClick(button.id)}
             >
-              <div className={`w-full ${button.subtitle ? "text-left" : "text-center"}`}>
-                <div className="font-semibold">{button.title}</div>
-                {button.subtitle && (
-                  <div className="text-sm opacity-80">{button.subtitle}</div>
-                )}
-              </div>
-            </Button>
+              <Button
+                variant={getButtonVariant(button.style) as any}
+                className={`w-full h-auto py-4 ${getButtonStyle()} ${
+                  hoverEffects ? 'hover:scale-105 hover:shadow-lg transition-all duration-300' : ''
+                } ${fadeAnimation ? 'animate-fade-in' : ''}`}
+                style={{
+                  animationDelay: fadeAnimation ? `${index * 100}ms` : '0ms',
+                  border: '2px solid hsl(var(--bronze))',
+                }}
+              >
+                <div className={`w-full ${button.subtitle ? "text-left" : "text-center"}`}>
+                  <div className="font-semibold">{button.title}</div>
+                  {button.subtitle && (
+                    <div className="text-sm opacity-80">{button.subtitle}</div>
+                  )}
+                </div>
+              </Button>
+            </a>
           ))}
         </div>
 
