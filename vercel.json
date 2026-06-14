@@ -1,12 +1,5 @@
 {
-  "redirects": [
-    {
-      "source": "/(.*)",
-      "has": [{ "type": "host", "value": "crevia.app" }],
-      "destination": "https://www.crevia.app/$1",
-      "permanent": true
-    }
-  ],
+  "redirects": [],
   "rewrites": [
     { "source": "/favicon.ico", "destination": "/crevia-logo.png" },
     {
