@@ -120,8 +120,10 @@ function AppContent() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       const uid = session?.user?.id ?? "";
       setUserId(uid);
-      if (uid) sessionStorage.setItem("crevia_uid", uid);
-      else sessionStorage.removeItem("crevia_uid");
+      try {
+        if (uid) sessionStorage.setItem("crevia_uid", uid);
+        else sessionStorage.removeItem("crevia_uid");
+      } catch { /* IAB (Instagram/LinkedIn) blocks sessionStorage — silently ignore */ }
     });
 
     return () => subscription.unsubscribe();
@@ -155,13 +157,15 @@ function AppContent() {
       if (!enabled || !credId) return;
       setBioCredentialId(credId);
       // Skip if user just logged in (fresh auth) or already verified biometrics this tab session.
-      if (
-        sessionStorage.getItem("biometric_unlocked") === "1" ||
-        sessionStorage.getItem("biometric_verified") === "1"
-      ) {
-        sessionStorage.removeItem("biometric_unlocked");
-        return;
-      }
+      try {
+        if (
+          sessionStorage.getItem("biometric_unlocked") === "1" ||
+          sessionStorage.getItem("biometric_verified") === "1"
+        ) {
+          sessionStorage.removeItem("biometric_unlocked");
+          return;
+        }
+      } catch { /* IAB blocks sessionStorage — proceed to bio lock */ }
       setBioLocked(true);
     });
   }, [userId]);
@@ -176,7 +180,7 @@ function AppContent() {
         <BiometricLockScreen
           credentialId={bioCredentialId}
           onUnlock={() => {
-            sessionStorage.setItem("biometric_verified", "1");
+            try { sessionStorage.setItem("biometric_verified", "1"); } catch { /* IAB */ }
             setBioLocked(false);
           }}
         />

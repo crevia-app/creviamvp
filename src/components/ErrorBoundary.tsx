@@ -12,7 +12,7 @@ const RELOAD_KEY = "crevia_chunk_reload";
 const DEBOUNCE_MS = 30_000; // 30 s — long enough to avoid loops, short enough to recover
 
 async function clearCachesAndReload() {
-  sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+  try { sessionStorage.setItem(RELOAD_KEY, String(Date.now())); } catch { /* IAB */ }
   try {
     if ("serviceWorker" in navigator) {
       const regs = await navigator.serviceWorker.getRegistrations();
@@ -60,7 +60,8 @@ export class ErrorBoundary extends React.Component<
       error.message.includes("ChunkLoadError");
 
     if (isChunkError) {
-      const last = sessionStorage.getItem(RELOAD_KEY);
+      let last: string | null = null;
+      try { last = sessionStorage.getItem(RELOAD_KEY); } catch { /* IAB */ }
       const now = Date.now();
       if (!last || now - Number(last) > DEBOUNCE_MS) {
         clearCachesAndReload();
@@ -71,7 +72,7 @@ export class ErrorBoundary extends React.Component<
   handleManualRefresh = () => {
     // Always do a full cache-clear refresh so the manual button recovers from
     // stale-chunk situations even when the auto-reload debounce is active.
-    sessionStorage.removeItem(RELOAD_KEY);
+    try { sessionStorage.removeItem(RELOAD_KEY); } catch { /* IAB */ }
     clearCachesAndReload();
   };
 
