@@ -233,8 +233,8 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
           {eventsTab === "previous" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
-                { src: "https://www.youtube.com/embed/-20xdAqoBfo", title: "Freelancers Summit 2024", desc: "Empowering digital independence" },
-                { src: "https://www.youtube.com/embed/BKaxVxiLz0Y", title: "AI Summit 2024", desc: "Building AI for Impact" },
+                { src: "https://www.youtube.com/embed/-20xdAqoBfo?rel=0", title: "Freelancers Summit 2024", desc: "Empowering digital independence" },
+                { src: "https://www.youtube.com/embed/BKaxVxiLz0Y?rel=0", title: "AI Summit 2024", desc: "Building AI for Impact" },
               ].map((event, i) => (
                 <ScrollReveal key={event.title} delay={i * 0.1}>
                   <div className="rounded-2xl overflow-hidden border border-border bg-card">
