@@ -177,7 +177,7 @@ const Home = () => {
                   <span className="text-gradient-bronze">Your AI Chief of Staff.</span>
                 </h3>
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  Whether you're a brand scaling your operations or a creative building
+                  Whether you're a business scaling your operations or a creative building
                   your business — Dira is the intelligent partner in your corner.
                   Strategy, scoping, and guidance, exactly when you need it.
                 </p>
@@ -246,7 +246,7 @@ const Home = () => {
                   <span className="text-gradient-bronze">a foundation.</span>
                 </h3>
                 <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
-                  Brands use Crevia to brief, align, and deliver at scale — structured workflows,
+                  Businesses use Crevia to brief, align, and deliver at scale — structured workflows,
                   clean invoices, and a vendor experience that kills the back-and-forth that costs
                   momentum. Creatives use it to show up like the business they are, with proposals
                   and invoices that command respect. One platform. Both sides. No chaos.
