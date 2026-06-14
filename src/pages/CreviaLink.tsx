@@ -531,7 +531,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
       clearTimeout(autoSaveTimerRef.current);
       autoSaveTimerRef.current = null;
     }
-    const liveUrl = `${window.location.origin}/${linkProfile.username}`;
+    const liveUrl = `${"https://crevia.app"}/${linkProfile.username}`;
     try {
       await supabase.from("link_profiles").update({
         username:             linkProfile.username,
@@ -557,7 +557,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   };
 
   const handleCopyLink = async () => {
-    const link = `${window.location.origin}/${linkProfile?.username}`;
+    const link = `${"https://crevia.app"}/${linkProfile?.username}`;
     try {
       await navigator.clipboard.writeText(link);
       setCopied(true);
@@ -968,7 +968,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                     <div className="mt-3 flex gap-2">
                       <Button
                         className="flex-1 bg-bronze hover:bg-bronze-dark text-white gap-1.5 text-sm h-11"
-                        onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/${linkProfile?.username}`); toast({ title: "Link copied!" }); }}
+                        onClick={() => { navigator.clipboard.writeText(`${"https://crevia.app"}/${linkProfile?.username}`); toast({ title: "Link copied!" }); }}
                         style={{ touchAction: "manipulation" }}
                       >
                         <Copy className="w-3.5 h-3.5" /> Copy Link
@@ -1276,7 +1276,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
               <div className="mt-4 flex gap-2">
                 <Button
                   className="flex-1 bg-bronze hover:bg-bronze-dark text-white gap-1.5 text-xs h-9"
-                  onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/${linkProfile?.username}`); toast({ title: "Link copied!" }); }}
+                  onClick={() => { navigator.clipboard.writeText(`${"https://crevia.app"}/${linkProfile?.username}`); toast({ title: "Link copied!" }); }}
                 >
                   <Copy className="w-3.5 h-3.5" /> Copy Link
                 </Button>
@@ -1437,13 +1437,13 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
               >
                 {/* URL bar — tap to copy */}
                 <button
-                  onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/${linkProfile?.username}`); toast({ title: "Link copied!", description: `${window.location.origin}/${linkProfile?.username}` }); }}
+                  onClick={() => { navigator.clipboard.writeText(`${"https://crevia.app"}/${linkProfile?.username}`); toast({ title: "Link copied!", description: `${"https://crevia.app"}/${linkProfile?.username}` }); }}
                   style={{ touchAction: 'manipulation' }}
                   className="w-full flex items-center gap-2.5 px-4 h-11 rounded-xl bg-muted/50 border border-border/50 hover:bg-muted/80 active:bg-muted/90 transition-colors group"
                 >
                   <Link2 className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                   <span className="flex-1 text-left text-xs text-muted-foreground truncate font-mono tracking-tight">
-                    {window.location.origin.replace(/^https?:\/\//, '')}/{linkProfile?.username}
+                    {"https://crevia.app".replace(/^https?:\/\//, '')}/{linkProfile?.username}
                   </span>
                   <Copy className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
                 </button>
@@ -1961,7 +1961,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
               <div className="mt-4 flex gap-2">
                 <Button
                   className="flex-1 bg-bronze hover:bg-bronze-dark text-white gap-1.5 text-xs h-9"
-                  onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/${linkProfile?.username}`); toast({ title: "Link copied!" }); }}
+                  onClick={() => { navigator.clipboard.writeText(`${"https://crevia.app"}/${linkProfile?.username}`); toast({ title: "Link copied!" }); }}
                 >
                   <Copy className="w-3.5 h-3.5" /> Copy Link
                 </Button>
