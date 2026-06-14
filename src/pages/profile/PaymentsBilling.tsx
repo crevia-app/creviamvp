@@ -20,7 +20,7 @@ const planLabel = (plan: string) => {
 };
 
 const planPrice = (plan: string) => {
-  if (plan === "business" || plan === "brand_workspace") return "$79 / month";
+  if (plan === "business" || plan === "brand_workspace") return "$74.99 / month";
   if (plan === "pro" || plan === "creative_pro") return "$14.99 / month";
   return "Free — no billing required";
 };
@@ -30,10 +30,10 @@ const isPaidPlan = (plan: string) =>
 
 // Payment method definitions — amount changes per target plan
 const buildMethods = (planKey: "pro" | "business") => {
-  const usdAmount = planKey === "business" ? 7900 : 1499;
-  const kesAmount = planKey === "business" ? 1027100 : 194900; // ~$79 ≈ KES 10,271
-  const usdLabel  = planKey === "business" ? "$79" : "$14.99";
-  const kesLabel  = planKey === "business" ? "KES 10,271" : "KES 1,949";
+  const usdAmount = planKey === "business" ? 7499 : 1499;
+  const kesAmount = planKey === "business" ? 974900 : 194900; // ~$74.99 ≈ KES 9,749
+  const usdLabel  = planKey === "business" ? "$74.99" : "$14.99";
+  const kesLabel  = planKey === "business" ? "KES 9,749" : "KES 1,949";
   return [
     {
       id: "card",
@@ -173,29 +173,25 @@ const PaymentsBilling = () => {
   const isFree     = !isPaidPlan(subscription);
 
   const starterFeatures = [
-    "1 seat",
-    "10 Dira AI actions per day",
-    "Crevia Link — basic templates",
-    "1 active workspace",
-    "3 invoices per month (Crevia watermark)",
+    "5 Dira AI credits per day",
+    "2 standard invoices per month",
+    "Crevia Link — core profile & basic templates",
+    "Workspaces not included (Pro feature)",
   ];
 
   const proFeatures = [
-    "1 seat",
-    "40 Dira AI actions per day",
-    "Crevia Link — all premium themes & analytics",
-    "Unlimited workspaces",
-    "Unlimited invoices — no watermark",
-    "Client Portal access",
-    "Priority support",
+    "500 Dira AI credits per month",
+    "Unlimited customized invoices — remove branding, add your logo",
+    "10 collaborative workspaces per month",
+    "Crevia Link — premium themes, custom brand colors & advanced analytics",
   ];
 
   const businessFeatures = [
-    "3 seats included (+$14.99/extra seat)",
-    "200 Dira AI actions/day",
-    "Multi-workspace Dira context",
-    "Team roles & permissions (RBAC)",
-    "Unlimited invoices — no watermark",
+    "3 seats included · +$19.99 per additional seat",
+    "Unlimited Dira AI — priority processing",
+    "Unlimited workspaces with RBAC",
+    "Unlimited invoices — removed branding, add your logo & brand colors",
+    "Crevia Link — brand colors, logos & advanced visitor analytics",
     "Priority support",
   ];
 
@@ -309,7 +305,7 @@ const PaymentsBilling = () => {
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
               <Badge className="bg-bronze text-white border-0">Most Popular</Badge>
             </div>
-            <h3 className="font-vollkorn text-xl font-bold mb-1">Pro</h3>
+            <h3 className="font-vollkorn text-xl font-bold mb-1">Pro Verified</h3>
             <div className="flex items-baseline gap-1 mb-1">
               <span className="text-3xl font-bold">$14.99</span>
               <span className="text-muted-foreground text-sm">/month</span>
@@ -337,12 +333,12 @@ const PaymentsBilling = () => {
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
               <Badge className="bg-foreground text-background border-0">For Teams</Badge>
             </div>
-            <h3 className="font-vollkorn text-xl font-bold mb-1">Business</h3>
+            <h3 className="font-vollkorn text-xl font-bold mb-1">Business Verified</h3>
             <div className="flex items-baseline gap-1 mb-1">
-              <span className="text-3xl font-bold">$79</span>
+              <span className="text-3xl font-bold">$74.99</span>
               <span className="text-muted-foreground text-sm">/month</span>
             </div>
-            <p className="text-xs text-muted-foreground mb-5">3 seats · +$14.99/extra seat</p>
+            <p className="text-xs text-muted-foreground mb-5">3 seats · +$19.99/extra seat</p>
             <ul className="space-y-3 mb-6">
               {businessFeatures.map((f) => (
                 <li key={f} className="flex items-start gap-2">
@@ -469,7 +465,7 @@ const PaymentsBilling = () => {
             <DialogTitle className="font-vollkorn text-xl">Choose Payment Method</DialogTitle>
             <p className="text-sm text-muted-foreground">
               Upgrading to <span className="font-semibold capitalize">{targetPlan}</span> —{" "}
-              {targetPlan === "business" ? "$79/mo · 3 seats" : "$14.99/mo · 1 seat"}
+              {targetPlan === "business" ? "$74.99/mo · 3 seats" : "$14.99/mo · 1 seat"}
             </p>
           </DialogHeader>
           <div className="grid gap-3 mt-1">
