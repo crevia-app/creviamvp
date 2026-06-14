@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL!,
-  process.env.VITE_SUPABASE_ANON_KEY!
+  process.env.VITE_SUPABASE_PUBLISHABLE_KEY!
 );
 
 function esc(str: string): string {
@@ -32,8 +32,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const name        = profile?.display_name || username;
   const description = profile?.bio || `Check out ${name}'s links on Crevia.`;
-  const avatar      = profile?.profile_picture || "https://www.crevia.app/crevia-logo.png";
-  const pageUrl     = `https://www.crevia.app/${username}`;
+  const avatar      = profile?.profile_picture || "https://crevia.app/crevia-logo.png";
+  const pageUrl     = `https://crevia.app/${username}`;
   const title       = `${name} | crevia.app`;
 
   const html = `<!DOCTYPE html>
