@@ -80,6 +80,15 @@ const PublicProfile = () => {
     setButtons(prev => prev.map(b => b.id === buttonId ? { ...b, clicks: (b.clicks || 0) + 1 } : b));
   };
 
+  const getFaviconUrl = (url: string) => {
+    try {
+      const domain = new URL(url).hostname;
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+    } catch {
+      return "";
+    }
+  };
+
   const getThemeStyles = () => {
     const theme = profile?.theme || "dark";
     const bgStyle = profile?.background?.style || "solid";
@@ -394,7 +403,7 @@ const PublicProfile = () => {
             >
               <Button
                 variant={getButtonVariant(button.style) as any}
-                className={`w-full h-auto py-4 ${getButtonStyle()} ${
+                className={`w-full h-auto py-3 ${getButtonStyle()} ${
                   hoverEffects ? 'hover:scale-105 hover:shadow-lg transition-all duration-300' : ''
                 } ${fadeAnimation ? 'animate-fade-in' : ''}`}
                 style={{
@@ -402,11 +411,25 @@ const PublicProfile = () => {
                   border: '2px solid hsl(var(--bronze))',
                 }}
               >
-                <div className={`w-full ${button.subtitle ? "text-left" : "text-center"}`}>
-                  <div className="font-semibold">{button.title}</div>
-                  {button.subtitle && (
-                    <div className="text-sm opacity-80">{button.subtitle}</div>
-                  )}
+                <div className="w-full flex items-center gap-3">
+                  {/* Favicon — balances layout so label stays centred */}
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-white/15 flex items-center justify-center">
+                    <img
+                      src={getFaviconUrl(button.url)}
+                      alt=""
+                      className="w-6 h-6 object-contain"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                    />
+                  </div>
+                  {/* Centred label */}
+                  <div className="flex-1 text-center">
+                    <div className="font-semibold">{button.title}</div>
+                    {button.subtitle && (
+                      <div className="text-sm opacity-80">{button.subtitle}</div>
+                    )}
+                  </div>
+                  {/* Right spacer mirrors the icon so text is truly centred */}
+                  <div className="w-10 flex-shrink-0" />
                 </div>
               </Button>
             </a>

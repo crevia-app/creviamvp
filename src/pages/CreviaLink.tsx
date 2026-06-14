@@ -689,6 +689,15 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 onCheckedChange={(v) => handleToggleVisibility(button.id, v)}
                 className="flex-shrink-0"
               />
+              {/* Favicon */}
+              <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/40">
+                <img
+                  src={(() => { try { return `https://www.google.com/s2/favicons?domain=${new URL(button.url).hostname}&sz=64`; } catch { return ""; } })()}
+                  alt=""
+                  className="w-5 h-5 object-contain"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                />
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{button.title}</p>
                 <p className="text-xs text-muted-foreground truncate">{button.url}</p>
