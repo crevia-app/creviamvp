@@ -249,10 +249,13 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   };
 
   useEffect(() => {
-    if (linkProfile) {
+    if (linkProfile?.id) {
       fetchButtons();
     }
-  }, [linkProfile]);
+  // Only re-fetch when the profile ID changes (initial load / profile switch),
+  // NOT on every object-identity change caused by spread-update setLinkProfile calls.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [linkProfile?.id]);
 
   const handleUsernameChange = (value: string) => {
     const sanitized = value.toLowerCase().trim();
@@ -322,7 +325,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      setButtons([...buttons, data]);
+      setButtons(prev => [...prev, data]);
       setNewLinkTitle("");
       setNewLinkUrl("");
       setNewLinkIcon("");
@@ -369,14 +372,17 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const handleDeleteButton = (id: string) => setPendingDeleteId(id);
 
   const executeDeleteButton = async (id: string) => {
+    // Optimistic removal — UI updates instantly, no waiting for the DB round-trip.
+    setPendingDeleteId(null);
+    setButtons(prev => prev.filter(b => b.id !== id));
     const { error } = await supabase.from("link_buttons").delete().eq("id", id);
     if (error) {
+      // Restore on failure by re-fetching the real DB state.
+      fetchButtons();
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      setButtons(prev => prev.filter(b => b.id !== id));
       toast({ title: "Link deleted" });
     }
-    setPendingDeleteId(null);
   };
 
   const handleAddSocialIcon = async () => {
