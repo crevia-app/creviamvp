@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 import { LINK_THEMES } from "@/lib/linkThemes";
 import { SocialBadgeRow } from "@/components/crevia-link/SocialBrandIcons";
+import { renderLinkIcon } from "@/components/crevia-link/LinkIconPicker";
 
 interface LivePreviewProps {
   linkProfile: any;
@@ -170,9 +171,17 @@ const LivePreview = ({ linkProfile, buttons, isPro = false, socialIcons }: LiveP
                         ...(fadeAnimation ? { animationDelay: `${index * 80}ms` } : {}),
                       }}
                     >
-                      <div className="font-medium truncate">{button.title}</div>
+                      <div className="flex items-center gap-1.5">
+                        {button.icon && button.icon !== "link" && (
+                          <span className="flex-shrink-0 opacity-90">
+                            {renderLinkIcon(button.icon, 14)}
+                          </span>
+                        )}
+                        <span className="font-medium truncate flex-1 text-center">{button.title}</span>
+                        {button.icon && button.icon !== "link" && <span className="w-[14px] flex-shrink-0" />}
+                      </div>
                       {button.subtitle && (
-                        <div className="text-[9px] opacity-70 truncate mt-0.5">{button.subtitle}</div>
+                        <div className="text-[9px] opacity-70 truncate mt-0.5 text-center">{button.subtitle}</div>
                       )}
                     </div>
                   ))

@@ -163,8 +163,8 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
                         />
                       )}
                       <h2 className="text-lg font-bold text-gray-900">{businessName}</h2>
-                      {(businessSettings?.business_email || profile?.email) && (
-                        <p className="text-gray-500 text-sm mt-0.5 break-all">{businessSettings?.business_email || profile?.email}</p>
+                      {businessSettings?.business_email && (
+                        <p className="text-gray-500 text-sm mt-0.5 break-all">{businessSettings.business_email}</p>
                       )}
                       {businessSettings?.business_phone && (
                         <p className="text-gray-500 text-sm">{businessSettings.business_phone}</p>

@@ -12,7 +12,13 @@ import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check, Globe, Shield, Bell, BarChart3, TrendingUp, MousePointer, ExternalLink, Camera, AlertCircle, Users, Star, ArrowUp, ArrowDown, ChevronUp, ChevronDown, ChevronRight, Image as ImageIcon, User, MousePointerClick, SlidersHorizontal, BarChart2, Trash2, Share2, Lock } from "lucide-react";
+import { Link2, Plus, Eye, Sparkles, Type, Palette, Layout, Copy, Check, Globe, Shield, Bell, BarChart3, TrendingUp, MousePointer, ExternalLink, Camera, AlertCircle, Users, Star, ArrowUp, ArrowDown, ChevronUp, ChevronDown, ChevronRight, Image as ImageIcon, User, MousePointerClick, SlidersHorizontal, BarChart2, Trash2, Share2, Lock, Mail, Phone, Youtube, Linkedin, Music, ShoppingBag } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import LinkIconPicker, { renderLinkIcon } from "@/components/crevia-link/LinkIconPicker";
 import ThemeSelector from "@/components/crevia-link/ThemeSelector";
 import { PRO_THEME_IDS } from "@/lib/linkThemes";
 import { AdvancedColorSelector } from "@/components/ui/AdvancedColorSelector";
@@ -137,6 +143,11 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const [viewingLive, setViewingLive] = useState(false);
   const [newLinkTitle, setNewLinkTitle] = useState("");
   const [newLinkUrl, setNewLinkUrl] = useState("");
+  const [newLinkIcon, setNewLinkIcon] = useState("");
+  const [iconPickerFor, setIconPickerFor] = useState<string | null>(null); // "new" | buttonId | null
+  const [uploadingLinkIcon, setUploadingLinkIcon] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [pendingDeleteSocialId, setPendingDeleteSocialId] = useState<string | null>(null);
   const [addingLink, setAddingLink] = useState(false);
   const [copied, setCopied] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
@@ -305,7 +316,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     const maxOrder = buttons.length > 0 ? Math.max(...buttons.map(b => b.order_index)) : -1;
     const { data, error } = await supabase
       .from("link_buttons")
-      .insert({ profile_id: linkProfile.id, title: newLinkTitle.trim(), url: newLinkUrl.trim(), icon: "link", style: "filled", visible: true, order_index: maxOrder + 1 })
+      .insert({ profile_id: linkProfile.id, title: newLinkTitle.trim(), url: newLinkUrl.trim(), icon: newLinkIcon || "link", style: "filled", visible: true, order_index: maxOrder + 1 })
       .select()
       .single();
     if (error) {
@@ -314,30 +325,58 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
       setButtons([...buttons, data]);
       setNewLinkTitle("");
       setNewLinkUrl("");
+      setNewLinkIcon("");
       toast({ title: "Link added!" });
     }
     setAddingLink(false);
   };
 
-  const handleDeleteButton = async (id: string) => {
-    const { error } = await supabase
-      .from("link_buttons")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+  const handleLinkIconSelect = async (iconValue: string, target: string) => {
+    if (target === "new") {
+      setNewLinkIcon(iconValue);
     } else {
-      setButtons(buttons.filter(b => b.id !== id));
-      toast({
-        title: "Button deleted",
-        description: "The button has been removed.",
-      });
+      await supabase.from("link_buttons").update({ icon: iconValue }).eq("id", target);
+      setButtons(prev => prev.map(b => b.id === target ? { ...b, icon: iconValue } : b));
     }
+    setIconPickerFor(null);
+  };
+
+  const handleLinkIconUpload = async (file: File, target: string) => {
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Image too large", description: "Max size is 5MB.", variant: "destructive" });
+      return;
+    }
+    setUploadingLinkIcon(true);
+    const ext = file.name.split('.').pop() || 'jpg';
+    const path = `link-icons/${linkProfile.id}/${target}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    if (error) {
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+      setUploadingLinkIcon(false);
+      return;
+    }
+    const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
+    if (target === "new") {
+      setNewLinkIcon(publicUrl);
+    } else {
+      await supabase.from("link_buttons").update({ icon: publicUrl }).eq("id", target);
+      setButtons(prev => prev.map(b => b.id === target ? { ...b, icon: publicUrl } : b));
+    }
+    setIconPickerFor(null);
+    setUploadingLinkIcon(false);
+  };
+
+  const handleDeleteButton = (id: string) => setPendingDeleteId(id);
+
+  const executeDeleteButton = async (id: string) => {
+    const { error } = await supabase.from("link_buttons").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      setButtons(prev => prev.filter(b => b.id !== id));
+      toast({ title: "Link deleted" });
+    }
+    setPendingDeleteId(null);
   };
 
   const handleAddSocialIcon = async () => {
@@ -360,13 +399,16 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     setAddingSocial(false);
   };
 
-  const handleDeleteSocialIcon = async (id: string) => {
+  const handleDeleteSocialIcon = (id: string) => setPendingDeleteSocialId(id);
+
+  const executeDeleteSocialIcon = async (id: string) => {
     const { error } = await supabase.from("link_social_icons").delete().eq("id", id);
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      setSocialIcons(socialIcons.filter((s) => s.id !== id));
+      setSocialIcons(prev => prev.filter((s) => s.id !== id));
     }
+    setPendingDeleteSocialId(null);
   };
 
   const handleToggleVisibility = async (id: string, visible: boolean) => {
@@ -689,15 +731,27 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 onCheckedChange={(v) => handleToggleVisibility(button.id, v)}
                 className="flex-shrink-0"
               />
-              {/* Favicon */}
-              <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/40">
-                <img
-                  src={(() => { try { return `https://www.google.com/s2/favicons?domain=${new URL(button.url).hostname}&sz=64`; } catch { return ""; } })()}
-                  alt=""
-                  className="w-5 h-5 object-contain"
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                />
-              </div>
+              {/* Icon — click to open picker */}
+              <Popover open={iconPickerFor === button.id} onOpenChange={(o) => setIconPickerFor(o ? button.id : null)}>
+                <PopoverTrigger asChild>
+                  <button
+                    className="w-9 h-9 rounded-full bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/40 hover:opacity-75 transition-opacity"
+                    title="Change icon"
+                  >
+                    {button.icon && button.icon !== "link"
+                      ? <span className="text-foreground/80">{renderLinkIcon(button.icon, 18)}</span>
+                      : (() => { try { return <img src={`https://www.google.com/s2/favicons?domain=${new URL(button.url).hostname}&sz=64`} alt="" className="w-5 h-5 object-contain" onError={(e)=>{(e.currentTarget as HTMLImageElement).style.display="none"}} />; } catch { return <Link2 className="w-4 h-4 text-muted-foreground" />; } })()
+                    }
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0 w-auto" side="right" align="start">
+                  <LinkIconPicker
+                    onSelect={(v) => handleLinkIconSelect(v, button.id)}
+                    onUpload={(f) => handleLinkIconUpload(f, button.id)}
+                    uploading={uploadingLinkIcon}
+                  />
+                </PopoverContent>
+              </Popover>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{button.title}</p>
                 <p className="text-xs text-muted-foreground truncate">{button.url}</p>
@@ -721,12 +775,34 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
       <div className="space-y-3 pt-2 border-t border-border/30">
         <p className="text-sm font-medium pt-3">Add a link</p>
-        <Input
-          className="h-11 text-sm"
-          value={newLinkTitle}
-          onChange={(e) => setNewLinkTitle(e.target.value)}
-          placeholder="Button title (e.g. My Portfolio)"
-        />
+        {/* Icon selector trigger + title input on same row */}
+        <div className="flex items-center gap-2">
+          <Popover open={iconPickerFor === "new"} onOpenChange={(o) => setIconPickerFor(o ? "new" : null)}>
+            <PopoverTrigger asChild>
+              <button
+                className="w-11 h-11 rounded-lg bg-muted border border-border/50 flex items-center justify-center flex-shrink-0 hover:opacity-75 transition-opacity"
+                title="Choose icon"
+              >
+                <span className="text-muted-foreground">
+                  {newLinkIcon ? renderLinkIcon(newLinkIcon, 18) : <Link2 className="w-4 h-4" />}
+                </span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0 w-auto" side="top" align="start">
+              <LinkIconPicker
+                onSelect={(v) => handleLinkIconSelect(v, "new")}
+                onUpload={(f) => handleLinkIconUpload(f, "new")}
+                uploading={uploadingLinkIcon}
+              />
+            </PopoverContent>
+          </Popover>
+          <Input
+            className="h-11 text-sm flex-1"
+            value={newLinkTitle}
+            onChange={(e) => setNewLinkTitle(e.target.value)}
+            placeholder="Button title (e.g. My Portfolio)"
+          />
+        </div>
         <Input
           className="h-11 text-sm"
           value={newLinkUrl}
@@ -2046,6 +2122,44 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
         document.body
       )}
     </div>
+
+    {/* Delete action link confirmation */}
+    <AlertDialog open={!!pendingDeleteId} onOpenChange={(o) => { if (!o) setPendingDeleteId(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete this link?</AlertDialogTitle>
+          <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={() => pendingDeleteId && executeDeleteButton(pendingDeleteId)}
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    {/* Delete social link confirmation */}
+    <AlertDialog open={!!pendingDeleteSocialId} onOpenChange={(o) => { if (!o) setPendingDeleteSocialId(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove social link?</AlertDialogTitle>
+          <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={() => pendingDeleteSocialId && executeDeleteSocialIcon(pendingDeleteSocialId)}
+          >
+            Remove
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 

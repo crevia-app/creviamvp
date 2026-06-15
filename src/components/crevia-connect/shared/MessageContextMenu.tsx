@@ -59,6 +59,7 @@ const MessageContextMenu = ({
   onFavoriteToggle,
 }: MessageContextMenuProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDeleteForMeDialog, setShowDeleteForMeDialog] = useState(false);
 
   const handleCopy = () => {
     if (content) {
@@ -114,7 +115,7 @@ const MessageContextMenu = ({
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={() => onDeleteForMe(messageId)}
+            onClick={() => setShowDeleteForMeDialog(true)}
             className="text-destructive focus:text-destructive"
           >
             <Trash2 className="h-4 w-4 mr-2" />
@@ -131,6 +132,26 @@ const MessageContextMenu = ({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <AlertDialog open={showDeleteForMeDialog} onOpenChange={setShowDeleteForMeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete for you?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This message will be removed from your view only. Others can still see it.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => onDeleteForMe(messageId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete for Me
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
