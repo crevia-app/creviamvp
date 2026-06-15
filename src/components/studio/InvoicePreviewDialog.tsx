@@ -309,9 +309,6 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
           </td>
           <td className="align-top text-right" style={{ width: "50%" }}>
             <h2 className="text-base font-bold text-gray-900">{businessName}</h2>
-            {businessSettings?.business_email && (
-              <p className="text-gray-500 text-xs mt-0.5 break-all">{businessSettings.business_email}</p>
-            )}
             {businessSettings?.business_phone && <p className="text-gray-500 text-xs">{businessSettings.business_phone}</p>}
             {businessSettings?.business_address && (
               <p className="text-gray-500 text-xs whitespace-pre-line mt-0.5">{businessSettings.business_address}</p>

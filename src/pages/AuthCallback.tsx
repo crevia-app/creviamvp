@@ -30,27 +30,27 @@ const AuthCallback = () => {
       return;
     }
 
-    // If session already exists (link clicked twice, or page refreshed after success)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setStatus("success");
-        navigate("/dira", { replace: true });
-      }
-    });
+    // Guard against double-navigation if both getSession and onAuthStateChange resolve
+    let navigated = false;
+    const handleSession = () => {
+      if (navigated) return;
+      navigated = true;
+      setStatus("success");
+      navigate("/dira", { replace: true });
+    };
 
-    // Supabase SDK automatically exchanges the token/code in the URL.
-    // Listen for the resulting session.
+    // Subscribe FIRST so we never miss the SIGNED_IN event that fires when
+    // the Supabase SDK auto-exchanges the PKCE code from the URL.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session) {
-          setStatus("success");
-          navigate("/dira", { replace: true });
-        }
-      }
+      (_event, session) => { if (session) handleSession(); }
     );
 
-    // Safety net: if nothing resolves in 8 seconds, show a helpful error
-    // instead of leaving the user stuck on "Verifying…" forever (e.g. page refresh).
+    // Then check if a session already exists (page refresh after successful auth)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) handleSession();
+    });
+
+    // Safety net: 8 s max wait before showing a recoverable error state.
     const timeout = setTimeout(() => {
       setStatus((prev) => {
         if (prev === "verifying") {
