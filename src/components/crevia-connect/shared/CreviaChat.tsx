@@ -51,6 +51,10 @@ import {
   ExternalLink,
   BarChart2,
   Trash2,
+  Star,
+  StarOff,
+  Forward,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
@@ -69,6 +73,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format, isToday, isYesterday } from "date-fns";
 import ChatMediaPanel from "./ChatMediaPanel";
@@ -296,6 +310,8 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
   const selectedExternalRef = useRef<string>("");
   const selectedRoomRef = useRef<ChatRoom | null>(null);
   const [longPressMsg, setLongPressMsg] = useState<ChatMessage | null>(null);
+  const [showMobileDeleteMeDialog, setShowMobileDeleteMeDialog] = useState(false);
+  const [showMobileDeleteEveryoneDialog, setShowMobileDeleteEveryoneDialog] = useState(false);
   const msgPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isInputFocused, setIsInputFocused] = useState(false);
 
@@ -495,6 +511,10 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
               if (prev.some(m => m.id === msgWithProfile.id)) return prev;
               return [...prev, msgWithProfile];
             });
+            // Pre-sign new file message URLs immediately on arrival.
+            if (msgWithProfile.message_type === "file" && msgWithProfile.file_url && !msgWithProfile.file_url.startsWith("http")) {
+              batchPrefetchSignedUrls([msgWithProfile.file_url]);
+            }
             if (newMsg.sender_id !== currentUserId) {
               if (typingTimeoutsRef.current[newMsg.sender_id]) {
                 clearTimeout(typingTimeoutsRef.current[newMsg.sender_id]);
@@ -1002,6 +1022,13 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
 
     const decrypted = await decryptMessages(enriched);
     setMessages(decrypted as ChatMessage[]);
+
+    // Pre-sign all file URLs in one batch request before any render touches them.
+    const filePaths = (decrypted as ChatMessage[])
+      .filter(m => m.message_type === "file" && m.file_url && !m.file_url.startsWith("http"))
+      .map(m => m.file_url!);
+    if (filePaths.length > 0) batchPrefetchSignedUrls(filePaths);
+
     updateReadReceipt(roomId);
   };
 
@@ -1543,23 +1570,30 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
     }
   };
 
+  // Batch-sign all file paths in a single HTTP request — prevents the
+  // thundering-herd of concurrent createSignedUrl calls that triggers
+  // ERR_HTTP2_SERVER_REFUSED_STREAM when a room has many file messages.
+  const batchPrefetchSignedUrls = useCallback(async (filePaths: string[]) => {
+    if (filePaths.length === 0) return;
+    const { data } = await supabase.storage.from("chat-files").createSignedUrls(filePaths, 3600);
+    if (!data) return;
+    const batch: Record<string, string> = {};
+    const failed: string[] = [];
+    for (const item of data) {
+      if (item.signedUrl) batch[item.path] = item.signedUrl;
+      else failed.push(item.path);
+    }
+    for (const path of failed) {
+      const { data: pub } = supabase.storage.from("chat-files").getPublicUrl(path);
+      if (pub?.publicUrl) batch[path] = pub.publicUrl;
+    }
+    if (Object.keys(batch).length > 0) setSignedUrls(prev => ({ ...prev, ...batch }));
+  }, []);
+
+  // Pure cache lookup — network I/O moved to batchPrefetchSignedUrls.
   const getFilePublicUrl = useCallback((filePath: string) => {
     if (filePath.startsWith("http")) return filePath;
-    if (signedUrls[filePath]) return signedUrls[filePath];
-
-    supabase.storage.from("chat-files").createSignedUrl(filePath, 3600).then(({ data, error }) => {
-      if (data?.signedUrl) {
-        setSignedUrls(prev => ({ ...prev, [filePath]: data.signedUrl }));
-      } else if (error) {
-        // Signed URL failed (likely a permissions issue for the recipient).
-        // Fall back to public URL — works when the bucket allows public reads.
-        const { data: pub } = supabase.storage.from("chat-files").getPublicUrl(filePath);
-        if (pub?.publicUrl) {
-          setSignedUrls(prev => ({ ...prev, [filePath]: pub.publicUrl }));
-        }
-      }
-    });
-    return "";
+    return signedUrls[filePath] ?? "";
   }, [signedUrls]);
 
   // Helpers
@@ -3580,13 +3614,30 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
 
     {/* ── Long-press message context sheet (mobile only) ─────────────────── */}
     <Sheet open={!!longPressMsg} onOpenChange={(open) => { if (!open) setLongPressMsg(null); }}>
-      <SheetContent side="bottom" className="rounded-t-2xl pb-safe bg-background border-border">
+      <SheetContent side="bottom" className="rounded-t-2xl pb-safe bg-background border-border max-h-[85dvh] overflow-y-auto">
         <SheetHeader className="pb-3">
           <SheetTitle className="text-sm font-medium text-muted-foreground truncate text-left">
-            {longPressMsg?.content?.slice(0, 48) || "Message"}
+            {longPressMsg?.content?.slice(0, 48) || (longPressMsg?.message_type === "file" ? `📎 ${longPressMsg?.file_name || "Attachment"}` : "Message")}
           </SheetTitle>
         </SheetHeader>
+
+        {/* Full emoji reaction row */}
+        {!longPressMsg?.deleted_for_everyone && (
+          <div className="flex items-center justify-between px-1 pb-4 mb-2 border-b border-border">
+            {["👍", "❤️", "😂", "😮", "😢", "🙏", "🔥", "👀", "🎉", "💯"].map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => { if (longPressMsg) handleReaction(longPressMsg.id, emoji); setLongPressMsg(null); }}
+                className="flex-1 text-xl py-2 rounded-xl active:scale-90 transition-transform hover:bg-muted"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="space-y-1">
+          {/* Reply */}
           <button
             onClick={() => { if (longPressMsg) handleReply(longPressMsg); setLongPressMsg(null); }}
             className="w-full flex items-center gap-3 px-3 py-3.5 min-h-[48px] rounded-xl hover:bg-muted active:bg-muted/80 transition-colors text-left"
@@ -3594,34 +3645,122 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
             <Reply className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-medium">Reply</span>
           </button>
-          <button
-            onClick={() => { if (longPressMsg) handleReaction(longPressMsg.id, "👍"); setLongPressMsg(null); }}
-            className="w-full flex items-center gap-3 px-3 py-3.5 min-h-[48px] rounded-xl hover:bg-muted active:bg-muted/80 transition-colors text-left"
-          >
-            <span className="text-base">👍</span>
-            <span className="text-sm font-medium">React</span>
-          </button>
-          {longPressMsg?.content && (
+
+          {/* Forward */}
+          {longPressMsg?.content && !longPressMsg?.deleted_for_everyone && (
+            <button
+              onClick={() => { if (longPressMsg) { handleForward(longPressMsg.id); setLongPressMsg(null); } }}
+              className="w-full flex items-center gap-3 px-3 py-3.5 min-h-[48px] rounded-xl hover:bg-muted active:bg-muted/80 transition-colors text-left"
+            >
+              <Forward className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Forward</span>
+            </button>
+          )}
+
+          {/* Copy text */}
+          {longPressMsg?.content && !longPressMsg?.deleted_for_everyone && (
             <button
               onClick={() => { if (longPressMsg?.content) { navigator.clipboard.writeText(longPressMsg.content!); toast.success("Copied"); } setLongPressMsg(null); }}
               className="w-full flex items-center gap-3 px-3 py-3.5 min-h-[48px] rounded-xl hover:bg-muted active:bg-muted/80 transition-colors text-left"
             >
-              <Pin className="w-4 h-4 text-muted-foreground" />
+              <Copy className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm font-medium">Copy text</span>
             </button>
           )}
+
+          {/* Pin / Unpin */}
+          {longPressMsg && !longPressMsg?.deleted_for_everyone && (() => {
+            const isPinned = pinnedMessageIds.has(longPressMsg.id);
+            return (
+              <button
+                onClick={() => { handlePinToggle(longPressMsg.id, isPinned); setLongPressMsg(null); }}
+                className="w-full flex items-center gap-3 px-3 py-3.5 min-h-[48px] rounded-xl hover:bg-muted active:bg-muted/80 transition-colors text-left"
+              >
+                <Pin className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium">{isPinned ? "Unpin" : "Pin"}</span>
+              </button>
+            );
+          })()}
+
+          {/* Favorite / Unfavorite */}
+          {longPressMsg && !longPressMsg?.deleted_for_everyone && (() => {
+            const isFav = favoritedMessageIds.has(longPressMsg.id);
+            return (
+              <button
+                onClick={() => { handleFavoriteToggle(longPressMsg.id, isFav); setLongPressMsg(null); }}
+                className="w-full flex items-center gap-3 px-3 py-3.5 min-h-[48px] rounded-xl hover:bg-muted active:bg-muted/80 transition-colors text-left"
+              >
+                {isFav
+                  ? <StarOff className="w-4 h-4 text-yellow-500" />
+                  : <Star className="w-4 h-4 text-muted-foreground" />}
+                <span className="text-sm font-medium">{isFav ? "Unfavorite" : "Favorite"}</span>
+              </button>
+            );
+          })()}
+
+          {/* Delete for Me */}
+          <button
+            onClick={() => setShowMobileDeleteMeDialog(true)}
+            className="w-full flex items-center gap-3 px-3 py-3.5 min-h-[48px] rounded-xl hover:bg-red-500/10 active:bg-red-500/15 transition-colors text-left"
+          >
+            <Trash2 className="w-4 h-4 text-red-500" />
+            <span className="text-sm font-medium text-red-500">Delete for Me</span>
+          </button>
+
+          {/* Delete for Everyone — sender only */}
           {longPressMsg && longPressMsg.sender_id === currentUserId && (
             <button
-              onClick={() => { if (longPressMsg) handleDeleteForEveryone(longPressMsg.id); setLongPressMsg(null); }}
+              onClick={() => setShowMobileDeleteEveryoneDialog(true)}
               className="w-full flex items-center gap-3 px-3 py-3.5 min-h-[48px] rounded-xl hover:bg-red-500/10 active:bg-red-500/15 transition-colors text-left"
             >
               <Trash2 className="w-4 h-4 text-red-500" />
-              <span className="text-sm font-medium text-red-500">Delete</span>
+              <span className="text-sm font-medium text-red-500">Delete for Everyone</span>
             </button>
           )}
         </div>
       </SheetContent>
     </Sheet>
+
+    {/* Mobile delete confirmation dialogs (outside Sheet to avoid z-index conflicts) */}
+    <AlertDialog open={showMobileDeleteMeDialog} onOpenChange={setShowMobileDeleteMeDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete for you?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This message will be removed from your view only. Others can still see it.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={() => { if (longPressMsg) { handleDeleteForMe(longPressMsg.id); setLongPressMsg(null); } setShowMobileDeleteMeDialog(false); }}
+          >
+            Delete for Me
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    <AlertDialog open={showMobileDeleteEveryoneDialog} onOpenChange={setShowMobileDeleteEveryoneDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete for everyone?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This message will be permanently removed for all participants. This cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={() => { if (longPressMsg) { handleDeleteForEveryone(longPressMsg.id); setLongPressMsg(null); } setShowMobileDeleteEveryoneDialog(false); }}
+          >
+            Delete for Everyone
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
 
     </div>
   );
