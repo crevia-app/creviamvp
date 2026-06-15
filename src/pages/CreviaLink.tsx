@@ -1574,6 +1574,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
 
   // Standalone view with sidebar
   return (
+    <>
     <div className="flex flex-col bg-background">
       <LinkTabsMobile userType={profile?.user_type || "creator"} />
 
@@ -2160,6 +2161,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+    </>
   );
 };
 
