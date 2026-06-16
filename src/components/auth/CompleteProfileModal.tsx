@@ -58,7 +58,7 @@ export function CompleteProfileModal({ userId, onComplete }: CompleteProfileModa
             <img
               src="/crevia-logo.png"
               alt="Crevia"
-              className="w-14 h-14 rounded-2xl ring-1 ring-border object-cover"
+              className="w-14 h-14 rounded-2xl bg-zinc-950 ring-1 ring-border object-cover"
             />
           </div>
 

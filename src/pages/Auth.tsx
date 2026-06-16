@@ -389,7 +389,7 @@ const Auth = () => {
         <PageBg />
         <div className="relative z-10 w-full max-w-sm animate-fade-in">
           <div className="flex items-center justify-center gap-2.5 mb-10">
-            <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-full ring-1 ring-border" />
+            <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-2xl bg-zinc-950 ring-1 ring-border" />
             <span className="font-vollkorn text-2xl font-bold text-foreground">Crevia</span>
           </div>
 
@@ -425,7 +425,7 @@ const Auth = () => {
         <PageBg />
         <div className="relative z-10 w-full max-w-sm animate-fade-in">
           <div className="flex items-center justify-center gap-2.5 mb-10">
-            <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-full ring-1 ring-border" />
+            <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-2xl bg-zinc-950 ring-1 ring-border" />
             <span className="font-vollkorn text-2xl font-bold text-foreground">Crevia</span>
           </div>
 
@@ -492,7 +492,7 @@ const Auth = () => {
       <div className="relative z-10 w-full max-w-md animate-fade-in">
         {/* Logo */}
         <Link to="/" className="flex items-center justify-center gap-2.5 mb-8 hover:opacity-80 transition-opacity">
-          <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-full ring-1 ring-border transition-transform hover:scale-105" />
+          <img src="/crevia-logo.png" alt="Crevia" className="w-9 h-9 rounded-2xl bg-zinc-950 ring-1 ring-border transition-transform hover:scale-105" />
           <span className="font-vollkorn text-2xl font-bold text-foreground">Crevia</span>
         </Link>
 

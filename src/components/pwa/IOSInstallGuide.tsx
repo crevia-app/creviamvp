@@ -38,7 +38,7 @@ export function IOSInstallGuide({ open, onClose }: IOSInstallGuideProps) {
       >
         <SheetHeader className="pb-4">
           <div className="flex items-center gap-3">
-            <img src="/crevia-logo.png" alt="Crevia" className="w-10 h-10 rounded-xl" />
+            <img src="/crevia-logo.png" alt="Crevia" className="w-10 h-10 rounded-2xl bg-zinc-950" />
             <div>
               <SheetTitle className="font-vollkorn text-lg text-foreground text-left">
                 Install Crevia

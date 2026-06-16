@@ -141,7 +141,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                   <img
                     src={creviaLogo}
                     alt="Crevia Logo"
-                    className="w-full max-w-xs mx-auto"
+                    className="w-full max-w-xs mx-auto rounded-2xl bg-zinc-950 p-6"
                   />
                 </div>
               </div>

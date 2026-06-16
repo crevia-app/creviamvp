@@ -62,7 +62,7 @@ const PageLoader = () => (
 
 const MaintenancePage = () => (
   <div className="min-h-dvh bg-background flex flex-col items-center justify-center px-4 text-center">
-    <img src="/crevia-logo.png" alt="Crevia" className="w-14 h-14 rounded-full ring-1 ring-border mb-8" />
+    <img src="/crevia-logo.png" alt="Crevia" className="w-14 h-14 rounded-2xl bg-zinc-950 ring-1 ring-border mb-8" />
     <h1 className="font-vollkorn text-3xl md:text-4xl font-bold mb-3">Down for maintenance</h1>
     <p className="text-muted-foreground text-sm max-w-sm leading-relaxed">
       We're making some improvements to Crevia. We'll be back shortly — thank you for your patience.

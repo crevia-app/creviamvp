@@ -161,7 +161,7 @@ const TopBar = ({ profile, hideRightElements = false }: TopBarProps) => {
               <img
                 src="/crevia-logo.png"
                 alt="Crevia"
-                className="w-9 h-9 md:w-11 md:h-11 rounded-full ring-1 ring-border"
+                className="w-9 h-9 md:w-11 md:h-11 rounded-2xl bg-zinc-950 ring-1 ring-border"
               />
             </Link>
           )}

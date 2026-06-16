@@ -2825,7 +2825,7 @@ const Admin = () => {
           onClick={() => { setSection("overview"); setSidebarOpen(false); }}
           className="flex items-center gap-3 px-5 py-5 border-b border-white/[0.05] w-full text-left hover:bg-white/[0.03] transition-colors group"
         >
-          <img src="/crevia-logo.png" alt="Crevia" className="w-8 h-8 rounded-full ring-1 ring-white/10 flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
+          <img src="/crevia-logo.png" alt="Crevia" className="w-8 h-8 rounded-2xl bg-zinc-950 ring-1 ring-white/10 flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
           <div>
             <p className="font-vollkorn text-white font-bold text-sm leading-none">Crevia</p>
             <p className="text-[9px] text-white/25 font-poppins uppercase tracking-[0.12em] mt-0.5">Admin</p>
@@ -2906,7 +2906,7 @@ const Admin = () => {
               <img
                 src="/crevia-logo.png"
                 alt="Crevia"
-                className="w-7 h-7 rounded-full ring-1 ring-white/10 transition-transform duration-200 group-hover:scale-105"
+                className="w-7 h-7 rounded-2xl bg-zinc-950 ring-1 ring-white/10 transition-transform duration-200 group-hover:scale-105"
               />
               <span className="font-vollkorn text-sm font-bold text-white/70 group-hover:text-white transition-colors hidden sm:block">Crevia</span>
             </button>

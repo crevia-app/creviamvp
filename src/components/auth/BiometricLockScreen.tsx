@@ -35,7 +35,7 @@ export function BiometricLockScreen({ credentialId, onUnlock }: Props) {
       <img
         src="/crevia-logo.png"
         alt="Crevia"
-        className="w-16 h-16 rounded-full ring-1 ring-white/10 mb-8"
+        className="w-16 h-16 rounded-2xl bg-zinc-950 ring-1 ring-white/10 mb-8"
       />
       <h1 className="font-vollkorn text-2xl font-bold text-white mb-2">Welcome back</h1>
       <p className="text-white/50 text-sm mb-10 text-center max-w-xs">

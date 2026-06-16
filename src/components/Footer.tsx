@@ -12,7 +12,7 @@ const Footer = () => {
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               className="flex items-center gap-2 mb-3 md:mb-4 cursor-pointer group"
             >
-              <img src="/crevia-logo.png" alt="Crevia" className="w-7 h-7 md:w-8 md:h-8 rounded-full ring-1 ring-border transition-transform duration-300 group-hover:scale-110" />
+              <img src="/crevia-logo.png" alt="Crevia" className="w-7 h-7 md:w-8 md:h-8 rounded-2xl bg-zinc-950 ring-1 ring-border transition-transform duration-300 group-hover:scale-110" />
               <span className="font-vollkorn text-lg md:text-xl font-bold transition-colors duration-300 group-hover:text-bronze">Crevia</span>
             </button>
             <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
