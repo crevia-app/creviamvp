@@ -800,10 +800,6 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setAutoShareInvoice(invoice)}>
-                          <Share2 className="h-4 w-4 mr-2" />
-                          Share
-                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleDuplicate(invoice)}>
                           <Copy className="h-4 w-4 mr-2" />
                           Duplicate
