@@ -40,7 +40,8 @@ export class ErrorBoundary extends React.Component<
       error.message.includes("Importing a module script failed") ||
       error.message.includes("Unable to preload CSS") ||
       error.message.includes("Loading chunk") ||
-      error.message.includes("ChunkLoadError");
+      error.message.includes("ChunkLoadError") ||
+      /Cannot access '.+' before initialization/.test(error.message);
     return { hasError: !isChunkError, isChunkError, message: error.message, stack: error.stack ?? "" };
   }
 
@@ -57,7 +58,8 @@ export class ErrorBoundary extends React.Component<
       error.message.includes("Importing a module script failed") ||
       error.message.includes("Unable to preload CSS") ||
       error.message.includes("Loading chunk") ||
-      error.message.includes("ChunkLoadError");
+      error.message.includes("ChunkLoadError") ||
+      /Cannot access '.+' before initialization/.test(error.message);
 
     if (isChunkError) {
       let last: string | null = null;
