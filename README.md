@@ -201,8 +201,8 @@ import { supabase } from "@/integrations/supabase/client";
 ### Prerequisites
 
 - Node.js ≥ 20
-- npm ≥ 10
-- Supabase CLI (`npm i -g supabase`)
+- **Bun ≥ 1.0** — the sole supported package manager ([install](https://bun.sh))
+- Supabase CLI (`bun add -g supabase`)
 - A Supabase project (free tier works for local dev)
 
 ### Steps
@@ -212,15 +212,15 @@ import { supabase } from "@/integrations/supabase/client";
 git clone https://github.com/your-org/creviamvp.git
 cd creviamvp
 
-# 2. Install dependencies
-npm install
+# 2. Install dependencies (use Bun — npm/yarn/pnpm will be rejected by the preinstall guard)
+bun install
 
 # 3. Configure environment (see Section 5)
 cp .env.example .env.local
 # Fill in the five variables
 
 # 4. Start the dev server
-npm run dev
+bun run dev
 # Runs at http://localhost:8080
 ```
 
@@ -228,11 +228,11 @@ npm run dev
 
 | Command | Description |
 |---|---|
-| `npm run dev` | Vite dev server on port 8080 |
-| `npm run build` | TypeScript check + Vite production build |
-| `npm run build:dev` | Vite build in development mode |
-| `npm run preview` | Preview production build locally |
-| `npm run lint` | ESLint |
+| `bun run dev` | Vite dev server on port 8080 |
+| `bun run build` | TypeScript check + Vite production build |
+| `bun run build:dev` | Vite build in development mode |
+| `bun run preview` | Preview production build locally |
+| `bun run lint` | ESLint |
 
 ---
 
@@ -873,7 +873,7 @@ vercel --prod
 # Or push to main — Vercel auto-deploys on merge if connected to GitHub
 ```
 
-**Build command:** `npm run build` (`tsc --noEmit && vite build`)  
+**Build command:** `bun run build` (`tsc --noEmit && vite build`)  
 **Output directory:** `dist/`
 
 ### Supabase
