@@ -3,7 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "bun@1.x",
   "scripts": {
+    "preinstall": "node -e \"if(process.env.npm_execpath && !process.env.npm_execpath.includes('bun')) { console.error('\\n\\u274C Use Bun: run `bun install` instead of npm/yarn/pnpm\\n'); process.exit(1); }\"",
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "build:dev": "vite build --mode development",

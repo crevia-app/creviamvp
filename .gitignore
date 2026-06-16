@@ -1,4 +1,43 @@
-# Logs
+# ── Dependencies ────────────────────────────────────────────────────────────
+node_modules
+
+# ── Build output ─────────────────────────────────────────────────────────────
+dist
+dist-ssr
+
+# ── Package manager lockfiles — Bun is the sole package manager ──────────────
+# bun.lockb is committed; all other lockfiles are rejected.
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+shrinkwrap.yaml
+
+# ── Environment & secrets ─────────────────────────────────────────────────────
+.env
+.env.local
+.env.*
+*.local
+
+# Extra safety net: common secret file names
+.secrets
+secrets.json
+service-account*.json
+*credentials*.json
+*keyfile*.json
+supabase_service_role*
+*_service_role_key*
+
+# ── Supabase local dev ────────────────────────────────────────────────────────
+supabase/.temp/
+supabase/functions/.env
+
+# ── AI session data & proprietary memory — not source code ───────────────────
+ai-memory/
+
+# ── FFmpeg WASM — copied from node_modules at build/dev time ─────────────────
+public/ffmpeg/
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
 logs
 *.log
 npm-debug.log*
@@ -7,12 +46,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
+# ── Editor & OS artefacts ────────────────────────────────────────────────────
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -22,10 +56,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-.env
-.env.local
-.env.*
-
-# FFmpeg WASM — copied from node_modules at build/dev time, not committed
-public/ffmpeg/
