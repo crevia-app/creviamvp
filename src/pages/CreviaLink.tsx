@@ -1044,6 +1044,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
     const embeddedTab = new URLSearchParams(location.search).get("section") || "profile";
     
     return (
+      <>
       <div className="bg-background">
         {/* Embedded Content with Preview */}
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 md:px-6 md:py-8 xl:flex-row xl:items-start">
@@ -1575,6 +1576,45 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
           document.body
         )}
       </div>
+
+      {/* Delete action link confirmation */}
+      <AlertDialog open={!!pendingDeleteId} onOpenChange={(o) => { if (!o) setPendingDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this link?</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => pendingDeleteId && executeDeleteButton(pendingDeleteId)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete social link confirmation */}
+      <AlertDialog open={!!pendingDeleteSocialId} onOpenChange={(o) => { if (!o) setPendingDeleteSocialId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove social link?</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => pendingDeleteSocialId && executeDeleteSocialIcon(pendingDeleteSocialId)}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      </>
     );
   }
 
