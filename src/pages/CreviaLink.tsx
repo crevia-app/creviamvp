@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { loadGoogleFont, CREVIA_LINK_FONTS } from "@/lib/loadFont";
 import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -196,6 +197,8 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
       background: { ...prev?.background, custom_bg_url: null, style: "solid" },
     }));
   };
+
+  useEffect(() => { loadGoogleFont(CREVIA_LINK_FONTS); }, []);
 
   useEffect(() => {
     checkAuth();

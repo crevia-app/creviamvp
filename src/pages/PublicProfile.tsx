@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { loadGoogleFont, CREVIA_LINK_FONTS } from "@/lib/loadFont";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,8 @@ const PublicProfile = () => {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<any>(undefined); // undefined = not yet checked
   const [ownerIsVerified, setOwnerIsVerified] = useState(false);
+
+  useEffect(() => { loadGoogleFont(CREVIA_LINK_FONTS); }, []);
 
   useEffect(() => {
     loadProfile();

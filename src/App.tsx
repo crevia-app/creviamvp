@@ -18,7 +18,6 @@ import { initGlobalErrorHandlers } from "./lib/error-logger";
 import { AutoUpdate } from "./components/pwa/AutoUpdate";
 import { CookieConsent } from "./components/CookieConsent";
 import { BiometricLockScreen } from "./components/auth/BiometricLockScreen";
-import AppLayout from "./components/navigation/AppLayout";
 import PublicPageWrapper from "./components/PublicPageWrapper";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AdminRoute from "./components/auth/AdminRoute";
@@ -27,6 +26,7 @@ import AdminRoute from "./components/auth/AdminRoute";
 import Home from "./pages/Home";
 
 // Lazy-loaded — split into separate chunks to reduce initial bundle
+const AppLayout        = lazy(() => import("./components/navigation/AppLayout"));
 const Auth             = lazy(() => import("./pages/Auth"));
 const AuthCallback     = lazy(() => import("./pages/AuthCallback"));
 const NotFound         = lazy(() => import("./pages/NotFound"));
