@@ -727,6 +727,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 <PopoverContent className="p-0 w-auto" side="right" align="start">
                   <LinkIconPicker
                     onSelect={(v) => handleLinkIconSelect(v, button.id)}
+                    currentIcon={button.icon}
                   />
                 </PopoverContent>
               </Popover>
@@ -769,6 +770,7 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
             <PopoverContent className="p-0 w-auto" side="top" align="start">
               <LinkIconPicker
                 onSelect={(v) => handleLinkIconSelect(v, "new")}
+                currentIcon={newLinkIcon || undefined}
               />
             </PopoverContent>
           </Popover>
