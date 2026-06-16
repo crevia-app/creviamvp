@@ -132,6 +132,9 @@ export default defineConfig({
     })
   ],
   optimizeDeps: {
+    // recharts pre-bundled via esbuild so its internal circular deps are flattened
+    // before Rollup sees them, preventing TDZ crashes in vendor-charts.
+    include: ['recharts'],
     // @ffmpeg packages are ES modules with top-level await — Vite must not pre-bundle them.
     exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
   },
@@ -146,7 +149,8 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (!id.includes('node_modules')) return;
-          if (id.includes('recharts') || id.includes('d3-') || id.includes('victory-vendor')) return 'vendor-charts';
+          if (id.includes('victory-vendor')) return 'vendor-victory';
+          if (id.includes('recharts') || id.includes('d3-')) return 'vendor-charts';
           if (id.includes('html2canvas') || id.includes('jspdf'))     return 'vendor-pdf';
           if (id.includes('framer-motion'))                            return 'vendor-motion';
           if (id.includes('@supabase'))                                return 'vendor-supabase';
