@@ -145,7 +145,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
   const [newLinkUrl, setNewLinkUrl] = useState("");
   const [newLinkIcon, setNewLinkIcon] = useState("");
   const [iconPickerFor, setIconPickerFor] = useState<string | null>(null); // "new" | buttonId | null
-  const [uploadingLinkIcon, setUploadingLinkIcon] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [pendingDeleteSocialId, setPendingDeleteSocialId] = useState<string | null>(null);
   const [addingLink, setAddingLink] = useState(false);
@@ -342,31 +341,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
       setButtons(prev => prev.map(b => b.id === target ? { ...b, icon: iconValue } : b));
     }
     setIconPickerFor(null);
-  };
-
-  const handleLinkIconUpload = async (file: File, target: string) => {
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "Image too large", description: "Max size is 5MB.", variant: "destructive" });
-      return;
-    }
-    setUploadingLinkIcon(true);
-    const ext = file.name.split('.').pop() || 'jpg';
-    const path = `link-icons/${linkProfile.id}/${target}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
-    if (error) {
-      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
-      setUploadingLinkIcon(false);
-      return;
-    }
-    const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
-    if (target === "new") {
-      setNewLinkIcon(publicUrl);
-    } else {
-      await supabase.from("link_buttons").update({ icon: publicUrl }).eq("id", target);
-      setButtons(prev => prev.map(b => b.id === target ? { ...b, icon: publicUrl } : b));
-    }
-    setIconPickerFor(null);
-    setUploadingLinkIcon(false);
   };
 
   const handleDeleteButton = (id: string) => setPendingDeleteId(id);
@@ -753,8 +727,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
                 <PopoverContent className="p-0 w-auto" side="right" align="start">
                   <LinkIconPicker
                     onSelect={(v) => handleLinkIconSelect(v, button.id)}
-                    onUpload={(f) => handleLinkIconUpload(f, button.id)}
-                    uploading={uploadingLinkIcon}
                   />
                 </PopoverContent>
               </Popover>
@@ -797,8 +769,6 @@ const CreviaLink = ({ isEmbedded = false }: CreviaLinkProps) => {
             <PopoverContent className="p-0 w-auto" side="top" align="start">
               <LinkIconPicker
                 onSelect={(v) => handleLinkIconSelect(v, "new")}
-                onUpload={(f) => handleLinkIconUpload(f, "new")}
-                uploading={uploadingLinkIcon}
               />
             </PopoverContent>
           </Popover>
