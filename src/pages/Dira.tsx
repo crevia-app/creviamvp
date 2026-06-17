@@ -547,6 +547,9 @@ const Dira = () => {
       el.scrollTop = el.scrollHeight;
       scrollRafRef.current = null;
     });
+    return () => {
+      if (scrollRafRef.current !== null) cancelAnimationFrame(scrollRafRef.current);
+    };
   }, [messages, isStreaming]);
 
   // ── Scroll path 2: active streaming — rAF-throttled ─────────────────────
@@ -561,6 +564,9 @@ const Dira = () => {
       scrollContainerRef.current?.scrollTo({ top: scrollContainerRef.current.scrollHeight });
       scrollRafRef.current = null;
     });
+    return () => {
+      if (scrollRafRef.current !== null) cancelAnimationFrame(scrollRafRef.current);
+    };
   }, [streamingDisplay, isStreaming]);
 
   // Reset textarea height whenever input is cleared (after send or new chat).
