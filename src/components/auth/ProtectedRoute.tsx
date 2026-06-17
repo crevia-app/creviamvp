@@ -29,10 +29,9 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
         if (!profile?.terms_accepted_at) {
           // Existing user whose record pre-dates this column — backfill silently
-          supabase.from("profiles")
+          await supabase.from("profiles")
             .update({ terms_accepted_at: new Date().toISOString() })
-            .eq("id", session.user.id)
-            .catch(() => {});
+            .eq("id", session.user.id);
         }
       }
 
