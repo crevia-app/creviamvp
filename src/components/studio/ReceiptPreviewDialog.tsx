@@ -121,7 +121,7 @@ const ReceiptPreviewDialog = ({ open, onOpenChange, invoice }: ReceiptPreviewDia
         <div className="flex-shrink-0 z-10 bg-background/95 backdrop-blur-sm border-b px-3 pb-2 flex items-center gap-2 [padding-top:max(12px,env(safe-area-inset-top))]">
           <DialogTitle className="font-vollkorn text-sm sm:text-base truncate min-w-0 flex-1">Payment Receipt</DialogTitle>
           <div className="flex items-center gap-1 flex-shrink-0">
-            <Button variant="outline" size="sm" onClick={shareSync} disabled={sharing || pregenerating} className="h-8 w-8 p-0" title="Share PDF">
+            <Button variant="outline" size="sm" onClick={shareSync} disabled={sharing} className="h-8 w-8 p-0" title="Share PDF">
               <Share2 className="h-3.5 w-3.5" />
             </Button>
             <Button variant="outline" size="sm" onClick={download} disabled={downloading} className="h-8 w-8 p-0" title="Download PDF">

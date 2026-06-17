@@ -591,7 +591,7 @@ const InvoicePreviewDialog = ({ open, onOpenChange, invoice, autoShare = false }
                     size="sm"
                     className="h-8 w-8 p-0"
                     title="Share PDF"
-                    disabled={sharing || pregenerating}
+                    disabled={sharing}
                     onClick={shareSync}
                   >
                     <Share2 className="h-3.5 w-3.5" />
