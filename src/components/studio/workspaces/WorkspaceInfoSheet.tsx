@@ -357,7 +357,7 @@ const WorkspaceInfoSheet = ({
         className="w-full sm:max-w-md p-0 flex flex-col gap-0 overflow-hidden [&>button:last-child]:hidden"
       >
         {/* ── Header ── */}
-        <div className="flex flex-col items-center pt-6 pb-4 px-5 border-b border-border/50 flex-shrink-0 gap-3 bg-card/30">
+        <div className="flex flex-col items-center pt-[max(env(safe-area-inset-top,0px),1.5rem)] pb-4 px-5 border-b border-border/50 flex-shrink-0 gap-3 bg-card/30">
           <SheetTitle className="sr-only">Workspace Info</SheetTitle>
 
           {/* Group avatar — owner and admins can change by clicking/tapping */}

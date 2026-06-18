@@ -41,6 +41,7 @@
    The @media block below overwrites it with the real value on mobile. */
 :root {
   --nav-bottom-offset: 0px;
+  --topbar-offset: calc(3.5rem + env(safe-area-inset-top, 0px));
 }
 
 /* Scale down base font on mobile so all rem-based text is proportionally smaller */

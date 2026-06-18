@@ -1930,7 +1930,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
       className="relative flex w-full max-w-full flex-col overflow-hidden bg-background overscroll-none"
       style={{
         height: typeof window !== "undefined" && window.innerWidth < 768
-          ? "var(--vp-height, 100dvh)"
+          ? "calc(var(--vp-height, 100dvh) - var(--topbar-offset, 3.5rem))"
           : "100%",
       }}
     >
@@ -2296,7 +2296,7 @@ const CreviaChat = ({ externalRoomId, hideRoomList, onBack, onOpenGroupInfo }: C
               <div
                 ref={scrollContainerRef}
                 className="flex-1 w-full max-w-full min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain touch-pan-y p-3 md:p-4"
-                style={{ overflowAnchor: "none", contain: "strict", maxHeight: "var(--vp-height, unset)" }}
+                style={{ overflowAnchor: "none", contain: "strict" }}
                 onScroll={() => {
                   const el = scrollContainerRef.current;
                   if (!el) return;

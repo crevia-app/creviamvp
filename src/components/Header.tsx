@@ -70,7 +70,7 @@ const Header = () => {
                 <Menu className="!h-8 !w-8" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[280px] sm:w-[320px] bg-background">
+            <SheetContent side="right" className="w-[280px] sm:w-[320px] bg-background pt-[max(env(safe-area-inset-top,0px),1.5rem)]">
               <nav className="flex flex-col gap-6 mt-8">
                 <Link
                   to="/"
