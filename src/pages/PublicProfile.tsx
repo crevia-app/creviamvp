@@ -68,7 +68,9 @@ const PublicProfile = () => {
       const { data: { session } } = await supabase.auth.getSession();
       const isOwner = session?.user?.id === linkProfile.user_id;
       if (!isOwner) {
-        await supabase.rpc("increment_link_visit", { profile_id: linkProfile.id });
+        // Insert into the events queue — concurrent inserts never block each other.
+        // A pg_cron job flushes these into link_profiles.total_visits every minute.
+        await supabase.from("link_visit_events").insert({ profile_id: linkProfile.id });
       }
 
       const [{ data: buttonData }, { data: socialData }] = await Promise.all([
