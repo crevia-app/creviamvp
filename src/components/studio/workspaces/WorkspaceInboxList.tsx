@@ -453,7 +453,7 @@ const WorkspaceInboxList = ({
                             <DropdownMenuTrigger asChild>
                               <button
                                 onClick={(e) => e.stopPropagation()}
-                                className="mr-1.5 w-6 h-6 flex items-center justify-center rounded-lg opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-opacity [@media(hover:hover)]:hover:bg-muted text-muted-foreground/60 [@media(hover:hover)]:hover:text-foreground flex-shrink-0"
+                                className="mr-1.5 w-6 h-6 flex items-center justify-center rounded-lg opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-opacity [@media(hover:hover)]:hover:bg-muted text-muted-foreground/60 [@media(hover:hover)]:hover:text-foreground flex-shrink-0"
                               >
                                 <MoreHorizontal className="w-3.5 h-3.5" />
                               </button>

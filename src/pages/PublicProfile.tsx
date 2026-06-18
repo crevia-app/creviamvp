@@ -26,6 +26,17 @@ const PublicProfile = () => {
     loadProfile();
   }, [username]);
 
+  // Back-navigation via bfcache restores the frozen page without re-running
+  // useEffects. The pageshow event fires on both normal load and bfcache restore;
+  // e.persisted === true only for the latter — re-fetch so edits appear instantly.
+  useEffect(() => {
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) loadProfile();
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, [username]);
+
   const loadProfile = async () => {
     if (!username) return;
 
@@ -43,20 +54,15 @@ const PublicProfile = () => {
 
     const { data: linkProfile } = await supabase
       .from("link_profiles")
-      .select("*")
+      .select("*, profiles_public(is_verified)")
       .eq("username", cleanUsername)
       .single();
 
     if (linkProfile) {
       setProfile(linkProfile);
-
-      // Fetch is_verified from the anon-accessible profiles_public view
-      const { data: pubProfile } = await supabase
-        .from("profiles_public")
-        .select("is_verified")
-        .eq("id", linkProfile.user_id)
-        .single();
-      setOwnerIsVerified(pubProfile?.is_verified ?? false);
+      // is_verified is fetched in the same query via the FK join — eliminates
+      // a second round-trip that Instagram IAB often blocks or delays.
+      setOwnerIsVerified((linkProfile as any).profiles_public?.is_verified ?? false);
 
       // Only count visits from non-owners (skip self-views)
       const { data: { session } } = await supabase.auth.getSession();
