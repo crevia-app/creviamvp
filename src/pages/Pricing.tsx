@@ -11,6 +11,8 @@ import Footer from "@/components/Footer";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/hooks/use-subscription";
+import { PaymentMethodModal } from "@/components/subscription/PaymentMethodModal";
 
 const fmt = (n: number) => n === 0 ? "$0" : `$${n % 1 === 0 ? n.toLocaleString() : n.toFixed(2)}`;
 
@@ -98,6 +100,12 @@ const Pricing = () => {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isPaystackLoading, setIsPaystackLoading] = useState<string | null>(null);
+  const { isPro, isBusiness } = useSubscription();
+  const [paymentModal, setPaymentModal] = useState<{
+    planKey: "pro" | "business";
+    monthlyAmount: number;
+    yearlyAmount: number;
+  } | null>(null);
   const [proPrice, setProPrice]               = useState(14.99);
   const [businessPrice, setBusinessPrice]     = useState(DEFAULT_BUSINESS_PRICE);
   useEffect(() => {
@@ -117,15 +125,20 @@ const Pricing = () => {
       });
   }, []);
 
-  const handleUpgrade = async (planKey: "pro" | "business", monthlyAmount: number, yearlyAmount: number) => {
+  const handleUpgrade = (planKey: "pro" | "business", monthlyAmount: number, yearlyAmount: number) => {
     if (!isLoggedIn) { navigate("/auth"); return; }
-    setIsPaystackLoading(planKey);
+    setPaymentModal({ planKey, monthlyAmount, yearlyAmount });
+  };
 
+  const handlePaymentMethodSelect = async (method: "card" | "mobile_money") => {
+    if (!paymentModal) return;
+    const { planKey, monthlyAmount, yearlyAmount } = paymentModal;
+    setPaymentModal(null);
+    setIsPaystackLoading(planKey);
     const amount = billingCycle === "yearly" ? yearlyAmount : monthlyAmount;
     const { data: { user } } = await supabase.auth.getUser();
     const email = user?.email;
     if (!email) { setIsPaystackLoading(null); return; }
-
     const w = window as unknown as {
       PaystackPop: { setup: (opts: Record<string, unknown>) => { openIframe: () => void } }
     };
@@ -133,12 +146,10 @@ const Pricing = () => {
       key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
       email,
       amount: amount * 100,
-      currency: "USD",
+      currency: method === "card" ? "USD" : "KES",
+      channels: method === "card" ? ["card"] : ["mobile_money"],
       metadata: { plan: planKey, billing_cycle: billingCycle },
-      callback: () => {
-        navigate("/profile/payments-billing");
-        setIsPaystackLoading(null);
-      },
+      callback: () => { navigate("/profile/payments-billing"); setIsPaystackLoading(null); },
       onClose: () => setIsPaystackLoading(null),
     });
     handler.openIframe();
@@ -363,7 +374,11 @@ const Pricing = () => {
                   {plan.planKey ? (
                     <Button
                       onClick={() => handleUpgrade(plan.planKey!, plan.monthlyAmount, plan.yearlyAmount)}
-                      disabled={isPaystackLoading !== null}
+                      disabled={
+                        isPaystackLoading !== null ||
+                        (plan.planKey === "pro" && isPro) ||
+                        (plan.planKey === "business" && isBusiness)
+                      }
                       className={`w-full font-poppins font-semibold ${
                         plan.highlighted
                           ? "bg-bronze hover:bg-bronze-dark text-white"
@@ -371,11 +386,12 @@ const Pricing = () => {
                       }`}
                       size="lg"
                     >
-                      {isPaystackLoading === plan.planKey ? (
-                        "Processing..."
-                      ) : (
-                        <>{plan.cta} <ArrowRight className="ml-2 w-4 h-4" /></>
-                      )}
+                      {(plan.planKey === "pro" && isPro) || (plan.planKey === "business" && isBusiness)
+                        ? "Current Plan"
+                        : isPaystackLoading === plan.planKey
+                          ? "Processing..."
+                          : <>{plan.cta} <ArrowRight className="ml-2 w-4 h-4" /></>
+                      }
                     </Button>
                   ) : (
                     <Link to={isLoggedIn ? "/dira" : "/auth?mode=signup"}>
@@ -454,6 +470,16 @@ const Pricing = () => {
       </section>
 
       <Footer />
+
+      {paymentModal && (
+        <PaymentMethodModal
+          planKey={paymentModal.planKey}
+          amount={billingCycle === "yearly" ? paymentModal.yearlyAmount : paymentModal.monthlyAmount}
+          billingCycle={billingCycle}
+          onSelect={handlePaymentMethodSelect}
+          onClose={() => setPaymentModal(null)}
+        />
+      )}
     </div>
   );
 };
