@@ -145,7 +145,7 @@ export default defineConfig({
     })
   ],
   optimizeDeps: {
-    include: ['recharts', 'victory-vendor'],
+    include: ['recharts'],
     // @ffmpeg packages are ES modules with top-level await — Vite must not pre-bundle them.
     exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
   },
