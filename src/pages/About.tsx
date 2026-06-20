@@ -38,15 +38,15 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
       {!isEmbedded && (
         <SEO
           title="About Crevia"
-          description="Learn about Crevia — the business operations platform built for creatives and brands to own their story, scale their operations, and build a business that runs as well as it creates."
-          keywords="about Crevia, Crevia company, business operations platform, creative business infrastructure, who is Crevia"
+          description="Learn about Crevia — the business operations platform built for businesses and brands to own their story, scale their operations, and build a business that runs as well as it creates."
+          keywords="about Crevia, Crevia company, business operations platform, business infrastructure, who is Crevia"
           url="/about"
           jsonLd={{
             "@context": "https://schema.org",
             "@type": "AboutPage",
             "name": "About Crevia",
             "url": "https://crevia.app/about",
-            "description": "Learn about Crevia — the business operations platform for creatives and brands.",
+            "description": "Learn about Crevia — the business operations platform for businesses and brands.",
             "about": {
               "@type": "Organization",
               "name": "Crevia",
@@ -86,7 +86,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
           </ScrollReveal>
           <ScrollReveal delay={0.2}>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Businesses and creatives deserve infrastructure that works as hard as they do.
+              Businesses deserve infrastructure that works as hard as they do.
               We are building it.
             </p>
           </ScrollReveal>
@@ -153,7 +153,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                 </h2>
                 <div className="h-1 w-16 bg-gradient-to-r from-bronze to-bronze-light rounded-full" />
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  Those dots in our logo are not decoration. Each one is a creative, a brand,
+                  Those dots in our logo are not decoration. Each one is a business, a brand,
                   a story in motion. Some at the start. Some mid-scale. All equal in what they
                   deserve — the infrastructure to be taken seriously. We do not measure value
                   by follower counts. We measure it by businesses built and money moved.
@@ -269,7 +269,7 @@ const About = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                   Our Mission
                 </p>
                 <h3 className="font-vollkorn text-2xl md:text-3xl font-bold">
-                  Give businesses and creatives the infrastructure to operate, close deals, and scale — without the chaos.
+                  Give businesses the infrastructure to operate, close deals, and scale — without the chaos.
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
                   Dira handles the intelligence. Crevia Studio handles the operations.

@@ -35,8 +35,8 @@ const Home = () => {
       <SEO
         url="/"
         title="Crevia — Invoice, Collaborate & Grow Your Business with AI"
-        description="Crevia is the all-in-one business platform for creatives and brands. Send professional invoices, manage client workspaces, build your link-in-bio page, and unlock Dira AI — your always-on business intelligence. Free to start."
-        keywords="invoicing software Kenya, online invoice generator, freelance invoice maker, business management platform, AI business assistant, Dira AI, link in bio tool, client workspace, creative business operations, Crevia app"
+        description="Crevia is the all-in-one business platform for businesses and brands. Send professional invoices, manage client workspaces, build your link-in-bio page, and unlock Dira AI — your always-on business intelligence. Free to start."
+        keywords="invoicing software Kenya, online invoice generator, freelance invoice maker, business management platform, AI business assistant, Dira AI, link in bio tool, client workspace, business operations, Crevia app"
       />
       <Header />
 
@@ -139,7 +139,7 @@ const Home = () => {
           </ScrollReveal>
           <ScrollReveal delay={0.12}>
             <p className="text-lg md:text-xl text-white leading-relaxed max-w-3xl mx-auto">
-              Talent is everywhere. What most businesses and creatives lack is the
+              Talent is everywhere. What most businesses lack is the
               infrastructure to convert it into structured, scalable revenue.
               Crevia closes that gap.
             </p>
@@ -177,8 +177,8 @@ const Home = () => {
                   <span className="text-gradient-bronze">Your AI Chief of Staff.</span>
                 </h3>
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  Whether you're a business scaling your operations or a creative building
-                  your business — Dira is the intelligent partner in your corner.
+                  Whether you're a business scaling your operations or a brand building
+                  your empire — Dira is the intelligent partner in your corner.
                   Strategy, scoping, and guidance, exactly when you need it.
                 </p>
               </div>
@@ -248,8 +248,7 @@ const Home = () => {
                 <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
                   Businesses use Crevia to brief, align, and deliver at scale — structured workflows,
                   clean invoices, and a vendor experience that kills the back-and-forth that costs
-                  momentum. Creatives use it to show up like the business they are, with proposals
-                  and invoices that command respect. One platform. Both sides. No chaos.
+                  momentum. Proposals and invoices that command respect. One platform. No chaos.
                 </p>
               </div>
             </div>

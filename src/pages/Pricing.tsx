@@ -150,7 +150,7 @@ const Pricing = () => {
     <div className="min-h-dvh bg-background page-bg-warm overflow-x-clip">
       <SEO
         title="Pricing"
-        description="Simple, transparent pricing for creatives and brands. Free plan forever. Crevia Pro from $14.99/month — unlimited invoices, 500 Dira AI credits, premium analytics. Business from $74.99/month."
+        description="Simple, transparent pricing for businesses and brands. Free plan forever. Crevia Pro from $14.99/month — unlimited invoices, 500 Dira AI credits, premium analytics. Business from $74.99/month."
         keywords="Crevia pricing, invoicing software price, AI business tool cost, Crevia Pro plan, Crevia Business plan, affordable invoicing Kenya"
         url="/pricing"
         jsonLd={{
