@@ -19,6 +19,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useBottomNavVisibility } from "@/hooks/use-bottom-nav-visibility";
 import { usePWAInstall } from "@/hooks/use-pwa-install";
 import { IOSInstallGuide } from "@/components/pwa/IOSInstallGuide";
+import { ManualInstallGuide } from "@/components/pwa/ManualInstallGuide";
 import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 import { useSubscription } from "@/hooks/use-subscription";
 
@@ -116,7 +117,7 @@ const MobileBottomNav = () => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const { visible }               = useBottomNavVisibility();
   const subscription              = useSubscription();
-  const { canInstall, isIOS, install, showIOSGuide, setShowIOSGuide } = usePWAInstall();
+  const { canInstall, isIOS, install, showIOSGuide, setShowIOSGuide, showManualGuide, setShowManualGuide } = usePWAInstall();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -411,6 +412,7 @@ const MobileBottomNav = () => {
     {/* iOS step-by-step install guide — rendered outside the nav so it can
         stack above everything without z-index conflicts */}
     <IOSInstallGuide open={showIOSGuide} onClose={() => setShowIOSGuide(false)} />
+    <ManualInstallGuide open={showManualGuide} onClose={() => setShowManualGuide(false)} />
     </>
   );
 };

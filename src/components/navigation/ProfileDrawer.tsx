@@ -25,6 +25,7 @@ import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 import { usePWAInstall } from "@/hooks/use-pwa-install";
 import { Download } from "lucide-react";
 import { IOSInstallGuide } from "@/components/pwa/IOSInstallGuide";
+import { ManualInstallGuide } from "@/components/pwa/ManualInstallGuide";
 
 interface ProfileDrawerProps {
   isOpen: boolean;
@@ -36,7 +37,7 @@ const ProfileDrawer = ({ isOpen, onClose, profile }: ProfileDrawerProps) => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const subscription = useSubscription();
-  const { canInstall, install, showIOSGuide, setShowIOSGuide } = usePWAInstall();
+  const { canInstall, install, showIOSGuide, setShowIOSGuide, showManualGuide, setShowManualGuide } = usePWAInstall();
 
   const handleSignOut = async () => {
     await signOutWithCleanup();
@@ -148,6 +149,7 @@ const ProfileDrawer = ({ isOpen, onClose, profile }: ProfileDrawerProps) => {
       </SheetContent>
 
       <IOSInstallGuide open={showIOSGuide} onClose={() => setShowIOSGuide(false)} />
+      <ManualInstallGuide open={showManualGuide} onClose={() => setShowManualGuide(false)} />
     </Sheet>
   );
 };

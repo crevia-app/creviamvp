@@ -18,6 +18,7 @@ import {
 import { useLanguage } from "@/i18n/LanguageContext";
 import { usePWAInstall } from "@/hooks/use-pwa-install";
 import { IOSInstallGuide } from "@/components/pwa/IOSInstallGuide";
+import { ManualInstallGuide } from "@/components/pwa/ManualInstallGuide";
 import { useSubscription } from "@/hooks/use-subscription";
 import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 
@@ -51,7 +52,7 @@ interface MainSidebarProps {
 const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
   const location = useLocation();
   const { t } = useLanguage();
-  const { canInstall, isIOS, install, showIOSGuide, setShowIOSGuide } = usePWAInstall();
+  const { canInstall, isIOS, install, showIOSGuide, setShowIOSGuide, showManualGuide, setShowManualGuide } = usePWAInstall();
   const subscription = useSubscription();
 
   const navItems = [
@@ -179,6 +180,7 @@ const MainSidebar = ({ profile, onProfileClick }: MainSidebarProps) => {
 
     {/* iOS guide rendered at root so it can layer above the sidebar */}
     <IOSInstallGuide open={showIOSGuide} onClose={() => setShowIOSGuide(false)} />
+    <ManualInstallGuide open={showManualGuide} onClose={() => setShowManualGuide(false)} />
     </>
   );
 };

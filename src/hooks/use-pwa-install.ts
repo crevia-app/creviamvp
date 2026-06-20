@@ -16,10 +16,12 @@ export function usePWAInstall() {
   const [prompt, setPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [showIOSGuide, setShowIOSGuide] = useState(false);
+  const [showManualGuide, setShowManualGuide] = useState(false);
 
   const ios = typeof navigator !== "undefined" && detectIOS();
 
   useEffect(() => {
+    // Already running as installed PWA — hide the button immediately
     if (isStandalone()) {
       setIsInstalled(true);
       return;
@@ -44,17 +46,31 @@ export function usePWAInstall() {
       setShowIOSGuide(true);
       return;
     }
-    if (!prompt) return;
-    await prompt.prompt();
-    const { outcome } = await prompt.userChoice;
-    if (outcome === "accepted") {
-      setIsInstalled(true);
-      setPrompt(null);
+    if (prompt) {
+      await prompt.prompt();
+      const { outcome } = await prompt.userChoice;
+      if (outcome === "accepted") {
+        setIsInstalled(true);
+        setPrompt(null);
+      }
+      return;
     }
+    // No native prompt available (Firefox, Safari desktop, Chrome after dismissal, etc.)
+    // Show manual browser-specific instructions
+    setShowManualGuide(true);
   };
 
-  // Show the button when: Android/Chrome has a prompt, OR on iOS (not yet installed)
-  const canInstall = !isInstalled && (!!prompt || ios);
+  // Show whenever the app is not already installed — no longer gated on browser prompt
+  const canInstall = !isInstalled;
 
-  return { canInstall, isInstalled, isIOS: ios, install, showIOSGuide, setShowIOSGuide };
+  return {
+    canInstall,
+    isInstalled,
+    isIOS: ios,
+    install,
+    showIOSGuide,
+    setShowIOSGuide,
+    showManualGuide,
+    setShowManualGuide,
+  };
 }
