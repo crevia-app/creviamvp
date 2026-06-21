@@ -87,15 +87,14 @@ export default defineConfig({
             },
           },
           {
-            // Crevia Link public profile tables — NetworkFirst so live edits are
-            // always reflected immediately. Stale-while-revalidate would serve a
-            // cached snapshot and only update in the background, breaking the
-            // expectation that saved changes appear instantly on the public link.
+            // Crevia Link public profile tables — NetworkFirst with no timeout so
+            // mobile users on slow connections always get real data rather than a
+            // cache miss. fetch() rejects immediately when there is no connectivity,
+            // so the cache fallback still kicks in instantly on offline devices.
             urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/.*(?:link_profiles|link_buttons|link_social_icons)/i,
             handler: 'NetworkFirst' as const,
             options: {
               cacheName: 'link-profile-cache',
-              networkTimeoutSeconds: 3,
               expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 },
             },
           },

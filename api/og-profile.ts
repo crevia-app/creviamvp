@@ -72,6 +72,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res
     .setHeader("Content-Type", "text/html; charset=utf-8")
     .setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate=86400")
+    .setHeader("Vary", "User-Agent")
     .status(200)
     .send(html);
 }

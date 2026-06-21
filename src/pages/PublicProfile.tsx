@@ -17,6 +17,7 @@ const PublicProfile = () => {
   const [buttons, setButtons] = useState<any[]>([]);
   const [socialIcons, setSocialIcons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [networkError, setNetworkError] = useState(false);
   const [session, setSession] = useState<any>(undefined); // undefined = not yet checked
   const [ownerIsVerified, setOwnerIsVerified] = useState(false);
 
@@ -52,17 +53,28 @@ const PublicProfile = () => {
 
     if (!cleanUsername) return;
 
-    const { data: linkProfile } = await supabase
+    const { data: linkProfile, error: profileError } = await supabase
       .from("link_profiles")
-      .select("*, profiles_public(is_verified)")
+      .select("*")
       .eq("username", cleanUsername)
       .single();
 
+    // PGRST116 = no rows found (profile genuinely doesn't exist).
+    // Any other error is a network/server problem — show retry, not "doesn't exist".
+    if (profileError && profileError.code !== "PGRST116") {
+      setNetworkError(true);
+      setLoading(false);
+      return;
+    }
+
     if (linkProfile) {
       setProfile(linkProfile);
-      // is_verified is fetched in the same query via the FK join — eliminates
-      // a second round-trip that Instagram IAB often blocks or delays.
-      setOwnerIsVerified((linkProfile as any).profiles_public?.is_verified ?? false);
+      const { data: verifiedData } = await supabase
+        .from("profiles_public")
+        .select("is_verified")
+        .eq("id", linkProfile.user_id)
+        .maybeSingle();
+      setOwnerIsVerified(verifiedData?.is_verified ?? false);
 
       // Only count visits from non-owners (skip self-views)
       const { data: { session } } = await supabase.auth.getSession();
@@ -259,6 +271,23 @@ const PublicProfile = () => {
     return (
       <div className="min-h-dvh flex items-center justify-center bg-black text-white">
         <p className="font-poppins">Loading...</p>
+      </div>
+    );
+  }
+
+  if (networkError) {
+    return (
+      <div className="min-h-dvh flex items-center justify-center bg-black text-white">
+        <div className="text-center px-6">
+          <h1 className="font-vollkorn text-3xl font-bold mb-3">Couldn't load this profile</h1>
+          <p className="font-poppins text-gray-400 mb-6">Check your connection and try again.</p>
+          <button
+            onClick={() => { setNetworkError(false); setLoading(true); loadProfile(); }}
+            className="px-6 py-2.5 rounded-full bg-white text-black font-semibold text-sm hover:bg-zinc-100 transition-colors"
+          >
+            Try again
+          </button>
+        </div>
       </div>
     );
   }
