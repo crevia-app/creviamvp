@@ -79,6 +79,29 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
+    // Idempotency check — Paystack retries webhooks on non-2xx responses and
+    // occasionally on network issues. Guard against double-processing by checking
+    // if this reference + event type was already handled. Return 200 immediately
+    // so Paystack stops retrying — do not re-process anything.
+    const eventRef = event.data?.reference ?? null;
+    if (eventRef) {
+      const { data: alreadyProcessed } = await supabase
+        .from('webhook_events')
+        .select('id')
+        .eq('source', 'paystack')
+        .eq('event_type', event.event)
+        .eq('reference', eventRef)
+        .maybeSingle();
+
+      if (alreadyProcessed) {
+        console.log(`[webhook] duplicate skipped event=${event.event} ref=${eventRef}`);
+        return new Response(JSON.stringify({ received: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     // Audit log — record every verified webhook event
     await supabase.from('webhook_events').insert({
       source:      'paystack',

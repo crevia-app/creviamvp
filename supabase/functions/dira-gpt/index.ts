@@ -849,6 +849,25 @@ serve(async (req) => {
         }))
       : [];
 
+    // ── Hard daily safety net ────────────────────────────────────────────────
+    // consume_dira_action handles monthly quotas but Business plan users have a
+    // NULL limit (unlimited). This hard cap of 300 calls/day applies to ALL plans
+    // and stops a compromised or abusive account from draining OpenAI spend.
+    // No legitimate user exceeds 300 Dira calls in a single day.
+    const { data: hardCapOk } = await supabase.rpc('check_rate_limit', {
+      p_user_id:     user.id,
+      p_endpoint:    'dira-gpt',
+      p_limit:       300,
+      p_window_secs: 86400,
+    });
+    if (!hardCapOk) {
+      supabase.rpc('log_security_event', { p_event_type: 'rate_limit', p_user_id: user.id, p_endpoint: 'dira-gpt-hard-cap', p_detail: 'Hard daily cap of 300 exceeded' }).catch(() => {});
+      console.warn(`[security] hard_cap_exceeded endpoint=dira-gpt user=${user.id}`);
+      return new Response(JSON.stringify({ error: 'Daily limit exceeded. Please try again tomorrow.' }), {
+        status: 429, headers: { ...cors, 'Content-Type': 'application/json' },
+      });
+    }
+
     // ── Fire all independent pre-stream operations in parallel ───────────────
     // Rate-limit gate, profile fetch, vector memory search, and conversation
     // summary all run simultaneously — previously this was a sequential waterfall
