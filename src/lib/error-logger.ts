@@ -21,12 +21,9 @@ function shouldSkip(message: string): boolean {
 async function getUserContext() {
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    return {
-      user_id: session?.user?.id ?? null,
-      user_email: session?.user?.email ?? null,
-    };
+    return { user_id: session?.user?.id ?? null };
   } catch {
-    return { user_id: null, user_email: null };
+    return { user_id: null };
   }
 }
 
@@ -38,10 +35,9 @@ export async function logError(
 ) {
   if (!message || shouldSkip(message)) return;
   try {
-    const { user_id, user_email } = await getUserContext();
+    const { user_id } = await getUserContext();
     await supabase.from("error_logs" as any).insert({
       user_id,
-      user_email,
       message: String(message).slice(0, 1000),
       stack: stack ? String(stack).slice(0, 5000) : null,
       source,
