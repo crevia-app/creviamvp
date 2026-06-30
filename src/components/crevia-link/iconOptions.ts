@@ -21,7 +21,7 @@ import type { IconType } from "react-icons";
 import {
   SiInstagram, SiX, SiFacebook, SiYoutube, SiGithub, SiTwitch,
   SiTiktok, SiSnapchat, SiDiscord, SiReddit, SiPinterest,
-  SiWhatsapp, SiTelegram, SiSignal, SiSlack, SiThreads, SiMastodon, SiBluesky,
+  SiWhatsapp, SiTelegram, SiSignal, SiThreads, SiMastodon, SiBluesky,
   SiSpotify, SiApplemusic, SiSoundcloud, SiVimeo,
   SiBehance, SiDribbble, SiMedium, SiSubstack, SiPatreon, SiLoom, SiProducthunt,
   SiPaypal, SiStripe, SiGumroad, SiEtsy, SiShopify,
@@ -72,7 +72,7 @@ export const iconOptions: IconOption[] = [
   { value: "whatsapp",    label: "WhatsApp",  icon: MessageCircle, siIcon: SiWhatsapp, category: "Messaging" },
   { value: "telegram",    label: "Telegram",  icon: Send,          siIcon: SiTelegram, category: "Messaging" },
   { value: "signal",      label: "Signal",    icon: Wifi,          siIcon: SiSignal,   category: "Messaging" },
-  { value: "slack",       label: "Slack",     icon: MessageSquare, siIcon: SiSlack,    category: "Messaging" },
+  { value: "slack",       label: "Slack",     icon: MessageSquare, category: "Messaging" },
   { value: "discord-msg", label: "Discord",   icon: MessageSquare, siIcon: SiDiscord,  category: "Messaging" },
 
   // Content & Media
