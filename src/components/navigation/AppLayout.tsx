@@ -67,7 +67,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
   const isCrevidAI  = location.pathname === "/crevia-ai";
   const isStudio    = location.pathname === "/crevia-studio";
-  const isChatRoute = location.pathname === "/dira" || location.pathname.startsWith("/crevia-workspace/");
+  const isChatRoute = location.pathname === "/dira";
   const isSubPage   = ["/profile/", "/privacy-policy", "/terms-of-service", "/app/about", "/admin2005"].some(
     (p) => location.pathname.startsWith(p)
   );

@@ -267,7 +267,6 @@ const en = {
   "studio.title": "Studio",
   "studio.subtitle": "Your creative business toolkit",
   "studio.tab.link": "Crevia Link",
-  "studio.tab.workspace": "Workspace",
   "studio.tab.invoice": "Invoice",
   "studio.tab.canvas": "Canvas",
 

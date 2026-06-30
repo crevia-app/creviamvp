@@ -105,7 +105,7 @@ const ar = {
   "studio.title": "Studio",
   "studio.subtitle": "مجموعة أدوات أعمالك الإبداعية",
   "studio.tab.link": "Crevia Link",
-  "studio.tab.workspace": "مساحة العمل",
+
   "studio.tab.invoice": "فاتورة",
   "studio.tab.canvas": "Canvas",
 

@@ -40,7 +40,6 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPri
       features: [
         { product: "Dira AI", detail: "5 Daily Credits", note: "Refreshed daily" },
         { product: "Crevia Invoice", detail: "2 standard invoices / month", lockNote: "Customization excluded" },
-        { product: "Crevia Workspace", detail: "0 Workspaces", lockNote: "Workspaces are a Pro feature" },
         { product: "Crevia Link", detail: "Core profile engine & basic themes", lockNote: "Analytics excluded" },
       ] as PlanFeature[],
       cta: "Get Started",
@@ -61,7 +60,6 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPri
         { product: "Verified badge", detail: "" },
         { product: "Dira AI", detail: "500 Monthly Credits" },
         { product: "Crevia Invoice", detail: "Unlimited customized invoices", note: "Remove branding, add your logo, add brand colors" },
-        { product: "Crevia Workspace", detail: "10 Collaborative Workspaces / month", note: "Invite clients and collaborators natively" },
         { product: "Crevia Link", detail: "Premium themes, custom brand colors, and advanced visitor analytics" },
       ] as PlanFeature[],
       cta: "Go Pro",
@@ -82,7 +80,6 @@ const PLANS = (billingCycle: "monthly" | "yearly", proPrice: number, businessPri
         { product: "Verified badge", detail: "" },
         { product: "Dira AI", detail: "Unlimited priority processing" },
         { product: "Crevia Invoice", detail: "Unlimited invoices", note: "Removed branding, add your brand colors and logo" },
-        { product: "Crevia Workspace", detail: "Unlimited Client & Project Workspaces with RBAC" },
         { product: "Crevia Link", detail: "Brand colors, logos, and advanced visitor analytics" },
         { product: "Support", detail: "Priority support" },
       ] as PlanFeature[],
@@ -181,7 +178,7 @@ const Pricing = () => {
               "name": "How much does Crevia Pro cost?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Crevia Pro starts at $14.99 per month. It includes 500 Dira AI credits per month, unlimited invoices, premium CreviaLink analytics, and up to 10 workspaces."
+                "text": "Crevia Pro starts at $14.99 per month. It includes 500 Dira AI credits per month, unlimited invoices, and premium CreviaLink analytics."
               }
             },
             {
@@ -189,7 +186,7 @@ const Pricing = () => {
               "name": "What is the Business plan?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "The Business plan is $74.99 per month and includes 3 seats, unlimited Dira AI, unlimited invoices, RBAC permissions, and unlimited workspaces. Additional seats are $19.99 each."
+                "text": "The Business plan is $74.99 per month and includes 3 seats, unlimited Dira AI, and unlimited invoices. Additional seats are $19.99 each."
               }
             },
             {

@@ -6,7 +6,7 @@ const OG_IMAGE_W    = 1200;
 const OG_IMAGE_H    = 630;
 
 const DEFAULT_TITLE       = "Crevia | The infrastructure to scale your business operations";
-const DEFAULT_DESCRIPTION = "Crevia gives creatives and founders the infrastructure to scale business operations — invoicing, AI, workspaces, and link pages in one place.";
+const DEFAULT_DESCRIPTION = "Crevia gives creatives and founders the infrastructure to scale business operations — invoicing, AI, and link pages in one place.";
 const DEFAULT_KEYWORDS    = "invoicing software, invoice generator, business management, AI business assistant, Dira AI, link in bio, client workspace, team collaboration, creative business tools, Crevia";
 
 interface SEOProps {

@@ -12,7 +12,6 @@ Disallow: /crevia-link
 Disallow: /crevia-studio
 Disallow: /crevia-invoice
 Disallow: /crevia-contracts
-Disallow: /crevia-workspace
 Disallow: /dira
 Disallow: /profile/
 Disallow: /received

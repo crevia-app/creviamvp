@@ -4,7 +4,7 @@ import { SEO } from "@/components/SEO";
 const TermsOfService = () => {
   return (
     <div className="min-h-dvh bg-background">
-      <SEO title="Terms of Use" description="Read Crevia's Terms of Use. Understand your rights and responsibilities when using the Crevia platform, including invoicing, workspaces, and AI features." keywords="Crevia terms of use, terms of service, user agreement, platform terms" url="/terms-of-service" />
+      <SEO title="Terms of Use" description="Read Crevia's Terms of Use. Understand your rights and responsibilities when using the Crevia platform, including invoicing and AI features." keywords="Crevia terms of use, terms of service, user agreement, platform terms" url="/terms-of-service" />
 
       <main className="container max-w-4xl px-4 py-8 md:py-16">
         <div className="mb-8 md:mb-12">
@@ -36,10 +36,6 @@ const TermsOfService = () => {
               <div>
                 <p className="font-semibold text-foreground mb-1">Account Security</p>
                 <p>You are responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account.</p>
-              </div>
-              <div>
-                <p className="font-semibold text-foreground mb-1">Business Workspaces</p>
-                <p>For users on the Business tiers, the primary account holder is responsible for managing Role-Based Access Control (RBAC) and ensuring that team members comply with these Terms.</p>
               </div>
             </div>
           </section>
@@ -79,7 +75,7 @@ const TermsOfService = () => {
             <div className="text-muted-foreground leading-relaxed space-y-3">
               <div>
                 <p className="font-semibold text-foreground mb-1">Billing</p>
-                <p>Pro and Business tier subscriptions are billed automatically according to the selected billing cycle. Additional seats added to Business workspaces will be billed at the stated per-seat add-on rate.</p>
+                <p>Pro and Business tier subscriptions are billed automatically according to the selected billing cycle.</p>
               </div>
               <div>
                 <p className="font-semibold text-foreground mb-1">Refunds</p>

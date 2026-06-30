@@ -53,7 +53,6 @@ const CreviaStudio = () => {
 
   const activeTab          = searchParams.get("tab")        || "link";
   const activeLinkSection  = searchParams.get("section")   || "profile";
-  const activeWorkspace    = searchParams.get("workspace") || undefined;
   const activeInvoiceId    = searchParams.get("invoiceId") || undefined;
 
   const activeTabDef = STUDIO_TABS.find(t => t.id === activeTab) ?? STUDIO_TABS[0];
@@ -202,7 +201,7 @@ const CreviaStudio = () => {
             transition={{ duration: 0.12 }}
           >
             {activeTab === "link"     && <CreviaLink isEmbedded />}
-            {activeTab === "invoices" && <SmartInvoicesTab workspaceId={activeWorkspace} initialInvoiceId={activeInvoiceId} />}
+            {activeTab === "invoices" && <SmartInvoicesTab initialInvoiceId={activeInvoiceId} />}
           </motion.div>
         </AnimatePresence>
       </div>

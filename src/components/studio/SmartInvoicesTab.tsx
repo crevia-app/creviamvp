@@ -84,7 +84,7 @@ interface InvoiceFolder {
   invoiceCount?: number;
 }
 
-const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: string; initialInvoiceId?: string } = {}) => {
+const SmartInvoicesTab = ({ initialInvoiceId }: { initialInvoiceId?: string } = {}) => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -126,22 +126,6 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
   const fetchInvoices = async (folderId: string | null = null) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
-
-    if (workspaceId) {
-      const { data: msgs } = await supabase
-        .from("chat_messages")
-        .select("invoice_id")
-        .eq("room_id", workspaceId)
-        .not("invoice_id", "is", null);
-      const ids = [...new Set((msgs || []).map((m: any) => m.invoice_id).filter(Boolean))];
-      if (ids.length === 0) { setInvoices([]); setLoading(false); return; }
-      const { data, error } = await supabase.from("invoices").select("*").in("id", ids).order("created_at", { ascending: false });
-      if (error) { toast.error("Failed to load invoices"); return; }
-      const now = new Date();
-      setInvoices((data || []).map((inv: any) => inv.status === "sent" && isAfter(now, new Date(inv.due_date)) ? { ...inv, status: "overdue" } : inv));
-      setLoading(false);
-      return;
-    }
 
     const { data, error } = await supabase
       .from("invoices")
@@ -253,14 +237,10 @@ const SmartInvoicesTab = ({ workspaceId, initialInvoiceId }: { workspaceId?: str
   };
 
   useEffect(() => {
-    if (workspaceId) {
-      fetchInvoices(currentFolderId);
-    } else {
-      Promise.all([fetchInvoices(currentFolderId), fetchFolders()]);
-    }
+    Promise.all([fetchInvoices(currentFolderId), fetchFolders()]);
     fetchBusinessSettings();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workspaceId, currentFolderId]);
+  }, [currentFolderId]);
 
   // Auto-open a specific invoice when navigating from a notification
   useEffect(() => {

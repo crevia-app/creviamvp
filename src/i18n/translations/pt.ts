@@ -105,7 +105,7 @@ const pt = {
   "studio.title": "Studio",
   "studio.subtitle": "Seu kit de ferramentas de negócios criativos",
   "studio.tab.link": "Crevia Link",
-  "studio.tab.workspace": "Espaço de trabalho",
+
   "studio.tab.invoice": "Fatura",
   "studio.tab.canvas": "Canvas",
 

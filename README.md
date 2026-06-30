@@ -40,7 +40,6 @@ Crevia is a unified portal serving two user types — **Independent Creatives** 
 | **Dira AI** | `/dira` | Conversational AI hub for deal structuring, project management, and proactive suggestions |
 | **Crevia Link** | `/crevia-link` | Customisable link-in-bio with live preview, themed public profiles, and analytics |
 | **Crevia Invoice** | `/crevia-invoice` | Tiered PDF invoice generation with manual eTIMS compliance fields |
-| **Crevia Workspace** | `/crevia-workspace` | End-to-end encrypted project hubs with real-time messaging and RBAC |
 
 ### Architecture at a Glance
 
@@ -125,7 +124,6 @@ creviamvp/
 │   │   ├── pwa/              # AutoUpdate, IOSInstallGuide
 │   │   ├── settings/         # SecurityTab
 │   │   ├── studio/
-│   │   │   ├── workspaces/   # WorkspaceActionVault
 │   │   │   ├── SmartInvoicesTab.tsx
 │   │   │   ├── InvoicePreviewDialog.tsx
 │   │   │   └── CreateInvoiceDialog.tsx
@@ -169,8 +167,6 @@ creviamvp/
 │   │   ├── CreviaLink.tsx
 │   │   ├── CreviaStudio.tsx
 │   │   ├── CreviaInvoice.tsx
-│   │   ├── WorkspacesList.tsx
-│   │   ├── WorkspacePage.tsx
 │   │   ├── PublicProfile.tsx # Public Crevia Link (/:username)
 │   │   ├── Admin.tsx
 │   │   └── ...
@@ -287,7 +283,6 @@ All routing is handled client-side by React Router v6. The Vercel config rewrite
 | `/terms-of-service` | `TermsOfService` | Legal |
 | `/cookie-policy` | `CookiePolicy` | Legal |
 | `/:username` | `PublicProfile` | Public Crevia Link profile |
-| `/invite/:token` | `WorkspaceInvitePage` | Workspace invite acceptance |
 
 ### Protected Routes (require auth)
 
@@ -297,10 +292,8 @@ Wrapped in `<ProtectedRoute>` — unauthenticated users are redirected to `/auth
 |---|---|---|
 | `/dira` | `Dira` | Dira AI dashboard (default post-login) |
 | `/crevia-link` | `CreviaLink` | Crevia Link editor |
-| `/crevia-studio` | `CreviaStudio` | Studio hub (Link, Workspace, Invoice) |
+| `/crevia-studio` | `CreviaStudio` | Studio hub (Link, Invoice) |
 | `/crevia-invoice` | `CreviaInvoice` | Invoice manager |
-| `/crevia-workspace` | `WorkspacesList` | All workspaces |
-| `/crevia-workspace/:id` | `WorkspacePage` | Individual workspace (chat + files) |
 | `/received` | `ReceivedDocuments` | Documents received from others |
 | `/profile/payments-billing` | `PaymentsBilling` | Subscription management |
 | `/profile/notifications` | `Notifications` | Notification preferences |
@@ -349,40 +342,6 @@ vendor-icons     — lucide-react
 
 After a period of inactivity, the app presents a biometric lock screen (device fingerprint/Face ID via the Web Authentication API). The session remains valid — the lock is purely a local UI gate, not a new auth round-trip.
 
-### End-to-End Encryption (Workspace Chat)
-
-All messages in Crevia Workspace are encrypted before they reach Supabase. The scheme uses the WebCrypto API throughout — no encryption library dependencies.
-
-**Algorithms:**
-- Key exchange: **RSA-OAEP-2048 / SHA-256**
-- Message encryption: **AES-256-GCM**
-
-**Key lifecycle:**
-
-```
-1. On first use, generate RSA-OAEP key pair (extractable: true).
-2. Store private key in IndexedDB as a native CryptoKey (never transmitted).
-3. Export public key as JWK → store in Supabase `user_encryption_keys`.
-4. When a chat room is created, generate a random AES-256-GCM room key.
-5. Wrap the room key with each member's RSA public key via SubtleCrypto.wrapKey().
-6. Store wrapped room keys in Supabase `room_encrypted_keys`.
-7. On room join, fetch the user's wrapped room key → unwrapKey() with private key → cache in IDB.
-8. All messages: encrypt(plaintext, roomKey) → store ciphertext. Decrypt on read.
-```
-
-**Key locations:**
-
-| Key | Location | Format |
-|---|---|---|
-| RSA private key | IndexedDB | Native `CryptoKey` |
-| RSA public key | Supabase `user_encryption_keys` | JWK (JSON) |
-| AES room key (wrapped) | Supabase `room_encrypted_keys` | Base64 |
-| AES room key (active) | IndexedDB session cache | Native `CryptoKey` |
-
-**Key migration:** `src/lib/key-migration.ts` handles V1 → V2 key format upgrades transparently on login.
-
-**Privacy guarantee:** If key initialisation fails, the send path throws and refuses to write an unencrypted message. There is no plaintext fallback.
-
 ### Row-Level Security
 
 All 40 Supabase tables have RLS enabled. The foundational pattern:
@@ -391,13 +350,7 @@ All 40 Supabase tables have RLS enabled. The foundational pattern:
 -- Users can only read/write their own rows
 CREATE POLICY "owner_access" ON table_name
   USING (auth.uid() = user_id);
-
--- Workspace members can access shared resources
-CREATE POLICY "member_access" ON chat_messages
-  USING (is_room_member(auth.uid(), room_id));
 ```
-
-The `is_room_member` function is a Postgres function that avoids N+1 policy checks.
 
 ### Content Security Policy
 
@@ -492,33 +445,6 @@ PDF invoice generation with tiered output quality.
 
 ---
 
-### 8.4 Crevia Workspace
-
-**Entry:** `src/pages/WorkspacesList.tsx`, `src/pages/WorkspacePage.tsx`  
-**Components:** `src/components/studio/workspaces/`, `src/components/crevia-connect/shared/CreviaChat.tsx`
-
-Secure, siloed project hubs for collaboration between a user and their clients or team.
-
-**Features:**
-- E2EE real-time messaging (see Section 7)
-- File sharing and attachment management
-- Read receipts (`chat_read_receipts`), message reactions (`message_reactions`), pinned messages (`pinned_messages`), favourite messages (`favorite_messages`)
-- RBAC for Business tier: Admin and Editor roles
-- Workspace invite via tokenised link (`/invite/:token`)
-- Message deletion with soft-delete (`deleted_messages`)
-
-**Data tables:** `chat_rooms`, `chat_room_members`, `chat_messages`, `room_encrypted_keys`, `chat_read_receipts`, `message_reactions`, `pinned_messages`, `favorite_messages`, `deleted_messages`, `messages`
-
-**Workspace limits:**
-
-| Plan | Max workspaces | Can create | Can join |
-|---|---|---|---|
-| Free | 0 | No | No |
-| Pro | 10 | Yes | Yes |
-| Business | Unlimited | Yes | Yes |
-
----
-
 ## 9. Supabase Architecture
 
 ### 9.1 Database Schema
@@ -550,21 +476,6 @@ Tables are grouped by domain below. All use UUID primary keys and `created_at`/`
 |---|---|
 | `invoices` | Invoice header — client info, status, totals, eTIMS fields |
 | `invoice_items` | Line items belonging to an invoice |
-
-#### Crevia Workspace (Chat)
-
-| Table | Description |
-|---|---|
-| `chat_rooms` | Workspace room metadata — name, type (DM / group), owner |
-| `chat_room_members` | Room membership with role (`admin`/`editor`/`viewer`) |
-| `chat_messages` | Encrypted message ciphertext + IV |
-| `room_encrypted_keys` | Per-member RSA-wrapped AES room keys |
-| `messages` | Legacy / alternate message store |
-| `chat_read_receipts` | Last-read timestamps per user per room |
-| `message_reactions` | Emoji reactions keyed to message + user |
-| `pinned_messages` | Pinned message references per room |
-| `favorite_messages` | User-saved favourite messages |
-| `deleted_messages` | Soft-deleted message records |
 
 #### Dira AI
 

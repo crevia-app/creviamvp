@@ -407,7 +407,7 @@ const UsersSection = () => {
   const load = async () => {
     const { data } = await supabase
       .from("profiles")
-      .select("id, display_name, handle, email, avatar_url, subscription_plan, subscription_status, subscription_expires_at, created_at, is_verified, is_admin, user_type, dira_actions_used, dira_actions_limit, invoices_used_this_month, workspaces_created_this_month")
+      .select("id, display_name, handle, email, avatar_url, subscription_plan, subscription_status, subscription_expires_at, created_at, is_verified, is_admin, user_type, dira_actions_used, dira_actions_limit, invoices_used_this_month")
       .order("created_at", { ascending: false });
     setUsers(data ?? []);
     setLoading(false);
@@ -618,16 +618,6 @@ const UsersSection = () => {
                   limit: ["pro","business","creative_pro","brand_workspace"].includes(selected.subscription_plan) ? "∞" : "3",
                   pct: ["pro","business","creative_pro","brand_workspace"].includes(selected.subscription_plan) ? 0
                     : Math.min(100, Math.round(((selected.invoices_used_this_month ?? 0) / 3) * 100)),
-                },
-                {
-                  label: "Workspaces created",
-                  used: selected.workspaces_created_this_month ?? 0,
-                  limit: ["business","brand_workspace"].includes(selected.subscription_plan) ? "∞"
-                    : ["pro","creative_pro"].includes(selected.subscription_plan) ? "10" : "0",
-                  pct: ["business","brand_workspace"].includes(selected.subscription_plan) ? 0
-                    : ["pro","creative_pro"].includes(selected.subscription_plan)
-                      ? Math.min(100, Math.round(((selected.workspaces_created_this_month ?? 0) / 10) * 100))
-                      : 0,
                 },
               ].map(({ label, used, limit, pct }) => (
                 <div key={label} className="px-4 py-2.5 border-t border-white/[0.04] first:border-t-0">
@@ -1737,7 +1727,6 @@ const PLAN_FEATURES = [
   { label: "Seats",                  free: "1",    pro: "1",         biz: "3+"        },
   { label: "Dira AI actions / day",  free: "10",   pro: "40",        biz: "200"       },
   { label: "Invoices / month",       free: "2",    pro: "Unlimited", biz: "Unlimited" },
-  { label: "Workspaces",             free: "1",    pro: "Unlimited", biz: "Unlimited" },
   { label: "No invoice watermark",   free: false,  pro: true,        biz: true        },
   { label: "E-Signature",            free: false,  pro: true,        biz: true        },
   { label: "Verified Badge",         free: false,  pro: true,        biz: true        },
@@ -1982,7 +1971,6 @@ const SettingsSection = () => {
 
   const STORAGE_BUCKETS = [
     { name: "avatars",     desc: "User profile & CreviaLink images", public: true },
-    { name: "chat-files",  desc: "Workspace chat file attachments",  public: false },
     { name: "deliverables",desc: "Campaign deliverable uploads",     public: false },
   ];
 

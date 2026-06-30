@@ -21,7 +21,7 @@ const themeOptions = [
 
 const STUDIO_TAB_META: Record<string, { shortLabel: string; color: string }> = {
   link:     { shortLabel: "Link",      color: "#CF8150" },
-  chat:     { shortLabel: "Workspace", color: "#7C6AF7" },
+
   invoices: { shortLabel: "Invoice",   color: "#2BA577" },
 };
 
