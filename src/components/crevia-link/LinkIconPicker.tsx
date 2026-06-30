@@ -16,7 +16,7 @@ import type { IconType } from "react-icons";
 import {
   SiInstagram, SiX, SiFacebook, SiYoutube, SiGithub, SiTwitch,
   SiTiktok, SiSnapchat, SiDiscord, SiReddit, SiPinterest,
-  SiWhatsapp, SiTelegram, SiSignal, SiSlack, SiThreads, SiMastodon, SiBluesky,
+  SiWhatsapp, SiTelegram, SiSignal, SiThreads, SiMastodon, SiBluesky,
   SiSpotify, SiApplemusic, SiSoundcloud, SiVimeo,
   SiBehance, SiDribbble, SiMedium, SiSubstack, SiPatreon, SiLoom, SiProducthunt,
   SiPaypal, SiStripe, SiGumroad, SiEtsy, SiShopify,
@@ -64,7 +64,7 @@ export const ICON_LIBRARY: LibraryEntry[] = [
   { id: "whatsapp",    label: "WhatsApp",     siIcon: SiWhatsapp,    tags: ["whatsapp","chat","message","messaging","contact","phone","wa","dms"] },
   { id: "telegram",    label: "Telegram",     siIcon: SiTelegram,    tags: ["telegram","chat","channel","bot","messaging","community","group"] },
   { id: "signal",      label: "Signal",       siIcon: SiSignal,      tags: ["signal","secure","private","encrypted","messaging","chat","privacy"] },
-  { id: "slack",       label: "Slack",        siIcon: SiSlack,       tags: ["slack","work","team","collaboration","chat","workspace","business","async"] },
+  { id: "slack",       label: "Slack",        tags: ["slack","work","team","collaboration","chat","workspace","business","async"] },
   { id: "zoom",        label: "Zoom",         siIcon: SiZoom,        tags: ["zoom","video call","meeting","virtual","conference","webinar","call","online"] },
   { id: "calendly",    label: "Calendly",     siIcon: SiCalendly,    tags: ["calendly","book","meeting","schedule","appointment","calendar","session"] },
 
