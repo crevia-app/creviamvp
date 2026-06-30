@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
-  Link2, MessageSquare, Receipt,
+  Link2, Receipt,
   User, MousePointerClick, Palette, BarChart2,
   X,
 } from "lucide-react";
@@ -11,7 +11,6 @@ import { useLanguage } from "@/i18n/LanguageContext";
 // Tab content
 import CreviaLink         from "./CreviaLink";
 import SmartInvoicesTab   from "@/components/studio/SmartInvoicesTab";
-import StudioWorkspacesHub from "@/components/studio/workspaces/StudioWorkspacesHub";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    TAB DEFINITIONS
@@ -25,15 +24,6 @@ const STUDIO_TABS = [
     labelKey:    "studio.tab.link",
     icon:        Link2,
     color:       "#CF8150",   // bronze
-  },
-  {
-    id:          "chat",
-    shortLabel:  "Workspace",
-    fullLabel:   "Crevia Workspace",
-    description: "Client collaboration hub",
-    labelKey:    "studio.tab.workspace",
-    icon:        MessageSquare,
-    color:       "#7C6AF7",   // indigo accent
   },
   {
     id:          "invoices",
@@ -64,9 +54,7 @@ const CreviaStudio = () => {
   const activeTab          = searchParams.get("tab")        || "link";
   const activeLinkSection  = searchParams.get("section")   || "profile";
   const activeWorkspace    = searchParams.get("workspace") || undefined;
-  const activeRoomId       = searchParams.get("roomId")    || undefined;
   const activeInvoiceId    = searchParams.get("invoiceId") || undefined;
-const isChatTab          = activeTab === "chat";
 
   const activeTabDef = STUDIO_TABS.find(t => t.id === activeTab) ?? STUDIO_TABS[0];
 
@@ -85,6 +73,13 @@ const isChatTab          = activeTab === "chat";
   const handleLinkSectionChange = (sectionId: string) => {
     setSearchParams({ tab: "link", section: sectionId });
   };
+
+  // Redirect to "link" tab if trying to access removed "chat" tab
+  useEffect(() => {
+    if (activeTab === "chat") {
+      setSearchParams({ tab: "link" });
+    }
+  }, [activeTab, setSearchParams]);
 
   return (
     <div className="h-full flex flex-col bg-background">
@@ -197,26 +192,20 @@ const isChatTab          = activeTab === "chat";
       {/* ═══════════════════════════════════════════════════════════════════
           TAB CONTENT
       ═══════════════════════════════════════════════════════════════════ */}
-      {isChatTab ? (
-        <div className="flex-1 min-h-0 overflow-hidden">
-          <StudioWorkspacesHub initialRoomId={activeRoomId} />
-        </div>
-      ) : (
-        <div className="flex-1 overflow-y-auto min-w-0 pb-16 md:pb-0">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.12 }}
-            >
-              {activeTab === "link"     && <CreviaLink isEmbedded />}
-              {activeTab === "invoices" && <SmartInvoicesTab workspaceId={activeWorkspace} initialInvoiceId={activeInvoiceId} />}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      )}
+      <div className="flex-1 overflow-y-auto min-w-0 pb-16 md:pb-0">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.12 }}
+          >
+            {activeTab === "link"     && <CreviaLink isEmbedded />}
+            {activeTab === "invoices" && <SmartInvoicesTab workspaceId={activeWorkspace} initialInvoiceId={activeInvoiceId} />}
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
       {/* ═══════════════════════════════════════════════════════════════════
           PREMIUM MOBILE SIDEBAR
