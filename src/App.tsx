@@ -36,9 +36,6 @@ const Dira             = lazy(() => import("./pages/Dira"));
 const CreviaLink       = lazy(() => import("./pages/CreviaLink"));
 const CreviaStudio     = lazy(() => import("./pages/CreviaStudio"));
 const CreviaInvoice    = lazy(() => import("./pages/CreviaInvoice"));
-const WorkspacesList   = lazy(() => import("./pages/WorkspacesList"));
-const WorkspacePage    = lazy(() => import("./pages/WorkspacePage"));
-const WorkspaceInvitePage = lazy(() => import("./pages/WorkspaceInvitePage"));
 const PublicProfile    = lazy(() => import("./pages/PublicProfile"));
 const ReceivedDocuments = lazy(() => import("./pages/ReceivedDocuments"));
 const PaymentsBilling  = lazy(() => import("./pages/profile/PaymentsBilling"));
@@ -227,9 +224,6 @@ function AppContent() {
           <Route path="/crevia-studio" element={<ProtectedRoute><AppLayout><CreviaStudio /></AppLayout></ProtectedRoute>} />
           <Route path="/crevia-invoice" element={<ProtectedRoute><AppLayout><CreviaInvoice /></AppLayout></ProtectedRoute>} />
           <Route path="/mfa-verify" element={<MFAVerify />} />
-          <Route path="/crevia-workspace" element={<ProtectedRoute><AppLayout><WorkspacesList /></AppLayout></ProtectedRoute>} />
-          <Route path="/crevia-workspace/:id" element={<ProtectedRoute><AppLayout><WorkspacePage /></AppLayout></ProtectedRoute>} />
-          <Route path="/invite/:token" element={<WorkspaceInvitePage />} />
           <Route path="/received" element={<ProtectedRoute><AppLayout><ReceivedDocuments /></AppLayout></ProtectedRoute>} />
           <Route path="/profile/payments-billing" element={<ProtectedRoute><AppLayout><PaymentsBilling /></AppLayout></ProtectedRoute>} />
           <Route path="/profile/notifications" element={<ProtectedRoute><AppLayout><Notifications /></AppLayout></ProtectedRoute>} />
